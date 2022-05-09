@@ -1885,6 +1885,17 @@ void VulkanReplayConsumerBase::GetMatchingDevice(InstanceInfo* instance_info, Ph
 
     auto replay_properties = replay_device_info->properties.get();
 
+    printf("%s() There are %lu (%lu) physical replay devices\n", __func__, instance_info->replay_device_info.size(), instance_info->replay_devices.size());
+    int i = 0;
+    for (auto& replay_physical_device : instance_info->replay_devices) {
+        printf("[%d]: %p", i, replay_physical_device);
+
+        auto properties = instance_info->replay_device_info.find(replay_physical_device);
+        if (properties != instance_info->replay_device_info.end())
+            printf(" (%s)\n", properties->second.properties ? properties->second.properties->deviceName : "(XXXX)");
+        ++i;
+    }
+
     if ((physical_device_info->capture_vendor_id != replay_properties->vendorID) ||
         (physical_device_info->capture_device_id != replay_properties->deviceID))
     {
@@ -2579,6 +2590,7 @@ VulkanReplayConsumerBase::OverrideCreateDevice(VkResult            original_resu
                                                              physical_device,
                                                              &modified_create_info);
 
+        printf("vkCreateDevice will use physical device: %p\n", physical_device);
         result = create_device_proc(
             physical_device, &modified_create_info, GetAllocationCallbacks(pAllocator), replay_device);
 
