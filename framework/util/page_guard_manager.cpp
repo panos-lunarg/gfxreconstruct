@@ -117,6 +117,10 @@ static void PageGuardExceptionHandler(int id, siginfo_t* info, void* data)
 {
     bool              handled = false;
     PageGuardManager* manager = PageGuardManager::Get();
+
+    GFXRECON_WRITE_CONSOLE("%s(id: 0x%x info->si_addr = %p, data = %p)\n", __func__, id, info->si_addr, data);
+
+
     if ((id == SIGSEGV) && (info->si_addr != nullptr) && (manager != nullptr))
     {
         bool is_write = true;
@@ -167,20 +171,27 @@ static void PageGuardExceptionHandler(int id, siginfo_t* info, void* data)
         handled = manager->HandleGuardPageViolation(info->si_addr, is_write, true);
     }
 
+    GFXRECON_WRITE_CONSOLE("    handled: %u\n", handled);
+    GFXRECON_WRITE_CONSOLE("    s_old_sigaction.sa_sigaction: %p\n", s_old_sigaction.sa_sigaction);
+    GFXRECON_WRITE_CONSOLE("    s_old_sigaction.sa_handler: %p\n", s_old_sigaction.sa_handler);
+
     if (!handled)
     {
         // This was not a SIGSEGV signal for an address that was protected with mprotect().
         // Raise the original signal handler for this case.
         if (((s_old_sigaction.sa_flags & SA_SIGINFO) == SA_SIGINFO) && (s_old_sigaction.sa_sigaction != nullptr))
         {
+            GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
             s_old_sigaction.sa_sigaction(id, info, data);
         }
         else if (((s_old_sigaction.sa_flags & SA_SIGINFO) != SA_SIGINFO) && (s_old_sigaction.sa_handler != nullptr))
         {
+            GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
             s_old_sigaction.sa_handler(id);
         }
         else
         {
+            GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
             abort();
         }
     }
@@ -328,6 +339,8 @@ void* PageGuardManager::AllocateMemory(size_t aligned_size, bool use_write_watch
 
         void* memory = mmap(nullptr, aligned_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
+        GFXRECON_WRITE_CONSOLE("%s() mmap: %p\n", __func__, memory);
+
         if (memory == MAP_FAILED)
         {
             GFXRECON_LOG_ERROR("PageGuardManager failed to allocate memory with \"mmap()\" and size = %" PRIuPTR
@@ -382,6 +395,12 @@ void PageGuardManager::AddExceptionHandler()
         // Retrieve the current SIGSEGV handler info before replacing the current signal handler to determine if our
         // replacement signal handler should use an alternate signal stack.
         int result = sigaction(SIGSEGV, nullptr, &s_old_sigaction);
+
+        GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
+        GFXRECON_WRITE_CONSOLE("    PageGuardExceptionHandler(): %p\n", PageGuardExceptionHandler);
+        GFXRECON_WRITE_CONSOLE("    s_old_sigaction.sa_sigaction(): %p\n", s_old_sigaction.sa_sigaction);
+        GFXRECON_WRITE_CONSOLE("    s_old_sigaction.sa_handler(): %p\n", s_old_sigaction.sa_handler);
+        GFXRECON_WRITE_CONSOLE("    s_old_sigaction.sa_flags: 0x%x\n", s_old_sigaction.sa_flags);
 
         if (result != -1)
         {
@@ -520,6 +539,8 @@ bool PageGuardManager::SetMemoryProtection(void* protect_address, size_t protect
     {
         success = false;
 
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
+
         GFXRECON_LOG_ERROR(
             "PageGuardManager failed to enable page guard for memory region [start address = %p, size = %" PRIuPTR
             "] (mprotect() produced error code %d)",
@@ -528,24 +549,31 @@ bool PageGuardManager::SetMemoryProtection(void* protect_address, size_t protect
             errno);
     }
 
+    GFXRECON_WRITE_CONSOLE("%s(protect_mask: 0x%x) [start address = %p, size = %" PRIuPTR "]\n", __func__, protect_mask, protect_address, protect_size);
+
     if (protect_mask ^ kGuardNoProtect)
     {
         sigset_t x;
         sigemptyset(&x);
         sigprocmask(SIG_SETMASK, nullptr, &x);
 
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
+
         // Check if SIGSEGV is blocked
         int ret = sigismember(&x, SIGSEGV);
         if (ret == 1)
         {
+            GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
             if (!unblock_sigsegv_)
             {
+                GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
                 GFXRECON_LOG_WARNING("SIGSEGV is blocked while page guard manager expects the signal to be handled. "
                                      "Things might fail and/or crash with segmentation fault. To force-enable SIGSEGV "
                                      "try setting GFXRECON_PAGE_GUARD_UNBLOCK_SIGSEGV environment variable to 1.\n");
             }
             else
             {
+                GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
                 // Unblock SIGSEGV
                 sigemptyset(&x);
                 sigaddset(&x, SIGSEGV);
@@ -558,6 +586,7 @@ bool PageGuardManager::SetMemoryProtection(void* protect_address, size_t protect
         }
         else if (ret == -1)
         {
+            GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
             GFXRECON_LOG_ERROR("sigismember() failed (errno: %d)\n", errno);
         }
     }

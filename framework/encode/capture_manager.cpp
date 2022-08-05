@@ -144,6 +144,7 @@ bool CaptureManager::CreateInstance(std::function<CaptureManager*()> GetInstance
 
         // Initialize capture manager with default settings.
         success = GetInstanceFunc()->Initialize(base_filename, trace_settings);
+        GFXRECON_WRITE_CONSOLE("%s()    success: %d\n", __func__, success);
         if (!success)
         {
             GFXRECON_LOG_FATAL("Failed to initialize CaptureManager");
@@ -230,6 +231,10 @@ bool CaptureManager::Initialize(std::string base_filename, const CaptureSettings
 {
     bool success = true;
 
+    GFXRECON_WRITE_CONSOLE("%s capture_mode_: 0x%x\n", __func__, capture_mode_);
+
+    GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
+
     base_filename_        = base_filename;
     file_options_         = trace_settings.capture_file_options;
     timestamp_filename_   = trace_settings.time_stamp_file;
@@ -279,13 +284,17 @@ bool CaptureManager::Initialize(std::string base_filename, const CaptureSettings
         page_guard_memory_mode_        = kMemoryModeDisabled;
     }
 
+    GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
+
     if (trace_settings.trim_ranges.empty() && trace_settings.trim_key.empty())
     {
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
         // Use default kModeWrite capture mode.
         success = CreateCaptureFile(base_filename_);
     }
     else
     {
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
         // Override default kModeWrite capture mode.
         trim_enabled_ = true;
         trim_ranges_  = trace_settings.trim_ranges;
@@ -293,60 +302,75 @@ bool CaptureManager::Initialize(std::string base_filename, const CaptureSettings
         // Determine if trim starts at the first frame
         if (!trace_settings.trim_ranges.empty())
         {
+            GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
             if (trim_ranges_[0].first == current_frame_)
             {
+                GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
                 // When capturing from the first frame, state tracking only needs to be enabled if there is more than
                 // one capture range.
                 if (trim_ranges_.size() > 1)
                 {
+                    GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
                     capture_mode_ = kModeWriteAndTrack;
                 }
 
+                GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
                 success = CreateCaptureFile(CreateTrimFilename(base_filename_, trim_ranges_[0]));
             }
             else
             {
+                GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
                 capture_mode_ = kModeTrack;
             }
         }
         // Check if trim is enabled by hot-key trigger at the first frame
         else if (!trace_settings.trim_key.empty())
         {
-            trim_key_ = trace_settings.trim_key;
+            GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
+            trim_key_        = trace_settings.trim_key;
             trim_key_frames_ = trace_settings.trim_key_frames;
 
             // Enable state tracking when hotkey pressed
             if (IsTrimHotkeyPressed())
             {
-                capture_mode_ = kModeWriteAndTrack;
+                GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
+                capture_mode_         = kModeWriteAndTrack;
                 trim_key_first_frame_ = current_frame_;
 
                 success = CreateCaptureFile(util::filepath::InsertFilenamePostfix(base_filename_, "_trim_trigger"));
             }
             else
             {
+                GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
                 capture_mode_ = kModeTrack;
             }
         }
         else
         {
+            GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
             capture_mode_ = kModeTrack;
         }
     }
 
+    GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
+
     if (success)
     {
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
         compressor_ = std::unique_ptr<util::Compressor>(format::CreateCompressor(file_options_.compression_type));
         if ((compressor_ == nullptr) && (file_options_.compression_type != format::CompressionType::kNone))
         {
+            GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
             success = false;
         }
     }
 
     if (success)
     {
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
         if (memory_tracking_mode_ == CaptureSettings::MemoryTrackingMode::kPageGuard)
         {
+            GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
             util::PageGuardManager::Create(trace_settings.page_guard_copy_on_map,
                                            trace_settings.page_guard_separate_read,
                                            util::PageGuardManager::kDefaultEnableReadWriteSamePage,
@@ -355,13 +379,17 @@ bool CaptureManager::Initialize(std::string base_filename, const CaptureSettings
 
         if ((capture_mode_ & kModeTrack) == kModeTrack)
         {
+            GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
             CreateStateTracker();
         }
     }
     else
     {
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
         capture_mode_ = kModeDisabled;
     }
+
+    GFXRECON_WRITE_CONSOLE("%s capture_mode_: 0x%x success: %d\n", __func__, capture_mode_, success);
 
     return success;
 }
@@ -456,11 +484,15 @@ bool CaptureManager::IsTrimHotkeyPressed()
 
 void CaptureManager::CheckContinueCaptureForWriteMode()
 {
+    GFXRECON_WRITE_CONSOLE("%s capture_mode_: 0x%x\n", __func__, capture_mode_);
+
     if (!trim_ranges_.empty())
     {
+        GFXRECON_WRITE_CONSOLE("    %u:%u\n", __LINE__);
         --trim_ranges_[trim_current_range_].total;
         if (trim_ranges_[trim_current_range_].total == 0)
         {
+            GFXRECON_WRITE_CONSOLE("    %u:%u\n", __LINE__);
             // Stop recording and close file.
             DeactivateTrimming();
             GFXRECON_LOG_INFO("Finished recording graphics API capture");
@@ -469,6 +501,7 @@ void CaptureManager::CheckContinueCaptureForWriteMode()
             ++trim_current_range_;
             if (trim_current_range_ >= trim_ranges_.size())
             {
+                GFXRECON_WRITE_CONSOLE("    %u:%u\n", __LINE__);
                 // No more frames to capture. Capture can be disabled and resources can be released.
                 trim_enabled_ = false;
                 capture_mode_ = kModeDisabled;
@@ -477,12 +510,15 @@ void CaptureManager::CheckContinueCaptureForWriteMode()
             }
             else if (trim_ranges_[trim_current_range_].first == current_frame_)
             {
+                GFXRECON_WRITE_CONSOLE("%s capture_mode_: 0x%x\n", __func__, capture_mode_);
+
                 // Trimming was configured to capture two consecutive frames, so we need to start a new capture
                 // file for the current frame.
                 const CaptureSettings::TrimRange& trim_range = trim_ranges_[trim_current_range_];
                 bool success = CreateCaptureFile(CreateTrimFilename(base_filename_, trim_range));
                 if (success)
                 {
+                    GFXRECON_WRITE_CONSOLE("%s capture_mode_: 0x%x\n", __func__, capture_mode_);
                     ActivateTrimming();
                 }
                 else
@@ -620,23 +656,33 @@ bool CaptureManager::CreateCaptureFile(const std::string& base_filename)
     bool        success          = true;
     std::string capture_filename = base_filename;
 
+    GFXRECON_WRITE_CONSOLE("%s\n", __func__);
+    GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
+
     if (timestamp_filename_)
     {
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
         capture_filename = util::filepath::GenerateTimestampedFilename(capture_filename);
     }
 
+    GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
     file_stream_ = std::make_unique<util::FileOutputStream>(capture_filename, kFileStreamBufferSize);
+    GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
 
     if (file_stream_->IsValid())
     {
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
         GFXRECON_LOG_INFO("Recording graphics API capture to %s", capture_filename.c_str());
         WriteFileHeader();
     }
     else
     {
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
         file_stream_ = nullptr;
         success      = false;
     }
+
+    GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
 
     return success;
 }
@@ -661,7 +707,11 @@ void CaptureManager::WriteFileHeader()
 {
     std::vector<format::FileOptionPair> option_list;
 
+    GFXRECON_WRITE_CONSOLE("%s\n", __func__);
+    GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
+
     BuildOptionList(file_options_, &option_list);
+    GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
 
     format::FileHeader file_header;
     file_header.fourcc        = GFXRECON_FOURCC;
@@ -671,6 +721,7 @@ void CaptureManager::WriteFileHeader()
 
     CombineAndWriteToFile({ { &file_header, sizeof(file_header) },
                             { option_list.data(), option_list.size() * sizeof(format::FileOptionPair) } });
+    GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
 }
 
 void CaptureManager::BuildOptionList(const format::EnabledOptions&        enabled_options,
@@ -683,6 +734,8 @@ void CaptureManager::BuildOptionList(const format::EnabledOptions&        enable
 
 void CaptureManager::WriteDisplayMessageCmd(const char* message)
 {
+    GFXRECON_WRITE_CONSOLE("%s capture_mode_: 0x%x\n", __func__, capture_mode_);
+
     if ((capture_mode_ & kModeWrite) == kModeWrite)
     {
         size_t                              message_length = util::platform::StringLength(message);
@@ -700,6 +753,8 @@ void CaptureManager::WriteDisplayMessageCmd(const char* message)
 
 void CaptureManager::WriteResizeWindowCmd(format::HandleId surface_id, uint32_t width, uint32_t height)
 {
+    GFXRECON_WRITE_CONSOLE("%s capture_mode_: 0x%x\n", __func__, capture_mode_);
+
     if ((capture_mode_ & kModeWrite) == kModeWrite)
     {
         format::ResizeWindowCommand resize_cmd;
@@ -719,6 +774,8 @@ void CaptureManager::WriteResizeWindowCmd(format::HandleId surface_id, uint32_t 
 
 void CaptureManager::WriteFillMemoryCmd(format::HandleId memory_id, uint64_t offset, uint64_t size, const void* data)
 {
+    GFXRECON_WRITE_CONSOLE("%s capture_mode_: 0x%x\n", __func__, capture_mode_);
+
     if ((capture_mode_ & kModeWrite) == kModeWrite)
     {
         GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, size);
@@ -797,11 +854,18 @@ void CaptureManager::WriteCreateHeapAllocationCmd(uint64_t allocation_id, uint64
 
 void CaptureManager::WriteToFile(const void* data, size_t size)
 {
+    // GFXRECON_WRITE_CONSOLE("%s\n", __func__);
+    // GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
+
     file_stream_->Write(data, size);
+    // GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
     if (force_file_flush_)
     {
+        // GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
         file_stream_->Flush();
+        // GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
     }
+    // GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
 }
 
 CaptureSettings::TraceSettings CaptureManager::GetDefaultTraceSettings()

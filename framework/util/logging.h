@@ -240,7 +240,7 @@ GFXRECON_END_NAMESPACE(gfxrecon)
                                         ##__VA_ARGS__);                              \
     }
 #define GFXRECON_LOG_ERROR(message, ...)                                             \
-    if (gfxrecon::util::Log::WillOutputMessage(gfxrecon::util::Log::kErrorSeverity)) \
+    if (gfxrecon::util::Log::WillOutputMessage(gfxrecon::util::Log::kAlwaysOutputSeverity)) \
     {                                                                                \
         gfxrecon::util::Log::LogMessage(gfxrecon::util::Log::kErrorSeverity,         \
                                         __FILE__,                                    \
@@ -250,7 +250,7 @@ GFXRECON_END_NAMESPACE(gfxrecon)
                                         ##__VA_ARGS__);                              \
     }
 #define GFXRECON_LOG_WARNING(message, ...)                                             \
-    if (gfxrecon::util::Log::WillOutputMessage(gfxrecon::util::Log::kWarningSeverity)) \
+    if (gfxrecon::util::Log::WillOutputMessage(gfxrecon::util::Log::kAlwaysOutputSeverity)) \
     {                                                                                  \
         gfxrecon::util::Log::LogMessage(gfxrecon::util::Log::kWarningSeverity,         \
                                         __FILE__,                                      \

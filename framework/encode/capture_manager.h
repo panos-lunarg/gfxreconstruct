@@ -247,17 +247,24 @@ class CaptureManager
     {
         static_assert(N != 1, "Use WriteToFile(void*, size) when writing a single buffer.");
 
+        GFXRECON_WRITE_CONSOLE("%s\n", __func__);
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
+
         // Combine buffers for a single write.
         std::vector<uint8_t>& scratch_buffer = GetThreadData()->GetScratchBuffer();
         scratch_buffer.clear();
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
         for (size_t i = 0; i < N; ++i)
         {
             const uint8_t* const data = reinterpret_cast<const uint8_t*>(buffers[i].first);
             const size_t         size = buffers[i].second;
+            GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
             scratch_buffer.insert(scratch_buffer.end(), data, data + size);
         }
 
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
         WriteToFile(scratch_buffer.data(), scratch_buffer.size());
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
     }
 
   private:

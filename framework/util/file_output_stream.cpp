@@ -32,19 +32,27 @@ GFXRECON_BEGIN_NAMESPACE(util)
 FileOutputStream::FileOutputStream(const std::string& filename, size_t buffer_size, bool append) :
     file_(nullptr), own_file_(true)
 {
+    GFXRECON_WRITE_CONSOLE("%s\n", __func__);
+    GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
+
     const char* mode   = append ? "ab" : "wb";
     int32_t     result = platform::FileOpen(&file_, filename.c_str(), mode);
 
+    GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
+
     if (file_ != nullptr)
     {
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
         result = platform::SetFileBufferSize(file_, buffer_size);
         if (result != 0)
         {
+            GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
             GFXRECON_LOG_WARNING("Failed to set file buffer size. File writing performance may be affected.");
         }
     }
     else
     {
+        GFXRECON_WRITE_CONSOLE("    %u\n", __LINE__);
         GFXRECON_LOG_ERROR("fopen(%s, %s) failed (errno = %d)", filename.c_str(), mode, result);
     }
 }

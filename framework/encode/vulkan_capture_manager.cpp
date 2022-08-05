@@ -55,6 +55,8 @@ GFXRECON_BEGIN_NAMESPACE(encode)
 VulkanCaptureManager* VulkanCaptureManager::instance_ = nullptr;
 LayerTable            VulkanCaptureManager::layer_table_;
 
+static constexpr const char* white_listed_app_names[] = { "com.epicgames.fortnite", "UE" };
+
 bool VulkanCaptureManager::CreateInstance()
 {
     bool result = CaptureManager::CreateInstance([]() -> CaptureManager* { return instance_; },
@@ -537,7 +539,22 @@ VkResult VulkanCaptureManager::OverrideCreateInstance(const VkInstanceCreateInfo
                                                       const VkAllocationCallbacks* pAllocator,
                                                       VkInstance*                  pInstance)
 {
-    VkResult result = VK_ERROR_INITIALIZATION_FAILED;
+    VkResult result       = VK_ERROR_INITIALIZATION_FAILED;
+    // bool     white_listed = false;
+
+    // for (uint32_t i = 0; i < sizeof(white_listed_app_names) / sizeof(white_listed_app_names[0]); ++i)
+    // {
+    //     if (!strcmp(pCreateInfo->pApplicationInfo->pApplicationName, white_listed_app_names[i]))
+    //     {
+    //         white_listed = true;
+    //         break;
+    //     }
+    // }
+
+    // if (!white_listed) {
+    //     GFXRECON_WRITE_CONSOLE("App not white listed. Skipping");
+    //     return result;
+    // }
 
     if (CreateInstance())
     {
@@ -1631,6 +1648,8 @@ void VulkanCaptureManager::PostProcess_vkMapMemory(VkResult         result,
                     {
                         wrapper->shadow_allocation = manager->AllocatePersistentShadowMemory(static_cast<size_t>(size));
                     }
+
+                    GFXRECON_WRITE_CONSOLE("%s() memory: %p offset: %zu size: %zu *ppData: %p\n", __func__, memory, offset, size, *ppData);
 
                     // Return the pointer provided by the pageguard manager, which may be a pointer to shadow memory,
                     // not the mapped memory.
