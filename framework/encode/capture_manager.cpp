@@ -33,6 +33,7 @@
 #include "util/file_path.h"
 #include "util/logging.h"
 #include "util/page_guard_manager.h"
+#include "util/checksum_manager.h"
 #include "util/platform.h"
 
 #include <cassert>
@@ -98,6 +99,10 @@ CaptureManager::~CaptureManager()
     if (memory_tracking_mode_ == CaptureSettings::MemoryTrackingMode::kPageGuard)
     {
         util::PageGuardManager::Destroy();
+    }
+    else if (memory_tracking_mode_ == CaptureSettings::MemoryTrackingMode::kChecksum)
+    {
+        util::ChecksumManager::Destroy();
     }
 }
 
@@ -351,6 +356,10 @@ bool CaptureManager::Initialize(std::string base_filename, const CaptureSettings
                                            trace_settings.page_guard_separate_read,
                                            util::PageGuardManager::kDefaultEnableReadWriteSamePage,
                                            trace_settings.page_guard_unblock_sigsegv);
+        }
+        else if (memory_tracking_mode_ == CaptureSettings::MemoryTrackingMode::kChecksum)
+        {
+            util::ChecksumManager::Create();
         }
 
         if ((capture_mode_ & kModeTrack) == kModeTrack)

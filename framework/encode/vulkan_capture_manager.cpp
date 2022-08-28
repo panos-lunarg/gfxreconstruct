@@ -34,6 +34,7 @@
 #include "util/compressor.h"
 #include "util/logging.h"
 #include "util/page_guard_manager.h"
+#include "util/checksum_manager.h"
 #include "util/platform.h"
 
 #include <cassert>
@@ -552,7 +553,7 @@ VkResult VulkanCaptureManager::OverrideCreateInstance(const VkInstanceCreateInfo
             const char* const*       extensions      = create_info_copy.ppEnabledExtensionNames;
             std::vector<const char*> modified_extensions;
 
-            bool has_dev_prop2 = false;
+            bool has_dev_prop2    = false;
             bool has_ext_mem_caps = false;
 
             for (size_t i = 0; i < extension_count; ++i)
@@ -1576,6 +1577,7 @@ void VulkanCaptureManager::PostProcess_vkMapMemory(VkResult         result,
                                                    VkMemoryMapFlags flags,
                                                    void**           ppData)
 {
+
     if ((result == VK_SUCCESS) && (ppData != nullptr))
     {
         auto wrapper = reinterpret_cast<DeviceMemoryWrapper*>(memory);
@@ -1649,6 +1651,26 @@ void VulkanCaptureManager::PostProcess_vkMapMemory(VkResult         result,
                 // Need to keep track of mapped memory objects so memory content can be written at queue submit.
                 std::lock_guard<std::mutex> lock(mapped_memory_lock_);
                 mapped_memory_.insert(wrapper);
+            }
+            else if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kChecksum)
+            {
+                if (size == VK_WHOLE_SIZE)
+                {
+                    assert(offset <= wrapper->allocation_size);
+                    size = wrapper->allocation_size - offset;
+                }
+
+                if (size > 0)
+                {
+                    GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, offset);
+                    GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, size);
+
+                    util::ChecksumManager* manager = util::ChecksumManager::Get();
+                    assert(manager);
+
+                    manager->AddTrackedMemory(
+                        wrapper->handle_id, (*ppData), static_cast<size_t>(offset), static_cast<size_t>(size));
+                }
             }
         }
         else
@@ -1744,6 +1766,35 @@ void VulkanCaptureManager::PreProcess_vkFlushMappedMemoryRanges(VkDevice        
                 }
             }
         }
+        else if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kChecksum)
+        {
+            const DeviceMemoryWrapper* current_memory_wrapper = nullptr;
+            util::ChecksumManager*     manager                = util::ChecksumManager::Get();
+            assert(manager != nullptr);
+
+            for (uint32_t i = 0; i < memoryRangeCount; ++i)
+            {
+                auto next_memory_wrapper = reinterpret_cast<const DeviceMemoryWrapper*>(pMemoryRanges[i].memory);
+
+                if (next_memory_wrapper != current_memory_wrapper)
+                {
+                    current_memory_wrapper = next_memory_wrapper;
+
+                    if ((current_memory_wrapper != nullptr) && (current_memory_wrapper->mapped_data != nullptr))
+                    {
+                        manager->ProcessMemoryEntry(
+                            current_memory_wrapper->handle_id,
+                            [this](uint64_t memory_id, void* start_address, size_t offset, size_t size) {
+                                WriteFillMemoryCmd(memory_id, offset, size, start_address);
+                            });
+                    }
+                    else
+                    {
+                        GFXRECON_LOG_WARNING("vkFlushMappedMemoryRanges called for memory that is not mapped");
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1783,6 +1834,18 @@ void VulkanCaptureManager::PreProcess_vkUnmapMemory(VkDevice device, VkDeviceMem
                 std::lock_guard<std::mutex> lock(mapped_memory_lock_);
                 mapped_memory_.erase(wrapper);
             }
+        }
+        else if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kChecksum)
+        {
+            util::ChecksumManager* manager = util::ChecksumManager::Get();
+            assert(manager != nullptr);
+
+            manager->ProcessMemoryEntry(wrapper->handle_id,
+                                        [this](uint64_t memory_id, void* start_address, size_t offset, size_t size) {
+                                            WriteFillMemoryCmd(memory_id, offset, size, start_address);
+                                        });
+
+            manager->RemoveTrackedMemory(wrapper->handle_id);
         }
 
         if ((GetCaptureMode() & kModeTrack) == kModeTrack)
@@ -1831,6 +1894,14 @@ void VulkanCaptureManager::PreProcess_vkFreeMemory(VkDevice                     
             {
                 std::lock_guard<std::mutex> lock(mapped_memory_lock_);
                 mapped_memory_.erase(wrapper);
+            }
+            else if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kChecksum)
+            {
+                util::ChecksumManager* manager = util::ChecksumManager::Get();
+                assert(manager != nullptr);
+
+                // Remove memory tracking.
+                manager->RemoveTrackedMemory(wrapper->handle_id);
             }
         }
     }
@@ -2033,6 +2104,15 @@ void VulkanCaptureManager::QueueSubmitWriteFillMemoryCmd()
             // We set offset to 0, because the pointer returned by vkMapMemory already includes the offset.
             WriteFillMemoryCmd(wrapper->handle_id, 0, size, wrapper->mapped_data);
         }
+    }
+    else if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kChecksum)
+    {
+        util::ChecksumManager* manager = util::ChecksumManager::Get();
+        assert(manager != nullptr);
+
+        manager->ProcessMemoryEntries([this](uint64_t memory_id, void* start_address, size_t offset, size_t size) {
+            WriteFillMemoryCmd(memory_id, offset, size, start_address);
+        });
     }
 }
 

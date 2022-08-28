@@ -52,6 +52,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateInstance(
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireUniqueStateLock();
 
+    GFXRECON_WRITE_CONSOLE("CreateInstance");
+
     bool omit_output_data = false;
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCreateInstance>::Dispatch(VulkanCaptureManager::Get(), pCreateInfo, pAllocator, pInstance);
@@ -59,8 +61,10 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateInstance(
     VkResult result = VulkanCaptureManager::OverrideCreateInstance(pCreateInfo, pAllocator, pInstance);
     if (result < 0)
     {
+        GFXRECON_WRITE_CONSOLE("... Failed");
         omit_output_data = true;
-    }
+    }else
+        GFXRECON_WRITE_CONSOLE("... OK");
 
     auto encoder = VulkanCaptureManager::Get()->BeginTrackedApiCallCapture(format::ApiCallId::ApiCall_vkCreateInstance);
     if (encoder)

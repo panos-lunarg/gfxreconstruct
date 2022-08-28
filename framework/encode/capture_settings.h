@@ -53,7 +53,9 @@ class CaptureSettings
         // Use guard pages to determine which regions of memory to write on unmap and queue submit.  This mode replaces
         // the mapped memory value returned by the driver with a shadow allocation that the capture layer can monitor
         // to determine which regions of memory have been modified by the application.
-        kPageGuard = 2
+        kPageGuard = 2,
+        // Checksum method
+        kChecksum = 3
     };
 
     struct TrimRange

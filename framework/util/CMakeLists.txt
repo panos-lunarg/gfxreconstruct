@@ -32,6 +32,9 @@ target_sources(gfxrecon_util
                PRIVATE
                     ${CMAKE_CURRENT_LIST_DIR}/argument_parser.h
                     ${CMAKE_CURRENT_LIST_DIR}/argument_parser.cpp
+                    ${CMAKE_CURRENT_LIST_DIR}/checksum_manager.h
+                    ${CMAKE_CURRENT_LIST_DIR}/checksum_manager.cpp
+                    ${CMAKE_CURRENT_LIST_DIR}/xxhash.c
                     ${CMAKE_CURRENT_LIST_DIR}/compressor.h
                     ${CMAKE_CURRENT_LIST_DIR}/date_time.h
                     ${CMAKE_CURRENT_LIST_DIR}/defines.h

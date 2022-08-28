@@ -5,6 +5,9 @@ target_sources(gfxrecon_util
                    ${GFXRECON_SOURCE_DIR}/framework/util/argument_parser.h
                    ${GFXRECON_SOURCE_DIR}/framework/util/argument_parser.cpp
                    ${GFXRECON_SOURCE_DIR}/framework/util/compressor.h
+                   ${GFXRECON_SOURCE_DIR}/framework/util/checksum_manager.h
+                   ${GFXRECON_SOURCE_DIR}/framework/util/checksum_manager.cpp
+                   ${GFXRECON_SOURCE_DIR}/framework/util/xxhash.c
                    ${GFXRECON_SOURCE_DIR}/framework/util/date_time.h
                    ${GFXRECON_SOURCE_DIR}/framework/util/defines.h
                    ${GFXRECON_SOURCE_DIR}/framework/util/file_output_stream.h
