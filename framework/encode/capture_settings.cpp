@@ -492,6 +492,10 @@ CaptureSettings::ParseMemoryTrackingModeString(const std::string&               
     {
         result = MemoryTrackingMode::kUnassisted;
     }
+    else if (util::platform::StringCompareNoCase("pagemap", value_string.c_str()) == 0)
+    {
+        result = MemoryTrackingMode::kPagemap;
+    }
     else
     {
         if (!value_string.empty())

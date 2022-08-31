@@ -201,8 +201,8 @@ void PageGuardManager::InitializeSystemExceptionContext(void)
 }
 
 PageGuardManager::PageGuardManager() :
-    exception_handler_(nullptr), exception_handler_count_(0), system_page_size_(GetSystemPageSize()),
-    system_page_pot_shift_(GetSystemPagePotShift()), enable_copy_on_map_(kDefaultEnableCopyOnMap),
+    exception_handler_(nullptr), exception_handler_count_(0), system_page_size_(platform::GetSystemPageSize()),
+    system_page_pot_shift_(platform::GetSystemPagePotShift()), enable_copy_on_map_(kDefaultEnableCopyOnMap),
     enable_separate_read_(kDefaultEnableSeparateRead), unblock_sigsegv_(kDefaultUnblockSIGSEGV),
     enable_read_write_same_page_(kDefaultEnableReadWriteSamePage)
 {
@@ -214,8 +214,8 @@ PageGuardManager::PageGuardManager(bool enable_copy_on_map,
                                    bool expect_read_write_same_page,
                                    bool unblock_SIGSEGV) :
     exception_handler_(nullptr),
-    exception_handler_count_(0), system_page_size_(GetSystemPageSize()),
-    system_page_pot_shift_(GetSystemPagePotShift()), enable_copy_on_map_(enable_copy_on_map),
+    exception_handler_count_(0), system_page_size_(platform::GetSystemPageSize()),
+    system_page_pot_shift_(platform::GetSystemPagePotShift()), enable_copy_on_map_(enable_copy_on_map),
     enable_separate_read_(enable_separate_read), unblock_sigsegv_(unblock_SIGSEGV),
     enable_read_write_same_page_(expect_read_write_same_page)
 {
@@ -253,35 +253,6 @@ void PageGuardManager::Destroy()
         delete instance_;
         instance_ = nullptr;
     }
-}
-
-size_t PageGuardManager::GetSystemPageSize() const
-{
-#if defined(WIN32)
-    SYSTEM_INFO sSysInfo;
-    GetSystemInfo(&sSysInfo);
-    return sSysInfo.dwPageSize;
-#else
-    return getpagesize();
-#endif
-}
-
-size_t PageGuardManager::GetSystemPagePotShift() const
-{
-    size_t pot_shift = 0;
-    size_t page_size = GetSystemPageSize();
-
-    if (page_size != 0)
-    {
-        assert((page_size & (page_size - 1)) == 0);
-        while (page_size != 1)
-        {
-            page_size >>= 1;
-            ++pot_shift;
-        }
-    }
-
-    return pot_shift;
 }
 
 size_t PageGuardManager::GetAlignedSize(size_t size) const

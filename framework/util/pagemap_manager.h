@@ -1,0 +1,104 @@
+/*
+** Copyright (c) 2016 Advanced Micro Devices, Inc. All rights reserved.
+** Copyright (c) 2015-2020 Valve Corporation
+** Copyright (c) 2015-2022 LunarG, Inc.
+**
+** Permission is hereby granted, free of charge, to any person obtaining a
+** copy of this software and associated documentation files (the "Software"),
+** to deal in the Software without restriction, including without limitation
+** the rights to use, copy, modify, merge, publish, distribute, sublicense,
+** and/or sell copies of the Software, and to permit persons to whom the
+** Software is furnished to do so, subject to the following conditions:
+**
+** The above copyright notice and this permission notice shall be included in
+** all copies or substantial portions of the Software.
+**
+** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+** IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+** FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+** AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+** LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+** FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+** DEALINGS IN THE SOFTWARE.
+*/
+
+#ifndef GFXRECON_UTIL_PAGEMAP_MANAGER_H
+#define GFXRECON_UTIL_PAGEMAP_MANAGER_H
+
+#include "util/defines.h"
+#include "format/format_util.h"
+#include "util/logging.h"
+
+#include <stdio.h>
+#include <unordered_map>
+#include <functional>
+#include <mutex>
+
+GFXRECON_BEGIN_NAMESPACE(gfxrecon)
+GFXRECON_BEGIN_NAMESPACE(util)
+
+class PagemapManager
+{
+  public:
+    static void            Create(bool enable_copy_on_map);
+    static void            Destroy();
+    static PagemapManager* Get() { return instance_; }
+
+    void* AddTrackedMemory(uint64_t memory_id, void* mapped_memory, size_t mapped_offset, size_t mapped_range);
+    void  RemoveTrackedMemory(uint64_t memory_id);
+
+    // Callback for processing modified memory.  The function parameters are the ID of the modified memory object,
+    // a pointer to the start of the modified memory range, the offset from the initial mapped memory pointer to
+    // the modified range pointer, and the size of the modified range.
+    // typedef std::function<void(format::HandleId, uint64_t, uint64_t, const void*)> ModifiedMemoryFunc;
+    typedef std::function<void(uint64_t, void*, size_t, size_t)> ModifiedMemoryFunc;
+
+    void ProcessMemoryEntry(uint64_t memory_id, const ModifiedMemoryFunc& handle_modified);
+    void ProcessMemoryEntries(const ModifiedMemoryFunc& handle_modified);
+
+  private:
+    struct MemoryInfo
+    {
+        MemoryInfo(void* mm, void* sm, size_t mr, size_t np, size_t lss, bool d) :
+            mapped_memory(mm), shadow_memory(sm), mapped_range(mr), n_pages(np), last_segment_size(lss), dirty(d)
+        {
+            // GFXRECON_WRITE_CONSOLE("%s()\n  mm: %p\n  sm: %p\n  mr: %zu\n  np: %zu\n", __func__, mm, sm, mr, np);
+        }
+
+        void*  mapped_memory;
+        void*  shadow_memory;
+        size_t mapped_range;
+        size_t n_pages;
+        size_t last_segment_size;
+        bool   dirty;
+    };
+
+    PagemapManager(bool enable_copy_on_map);
+
+    void ProcessEntry(uint64_t memory_id, MemoryInfo* memory_info, const ModifiedMemoryFunc& handle_modified);
+
+    void UpdatePageTableEntries();
+    void UpdatePageTableEntry(MemoryInfo* mem_info);
+    void ClearSoftDirtyBits();
+    bool OpenPagemapFile();
+    void ClosePagemapFile();
+
+    typedef std::unordered_map<uint64_t, MemoryInfo> MemoryInfoMap;
+
+    static PagemapManager* instance_;
+
+    using hash_t                       = uint64_t;
+    static constexpr hash_t hash_seed_ = 0;
+    MemoryInfoMap           memory_info_;
+    std::mutex              tracked_memory_lock_;
+    FILE*                   pagemap_fd_;
+    char                    pagemap_filename_[64];
+    size_t                  system_page_size_;
+    size_t                  system_page_pot_shift_;
+    bool                    enable_copy_on_map_;
+};
+
+GFXRECON_END_NAMESPACE(util)
+GFXRECON_END_NAMESPACE(gfxrecon)
+
+#endif // GFXRECON_UTIL_PAGEMAP_MANAGER_H

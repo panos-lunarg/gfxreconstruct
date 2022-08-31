@@ -34,6 +34,7 @@
 #include "util/compressor.h"
 #include "util/logging.h"
 #include "util/page_guard_manager.h"
+#include "util/pagemap_manager.h"
 #include "util/platform.h"
 
 #include <cassert>
@@ -552,7 +553,7 @@ VkResult VulkanCaptureManager::OverrideCreateInstance(const VkInstanceCreateInfo
             const char* const*       extensions      = create_info_copy.ppEnabledExtensionNames;
             std::vector<const char*> modified_extensions;
 
-            bool has_dev_prop2 = false;
+            bool has_dev_prop2    = false;
             bool has_ext_mem_caps = false;
 
             for (size_t i = 0; i < extension_count; ++i)
@@ -1650,6 +1651,28 @@ void VulkanCaptureManager::PostProcess_vkMapMemory(VkResult         result,
                 std::lock_guard<std::mutex> lock(mapped_memory_lock_);
                 mapped_memory_.insert(wrapper);
             }
+            else if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPagemap)
+            {
+                if (size == VK_WHOLE_SIZE)
+                {
+                    assert(offset <= wrapper->allocation_size);
+                    size = wrapper->allocation_size - offset;
+                }
+
+                if (size > 0)
+                {
+                    GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, offset);
+                    GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, size);
+
+                    util::PagemapManager* manager = util::PagemapManager::Get();
+                    assert(manager != nullptr);
+
+                    // Return the pointer provided by the pageguard manager, which may be a pointer to shadow memory,
+                    // not the mapped memory.
+                    (*ppData) = manager->AddTrackedMemory(
+                        wrapper->handle_id, (*ppData), static_cast<size_t>(offset), static_cast<size_t>(size));
+                }
+            }
         }
         else
         {
@@ -1689,6 +1712,37 @@ void VulkanCaptureManager::PreProcess_vkFlushMappedMemoryRanges(VkDevice        
         {
             const DeviceMemoryWrapper* current_memory_wrapper = nullptr;
             util::PageGuardManager*    manager                = util::PageGuardManager::Get();
+            assert(manager != nullptr);
+
+            for (uint32_t i = 0; i < memoryRangeCount; ++i)
+            {
+                auto next_memory_wrapper = reinterpret_cast<const DeviceMemoryWrapper*>(pMemoryRanges[i].memory);
+
+                // Currently processing all dirty pages for the mapped memory, so filter multiple ranges from the same
+                // object.
+                if (next_memory_wrapper != current_memory_wrapper)
+                {
+                    current_memory_wrapper = next_memory_wrapper;
+
+                    if ((current_memory_wrapper != nullptr) && (current_memory_wrapper->mapped_data != nullptr))
+                    {
+                        manager->ProcessMemoryEntry(
+                            current_memory_wrapper->handle_id,
+                            [this](uint64_t memory_id, void* start_address, size_t offset, size_t size) {
+                                WriteFillMemoryCmd(memory_id, offset, size, start_address);
+                            });
+                    }
+                    else
+                    {
+                        GFXRECON_LOG_WARNING("vkFlushMappedMemoryRanges called for memory that is not mapped");
+                    }
+                }
+            }
+        }
+        else if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPagemap)
+        {
+            const DeviceMemoryWrapper* current_memory_wrapper = nullptr;
+            util::PagemapManager*      manager                = util::PagemapManager::Get();
             assert(manager != nullptr);
 
             for (uint32_t i = 0; i < memoryRangeCount; ++i)
@@ -1766,6 +1820,18 @@ void VulkanCaptureManager::PreProcess_vkUnmapMemory(VkDevice device, VkDeviceMem
 
             manager->RemoveTrackedMemory(wrapper->handle_id);
         }
+        if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPagemap)
+        {
+            util::PagemapManager* manager = util::PagemapManager::Get();
+            assert(manager != nullptr);
+
+            manager->ProcessMemoryEntry(wrapper->handle_id,
+                                        [this](uint64_t memory_id, void* start_address, size_t offset, size_t size) {
+                                            WriteFillMemoryCmd(memory_id, offset, size, start_address);
+                                        });
+
+            manager->RemoveTrackedMemory(wrapper->handle_id);
+        }
         else if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kUnassisted)
         {
             VkDeviceSize size = wrapper->mapped_size;
@@ -1831,6 +1897,14 @@ void VulkanCaptureManager::PreProcess_vkFreeMemory(VkDevice                     
             {
                 std::lock_guard<std::mutex> lock(mapped_memory_lock_);
                 mapped_memory_.erase(wrapper);
+            }
+            else if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPagemap)
+            {
+                util::PagemapManager* manager = util::PagemapManager::Get();
+                assert(manager != nullptr);
+
+                // Remove memory tracking.
+                manager->RemoveTrackedMemory(wrapper->handle_id);
             }
         }
     }
@@ -2010,6 +2084,15 @@ void VulkanCaptureManager::QueueSubmitWriteFillMemoryCmd()
     if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPageGuard)
     {
         util::PageGuardManager* manager = util::PageGuardManager::Get();
+        assert(manager != nullptr);
+
+        manager->ProcessMemoryEntries([this](uint64_t memory_id, void* start_address, size_t offset, size_t size) {
+            WriteFillMemoryCmd(memory_id, offset, size, start_address);
+        });
+    }
+    else if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPagemap)
+    {
+        util::PagemapManager* manager = util::PagemapManager::Get();
         assert(manager != nullptr);
 
         manager->ProcessMemoryEntries([this](uint64_t memory_id, void* start_address, size_t offset, size_t size) {

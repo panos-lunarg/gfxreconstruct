@@ -211,6 +211,13 @@ inline int32_t MakeDirectory(const char* filename)
     return _mkdir(filename);
 }
 
+inline size_t GetSystemPageSize() const
+{
+    SYSTEM_INFO sSysInfo;
+    GetSystemInfo(&sSysInfo);
+    return sSysInfo.dwPageSize;
+}
+
 #else // !defined(WIN32)
 
 // Error value indicating string was truncated
@@ -455,6 +462,11 @@ inline int32_t MakeDirectory(const char* filename)
     return mkdir(filename, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
+inline size_t GetSystemPageSize()
+{
+    return getpagesize();
+}
+
 #endif // WIN32
 
 inline LibraryHandle OpenLibrary(const std::vector<std::string>& name_list)
@@ -528,6 +540,30 @@ inline int32_t SetFileBufferSize(FILE* stream, size_t buffer_size)
 inline int32_t FileClose(FILE* stream)
 {
     return fclose(stream);
+}
+
+inline bool IsBigEndian()
+{
+    const int endian_bit = 1;
+    return *(char *)&endian_bit == 1 ? false : true;
+}
+
+inline size_t GetSystemPagePotShift()
+{
+    size_t pot_shift = 0;
+    size_t page_size = GetSystemPageSize();
+
+    if (page_size != 0)
+    {
+        assert((page_size & (page_size - 1)) == 0);
+        while (page_size != 1)
+        {
+            page_size >>= 1;
+            ++pot_shift;
+        }
+    }
+
+    return pot_shift;
 }
 
 GFXRECON_END_NAMESPACE(platform)
