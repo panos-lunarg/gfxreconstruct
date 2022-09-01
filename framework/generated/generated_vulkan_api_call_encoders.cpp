@@ -82,6 +82,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyInstance(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyInstance>::Dispatch(VulkanCaptureManager::Get(), instance, pAllocator);
 
@@ -108,6 +109,7 @@ VKAPI_ATTR VkResult VKAPI_CALL EnumeratePhysicalDevices(
     VkPhysicalDevice*                           pPhysicalDevices)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -146,6 +148,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceFeatures(
     VkPhysicalDeviceFeatures*                   pFeatures)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pFeatures);
 
@@ -170,6 +173,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceFormatProperties(
     VkFormatProperties*                         pFormatProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatProperties>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, format, pFormatProperties);
 
@@ -199,6 +203,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceImageFormatProperties(
     VkImageFormatProperties*                    pImageFormatProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -236,6 +241,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceProperties(
     VkPhysicalDeviceProperties*                 pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pProperties);
 
@@ -260,6 +266,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceQueueFamilyProperties(
     VkQueueFamilyProperties*                    pQueueFamilyProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamilyProperties>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pQueueFamilyPropertyCount, pQueueFamilyProperties);
 
@@ -284,6 +291,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceMemoryProperties(
     VkPhysicalDeviceMemoryProperties*           pMemoryProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryProperties>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pMemoryProperties);
 
@@ -309,6 +317,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDevice(
     VkDevice*                                   pDevice)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -341,6 +350,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDevice(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDevice>::Dispatch(VulkanCaptureManager::Get(), device, pAllocator);
 
@@ -368,6 +378,7 @@ VKAPI_ATTR void VKAPI_CALL GetDeviceQueue(
     VkQueue*                                    pQueue)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceQueue>::Dispatch(VulkanCaptureManager::Get(), device, queueFamilyIndex, queueIndex, pQueue);
 
@@ -397,6 +408,7 @@ VKAPI_ATTR VkResult VKAPI_CALL QueueSubmit(
     VkFence                                     fence)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>::Dispatch(VulkanCaptureManager::Get(), queue, submitCount, pSubmits, fence);
 
@@ -427,6 +439,7 @@ VKAPI_ATTR VkResult VKAPI_CALL QueueWaitIdle(
     VkQueue                                     queue)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkQueueWaitIdle>::Dispatch(VulkanCaptureManager::Get(), queue);
 
@@ -451,6 +464,7 @@ VKAPI_ATTR VkResult VKAPI_CALL DeviceWaitIdle(
     VkDevice                                    device)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDeviceWaitIdle>::Dispatch(VulkanCaptureManager::Get(), device);
 
@@ -502,6 +516,9 @@ VKAPI_ATTR VkResult VKAPI_CALL AllocateMemory(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkAllocateMemory>::Dispatch(VulkanCaptureManager::Get(), result, device, pAllocateInfo, pAllocator, pMemory);
 
+    // GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
+    // GFXRECON_WRITE_CONSOLE("  pAllocateInfo->allocationSize: 0x%" PRIx64", pAllocateInfo->memoryTypeIndex: %u, *pMemory: %p", pAllocateInfo->allocationSize, pAllocateInfo->memoryTypeIndex, *pMemory);
+
     return result;
 }
 
@@ -511,6 +528,7 @@ VKAPI_ATTR void VKAPI_CALL FreeMemory(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkFreeMemory>::Dispatch(VulkanCaptureManager::Get(), device, memory, pAllocator);
 
@@ -542,6 +560,12 @@ VKAPI_ATTR VkResult VKAPI_CALL MapMemory(
     void**                                      ppData)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+
+    // GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
+    // GFXRECON_WRITE_CONSOLE("  memory: %p\n", memory);
+    // GFXRECON_WRITE_CONSOLE("  offset: 0x%" PRIx64 "\n", offset);
+    // GFXRECON_WRITE_CONSOLE("  size: 0x%" PRIx64 "\n", size);
+    // GFXRECON_WRITE_CONSOLE("  flags: 0x%x\n", flags);
 
     bool omit_output_data = false;
 
@@ -579,6 +603,7 @@ VKAPI_ATTR void VKAPI_CALL UnmapMemory(
     VkDeviceMemory                              memory)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkUnmapMemory>::Dispatch(VulkanCaptureManager::Get(), device, memory);
 
@@ -604,6 +629,7 @@ VKAPI_ATTR VkResult VKAPI_CALL FlushMappedMemoryRanges(
     const VkMappedMemoryRange*                  pMemoryRanges)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkFlushMappedMemoryRanges>::Dispatch(VulkanCaptureManager::Get(), device, memoryRangeCount, pMemoryRanges);
 
@@ -634,6 +660,7 @@ VKAPI_ATTR VkResult VKAPI_CALL InvalidateMappedMemoryRanges(
     const VkMappedMemoryRange*                  pMemoryRanges)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkInvalidateMappedMemoryRanges>::Dispatch(VulkanCaptureManager::Get(), device, memoryRangeCount, pMemoryRanges);
 
@@ -664,6 +691,7 @@ VKAPI_ATTR void VKAPI_CALL GetDeviceMemoryCommitment(
     VkDeviceSize*                               pCommittedMemoryInBytes)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryCommitment>::Dispatch(VulkanCaptureManager::Get(), device, memory, pCommittedMemoryInBytes);
 
@@ -691,6 +719,13 @@ VKAPI_ATTR VkResult VKAPI_CALL BindBufferMemory(
     VkDeviceSize                                memoryOffset)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+
+    // GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
+    // GFXRECON_WRITE_CONSOLE("  buffer: %p\n", buffer);
+    // GFXRECON_WRITE_CONSOLE("  memory: %p\n", memory);
+    // GFXRECON_WRITE_CONSOLE("  memoryOffset: 0x%" PRIx64"\n", memoryOffset);
+
+    assert(!(memoryOffset % 0x1000));
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory>::Dispatch(VulkanCaptureManager::Get(), device, buffer, memory, memoryOffset);
 
@@ -724,6 +759,14 @@ VKAPI_ATTR VkResult VKAPI_CALL BindImageMemory(
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
 
+
+    // GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
+    // GFXRECON_WRITE_CONSOLE("  image: %p", image);
+    // GFXRECON_WRITE_CONSOLE("  memory: %p", memory);
+    // GFXRECON_WRITE_CONSOLE("  memoryOffset:  0x%" PRIx64 "", memoryOffset);
+
+    assert(!(memoryOffset % 0x1000));
+
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkBindImageMemory>::Dispatch(VulkanCaptureManager::Get(), device, image, memory, memoryOffset);
 
     VkDevice device_unwrapped = GetWrappedHandle<VkDevice>(device);
@@ -754,6 +797,7 @@ VKAPI_ATTR void VKAPI_CALL GetBufferMemoryRequirements(
     VkMemoryRequirements*                       pMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements>::Dispatch(VulkanCaptureManager::Get(), device, buffer, pMemoryRequirements);
 
@@ -780,6 +824,7 @@ VKAPI_ATTR void VKAPI_CALL GetImageMemoryRequirements(
     VkMemoryRequirements*                       pMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements>::Dispatch(VulkanCaptureManager::Get(), device, image, pMemoryRequirements);
 
@@ -807,6 +852,7 @@ VKAPI_ATTR void VKAPI_CALL GetImageSparseMemoryRequirements(
     VkSparseImageMemoryRequirements*            pSparseMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequirements>::Dispatch(VulkanCaptureManager::Get(), device, image, pSparseMemoryRequirementCount, pSparseMemoryRequirements);
 
@@ -839,6 +885,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceSparseImageFormatProperties(
     VkSparseImageFormatProperties*              pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImageFormatProperties>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, format, type, samples, usage, tiling, pPropertyCount, pProperties);
 
@@ -870,6 +917,7 @@ VKAPI_ATTR VkResult VKAPI_CALL QueueBindSparse(
     VkFence                                     fence)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkQueueBindSparse>::Dispatch(VulkanCaptureManager::Get(), queue, bindInfoCount, pBindInfo, fence);
 
@@ -903,6 +951,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateFence(
     VkFence*                                    pFence)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -943,6 +992,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyFence(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyFence>::Dispatch(VulkanCaptureManager::Get(), device, fence, pAllocator);
 
@@ -971,6 +1021,7 @@ VKAPI_ATTR VkResult VKAPI_CALL ResetFences(
     const VkFence*                              pFences)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkResetFences>::Dispatch(VulkanCaptureManager::Get(), device, fenceCount, pFences);
 
@@ -1000,6 +1051,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetFenceStatus(
     VkFence                                     fence)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetFenceStatus>::Dispatch(VulkanCaptureManager::Get(), device, fence);
 
@@ -1030,6 +1082,7 @@ VKAPI_ATTR VkResult VKAPI_CALL WaitForFences(
     uint64_t                                    timeout)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkWaitForFences>::Dispatch(VulkanCaptureManager::Get(), device, fenceCount, pFences, waitAll, timeout);
 
@@ -1063,6 +1116,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSemaphore(
     VkSemaphore*                                pSemaphore)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -1103,6 +1157,7 @@ VKAPI_ATTR void VKAPI_CALL DestroySemaphore(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroySemaphore>::Dispatch(VulkanCaptureManager::Get(), device, semaphore, pAllocator);
 
@@ -1132,6 +1187,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateEvent(
     VkEvent*                                    pEvent)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -1172,6 +1228,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyEvent(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyEvent>::Dispatch(VulkanCaptureManager::Get(), device, event, pAllocator);
 
@@ -1199,6 +1256,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetEventStatus(
     VkEvent                                     event)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetEventStatus>::Dispatch(VulkanCaptureManager::Get(), device, event);
 
@@ -1226,6 +1284,7 @@ VKAPI_ATTR VkResult VKAPI_CALL SetEvent(
     VkEvent                                     event)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkSetEvent>::Dispatch(VulkanCaptureManager::Get(), device, event);
 
@@ -1253,6 +1312,7 @@ VKAPI_ATTR VkResult VKAPI_CALL ResetEvent(
     VkEvent                                     event)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkResetEvent>::Dispatch(VulkanCaptureManager::Get(), device, event);
 
@@ -1282,6 +1342,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateQueryPool(
     VkQueryPool*                                pQueryPool)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -1322,6 +1383,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyQueryPool(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyQueryPool>::Dispatch(VulkanCaptureManager::Get(), device, queryPool, pAllocator);
 
@@ -1355,6 +1417,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetQueryPoolResults(
     VkQueryResultFlags                          flags)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -1420,6 +1483,10 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateBuffer(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCreateBuffer>::Dispatch(VulkanCaptureManager::Get(), result, device, pCreateInfo, pAllocator, pBuffer);
 
+    // GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
+    // GFXRECON_WRITE_CONSOLE("  pCreateInfo->size: 0x%" PRIx64 "\n", pCreateInfo->size);
+    // GFXRECON_WRITE_CONSOLE("  *pBuffer: %p", *pBuffer);
+
     return result;
 }
 
@@ -1429,6 +1496,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyBuffer(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyBuffer>::Dispatch(VulkanCaptureManager::Get(), device, buffer, pAllocator);
 
@@ -1458,6 +1526,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateBufferView(
     VkBufferView*                               pView)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -1500,6 +1569,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyBufferView(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyBufferView>::Dispatch(VulkanCaptureManager::Get(), device, bufferView, pAllocator);
 
@@ -1562,6 +1632,9 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateImage(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCreateImage>::Dispatch(VulkanCaptureManager::Get(), result, device, pCreateInfo, pAllocator, pImage);
 
+    // GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
+    // GFXRECON_WRITE_CONSOLE("  *pImage: %p", *pImage);
+
     return result;
 }
 
@@ -1571,6 +1644,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyImage(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyImage>::Dispatch(VulkanCaptureManager::Get(), device, image, pAllocator);
 
@@ -1600,6 +1674,7 @@ VKAPI_ATTR void VKAPI_CALL GetImageSubresourceLayout(
     VkSubresourceLayout*                        pLayout)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetImageSubresourceLayout>::Dispatch(VulkanCaptureManager::Get(), device, image, pSubresource, pLayout);
 
@@ -1628,6 +1703,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateImageView(
     VkImageView*                                pView)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -1670,6 +1746,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyImageView(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyImageView>::Dispatch(VulkanCaptureManager::Get(), device, imageView, pAllocator);
 
@@ -1699,6 +1776,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateShaderModule(
     VkShaderModule*                             pShaderModule)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -1741,6 +1819,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyShaderModule(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyShaderModule>::Dispatch(VulkanCaptureManager::Get(), device, shaderModule, pAllocator);
 
@@ -1770,6 +1849,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreatePipelineCache(
     VkPipelineCache*                            pPipelineCache)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -1810,6 +1890,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyPipelineCache(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyPipelineCache>::Dispatch(VulkanCaptureManager::Get(), device, pipelineCache, pAllocator);
 
@@ -1839,6 +1920,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPipelineCacheData(
     void*                                       pData)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -1876,6 +1958,7 @@ VKAPI_ATTR VkResult VKAPI_CALL MergePipelineCaches(
     const VkPipelineCache*                      pSrcCaches)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkMergePipelineCaches>::Dispatch(VulkanCaptureManager::Get(), device, dstCache, srcCacheCount, pSrcCaches);
 
@@ -1911,6 +1994,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateGraphicsPipelines(
     VkPipeline*                                 pPipelines)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -1959,6 +2043,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateComputePipelines(
     VkPipeline*                                 pPipelines)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -2004,6 +2089,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyPipeline(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyPipeline>::Dispatch(VulkanCaptureManager::Get(), device, pipeline, pAllocator);
 
@@ -2033,6 +2119,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreatePipelineLayout(
     VkPipelineLayout*                           pPipelineLayout)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -2075,6 +2162,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyPipelineLayout(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyPipelineLayout>::Dispatch(VulkanCaptureManager::Get(), device, pipelineLayout, pAllocator);
 
@@ -2104,6 +2192,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSampler(
     VkSampler*                                  pSampler)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -2146,6 +2235,7 @@ VKAPI_ATTR void VKAPI_CALL DestroySampler(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroySampler>::Dispatch(VulkanCaptureManager::Get(), device, sampler, pAllocator);
 
@@ -2175,6 +2265,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDescriptorSetLayout(
     VkDescriptorSetLayout*                      pSetLayout)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -2217,6 +2308,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDescriptorSetLayout(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorSetLayout>::Dispatch(VulkanCaptureManager::Get(), device, descriptorSetLayout, pAllocator);
 
@@ -2246,6 +2338,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDescriptorPool(
     VkDescriptorPool*                           pDescriptorPool)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -2286,6 +2379,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDescriptorPool(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorPool>::Dispatch(VulkanCaptureManager::Get(), device, descriptorPool, pAllocator);
 
@@ -2314,6 +2408,7 @@ VKAPI_ATTR VkResult VKAPI_CALL ResetDescriptorPool(
     VkDescriptorPoolResetFlags                  flags)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkResetDescriptorPool>::Dispatch(VulkanCaptureManager::Get(), device, descriptorPool, flags);
 
@@ -2343,6 +2438,7 @@ VKAPI_ATTR VkResult VKAPI_CALL AllocateDescriptorSets(
     VkDescriptorSet*                            pDescriptorSets)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -2385,6 +2481,7 @@ VKAPI_ATTR VkResult VKAPI_CALL FreeDescriptorSets(
     const VkDescriptorSet*                      pDescriptorSets)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkFreeDescriptorSets>::Dispatch(VulkanCaptureManager::Get(), device, descriptorPool, descriptorSetCount, pDescriptorSets);
 
@@ -2421,6 +2518,7 @@ VKAPI_ATTR void VKAPI_CALL UpdateDescriptorSets(
     const VkCopyDescriptorSet*                  pDescriptorCopies)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkUpdateDescriptorSets>::Dispatch(VulkanCaptureManager::Get(), device, descriptorWriteCount, pDescriptorWrites, descriptorCopyCount, pDescriptorCopies);
 
@@ -2452,6 +2550,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateFramebuffer(
     VkFramebuffer*                              pFramebuffer)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -2494,6 +2593,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyFramebuffer(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyFramebuffer>::Dispatch(VulkanCaptureManager::Get(), device, framebuffer, pAllocator);
 
@@ -2523,6 +2623,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateRenderPass(
     VkRenderPass*                               pRenderPass)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -2563,6 +2664,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyRenderPass(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyRenderPass>::Dispatch(VulkanCaptureManager::Get(), device, renderPass, pAllocator);
 
@@ -2591,6 +2693,7 @@ VKAPI_ATTR void VKAPI_CALL GetRenderAreaGranularity(
     VkExtent2D*                                 pGranularity)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetRenderAreaGranularity>::Dispatch(VulkanCaptureManager::Get(), device, renderPass, pGranularity);
 
@@ -2618,6 +2721,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateCommandPool(
     VkCommandPool*                              pCommandPool)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -2658,6 +2762,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyCommandPool(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyCommandPool>::Dispatch(VulkanCaptureManager::Get(), device, commandPool, pAllocator);
 
@@ -2686,6 +2791,7 @@ VKAPI_ATTR VkResult VKAPI_CALL ResetCommandPool(
     VkCommandPoolResetFlags                     flags)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkResetCommandPool>::Dispatch(VulkanCaptureManager::Get(), device, commandPool, flags);
 
@@ -2715,6 +2821,7 @@ VKAPI_ATTR VkResult VKAPI_CALL AllocateCommandBuffers(
     VkCommandBuffer*                            pCommandBuffers)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -2757,6 +2864,7 @@ VKAPI_ATTR void VKAPI_CALL FreeCommandBuffers(
     const VkCommandBuffer*                      pCommandBuffers)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkFreeCommandBuffers>::Dispatch(VulkanCaptureManager::Get(), device, commandPool, commandBufferCount, pCommandBuffers);
 
@@ -2787,6 +2895,7 @@ VKAPI_ATTR VkResult VKAPI_CALL BeginCommandBuffer(
     const VkCommandBufferBeginInfo*             pBeginInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkBeginCommandBuffer>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pBeginInfo);
 
@@ -2814,6 +2923,7 @@ VKAPI_ATTR VkResult VKAPI_CALL EndCommandBuffer(
     VkCommandBuffer                             commandBuffer)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkEndCommandBuffer>::Dispatch(VulkanCaptureManager::Get(), commandBuffer);
 
@@ -2839,6 +2949,7 @@ VKAPI_ATTR VkResult VKAPI_CALL ResetCommandBuffer(
     VkCommandBufferResetFlags                   flags)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkResetCommandBuffer>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, flags);
 
@@ -2866,6 +2977,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBindPipeline(
     VkPipeline                                  pipeline)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindPipeline>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pipelineBindPoint, pipeline);
 
@@ -2893,6 +3005,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetViewport(
     const VkViewport*                           pViewports)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetViewport>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, firstViewport, viewportCount, pViewports);
 
@@ -2920,6 +3033,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetScissor(
     const VkRect2D*                             pScissors)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetScissor>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, firstScissor, scissorCount, pScissors);
 
@@ -2945,6 +3059,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetLineWidth(
     float                                       lineWidth)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetLineWidth>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, lineWidth);
 
@@ -2970,6 +3085,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDepthBias(
     float                                       depthBiasSlopeFactor)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBias>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor);
 
@@ -2995,6 +3111,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetBlendConstants(
     const float                                 blendConstants[4])
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetBlendConstants>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, blendConstants);
 
@@ -3019,6 +3136,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDepthBounds(
     float                                       maxDepthBounds)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBounds>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, minDepthBounds, maxDepthBounds);
 
@@ -3044,6 +3162,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetStencilCompareMask(
     uint32_t                                    compareMask)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilCompareMask>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, faceMask, compareMask);
 
@@ -3069,6 +3188,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetStencilWriteMask(
     uint32_t                                    writeMask)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilWriteMask>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, faceMask, writeMask);
 
@@ -3094,6 +3214,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetStencilReference(
     uint32_t                                    reference)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilReference>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, faceMask, reference);
 
@@ -3124,6 +3245,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBindDescriptorSets(
     const uint32_t*                             pDynamicOffsets)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindDescriptorSets>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pipelineBindPoint, layout, firstSet, descriptorSetCount, pDescriptorSets, dynamicOffsetCount, pDynamicOffsets);
 
@@ -3158,6 +3280,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBindIndexBuffer(
     VkIndexType                                 indexType)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindIndexBuffer>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, buffer, offset, indexType);
 
@@ -3187,6 +3310,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBindVertexBuffers(
     const VkDeviceSize*                         pOffsets)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, firstBinding, bindingCount, pBuffers, pOffsets);
 
@@ -3218,6 +3342,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDraw(
     uint32_t                                    firstInstance)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDraw>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
 
@@ -3248,6 +3373,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawIndexed(
     uint32_t                                    firstInstance)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexed>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 
@@ -3278,6 +3404,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawIndirect(
     uint32_t                                    stride)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirect>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, buffer, offset, drawCount, stride);
 
@@ -3308,6 +3435,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawIndexedIndirect(
     uint32_t                                    stride)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirect>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, buffer, offset, drawCount, stride);
 
@@ -3337,6 +3465,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDispatch(
     uint32_t                                    groupCountZ)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDispatch>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, groupCountX, groupCountY, groupCountZ);
 
@@ -3363,6 +3492,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDispatchIndirect(
     VkDeviceSize                                offset)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDispatchIndirect>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, buffer, offset);
 
@@ -3391,6 +3521,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyBuffer(
     const VkBufferCopy*                         pRegions)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, srcBuffer, dstBuffer, regionCount, pRegions);
 
@@ -3424,6 +3555,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyImage(
     const VkImageCopy*                          pRegions)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions);
 
@@ -3460,6 +3592,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBlitImage(
     VkFilter                                    filter)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions, filter);
 
@@ -3495,6 +3628,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyBufferToImage(
     const VkBufferImageCopy*                    pRegions)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, srcBuffer, dstImage, dstImageLayout, regionCount, pRegions);
 
@@ -3528,6 +3662,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyImageToBuffer(
     const VkBufferImageCopy*                    pRegions)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, srcImage, srcImageLayout, dstBuffer, regionCount, pRegions);
 
@@ -3560,6 +3695,7 @@ VKAPI_ATTR void VKAPI_CALL CmdUpdateBuffer(
     const void*                                 pData)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdUpdateBuffer>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, dstBuffer, dstOffset, dataSize, pData);
 
@@ -3590,6 +3726,7 @@ VKAPI_ATTR void VKAPI_CALL CmdFillBuffer(
     uint32_t                                    data)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdFillBuffer>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, dstBuffer, dstOffset, size, data);
 
@@ -3621,6 +3758,7 @@ VKAPI_ATTR void VKAPI_CALL CmdClearColorImage(
     const VkImageSubresourceRange*              pRanges)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdClearColorImage>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, image, imageLayout, pColor, rangeCount, pRanges);
 
@@ -3653,6 +3791,7 @@ VKAPI_ATTR void VKAPI_CALL CmdClearDepthStencilImage(
     const VkImageSubresourceRange*              pRanges)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdClearDepthStencilImage>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, image, imageLayout, pDepthStencil, rangeCount, pRanges);
 
@@ -3684,6 +3823,7 @@ VKAPI_ATTR void VKAPI_CALL CmdClearAttachments(
     const VkClearRect*                          pRects)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdClearAttachments>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, attachmentCount, pAttachments, rectCount, pRects);
 
@@ -3715,6 +3855,7 @@ VKAPI_ATTR void VKAPI_CALL CmdResolveImage(
     const VkImageResolve*                       pRegions)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions);
 
@@ -3746,6 +3887,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetEvent(
     VkPipelineStageFlags                        stageMask)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, event, stageMask);
 
@@ -3772,6 +3914,7 @@ VKAPI_ATTR void VKAPI_CALL CmdResetEvent(
     VkPipelineStageFlags                        stageMask)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, event, stageMask);
 
@@ -3806,6 +3949,7 @@ VKAPI_ATTR void VKAPI_CALL CmdWaitEvents(
     const VkImageMemoryBarrier*                 pImageMemoryBarriers)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, eventCount, pEvents, srcStageMask, dstStageMask, memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers);
 
@@ -3850,6 +3994,7 @@ VKAPI_ATTR void VKAPI_CALL CmdPipelineBarrier(
     const VkImageMemoryBarrier*                 pImageMemoryBarriers)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, srcStageMask, dstStageMask, dependencyFlags, memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers);
 
@@ -3886,6 +4031,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBeginQuery(
     VkQueryControlFlags                         flags)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginQuery>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, queryPool, query, flags);
 
@@ -3913,6 +4059,7 @@ VKAPI_ATTR void VKAPI_CALL CmdEndQuery(
     uint32_t                                    query)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndQuery>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, queryPool, query);
 
@@ -3940,6 +4087,7 @@ VKAPI_ATTR void VKAPI_CALL CmdResetQueryPool(
     uint32_t                                    queryCount)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdResetQueryPool>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, queryPool, firstQuery, queryCount);
 
@@ -3968,6 +4116,7 @@ VKAPI_ATTR void VKAPI_CALL CmdWriteTimestamp(
     uint32_t                                    query)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pipelineStage, queryPool, query);
 
@@ -4000,6 +4149,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyQueryPoolResults(
     VkQueryResultFlags                          flags)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyQueryPoolResults>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, queryPool, firstQuery, queryCount, dstBuffer, dstOffset, stride, flags);
 
@@ -4035,6 +4185,7 @@ VKAPI_ATTR void VKAPI_CALL CmdPushConstants(
     const void*                                 pValues)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdPushConstants>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, layout, stageFlags, offset, size, pValues);
 
@@ -4064,6 +4215,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBeginRenderPass(
     VkSubpassContents                           contents)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pRenderPassBegin, contents);
 
@@ -4090,6 +4242,7 @@ VKAPI_ATTR void VKAPI_CALL CmdNextSubpass(
     VkSubpassContents                           contents)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, contents);
 
@@ -4112,6 +4265,7 @@ VKAPI_ATTR void VKAPI_CALL CmdEndRenderPass(
     VkCommandBuffer                             commandBuffer)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass>::Dispatch(VulkanCaptureManager::Get(), commandBuffer);
 
@@ -4135,6 +4289,7 @@ VKAPI_ATTR void VKAPI_CALL CmdExecuteCommands(
     const VkCommandBuffer*                      pCommandBuffers)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdExecuteCommands>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, commandBufferCount, pCommandBuffers);
 
@@ -4162,6 +4317,15 @@ VKAPI_ATTR VkResult VKAPI_CALL BindBufferMemory2(
     const VkBindBufferMemoryInfo*               pBindInfos)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+    // GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
+
+    // for (uint32_t i = 0; i < bindInfoCount; ++i) {
+    //     GFXRECON_WRITE_CONSOLE("  pBindInfos[%u].buffer: %p\n", i, pBindInfos[i].buffer);
+    //     GFXRECON_WRITE_CONSOLE("  pBindInfos[%u].memory: %p\n", i, pBindInfos[i].memory);
+    //     GFXRECON_WRITE_CONSOLE("  pBindInfos[%u].memoryOffset: 0x%" PRIx64"\n", i, pBindInfos[i].memoryOffset);
+
+    //     assert(!(pBindInfos[i].memoryOffset % 0x1000));
+    // }
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory2>::Dispatch(VulkanCaptureManager::Get(), device, bindInfoCount, pBindInfos);
 
@@ -4192,6 +4356,16 @@ VKAPI_ATTR VkResult VKAPI_CALL BindImageMemory2(
     const VkBindImageMemoryInfo*                pBindInfos)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
+
+    // for(uint32_t i = 0; i < bindInfoCount && pBindInfos; ++i)
+    // {
+    //     GFXRECON_WRITE_CONSOLE("  pBindInfos[%u].image: %p", i, pBindInfos[i].image);
+    //     GFXRECON_WRITE_CONSOLE("  pBindInfos[%u].memory: %p", i, pBindInfos[i].memory);
+    //     GFXRECON_WRITE_CONSOLE("  pBindInfos[%u].memoryOffset: 0x%" PRIx64"", i, pBindInfos[i].memoryOffset);
+
+    //     assert(!(pBindInfos[i].memoryOffset % 0x1000));
+    // }
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkBindImageMemory2>::Dispatch(VulkanCaptureManager::Get(), device, bindInfoCount, pBindInfos);
 
@@ -4224,6 +4398,7 @@ VKAPI_ATTR void VKAPI_CALL GetDeviceGroupPeerMemoryFeatures(
     VkPeerMemoryFeatureFlags*                   pPeerMemoryFeatures)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPeerMemoryFeatures>::Dispatch(VulkanCaptureManager::Get(), device, heapIndex, localDeviceIndex, remoteDeviceIndex, pPeerMemoryFeatures);
 
@@ -4250,6 +4425,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDeviceMask(
     uint32_t                                    deviceMask)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDeviceMask>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, deviceMask);
 
@@ -4278,6 +4454,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDispatchBase(
     uint32_t                                    groupCountZ)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDispatchBase>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, baseGroupX, baseGroupY, baseGroupZ, groupCountX, groupCountY, groupCountZ);
 
@@ -4307,6 +4484,7 @@ VKAPI_ATTR VkResult VKAPI_CALL EnumeratePhysicalDeviceGroups(
     VkPhysicalDeviceGroupProperties*            pPhysicalDeviceGroupProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -4346,6 +4524,7 @@ VKAPI_ATTR void VKAPI_CALL GetImageMemoryRequirements2(
     VkMemoryRequirements2*                      pMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements2>::Dispatch(VulkanCaptureManager::Get(), device, pInfo, pMemoryRequirements);
 
@@ -4373,6 +4552,7 @@ VKAPI_ATTR void VKAPI_CALL GetBufferMemoryRequirements2(
     VkMemoryRequirements2*                      pMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements2>::Dispatch(VulkanCaptureManager::Get(), device, pInfo, pMemoryRequirements);
 
@@ -4401,6 +4581,7 @@ VKAPI_ATTR void VKAPI_CALL GetImageSparseMemoryRequirements2(
     VkSparseImageMemoryRequirements2*           pSparseMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequirements2>::Dispatch(VulkanCaptureManager::Get(), device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements);
 
@@ -4428,6 +4609,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceFeatures2(
     VkPhysicalDeviceFeatures2*                  pFeatures)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures2>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pFeatures);
 
@@ -4451,6 +4633,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceProperties2(
     VkPhysicalDeviceProperties2*                pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties2>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pProperties);
 
@@ -4475,6 +4658,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceFormatProperties2(
     VkFormatProperties2*                        pFormatProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatProperties2>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, format, pFormatProperties);
 
@@ -4500,6 +4684,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceImageFormatProperties2(
     VkImageFormatProperties2*                   pImageFormatProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -4534,6 +4719,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceQueueFamilyProperties2(
     VkQueueFamilyProperties2*                   pQueueFamilyProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamilyProperties2>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pQueueFamilyPropertyCount, pQueueFamilyProperties);
 
@@ -4558,6 +4744,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceMemoryProperties2(
     VkPhysicalDeviceMemoryProperties2*          pMemoryProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryProperties2>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pMemoryProperties);
 
@@ -4583,6 +4770,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceSparseImageFormatProperties2(
     VkSparseImageFormatProperties2*             pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImageFormatProperties2>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pFormatInfo, pPropertyCount, pProperties);
 
@@ -4609,6 +4797,7 @@ VKAPI_ATTR void VKAPI_CALL TrimCommandPool(
     VkCommandPoolTrimFlags                      flags)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkTrimCommandPool>::Dispatch(VulkanCaptureManager::Get(), device, commandPool, flags);
 
@@ -4635,6 +4824,7 @@ VKAPI_ATTR void VKAPI_CALL GetDeviceQueue2(
     VkQueue*                                    pQueue)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceQueue2>::Dispatch(VulkanCaptureManager::Get(), device, pQueueInfo, pQueue);
 
@@ -4663,6 +4853,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSamplerYcbcrConversion(
     VkSamplerYcbcrConversion*                   pYcbcrConversion)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -4703,6 +4894,7 @@ VKAPI_ATTR void VKAPI_CALL DestroySamplerYcbcrConversion(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroySamplerYcbcrConversion>::Dispatch(VulkanCaptureManager::Get(), device, ycbcrConversion, pAllocator);
 
@@ -4732,6 +4924,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDescriptorUpdateTemplate(
     VkDescriptorUpdateTemplate*                 pDescriptorUpdateTemplate)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -4774,6 +4967,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDescriptorUpdateTemplate(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorUpdateTemplate>::Dispatch(VulkanCaptureManager::Get(), device, descriptorUpdateTemplate, pAllocator);
 
@@ -4802,6 +4996,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceExternalBufferProperties(
     VkExternalBufferProperties*                 pExternalBufferProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalBufferProperties>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pExternalBufferInfo, pExternalBufferProperties);
 
@@ -4827,6 +5022,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceExternalFenceProperties(
     VkExternalFenceProperties*                  pExternalFenceProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalFenceProperties>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pExternalFenceInfo, pExternalFenceProperties);
 
@@ -4852,6 +5048,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceExternalSemaphoreProperties(
     VkExternalSemaphoreProperties*              pExternalSemaphoreProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalSemaphoreProperties>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pExternalSemaphoreInfo, pExternalSemaphoreProperties);
 
@@ -4877,6 +5074,7 @@ VKAPI_ATTR void VKAPI_CALL GetDescriptorSetLayoutSupport(
     VkDescriptorSetLayoutSupport*               pSupport)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutSupport>::Dispatch(VulkanCaptureManager::Get(), device, pCreateInfo, pSupport);
 
@@ -4908,6 +5106,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawIndirectCount(
     uint32_t                                    stride)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCount>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
 
@@ -4943,6 +5142,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawIndexedIndirectCount(
     uint32_t                                    stride)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCount>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
 
@@ -4975,6 +5175,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateRenderPass2(
     VkRenderPass*                               pRenderPass)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -5015,6 +5216,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBeginRenderPass2(
     const VkSubpassBeginInfo*                   pSubpassBeginInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pRenderPassBegin, pSubpassBeginInfo);
 
@@ -5042,6 +5244,7 @@ VKAPI_ATTR void VKAPI_CALL CmdNextSubpass2(
     const VkSubpassEndInfo*                     pSubpassEndInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pSubpassBeginInfo, pSubpassEndInfo);
 
@@ -5066,6 +5269,7 @@ VKAPI_ATTR void VKAPI_CALL CmdEndRenderPass2(
     const VkSubpassEndInfo*                     pSubpassEndInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pSubpassEndInfo);
 
@@ -5091,6 +5295,7 @@ VKAPI_ATTR void VKAPI_CALL ResetQueryPool(
     uint32_t                                    queryCount)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkResetQueryPool>::Dispatch(VulkanCaptureManager::Get(), device, queryPool, firstQuery, queryCount);
 
@@ -5118,6 +5323,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetSemaphoreCounterValue(
     uint64_t*                                   pValue)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -5153,6 +5359,7 @@ VKAPI_ATTR VkResult VKAPI_CALL WaitSemaphores(
     uint64_t                                    timeout)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkWaitSemaphores>::Dispatch(VulkanCaptureManager::Get(), device, pWaitInfo, timeout);
 
@@ -5182,6 +5389,7 @@ VKAPI_ATTR VkResult VKAPI_CALL SignalSemaphore(
     const VkSemaphoreSignalInfo*                pSignalInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkSignalSemaphore>::Dispatch(VulkanCaptureManager::Get(), device, pSignalInfo);
 
@@ -5210,6 +5418,7 @@ VKAPI_ATTR VkDeviceAddress VKAPI_CALL GetBufferDeviceAddress(
     const VkBufferDeviceAddressInfo*            pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddress>::Dispatch(VulkanCaptureManager::Get(), device, pInfo);
 
@@ -5238,6 +5447,7 @@ VKAPI_ATTR uint64_t VKAPI_CALL GetBufferOpaqueCaptureAddress(
     const VkBufferDeviceAddressInfo*            pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferOpaqueCaptureAddress>::Dispatch(VulkanCaptureManager::Get(), device, pInfo);
 
@@ -5266,6 +5476,7 @@ VKAPI_ATTR uint64_t VKAPI_CALL GetDeviceMemoryOpaqueCaptureAddress(
     const VkDeviceMemoryOpaqueCaptureAddressInfo* pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryOpaqueCaptureAddress>::Dispatch(VulkanCaptureManager::Get(), device, pInfo);
 
@@ -5295,6 +5506,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceToolProperties(
     VkPhysicalDeviceToolProperties*             pToolProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -5330,6 +5542,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreatePrivateDataSlot(
     VkPrivateDataSlot*                          pPrivateDataSlot)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -5370,6 +5583,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyPrivateDataSlot(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyPrivateDataSlot>::Dispatch(VulkanCaptureManager::Get(), device, privateDataSlot, pAllocator);
 
@@ -5400,6 +5614,7 @@ VKAPI_ATTR VkResult VKAPI_CALL SetPrivateData(
     uint64_t                                    data)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkSetPrivateData>::Dispatch(VulkanCaptureManager::Get(), device, objectType, objectHandle, privateDataSlot, data);
 
@@ -5433,6 +5648,7 @@ VKAPI_ATTR void VKAPI_CALL GetPrivateData(
     uint64_t*                                   pData)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPrivateData>::Dispatch(VulkanCaptureManager::Get(), device, objectType, objectHandle, privateDataSlot, pData);
 
@@ -5461,6 +5677,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetEvent2(
     const VkDependencyInfo*                     pDependencyInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, event, pDependencyInfo);
 
@@ -5489,6 +5706,7 @@ VKAPI_ATTR void VKAPI_CALL CmdResetEvent2(
     VkPipelineStageFlags2                       stageMask)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, event, stageMask);
 
@@ -5516,6 +5734,7 @@ VKAPI_ATTR void VKAPI_CALL CmdWaitEvents2(
     const VkDependencyInfo*                     pDependencyInfos)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, eventCount, pEvents, pDependencyInfos);
 
@@ -5544,6 +5763,7 @@ VKAPI_ATTR void VKAPI_CALL CmdPipelineBarrier2(
     const VkDependencyInfo*                     pDependencyInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pDependencyInfo);
 
@@ -5571,6 +5791,7 @@ VKAPI_ATTR void VKAPI_CALL CmdWriteTimestamp2(
     uint32_t                                    query)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, stage, queryPool, query);
 
@@ -5599,6 +5820,7 @@ VKAPI_ATTR VkResult VKAPI_CALL QueueSubmit2(
     VkFence                                     fence)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkQueueSubmit2>::Dispatch(VulkanCaptureManager::Get(), queue, submitCount, pSubmits, fence);
 
@@ -5630,6 +5852,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyBuffer2(
     const VkCopyBufferInfo2*                    pCopyBufferInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pCopyBufferInfo);
 
@@ -5655,6 +5878,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyImage2(
     const VkCopyImageInfo2*                     pCopyImageInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pCopyImageInfo);
 
@@ -5680,6 +5904,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyBufferToImage2(
     const VkCopyBufferToImageInfo2*             pCopyBufferToImageInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pCopyBufferToImageInfo);
 
@@ -5705,6 +5930,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyImageToBuffer2(
     const VkCopyImageToBufferInfo2*             pCopyImageToBufferInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pCopyImageToBufferInfo);
 
@@ -5730,6 +5956,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBlitImage2(
     const VkBlitImageInfo2*                     pBlitImageInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pBlitImageInfo);
 
@@ -5755,6 +5982,7 @@ VKAPI_ATTR void VKAPI_CALL CmdResolveImage2(
     const VkResolveImageInfo2*                  pResolveImageInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pResolveImageInfo);
 
@@ -5780,6 +6008,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBeginRendering(
     const VkRenderingInfo*                      pRenderingInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginRendering>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pRenderingInfo);
 
@@ -5804,6 +6033,7 @@ VKAPI_ATTR void VKAPI_CALL CmdEndRendering(
     VkCommandBuffer                             commandBuffer)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndRendering>::Dispatch(VulkanCaptureManager::Get(), commandBuffer);
 
@@ -5826,6 +6056,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetCullMode(
     VkCullModeFlags                             cullMode)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetCullMode>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, cullMode);
 
@@ -5849,6 +6080,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetFrontFace(
     VkFrontFace                                 frontFace)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetFrontFace>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, frontFace);
 
@@ -5872,6 +6104,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetPrimitiveTopology(
     VkPrimitiveTopology                         primitiveTopology)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveTopology>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, primitiveTopology);
 
@@ -5896,6 +6129,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetViewportWithCount(
     const VkViewport*                           pViewports)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWithCount>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, viewportCount, pViewports);
 
@@ -5921,6 +6155,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetScissorWithCount(
     const VkRect2D*                             pScissors)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetScissorWithCount>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, scissorCount, pScissors);
 
@@ -5950,6 +6185,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBindVertexBuffers2(
     const VkDeviceSize*                         pStrides)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers2>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, firstBinding, bindingCount, pBuffers, pOffsets, pSizes, pStrides);
 
@@ -5980,6 +6216,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDepthTestEnable(
     VkBool32                                    depthTestEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthTestEnable>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, depthTestEnable);
 
@@ -6003,6 +6240,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDepthWriteEnable(
     VkBool32                                    depthWriteEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthWriteEnable>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, depthWriteEnable);
 
@@ -6026,6 +6264,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDepthCompareOp(
     VkCompareOp                                 depthCompareOp)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthCompareOp>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, depthCompareOp);
 
@@ -6049,6 +6288,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDepthBoundsTestEnable(
     VkBool32                                    depthBoundsTestEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBoundsTestEnable>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, depthBoundsTestEnable);
 
@@ -6072,6 +6312,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetStencilTestEnable(
     VkBool32                                    stencilTestEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilTestEnable>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, stencilTestEnable);
 
@@ -6099,6 +6340,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetStencilOp(
     VkCompareOp                                 compareOp)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilOp>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, faceMask, failOp, passOp, depthFailOp, compareOp);
 
@@ -6126,6 +6368,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetRasterizerDiscardEnable(
     VkBool32                                    rasterizerDiscardEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizerDiscardEnable>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, rasterizerDiscardEnable);
 
@@ -6149,6 +6392,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDepthBiasEnable(
     VkBool32                                    depthBiasEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBiasEnable>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, depthBiasEnable);
 
@@ -6172,6 +6416,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetPrimitiveRestartEnable(
     VkBool32                                    primitiveRestartEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveRestartEnable>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, primitiveRestartEnable);
 
@@ -6196,6 +6441,7 @@ VKAPI_ATTR void VKAPI_CALL GetDeviceBufferMemoryRequirements(
     VkMemoryRequirements2*                      pMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceBufferMemoryRequirements>::Dispatch(VulkanCaptureManager::Get(), device, pInfo, pMemoryRequirements);
 
@@ -6223,6 +6469,7 @@ VKAPI_ATTR void VKAPI_CALL GetDeviceImageMemoryRequirements(
     VkMemoryRequirements2*                      pMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageMemoryRequirements>::Dispatch(VulkanCaptureManager::Get(), device, pInfo, pMemoryRequirements);
 
@@ -6251,6 +6498,7 @@ VKAPI_ATTR void VKAPI_CALL GetDeviceImageSparseMemoryRequirements(
     VkSparseImageMemoryRequirements2*           pSparseMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageSparseMemoryRequirements>::Dispatch(VulkanCaptureManager::Get(), device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements);
 
@@ -6279,6 +6527,7 @@ VKAPI_ATTR void VKAPI_CALL DestroySurfaceKHR(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroySurfaceKHR>::Dispatch(VulkanCaptureManager::Get(), instance, surface, pAllocator);
 
@@ -6308,6 +6557,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfaceSupportKHR(
     VkBool32*                                   pSupported)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6344,6 +6594,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfaceCapabilitiesKHR(
     VkSurfaceCapabilitiesKHR*                   pSurfaceCapabilities)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6380,6 +6631,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfaceFormatsKHR(
     VkSurfaceFormatKHR*                         pSurfaceFormats)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6417,6 +6669,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfacePresentModesKHR(
     VkPresentModeKHR*                           pPresentModes)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6454,6 +6707,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSwapchainKHR(
     VkSwapchainKHR*                             pSwapchain)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6496,6 +6750,7 @@ VKAPI_ATTR void VKAPI_CALL DestroySwapchainKHR(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroySwapchainKHR>::Dispatch(VulkanCaptureManager::Get(), device, swapchain, pAllocator);
 
@@ -6525,6 +6780,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetSwapchainImagesKHR(
     VkImage*                                    pSwapchainImages)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6569,6 +6825,7 @@ VKAPI_ATTR VkResult VKAPI_CALL AcquireNextImageKHR(
     uint32_t*                                   pImageIndex)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6636,6 +6893,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetDeviceGroupPresentCapabilitiesKHR(
     VkDeviceGroupPresentCapabilitiesKHR*        pDeviceGroupPresentCapabilities)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6669,6 +6927,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetDeviceGroupSurfacePresentModesKHR(
     VkDeviceGroupPresentModeFlagsKHR*           pModes)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6705,6 +6964,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDevicePresentRectanglesKHR(
     VkRect2D*                                   pRects)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6741,6 +7001,7 @@ VKAPI_ATTR VkResult VKAPI_CALL AcquireNextImage2KHR(
     uint32_t*                                   pImageIndex)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6777,6 +7038,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceDisplayPropertiesKHR(
     VkDisplayPropertiesKHR*                     pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6816,6 +7078,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceDisplayPlanePropertiesKHR(
     VkDisplayPlanePropertiesKHR*                pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6856,6 +7119,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetDisplayPlaneSupportedDisplaysKHR(
     VkDisplayKHR*                               pDisplays)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6897,6 +7161,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetDisplayModePropertiesKHR(
     VkDisplayModePropertiesKHR*                 pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6940,6 +7205,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDisplayModeKHR(
     VkDisplayModeKHR*                           pMode)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -6983,6 +7249,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetDisplayPlaneCapabilitiesKHR(
     VkDisplayPlaneCapabilitiesKHR*              pCapabilities)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -7020,6 +7287,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDisplayPlaneSurfaceKHR(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -7064,6 +7332,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSharedSwapchainsKHR(
     VkSwapchainKHR*                             pSwapchains)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -7108,6 +7377,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateXlibSurfaceKHR(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -7149,6 +7419,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL GetPhysicalDeviceXlibPresentationSupportKHR(
     VisualID                                    visualID)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceXlibPresentationSupportKHR>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, queueFamilyIndex, dpy, visualID);
 
@@ -7179,6 +7450,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateXcbSurfaceKHR(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -7220,6 +7492,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL GetPhysicalDeviceXcbPresentationSupportKHR(
     xcb_visualid_t                              visual_id)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceXcbPresentationSupportKHR>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, queueFamilyIndex, connection, visual_id);
 
@@ -7250,6 +7523,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateWaylandSurfaceKHR(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -7290,6 +7564,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL GetPhysicalDeviceWaylandPresentationSupportKHR(
     struct wl_display*                          display)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceWaylandPresentationSupportKHR>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, queueFamilyIndex, display);
 
@@ -7319,6 +7594,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateAndroidSurfaceKHR(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -7360,6 +7636,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateWin32SurfaceKHR(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -7399,6 +7676,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL GetPhysicalDeviceWin32PresentationSupportKHR(
     uint32_t                                    queueFamilyIndex)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceWin32PresentationSupportKHR>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, queueFamilyIndex);
 
@@ -7425,6 +7703,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBeginRenderingKHR(
     const VkRenderingInfo*                      pRenderingInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderingKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pRenderingInfo);
 
@@ -7449,6 +7728,7 @@ VKAPI_ATTR void VKAPI_CALL CmdEndRenderingKHR(
     VkCommandBuffer                             commandBuffer)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderingKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer);
 
@@ -7471,6 +7751,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceFeatures2KHR(
     VkPhysicalDeviceFeatures2*                  pFeatures)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures2KHR>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pFeatures);
 
@@ -7494,6 +7775,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceProperties2KHR(
     VkPhysicalDeviceProperties2*                pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties2KHR>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pProperties);
 
@@ -7518,6 +7800,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceFormatProperties2KHR(
     VkFormatProperties2*                        pFormatProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatProperties2KHR>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, format, pFormatProperties);
 
@@ -7543,6 +7826,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceImageFormatProperties2KHR(
     VkImageFormatProperties2*                   pImageFormatProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -7577,6 +7861,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceQueueFamilyProperties2KHR(
     VkQueueFamilyProperties2*                   pQueueFamilyProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamilyProperties2KHR>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pQueueFamilyPropertyCount, pQueueFamilyProperties);
 
@@ -7601,6 +7886,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceMemoryProperties2KHR(
     VkPhysicalDeviceMemoryProperties2*          pMemoryProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryProperties2KHR>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pMemoryProperties);
 
@@ -7626,6 +7912,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceSparseImageFormatProperties2KHR(
     VkSparseImageFormatProperties2*             pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImageFormatProperties2KHR>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pFormatInfo, pPropertyCount, pProperties);
 
@@ -7654,6 +7941,7 @@ VKAPI_ATTR void VKAPI_CALL GetDeviceGroupPeerMemoryFeaturesKHR(
     VkPeerMemoryFeatureFlags*                   pPeerMemoryFeatures)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPeerMemoryFeaturesKHR>::Dispatch(VulkanCaptureManager::Get(), device, heapIndex, localDeviceIndex, remoteDeviceIndex, pPeerMemoryFeatures);
 
@@ -7680,6 +7968,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDeviceMaskKHR(
     uint32_t                                    deviceMask)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDeviceMaskKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, deviceMask);
 
@@ -7708,6 +7997,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDispatchBaseKHR(
     uint32_t                                    groupCountZ)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDispatchBaseKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, baseGroupX, baseGroupY, baseGroupZ, groupCountX, groupCountY, groupCountZ);
 
@@ -7737,6 +8027,7 @@ VKAPI_ATTR void VKAPI_CALL TrimCommandPoolKHR(
     VkCommandPoolTrimFlags                      flags)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkTrimCommandPoolKHR>::Dispatch(VulkanCaptureManager::Get(), device, commandPool, flags);
 
@@ -7763,6 +8054,7 @@ VKAPI_ATTR VkResult VKAPI_CALL EnumeratePhysicalDeviceGroupsKHR(
     VkPhysicalDeviceGroupProperties*            pPhysicalDeviceGroupProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -7802,6 +8094,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceExternalBufferPropertiesKHR(
     VkExternalBufferProperties*                 pExternalBufferProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalBufferPropertiesKHR>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pExternalBufferInfo, pExternalBufferProperties);
 
@@ -7827,6 +8120,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetMemoryWin32HandleKHR(
     HANDLE*                                     pHandle)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -7864,6 +8158,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetMemoryWin32HandlePropertiesKHR(
     VkMemoryWin32HandlePropertiesKHR*           pMemoryWin32HandleProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -7899,6 +8194,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetMemoryFdKHR(
     int*                                        pFd)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -7936,6 +8232,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetMemoryFdPropertiesKHR(
     VkMemoryFdPropertiesKHR*                    pMemoryFdProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -7971,6 +8268,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceExternalSemaphorePropertiesKHR(
     VkExternalSemaphoreProperties*              pExternalSemaphoreProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalSemaphorePropertiesKHR>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pExternalSemaphoreInfo, pExternalSemaphoreProperties);
 
@@ -7995,6 +8293,7 @@ VKAPI_ATTR VkResult VKAPI_CALL ImportSemaphoreWin32HandleKHR(
     const VkImportSemaphoreWin32HandleInfoKHR*  pImportSemaphoreWin32HandleInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreWin32HandleKHR>::Dispatch(VulkanCaptureManager::Get(), device, pImportSemaphoreWin32HandleInfo);
 
@@ -8024,6 +8323,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetSemaphoreWin32HandleKHR(
     HANDLE*                                     pHandle)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -8059,6 +8359,7 @@ VKAPI_ATTR VkResult VKAPI_CALL ImportSemaphoreFdKHR(
     const VkImportSemaphoreFdInfoKHR*           pImportSemaphoreFdInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreFdKHR>::Dispatch(VulkanCaptureManager::Get(), device, pImportSemaphoreFdInfo);
 
@@ -8088,6 +8389,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetSemaphoreFdKHR(
     int*                                        pFd)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -8127,6 +8429,7 @@ VKAPI_ATTR void VKAPI_CALL CmdPushDescriptorSetKHR(
     const VkWriteDescriptorSet*                 pDescriptorWrites)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdPushDescriptorSetKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pipelineBindPoint, layout, set, descriptorWriteCount, pDescriptorWrites);
 
@@ -8159,6 +8462,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDescriptorUpdateTemplateKHR(
     VkDescriptorUpdateTemplate*                 pDescriptorUpdateTemplate)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -8201,6 +8505,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDescriptorUpdateTemplateKHR(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorUpdateTemplateKHR>::Dispatch(VulkanCaptureManager::Get(), device, descriptorUpdateTemplate, pAllocator);
 
@@ -8230,6 +8535,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateRenderPass2KHR(
     VkRenderPass*                               pRenderPass)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -8270,6 +8576,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBeginRenderPass2KHR(
     const VkSubpassBeginInfo*                   pSubpassBeginInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pRenderPassBegin, pSubpassBeginInfo);
 
@@ -8297,6 +8604,7 @@ VKAPI_ATTR void VKAPI_CALL CmdNextSubpass2KHR(
     const VkSubpassEndInfo*                     pSubpassEndInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pSubpassBeginInfo, pSubpassEndInfo);
 
@@ -8321,6 +8629,7 @@ VKAPI_ATTR void VKAPI_CALL CmdEndRenderPass2KHR(
     const VkSubpassEndInfo*                     pSubpassEndInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pSubpassEndInfo);
 
@@ -8344,6 +8653,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetSwapchainStatusKHR(
     VkSwapchainKHR                              swapchain)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetSwapchainStatusKHR>::Dispatch(VulkanCaptureManager::Get(), device, swapchain);
 
@@ -8372,6 +8682,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceExternalFencePropertiesKHR(
     VkExternalFenceProperties*                  pExternalFenceProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalFencePropertiesKHR>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pExternalFenceInfo, pExternalFenceProperties);
 
@@ -8396,6 +8707,7 @@ VKAPI_ATTR VkResult VKAPI_CALL ImportFenceWin32HandleKHR(
     const VkImportFenceWin32HandleInfoKHR*      pImportFenceWin32HandleInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkImportFenceWin32HandleKHR>::Dispatch(VulkanCaptureManager::Get(), device, pImportFenceWin32HandleInfo);
 
@@ -8425,6 +8737,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetFenceWin32HandleKHR(
     HANDLE*                                     pHandle)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -8460,6 +8773,7 @@ VKAPI_ATTR VkResult VKAPI_CALL ImportFenceFdKHR(
     const VkImportFenceFdInfoKHR*               pImportFenceFdInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkImportFenceFdKHR>::Dispatch(VulkanCaptureManager::Get(), device, pImportFenceFdInfo);
 
@@ -8489,6 +8803,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetFenceFdKHR(
     int*                                        pFd)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -8527,6 +8842,7 @@ VKAPI_ATTR VkResult VKAPI_CALL EnumeratePhysicalDeviceQueueFamilyPerformanceQuer
     VkPerformanceCounterDescriptionKHR*         pCounterDescriptions)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -8563,6 +8879,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR
     uint32_t*                                   pNumPasses)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, pPerformanceQueryCreateInfo, pNumPasses);
 
@@ -8587,6 +8904,7 @@ VKAPI_ATTR VkResult VKAPI_CALL AcquireProfilingLockKHR(
     const VkAcquireProfilingLockInfoKHR*        pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkAcquireProfilingLockKHR>::Dispatch(VulkanCaptureManager::Get(), device, pInfo);
 
@@ -8612,6 +8930,7 @@ VKAPI_ATTR void VKAPI_CALL ReleaseProfilingLockKHR(
     VkDevice                                    device)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkReleaseProfilingLockKHR>::Dispatch(VulkanCaptureManager::Get(), device);
 
@@ -8635,6 +8954,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfaceCapabilities2KHR(
     VkSurfaceCapabilities2KHR*                  pSurfaceCapabilities)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -8672,6 +8992,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfaceFormats2KHR(
     VkSurfaceFormat2KHR*                        pSurfaceFormats)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -8709,6 +9030,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceDisplayProperties2KHR(
     VkDisplayProperties2KHR*                    pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -8748,6 +9070,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceDisplayPlaneProperties2KHR(
     VkDisplayPlaneProperties2KHR*               pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -8788,6 +9111,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetDisplayModeProperties2KHR(
     VkDisplayModeProperties2KHR*                pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -8829,6 +9153,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetDisplayPlaneCapabilities2KHR(
     VkDisplayPlaneCapabilities2KHR*             pCapabilities)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -8865,6 +9190,7 @@ VKAPI_ATTR void VKAPI_CALL GetImageMemoryRequirements2KHR(
     VkMemoryRequirements2*                      pMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements2KHR>::Dispatch(VulkanCaptureManager::Get(), device, pInfo, pMemoryRequirements);
 
@@ -8892,6 +9218,7 @@ VKAPI_ATTR void VKAPI_CALL GetBufferMemoryRequirements2KHR(
     VkMemoryRequirements2*                      pMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements2KHR>::Dispatch(VulkanCaptureManager::Get(), device, pInfo, pMemoryRequirements);
 
@@ -8920,6 +9247,7 @@ VKAPI_ATTR void VKAPI_CALL GetImageSparseMemoryRequirements2KHR(
     VkSparseImageMemoryRequirements2*           pSparseMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequirements2KHR>::Dispatch(VulkanCaptureManager::Get(), device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements);
 
@@ -8949,6 +9277,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSamplerYcbcrConversionKHR(
     VkSamplerYcbcrConversion*                   pYcbcrConversion)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -8989,6 +9318,7 @@ VKAPI_ATTR void VKAPI_CALL DestroySamplerYcbcrConversionKHR(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroySamplerYcbcrConversionKHR>::Dispatch(VulkanCaptureManager::Get(), device, ycbcrConversion, pAllocator);
 
@@ -9017,6 +9347,15 @@ VKAPI_ATTR VkResult VKAPI_CALL BindBufferMemory2KHR(
     const VkBindBufferMemoryInfo*               pBindInfos)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
+
+    // for (uint32_t i = 0; i < bindInfoCount; ++i) {
+    //     GFXRECON_WRITE_CONSOLE("  pBindInfos[%u].buffer: %p\n", i, pBindInfos[i].buffer);
+    //     GFXRECON_WRITE_CONSOLE("  pBindInfos[%u].memory: %p\n", i, pBindInfos[i].memory);
+    //     GFXRECON_WRITE_CONSOLE("  pBindInfos[%u].memoryOffset: 0x%" PRIx64"\n", i, pBindInfos[i].memoryOffset);
+
+    //     assert(!(pBindInfos[i].memoryOffset % 0x1000));
+    // }
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory2KHR>::Dispatch(VulkanCaptureManager::Get(), device, bindInfoCount, pBindInfos);
 
@@ -9047,6 +9386,16 @@ VKAPI_ATTR VkResult VKAPI_CALL BindImageMemory2KHR(
     const VkBindImageMemoryInfo*                pBindInfos)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
+
+    // for(uint32_t i = 0; i < bindInfoCount && pBindInfos; ++i)
+    // {
+    //     GFXRECON_WRITE_CONSOLE("  pBindInfos[%u].image: %p", i, pBindInfos[i].image);
+    //     GFXRECON_WRITE_CONSOLE("  pBindInfos[%u].memory: %p", i, pBindInfos[i].memory);
+    //     GFXRECON_WRITE_CONSOLE("  pBindInfos[%u].memoryOffset: 0x%" PRIx64"", i, pBindInfos[i].memoryOffset);
+
+    //     assert(!(pBindInfos[i].memoryOffset % 0x1000));
+    // }
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkBindImageMemory2KHR>::Dispatch(VulkanCaptureManager::Get(), device, bindInfoCount, pBindInfos);
 
@@ -9077,6 +9426,7 @@ VKAPI_ATTR void VKAPI_CALL GetDescriptorSetLayoutSupportKHR(
     VkDescriptorSetLayoutSupport*               pSupport)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutSupportKHR>::Dispatch(VulkanCaptureManager::Get(), device, pCreateInfo, pSupport);
 
@@ -9108,6 +9458,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawIndirectCountKHR(
     uint32_t                                    stride)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCountKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
 
@@ -9143,6 +9494,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawIndexedIndirectCountKHR(
     uint32_t                                    stride)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCountKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
 
@@ -9174,6 +9526,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetSemaphoreCounterValueKHR(
     uint64_t*                                   pValue)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -9209,6 +9562,7 @@ VKAPI_ATTR VkResult VKAPI_CALL WaitSemaphoresKHR(
     uint64_t                                    timeout)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkWaitSemaphoresKHR>::Dispatch(VulkanCaptureManager::Get(), device, pWaitInfo, timeout);
 
@@ -9238,6 +9592,7 @@ VKAPI_ATTR VkResult VKAPI_CALL SignalSemaphoreKHR(
     const VkSemaphoreSignalInfo*                pSignalInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkSignalSemaphoreKHR>::Dispatch(VulkanCaptureManager::Get(), device, pSignalInfo);
 
@@ -9267,6 +9622,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceFragmentShadingRatesKHR(
     VkPhysicalDeviceFragmentShadingRateKHR*     pFragmentShadingRates)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -9301,6 +9657,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetFragmentShadingRateKHR(
     const VkFragmentShadingRateCombinerOpKHR    combinerOps[2])
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetFragmentShadingRateKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pFragmentSize, combinerOps);
 
@@ -9327,6 +9684,7 @@ VKAPI_ATTR VkResult VKAPI_CALL WaitForPresentKHR(
     uint64_t                                    timeout)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkWaitForPresentKHR>::Dispatch(VulkanCaptureManager::Get(), device, swapchain, presentId, timeout);
 
@@ -9356,6 +9714,7 @@ VKAPI_ATTR VkDeviceAddress VKAPI_CALL GetBufferDeviceAddressKHR(
     const VkBufferDeviceAddressInfo*            pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddressKHR>::Dispatch(VulkanCaptureManager::Get(), device, pInfo);
 
@@ -9384,6 +9743,7 @@ VKAPI_ATTR uint64_t VKAPI_CALL GetBufferOpaqueCaptureAddressKHR(
     const VkBufferDeviceAddressInfo*            pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferOpaqueCaptureAddressKHR>::Dispatch(VulkanCaptureManager::Get(), device, pInfo);
 
@@ -9412,6 +9772,7 @@ VKAPI_ATTR uint64_t VKAPI_CALL GetDeviceMemoryOpaqueCaptureAddressKHR(
     const VkDeviceMemoryOpaqueCaptureAddressInfo* pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryOpaqueCaptureAddressKHR>::Dispatch(VulkanCaptureManager::Get(), device, pInfo);
 
@@ -9441,6 +9802,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDeferredOperationKHR(
     VkDeferredOperationKHR*                     pDeferredOperation)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -9480,6 +9842,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDeferredOperationKHR(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDeferredOperationKHR>::Dispatch(VulkanCaptureManager::Get(), device, operation, pAllocator);
 
@@ -9507,6 +9870,7 @@ VKAPI_ATTR uint32_t VKAPI_CALL GetDeferredOperationMaxConcurrencyKHR(
     VkDeferredOperationKHR                      operation)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeferredOperationMaxConcurrencyKHR>::Dispatch(VulkanCaptureManager::Get(), device, operation);
 
@@ -9534,6 +9898,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetDeferredOperationResultKHR(
     VkDeferredOperationKHR                      operation)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeferredOperationResultKHR>::Dispatch(VulkanCaptureManager::Get(), device, operation);
 
@@ -9561,6 +9926,7 @@ VKAPI_ATTR VkResult VKAPI_CALL DeferredOperationJoinKHR(
     VkDeferredOperationKHR                      operation)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDeferredOperationJoinKHR>::Dispatch(VulkanCaptureManager::Get(), device, operation);
 
@@ -9590,6 +9956,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPipelineExecutablePropertiesKHR(
     VkPipelineExecutablePropertiesKHR*          pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -9628,6 +9995,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPipelineExecutableStatisticsKHR(
     VkPipelineExecutableStatisticKHR*           pStatistics)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -9666,6 +10034,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPipelineExecutableInternalRepresentationsKHR(
     VkPipelineExecutableInternalRepresentationKHR* pInternalRepresentations)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -9703,6 +10072,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetEvent2KHR(
     const VkDependencyInfo*                     pDependencyInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, event, pDependencyInfo);
 
@@ -9731,6 +10101,7 @@ VKAPI_ATTR void VKAPI_CALL CmdResetEvent2KHR(
     VkPipelineStageFlags2                       stageMask)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, event, stageMask);
 
@@ -9758,6 +10129,7 @@ VKAPI_ATTR void VKAPI_CALL CmdWaitEvents2KHR(
     const VkDependencyInfo*                     pDependencyInfos)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, eventCount, pEvents, pDependencyInfos);
 
@@ -9786,6 +10158,7 @@ VKAPI_ATTR void VKAPI_CALL CmdPipelineBarrier2KHR(
     const VkDependencyInfo*                     pDependencyInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pDependencyInfo);
 
@@ -9813,6 +10186,7 @@ VKAPI_ATTR void VKAPI_CALL CmdWriteTimestamp2KHR(
     uint32_t                                    query)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, stage, queryPool, query);
 
@@ -9841,6 +10215,7 @@ VKAPI_ATTR VkResult VKAPI_CALL QueueSubmit2KHR(
     VkFence                                     fence)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkQueueSubmit2KHR>::Dispatch(VulkanCaptureManager::Get(), queue, submitCount, pSubmits, fence);
 
@@ -9875,6 +10250,7 @@ VKAPI_ATTR void VKAPI_CALL CmdWriteBufferMarker2AMD(
     uint32_t                                    marker)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteBufferMarker2AMD>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, stage, dstBuffer, dstOffset, marker);
 
@@ -9903,6 +10279,7 @@ VKAPI_ATTR void VKAPI_CALL GetQueueCheckpointData2NV(
     VkCheckpointData2NV*                        pCheckpointData)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetQueueCheckpointData2NV>::Dispatch(VulkanCaptureManager::Get(), queue, pCheckpointDataCount, pCheckpointData);
 
@@ -9927,6 +10304,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyBuffer2KHR(
     const VkCopyBufferInfo2*                    pCopyBufferInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pCopyBufferInfo);
 
@@ -9952,6 +10330,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyImage2KHR(
     const VkCopyImageInfo2*                     pCopyImageInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pCopyImageInfo);
 
@@ -9977,6 +10356,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyBufferToImage2KHR(
     const VkCopyBufferToImageInfo2*             pCopyBufferToImageInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pCopyBufferToImageInfo);
 
@@ -10002,6 +10382,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyImageToBuffer2KHR(
     const VkCopyImageToBufferInfo2*             pCopyImageToBufferInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pCopyImageToBufferInfo);
 
@@ -10027,6 +10408,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBlitImage2KHR(
     const VkBlitImageInfo2*                     pBlitImageInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pBlitImageInfo);
 
@@ -10052,6 +10434,7 @@ VKAPI_ATTR void VKAPI_CALL CmdResolveImage2KHR(
     const VkResolveImageInfo2*                  pResolveImageInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pResolveImageInfo);
 
@@ -10077,6 +10460,7 @@ VKAPI_ATTR void VKAPI_CALL CmdTraceRaysIndirect2KHR(
     VkDeviceAddress                             indirectDeviceAddress)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysIndirect2KHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, indirectDeviceAddress);
 
@@ -10101,6 +10485,7 @@ VKAPI_ATTR void VKAPI_CALL GetDeviceBufferMemoryRequirementsKHR(
     VkMemoryRequirements2*                      pMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceBufferMemoryRequirementsKHR>::Dispatch(VulkanCaptureManager::Get(), device, pInfo, pMemoryRequirements);
 
@@ -10128,6 +10513,7 @@ VKAPI_ATTR void VKAPI_CALL GetDeviceImageMemoryRequirementsKHR(
     VkMemoryRequirements2*                      pMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageMemoryRequirementsKHR>::Dispatch(VulkanCaptureManager::Get(), device, pInfo, pMemoryRequirements);
 
@@ -10156,6 +10542,7 @@ VKAPI_ATTR void VKAPI_CALL GetDeviceImageSparseMemoryRequirementsKHR(
     VkSparseImageMemoryRequirements2*           pSparseMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageSparseMemoryRequirementsKHR>::Dispatch(VulkanCaptureManager::Get(), device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements);
 
@@ -10185,6 +10572,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDebugReportCallbackEXT(
     VkDebugReportCallbackEXT*                   pCallback)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -10225,6 +10613,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDebugReportCallbackEXT(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDebugReportCallbackEXT>::Dispatch(VulkanCaptureManager::Get(), instance, callback, pAllocator);
 
@@ -10258,6 +10647,7 @@ VKAPI_ATTR void VKAPI_CALL DebugReportMessageEXT(
     const char*                                 pMessage)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDebugReportMessageEXT>::Dispatch(VulkanCaptureManager::Get(), instance, flags, objectType, object, location, messageCode, pLayerPrefix, pMessage);
 
@@ -10288,6 +10678,7 @@ VKAPI_ATTR VkResult VKAPI_CALL DebugMarkerSetObjectTagEXT(
     const VkDebugMarkerObjectTagInfoEXT*        pTagInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDebugMarkerSetObjectTagEXT>::Dispatch(VulkanCaptureManager::Get(), device, pTagInfo);
 
@@ -10316,6 +10707,7 @@ VKAPI_ATTR VkResult VKAPI_CALL DebugMarkerSetObjectNameEXT(
     const VkDebugMarkerObjectNameInfoEXT*       pNameInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDebugMarkerSetObjectNameEXT>::Dispatch(VulkanCaptureManager::Get(), device, pNameInfo);
 
@@ -10344,6 +10736,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDebugMarkerBeginEXT(
     const VkDebugMarkerMarkerInfoEXT*           pMarkerInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerBeginEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pMarkerInfo);
 
@@ -10366,6 +10759,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDebugMarkerEndEXT(
     VkCommandBuffer                             commandBuffer)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerEndEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer);
 
@@ -10388,6 +10782,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDebugMarkerInsertEXT(
     const VkDebugMarkerMarkerInfoEXT*           pMarkerInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerInsertEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pMarkerInfo);
 
@@ -10415,6 +10810,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBindTransformFeedbackBuffersEXT(
     const VkDeviceSize*                         pSizes)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindTransformFeedbackBuffersEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, firstBinding, bindingCount, pBuffers, pOffsets, pSizes);
 
@@ -10447,6 +10843,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBeginTransformFeedbackEXT(
     const VkDeviceSize*                         pCounterBufferOffsets)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginTransformFeedbackEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, firstCounterBuffer, counterBufferCount, pCounterBuffers, pCounterBufferOffsets);
 
@@ -10478,6 +10875,7 @@ VKAPI_ATTR void VKAPI_CALL CmdEndTransformFeedbackEXT(
     const VkDeviceSize*                         pCounterBufferOffsets)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndTransformFeedbackEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, firstCounterBuffer, counterBufferCount, pCounterBuffers, pCounterBufferOffsets);
 
@@ -10509,6 +10907,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBeginQueryIndexedEXT(
     uint32_t                                    index)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginQueryIndexedEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, queryPool, query, flags, index);
 
@@ -10538,6 +10937,7 @@ VKAPI_ATTR void VKAPI_CALL CmdEndQueryIndexedEXT(
     uint32_t                                    index)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndQueryIndexedEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, queryPool, query, index);
 
@@ -10569,6 +10969,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawIndirectByteCountEXT(
     uint32_t                                    vertexStride)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectByteCountEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, instanceCount, firstInstance, counterBuffer, counterBufferOffset, counterOffset, vertexStride);
 
@@ -10598,6 +10999,7 @@ VKAPI_ATTR uint32_t VKAPI_CALL GetImageViewHandleNVX(
     const VkImageViewHandleInfoNVX*             pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetImageViewHandleNVX>::Dispatch(VulkanCaptureManager::Get(), device, pInfo);
 
@@ -10627,6 +11029,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetImageViewAddressNVX(
     VkImageViewAddressPropertiesNVX*            pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -10666,6 +11069,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawIndirectCountAMD(
     uint32_t                                    stride)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCountAMD>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
 
@@ -10701,6 +11105,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawIndexedIndirectCountAMD(
     uint32_t                                    stride)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCountAMD>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
 
@@ -10735,6 +11140,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetShaderInfoAMD(
     void*                                       pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -10774,6 +11180,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateStreamDescriptorSurfaceGGP(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -10819,6 +11226,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceExternalImageFormatPropertiesNV(
     VkExternalImageFormatPropertiesNV*          pExternalImageFormatProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -10859,6 +11267,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetMemoryWin32HandleNV(
     HANDLE*                                     pHandle)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -10896,6 +11305,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateViSurfaceNN(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -10935,6 +11345,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBeginConditionalRenderingEXT(
     const VkConditionalRenderingBeginInfoEXT*   pConditionalRenderingBegin)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginConditionalRenderingEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pConditionalRenderingBegin);
 
@@ -10959,6 +11370,7 @@ VKAPI_ATTR void VKAPI_CALL CmdEndConditionalRenderingEXT(
     VkCommandBuffer                             commandBuffer)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndConditionalRenderingEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer);
 
@@ -10983,6 +11395,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetViewportWScalingNV(
     const VkViewportWScalingNV*                 pViewportWScalings)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWScalingNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, firstViewport, viewportCount, pViewportWScalings);
 
@@ -11008,6 +11421,7 @@ VKAPI_ATTR VkResult VKAPI_CALL ReleaseDisplayEXT(
     VkDisplayKHR                                display)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkReleaseDisplayEXT>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, display);
 
@@ -11036,6 +11450,7 @@ VKAPI_ATTR VkResult VKAPI_CALL AcquireXlibDisplayEXT(
     VkDisplayKHR                                display)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkAcquireXlibDisplayEXT>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, dpy, display);
 
@@ -11066,6 +11481,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetRandROutputDisplayEXT(
     VkDisplayKHR*                               pDisplay)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -11106,6 +11522,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfaceCapabilities2EXT(
     VkSurfaceCapabilities2EXT*                  pSurfaceCapabilities)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -11141,6 +11558,7 @@ VKAPI_ATTR VkResult VKAPI_CALL DisplayPowerControlEXT(
     const VkDisplayPowerInfoEXT*                pDisplayPowerInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDisplayPowerControlEXT>::Dispatch(VulkanCaptureManager::Get(), device, display, pDisplayPowerInfo);
 
@@ -11171,6 +11589,7 @@ VKAPI_ATTR VkResult VKAPI_CALL RegisterDeviceEventEXT(
     VkFence*                                    pFence)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -11213,6 +11632,7 @@ VKAPI_ATTR VkResult VKAPI_CALL RegisterDisplayEventEXT(
     VkFence*                                    pFence)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -11256,6 +11676,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetSwapchainCounterEXT(
     uint64_t*                                   pCounterValue)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -11292,6 +11713,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetRefreshCycleDurationGOOGLE(
     VkRefreshCycleDurationGOOGLE*               pDisplayTimingProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -11328,6 +11750,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPastPresentationTimingGOOGLE(
     VkPastPresentationTimingGOOGLE*             pPresentationTimings)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -11365,6 +11788,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDiscardRectangleEXT(
     const VkRect2D*                             pDiscardRectangles)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, firstDiscardRectangle, discardRectangleCount, pDiscardRectangles);
 
@@ -11392,6 +11816,7 @@ VKAPI_ATTR void VKAPI_CALL SetHdrMetadataEXT(
     const VkHdrMetadataEXT*                     pMetadata)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkSetHdrMetadataEXT>::Dispatch(VulkanCaptureManager::Get(), device, swapchainCount, pSwapchains, pMetadata);
 
@@ -11421,6 +11846,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateIOSSurfaceMVK(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -11462,6 +11888,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateMacOSSurfaceMVK(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -11501,6 +11928,7 @@ VKAPI_ATTR VkResult VKAPI_CALL SetDebugUtilsObjectNameEXT(
     const VkDebugUtilsObjectNameInfoEXT*        pNameInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkSetDebugUtilsObjectNameEXT>::Dispatch(VulkanCaptureManager::Get(), device, pNameInfo);
 
@@ -11529,6 +11957,7 @@ VKAPI_ATTR VkResult VKAPI_CALL SetDebugUtilsObjectTagEXT(
     const VkDebugUtilsObjectTagInfoEXT*         pTagInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkSetDebugUtilsObjectTagEXT>::Dispatch(VulkanCaptureManager::Get(), device, pTagInfo);
 
@@ -11557,6 +11986,7 @@ VKAPI_ATTR void VKAPI_CALL QueueBeginDebugUtilsLabelEXT(
     const VkDebugUtilsLabelEXT*                 pLabelInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkQueueBeginDebugUtilsLabelEXT>::Dispatch(VulkanCaptureManager::Get(), queue, pLabelInfo);
 
@@ -11579,6 +12009,7 @@ VKAPI_ATTR void VKAPI_CALL QueueEndDebugUtilsLabelEXT(
     VkQueue                                     queue)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkQueueEndDebugUtilsLabelEXT>::Dispatch(VulkanCaptureManager::Get(), queue);
 
@@ -11601,6 +12032,7 @@ VKAPI_ATTR void VKAPI_CALL QueueInsertDebugUtilsLabelEXT(
     const VkDebugUtilsLabelEXT*                 pLabelInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkQueueInsertDebugUtilsLabelEXT>::Dispatch(VulkanCaptureManager::Get(), queue, pLabelInfo);
 
@@ -11624,6 +12056,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBeginDebugUtilsLabelEXT(
     const VkDebugUtilsLabelEXT*                 pLabelInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginDebugUtilsLabelEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pLabelInfo);
 
@@ -11646,6 +12079,7 @@ VKAPI_ATTR void VKAPI_CALL CmdEndDebugUtilsLabelEXT(
     VkCommandBuffer                             commandBuffer)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndDebugUtilsLabelEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer);
 
@@ -11668,6 +12102,7 @@ VKAPI_ATTR void VKAPI_CALL CmdInsertDebugUtilsLabelEXT(
     const VkDebugUtilsLabelEXT*                 pLabelInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdInsertDebugUtilsLabelEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pLabelInfo);
 
@@ -11693,6 +12128,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDebugUtilsMessengerEXT(
     VkDebugUtilsMessengerEXT*                   pMessenger)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -11733,6 +12169,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDebugUtilsMessengerEXT(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDebugUtilsMessengerEXT>::Dispatch(VulkanCaptureManager::Get(), instance, messenger, pAllocator);
 
@@ -11762,6 +12199,7 @@ VKAPI_ATTR void VKAPI_CALL SubmitDebugUtilsMessageEXT(
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkSubmitDebugUtilsMessageEXT>::Dispatch(VulkanCaptureManager::Get(), instance, messageSeverity, messageTypes, pCallbackData);
 
@@ -11788,6 +12226,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetAndroidHardwareBufferPropertiesANDROID(
     VkAndroidHardwareBufferPropertiesANDROID*   pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -11822,6 +12261,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetMemoryAndroidHardwareBufferANDROID(
     struct AHardwareBuffer**                    pBuffer)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -11857,6 +12297,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetSampleLocationsEXT(
     const VkSampleLocationsInfoEXT*             pSampleLocationsInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetSampleLocationsEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pSampleLocationsInfo);
 
@@ -11881,6 +12322,7 @@ VKAPI_ATTR void VKAPI_CALL GetPhysicalDeviceMultisamplePropertiesEXT(
     VkMultisamplePropertiesEXT*                 pMultisampleProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMultisamplePropertiesEXT>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, samples, pMultisampleProperties);
 
@@ -11906,6 +12348,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetImageDrmFormatModifierPropertiesEXT(
     VkImageDrmFormatModifierPropertiesEXT*      pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -11942,6 +12385,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateValidationCacheEXT(
     VkValidationCacheEXT*                       pValidationCache)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -11982,6 +12426,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyValidationCacheEXT(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyValidationCacheEXT>::Dispatch(VulkanCaptureManager::Get(), device, validationCache, pAllocator);
 
@@ -12011,6 +12456,7 @@ VKAPI_ATTR VkResult VKAPI_CALL MergeValidationCachesEXT(
     const VkValidationCacheEXT*                 pSrcCaches)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkMergeValidationCachesEXT>::Dispatch(VulkanCaptureManager::Get(), device, dstCache, srcCacheCount, pSrcCaches);
 
@@ -12044,6 +12490,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetValidationCacheDataEXT(
     void*                                       pData)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -12080,6 +12527,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBindShadingRateImageNV(
     VkImageLayout                               imageLayout)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindShadingRateImageNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, imageView, imageLayout);
 
@@ -12107,6 +12555,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetViewportShadingRatePaletteNV(
     const VkShadingRatePaletteNV*               pShadingRatePalettes)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportShadingRatePaletteNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, firstViewport, viewportCount, pShadingRatePalettes);
 
@@ -12134,6 +12583,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetCoarseSampleOrderNV(
     const VkCoarseSampleOrderCustomNV*          pCustomSampleOrders)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetCoarseSampleOrderNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, sampleOrderType, customSampleOrderCount, pCustomSampleOrders);
 
@@ -12161,6 +12611,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateAccelerationStructureNV(
     VkAccelerationStructureNV*                  pAccelerationStructure)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -12203,6 +12654,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyAccelerationStructureNV(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyAccelerationStructureNV>::Dispatch(VulkanCaptureManager::Get(), device, accelerationStructure, pAllocator);
 
@@ -12231,6 +12683,7 @@ VKAPI_ATTR void VKAPI_CALL GetAccelerationStructureMemoryRequirementsNV(
     VkMemoryRequirements2KHR*                   pMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureMemoryRequirementsNV>::Dispatch(VulkanCaptureManager::Get(), device, pInfo, pMemoryRequirements);
 
@@ -12258,6 +12711,7 @@ VKAPI_ATTR VkResult VKAPI_CALL BindAccelerationStructureMemoryNV(
     const VkBindAccelerationStructureMemoryInfoNV* pBindInfos)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkBindAccelerationStructureMemoryNV>::Dispatch(VulkanCaptureManager::Get(), device, bindInfoCount, pBindInfos);
 
@@ -12294,6 +12748,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBuildAccelerationStructureNV(
     VkDeviceSize                                scratchOffset)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructureNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pInfo, instanceData, instanceOffset, update, dst, src, scratch, scratchOffset);
 
@@ -12332,6 +12787,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyAccelerationStructureNV(
     VkCopyAccelerationStructureModeKHR          mode)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructureNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, dst, src, mode);
 
@@ -12372,6 +12828,7 @@ VKAPI_ATTR void VKAPI_CALL CmdTraceRaysNV(
     uint32_t                                    depth)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, raygenShaderBindingTableBuffer, raygenShaderBindingOffset, missShaderBindingTableBuffer, missShaderBindingOffset, missShaderBindingStride, hitShaderBindingTableBuffer, hitShaderBindingOffset, hitShaderBindingStride, callableShaderBindingTableBuffer, callableShaderBindingOffset, callableShaderBindingStride, width, height, depth);
 
@@ -12416,6 +12873,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateRayTracingPipelinesNV(
     VkPipeline*                                 pPipelines)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -12464,6 +12922,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetRayTracingShaderGroupHandlesKHR(
     void*                                       pData)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -12505,6 +12964,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetRayTracingShaderGroupHandlesNV(
     void*                                       pData)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -12544,6 +13004,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetAccelerationStructureHandleNV(
     void*                                       pData)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -12583,6 +13044,7 @@ VKAPI_ATTR void VKAPI_CALL CmdWriteAccelerationStructuresPropertiesNV(
     uint32_t                                    firstQuery)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteAccelerationStructuresPropertiesNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, accelerationStructureCount, pAccelerationStructures, queryType, queryPool, firstQuery);
 
@@ -12614,6 +13076,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CompileDeferredNV(
     uint32_t                                    shader)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCompileDeferredNV>::Dispatch(VulkanCaptureManager::Get(), device, pipeline, shader);
 
@@ -12644,6 +13107,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetMemoryHostPointerPropertiesEXT(
     VkMemoryHostPointerPropertiesEXT*           pMemoryHostPointerProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -12681,6 +13145,7 @@ VKAPI_ATTR void VKAPI_CALL CmdWriteBufferMarkerAMD(
     uint32_t                                    marker)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteBufferMarkerAMD>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pipelineStage, dstBuffer, dstOffset, marker);
 
@@ -12709,6 +13174,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceCalibrateableTimeDomainsEXT(
     VkTimeDomainEXT*                            pTimeDomains)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -12745,6 +13211,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetCalibratedTimestampsEXT(
     uint64_t*                                   pMaxDeviation)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -12781,6 +13248,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawMeshTasksNV(
     uint32_t                                    firstTask)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, taskCount, firstTask);
 
@@ -12808,6 +13276,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawMeshTasksIndirectNV(
     uint32_t                                    stride)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, buffer, offset, drawCount, stride);
 
@@ -12840,6 +13309,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawMeshTasksIndirectCountNV(
     uint32_t                                    stride)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectCountNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
 
@@ -12872,6 +13342,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetExclusiveScissorNV(
     const VkRect2D*                             pExclusiveScissors)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetExclusiveScissorNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, firstExclusiveScissor, exclusiveScissorCount, pExclusiveScissors);
 
@@ -12897,6 +13368,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetCheckpointNV(
     const void*                                 pCheckpointMarker)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetCheckpointNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pCheckpointMarker);
 
@@ -12921,6 +13393,7 @@ VKAPI_ATTR void VKAPI_CALL GetQueueCheckpointDataNV(
     VkCheckpointDataNV*                         pCheckpointData)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetQueueCheckpointDataNV>::Dispatch(VulkanCaptureManager::Get(), queue, pCheckpointDataCount, pCheckpointData);
 
@@ -12945,6 +13418,7 @@ VKAPI_ATTR VkResult VKAPI_CALL InitializePerformanceApiINTEL(
     const VkInitializePerformanceApiInfoINTEL*  pInitializeInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkInitializePerformanceApiINTEL>::Dispatch(VulkanCaptureManager::Get(), device, pInitializeInfo);
 
@@ -12970,6 +13444,7 @@ VKAPI_ATTR void VKAPI_CALL UninitializePerformanceApiINTEL(
     VkDevice                                    device)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkUninitializePerformanceApiINTEL>::Dispatch(VulkanCaptureManager::Get(), device);
 
@@ -12992,6 +13467,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CmdSetPerformanceMarkerINTEL(
     const VkPerformanceMarkerInfoINTEL*         pMarkerInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceMarkerINTEL>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pMarkerInfo);
 
@@ -13018,6 +13494,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CmdSetPerformanceStreamMarkerINTEL(
     const VkPerformanceStreamMarkerInfoINTEL*   pMarkerInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceStreamMarkerINTEL>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pMarkerInfo);
 
@@ -13044,6 +13521,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CmdSetPerformanceOverrideINTEL(
     const VkPerformanceOverrideInfoINTEL*       pOverrideInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceOverrideINTEL>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pOverrideInfo);
 
@@ -13071,6 +13549,7 @@ VKAPI_ATTR VkResult VKAPI_CALL AcquirePerformanceConfigurationINTEL(
     VkPerformanceConfigurationINTEL*            pConfiguration)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -13109,6 +13588,7 @@ VKAPI_ATTR VkResult VKAPI_CALL ReleasePerformanceConfigurationINTEL(
     VkPerformanceConfigurationINTEL             configuration)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkReleasePerformanceConfigurationINTEL>::Dispatch(VulkanCaptureManager::Get(), device, configuration);
 
@@ -13138,6 +13618,7 @@ VKAPI_ATTR VkResult VKAPI_CALL QueueSetPerformanceConfigurationINTEL(
     VkPerformanceConfigurationINTEL             configuration)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkQueueSetPerformanceConfigurationINTEL>::Dispatch(VulkanCaptureManager::Get(), queue, configuration);
 
@@ -13166,6 +13647,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPerformanceParameterINTEL(
     VkPerformanceValueINTEL*                    pValue)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -13200,6 +13682,7 @@ VKAPI_ATTR void VKAPI_CALL SetLocalDimmingAMD(
     VkBool32                                    localDimmingEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkSetLocalDimmingAMD>::Dispatch(VulkanCaptureManager::Get(), device, swapChain, localDimmingEnable);
 
@@ -13227,6 +13710,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateImagePipeSurfaceFUCHSIA(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -13268,6 +13752,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateMetalSurfaceEXT(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -13307,6 +13792,7 @@ VKAPI_ATTR VkDeviceAddress VKAPI_CALL GetBufferDeviceAddressEXT(
     const VkBufferDeviceAddressInfo*            pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddressEXT>::Dispatch(VulkanCaptureManager::Get(), device, pInfo);
 
@@ -13336,6 +13822,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceToolPropertiesEXT(
     VkPhysicalDeviceToolProperties*             pToolProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -13368,6 +13855,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceCooperativeMatrixPropertiesNV(
     VkCooperativeMatrixPropertiesNV*            pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -13402,6 +13890,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSupportedFramebufferMixedSamples
     VkFramebufferMixedSamplesCombinationNV*     pCombinations)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -13437,6 +13926,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfacePresentModes2EXT(
     VkPresentModeKHR*                           pPresentModes)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -13473,6 +13963,7 @@ VKAPI_ATTR VkResult VKAPI_CALL AcquireFullScreenExclusiveModeEXT(
     VkSwapchainKHR                              swapchain)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkAcquireFullScreenExclusiveModeEXT>::Dispatch(VulkanCaptureManager::Get(), device, swapchain);
 
@@ -13500,6 +13991,7 @@ VKAPI_ATTR VkResult VKAPI_CALL ReleaseFullScreenExclusiveModeEXT(
     VkSwapchainKHR                              swapchain)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkReleaseFullScreenExclusiveModeEXT>::Dispatch(VulkanCaptureManager::Get(), device, swapchain);
 
@@ -13528,6 +14020,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetDeviceGroupSurfacePresentModes2EXT(
     VkDeviceGroupPresentModeFlagsKHR*           pModes)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -13565,6 +14058,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateHeadlessSurfaceEXT(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -13605,6 +14099,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetLineStippleEXT(
     uint16_t                                    lineStipplePattern)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetLineStippleEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, lineStippleFactor, lineStipplePattern);
 
@@ -13631,6 +14126,7 @@ VKAPI_ATTR void VKAPI_CALL ResetQueryPoolEXT(
     uint32_t                                    queryCount)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkResetQueryPoolEXT>::Dispatch(VulkanCaptureManager::Get(), device, queryPool, firstQuery, queryCount);
 
@@ -13657,6 +14153,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetCullModeEXT(
     VkCullModeFlags                             cullMode)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetCullModeEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, cullMode);
 
@@ -13680,6 +14177,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetFrontFaceEXT(
     VkFrontFace                                 frontFace)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetFrontFaceEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, frontFace);
 
@@ -13703,6 +14201,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetPrimitiveTopologyEXT(
     VkPrimitiveTopology                         primitiveTopology)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveTopologyEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, primitiveTopology);
 
@@ -13727,6 +14226,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetViewportWithCountEXT(
     const VkViewport*                           pViewports)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWithCountEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, viewportCount, pViewports);
 
@@ -13752,6 +14252,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetScissorWithCountEXT(
     const VkRect2D*                             pScissors)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetScissorWithCountEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, scissorCount, pScissors);
 
@@ -13781,6 +14282,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBindVertexBuffers2EXT(
     const VkDeviceSize*                         pStrides)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers2EXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, firstBinding, bindingCount, pBuffers, pOffsets, pSizes, pStrides);
 
@@ -13811,6 +14313,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDepthTestEnableEXT(
     VkBool32                                    depthTestEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthTestEnableEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, depthTestEnable);
 
@@ -13834,6 +14337,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDepthWriteEnableEXT(
     VkBool32                                    depthWriteEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthWriteEnableEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, depthWriteEnable);
 
@@ -13857,6 +14361,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDepthCompareOpEXT(
     VkCompareOp                                 depthCompareOp)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthCompareOpEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, depthCompareOp);
 
@@ -13880,6 +14385,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDepthBoundsTestEnableEXT(
     VkBool32                                    depthBoundsTestEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBoundsTestEnableEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, depthBoundsTestEnable);
 
@@ -13903,6 +14409,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetStencilTestEnableEXT(
     VkBool32                                    stencilTestEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilTestEnableEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, stencilTestEnable);
 
@@ -13930,6 +14437,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetStencilOpEXT(
     VkCompareOp                                 compareOp)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilOpEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, faceMask, failOp, passOp, depthFailOp, compareOp);
 
@@ -13958,6 +14466,7 @@ VKAPI_ATTR void VKAPI_CALL GetGeneratedCommandsMemoryRequirementsNV(
     VkMemoryRequirements2*                      pMemoryRequirements)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetGeneratedCommandsMemoryRequirementsNV>::Dispatch(VulkanCaptureManager::Get(), device, pInfo, pMemoryRequirements);
 
@@ -13984,6 +14493,7 @@ VKAPI_ATTR void VKAPI_CALL CmdPreprocessGeneratedCommandsNV(
     const VkGeneratedCommandsInfoNV*            pGeneratedCommandsInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdPreprocessGeneratedCommandsNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pGeneratedCommandsInfo);
 
@@ -14010,6 +14520,7 @@ VKAPI_ATTR void VKAPI_CALL CmdExecuteGeneratedCommandsNV(
     const VkGeneratedCommandsInfoNV*            pGeneratedCommandsInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdExecuteGeneratedCommandsNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, isPreprocessed, pGeneratedCommandsInfo);
 
@@ -14038,6 +14549,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBindPipelineShaderGroupNV(
     uint32_t                                    groupIndex)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindPipelineShaderGroupNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pipelineBindPoint, pipeline, groupIndex);
 
@@ -14066,6 +14578,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateIndirectCommandsLayoutNV(
     VkIndirectCommandsLayoutNV*                 pIndirectCommandsLayout)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -14108,6 +14621,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyIndirectCommandsLayoutNV(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyIndirectCommandsLayoutNV>::Dispatch(VulkanCaptureManager::Get(), device, indirectCommandsLayout, pAllocator);
 
@@ -14136,6 +14650,7 @@ VKAPI_ATTR VkResult VKAPI_CALL AcquireDrmDisplayEXT(
     VkDisplayKHR                                display)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkAcquireDrmDisplayEXT>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, drmFd, display);
 
@@ -14166,6 +14681,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetDrmDisplayEXT(
     VkDisplayKHR*                               display)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -14207,6 +14723,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreatePrivateDataSlotEXT(
     VkPrivateDataSlot*                          pPrivateDataSlot)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -14247,6 +14764,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyPrivateDataSlotEXT(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyPrivateDataSlotEXT>::Dispatch(VulkanCaptureManager::Get(), device, privateDataSlot, pAllocator);
 
@@ -14277,6 +14795,7 @@ VKAPI_ATTR VkResult VKAPI_CALL SetPrivateDataEXT(
     uint64_t                                    data)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkSetPrivateDataEXT>::Dispatch(VulkanCaptureManager::Get(), device, objectType, objectHandle, privateDataSlot, data);
 
@@ -14311,6 +14830,7 @@ VKAPI_ATTR void VKAPI_CALL GetPrivateDataEXT(
     uint64_t*                                   pData)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPrivateDataEXT>::Dispatch(VulkanCaptureManager::Get(), device, objectType, objectHandle, privateDataSlot, pData);
 
@@ -14340,6 +14860,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetFragmentShadingRateEnumNV(
     const VkFragmentShadingRateCombinerOpKHR    combinerOps[2])
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetFragmentShadingRateEnumNV>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, shadingRate, combinerOps);
 
@@ -14366,6 +14887,7 @@ VKAPI_ATTR void VKAPI_CALL GetImageSubresourceLayout2EXT(
     VkSubresourceLayout2EXT*                    pLayout)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetImageSubresourceLayout2EXT>::Dispatch(VulkanCaptureManager::Get(), device, image, pSubresource, pLayout);
 
@@ -14392,6 +14914,7 @@ VKAPI_ATTR VkResult VKAPI_CALL AcquireWinrtDisplayNV(
     VkDisplayKHR                                display)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkAcquireWinrtDisplayNV>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, display);
 
@@ -14420,6 +14943,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetWinrtDisplayNV(
     VkDisplayKHR*                               pDisplay)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -14460,6 +14984,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDirectFBSurfaceEXT(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -14500,6 +15025,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL GetPhysicalDeviceDirectFBPresentationSupportEXT(
     IDirectFB*                                  dfb)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDirectFBPresentationSupportEXT>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, queueFamilyIndex, dfb);
 
@@ -14530,6 +15056,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetVertexInputEXT(
     const VkVertexInputAttributeDescription2EXT* pVertexAttributeDescriptions)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetVertexInputEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, vertexBindingDescriptionCount, pVertexBindingDescriptions, vertexAttributeDescriptionCount, pVertexAttributeDescriptions);
 
@@ -14557,6 +15084,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetMemoryZirconHandleFUCHSIA(
     zx_handle_t*                                pZirconHandle)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -14594,6 +15122,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetMemoryZirconHandlePropertiesFUCHSIA(
     VkMemoryZirconHandlePropertiesFUCHSIA*      pMemoryZirconHandleProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -14628,6 +15157,7 @@ VKAPI_ATTR VkResult VKAPI_CALL ImportSemaphoreZirconHandleFUCHSIA(
     const VkImportSemaphoreZirconHandleInfoFUCHSIA* pImportSemaphoreZirconHandleInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreZirconHandleFUCHSIA>::Dispatch(VulkanCaptureManager::Get(), device, pImportSemaphoreZirconHandleInfo);
 
@@ -14657,6 +15187,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetSemaphoreZirconHandleFUCHSIA(
     zx_handle_t*                                pZirconHandle)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -14693,6 +15224,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBindInvocationMaskHUAWEI(
     VkImageLayout                               imageLayout)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindInvocationMaskHUAWEI>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, imageView, imageLayout);
 
@@ -14719,6 +15251,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetMemoryRemoteAddressNV(
     VkRemoteAddressNV*                          pAddress)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -14754,6 +15287,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetPatchControlPointsEXT(
     uint32_t                                    patchControlPoints)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPatchControlPointsEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, patchControlPoints);
 
@@ -14777,6 +15311,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetRasterizerDiscardEnableEXT(
     VkBool32                                    rasterizerDiscardEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizerDiscardEnableEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, rasterizerDiscardEnable);
 
@@ -14800,6 +15335,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetDepthBiasEnableEXT(
     VkBool32                                    depthBiasEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBiasEnableEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, depthBiasEnable);
 
@@ -14823,6 +15359,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetLogicOpEXT(
     VkLogicOp                                   logicOp)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetLogicOpEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, logicOp);
 
@@ -14846,6 +15383,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetPrimitiveRestartEnableEXT(
     VkBool32                                    primitiveRestartEnable)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveRestartEnableEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, primitiveRestartEnable);
 
@@ -14871,6 +15409,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateScreenSurfaceQNX(
     VkSurfaceKHR*                               pSurface)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -14911,6 +15450,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL GetPhysicalDeviceScreenPresentationSupportQNX(
     struct _screen_window*                      window)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceScreenPresentationSupportQNX>::Dispatch(VulkanCaptureManager::Get(), physicalDevice, queueFamilyIndex, window);
 
@@ -14939,6 +15479,7 @@ VKAPI_ATTR void                                    VKAPI_CALL CmdSetColorWriteEn
     const VkBool32*                             pColorWriteEnables)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetColorWriteEnableEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, attachmentCount, pColorWriteEnables);
 
@@ -14967,6 +15508,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawMultiEXT(
     uint32_t                                    stride)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawMultiEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, drawCount, pVertexInfo, instanceCount, firstInstance, stride);
 
@@ -14999,6 +15541,7 @@ VKAPI_ATTR void VKAPI_CALL CmdDrawMultiIndexedEXT(
     const int32_t*                              pVertexOffset)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawMultiIndexedEXT>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, drawCount, pIndexInfo, instanceCount, firstInstance, stride, pVertexOffset);
 
@@ -15028,6 +15571,7 @@ VKAPI_ATTR void VKAPI_CALL SetDeviceMemoryPriorityEXT(
     float                                       priority)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkSetDeviceMemoryPriorityEXT>::Dispatch(VulkanCaptureManager::Get(), device, memory, priority);
 
@@ -15054,6 +15598,7 @@ VKAPI_ATTR void VKAPI_CALL GetDescriptorSetLayoutHostMappingInfoVALVE(
     VkDescriptorSetLayoutHostMappingInfoVALVE*  pHostMapping)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutHostMappingInfoVALVE>::Dispatch(VulkanCaptureManager::Get(), device, pBindingReference, pHostMapping);
 
@@ -15081,6 +15626,7 @@ VKAPI_ATTR void VKAPI_CALL GetDescriptorSetHostMappingVALVE(
     void**                                      ppData)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetHostMappingVALVE>::Dispatch(VulkanCaptureManager::Get(), device, descriptorSet, ppData);
 
@@ -15107,6 +15653,7 @@ VKAPI_ATTR void VKAPI_CALL GetShaderModuleIdentifierEXT(
     VkShaderModuleIdentifierEXT*                pIdentifier)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetShaderModuleIdentifierEXT>::Dispatch(VulkanCaptureManager::Get(), device, shaderModule, pIdentifier);
 
@@ -15133,6 +15680,7 @@ VKAPI_ATTR void VKAPI_CALL GetShaderModuleCreateInfoIdentifierEXT(
     VkShaderModuleIdentifierEXT*                pIdentifier)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetShaderModuleCreateInfoIdentifierEXT>::Dispatch(VulkanCaptureManager::Get(), device, pCreateInfo, pIdentifier);
 
@@ -15161,6 +15709,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetFramebufferTilePropertiesQCOM(
     VkTilePropertiesQCOM*                       pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -15197,6 +15746,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetDynamicRenderingTilePropertiesQCOM(
     VkTilePropertiesQCOM*                       pProperties)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -15234,6 +15784,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateAccelerationStructureKHR(
     VkAccelerationStructureKHR*                 pAccelerationStructure)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -15267,6 +15818,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyAccelerationStructureKHR(
     const VkAllocationCallbacks*                pAllocator)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyAccelerationStructureKHR>::Dispatch(VulkanCaptureManager::Get(), device, accelerationStructure, pAllocator);
 
@@ -15296,6 +15848,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBuildAccelerationStructuresKHR(
     const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructuresKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, infoCount, pInfos, ppBuildRangeInfos);
 
@@ -15327,6 +15880,7 @@ VKAPI_ATTR void VKAPI_CALL CmdBuildAccelerationStructuresIndirectKHR(
     const uint32_t* const*                      ppMaxPrimitiveCounts)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructuresIndirectKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, infoCount, pInfos, pIndirectDeviceAddresses, pIndirectStrides, ppMaxPrimitiveCounts);
 
@@ -15357,6 +15911,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CopyAccelerationStructureToMemoryKHR(
     const VkCopyAccelerationStructureToMemoryInfoKHR* pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCopyAccelerationStructureToMemoryKHR>::Dispatch(VulkanCaptureManager::Get(), device, deferredOperation, pInfo);
 
@@ -15388,6 +15943,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CopyMemoryToAccelerationStructureKHR(
     const VkCopyMemoryToAccelerationStructureInfoKHR* pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCopyMemoryToAccelerationStructureKHR>::Dispatch(VulkanCaptureManager::Get(), device, deferredOperation, pInfo);
 
@@ -15423,6 +15979,7 @@ VKAPI_ATTR VkResult VKAPI_CALL WriteAccelerationStructuresPropertiesKHR(
     size_t                                      stride)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -15462,6 +16019,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyAccelerationStructureKHR(
     const VkCopyAccelerationStructureInfoKHR*   pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructureKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pInfo);
 
@@ -15487,6 +16045,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyAccelerationStructureToMemoryKHR(
     const VkCopyAccelerationStructureToMemoryInfoKHR* pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructureToMemoryKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pInfo);
 
@@ -15512,6 +16071,7 @@ VKAPI_ATTR void VKAPI_CALL CmdCopyMemoryToAccelerationStructureKHR(
     const VkCopyMemoryToAccelerationStructureInfoKHR* pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyMemoryToAccelerationStructureKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pInfo);
 
@@ -15537,6 +16097,7 @@ VKAPI_ATTR VkDeviceAddress VKAPI_CALL GetAccelerationStructureDeviceAddressKHR(
     const VkAccelerationStructureDeviceAddressInfoKHR* pInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureDeviceAddressKHR>::Dispatch(VulkanCaptureManager::Get(), device, pInfo);
 
@@ -15569,6 +16130,7 @@ VKAPI_ATTR void VKAPI_CALL CmdWriteAccelerationStructuresPropertiesKHR(
     uint32_t                                    firstQuery)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteAccelerationStructuresPropertiesKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, accelerationStructureCount, pAccelerationStructures, queryType, queryPool, firstQuery);
 
@@ -15600,6 +16162,7 @@ VKAPI_ATTR void VKAPI_CALL GetDeviceAccelerationStructureCompatibilityKHR(
     VkAccelerationStructureCompatibilityKHR*    pCompatibility)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceAccelerationStructureCompatibilityKHR>::Dispatch(VulkanCaptureManager::Get(), device, pVersionInfo, pCompatibility);
 
@@ -15627,6 +16190,7 @@ VKAPI_ATTR void VKAPI_CALL GetAccelerationStructureBuildSizesKHR(
     VkAccelerationStructureBuildSizesInfoKHR*   pSizeInfo)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureBuildSizesKHR>::Dispatch(VulkanCaptureManager::Get(), device, buildType, pBuildInfo, pMaxPrimitiveCounts, pSizeInfo);
 
@@ -15661,6 +16225,7 @@ VKAPI_ATTR void VKAPI_CALL CmdTraceRaysKHR(
     uint32_t                                    depth)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pRaygenShaderBindingTable, pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable, width, height, depth);
 
@@ -15695,6 +16260,7 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateRayTracingPipelinesKHR(
     VkPipeline*                                 pPipelines)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -15734,6 +16300,7 @@ VKAPI_ATTR VkResult VKAPI_CALL GetRayTracingCaptureReplayShaderGroupHandlesKHR(
     void*                                       pData)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     bool omit_output_data = false;
 
@@ -15775,6 +16342,7 @@ VKAPI_ATTR void VKAPI_CALL CmdTraceRaysIndirectKHR(
     VkDeviceAddress                             indirectDeviceAddress)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysIndirectKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pRaygenShaderBindingTable, pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable, indirectDeviceAddress);
 
@@ -15804,6 +16372,7 @@ VKAPI_ATTR VkDeviceSize VKAPI_CALL GetRayTracingShaderGroupStackSizeKHR(
     VkShaderGroupShaderKHR                      groupShader)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupStackSizeKHR>::Dispatch(VulkanCaptureManager::Get(), device, pipeline, group, groupShader);
 
@@ -15833,6 +16402,7 @@ VKAPI_ATTR void VKAPI_CALL CmdSetRayTracingPipelineStackSizeKHR(
     uint32_t                                    pipelineStackSize)
 {
     auto state_lock = VulkanCaptureManager::Get()->AcquireSharedStateLock();
+// GFXRECON_WRITE_CONSOLE("%s()\n", __func__);
 
     CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetRayTracingPipelineStackSizeKHR>::Dispatch(VulkanCaptureManager::Get(), commandBuffer, pipelineStackSize);
 

@@ -38,6 +38,7 @@
 #include <limits>
 #include <memory>
 #include <set>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -98,6 +99,7 @@ struct DisplayKHRWrapper : public HandleWrapper<VkDisplayKHR>
     std::vector<DisplayModeKHRWrapper*> child_display_modes;
 };
 
+struct InstanceWrapper;
 // This handle type is retrieved and has no destroy function. The handle wrapper will be owned by its parent VkInstance
 // handle wrapper, which will filter duplicate handle retrievals and ensure that the wrapper is destroyed.
 struct PhysicalDeviceWrapper : public HandleWrapper<VkPhysicalDevice>
@@ -116,6 +118,7 @@ struct PhysicalDeviceWrapper : public HandleWrapper<VkPhysicalDevice>
     std::unique_ptr<VkQueueFamilyProperties[]>  queue_family_properties;
     std::unique_ptr<VkQueueFamilyProperties2[]> queue_family_properties2;
     std::vector<std::unique_ptr<VkQueueFamilyCheckpointPropertiesNV>> queue_family_checkpoint_properties;
+    InstanceWrapper*                                                  instance_wrapper;
 };
 
 struct InstanceWrapper : public HandleWrapper<VkInstance>
@@ -124,6 +127,8 @@ struct InstanceWrapper : public HandleWrapper<VkInstance>
     std::vector<PhysicalDeviceWrapper*> child_physical_devices;
     bool                                have_device_properties{ false };
     uint32_t                            api_version{ VK_MAKE_VERSION(1, 0, 0) };
+    std::string                         application_name;
+    std::string                         engine_name;
 };
 
 struct QueueWrapper : public HandleWrapper<VkQueue>

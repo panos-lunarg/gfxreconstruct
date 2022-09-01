@@ -40,7 +40,8 @@
 #include "generated/generated_vulkan_dispatch_table.h"
 #include "generated/generated_vulkan_command_buffer_util.h"
 #include "util/defines.h"
-
+#include "util/pagemap_manager.h"
+#include "util/logging.h"
 #include "vulkan/vulkan.h"
 
 #include <atomic>
@@ -476,6 +477,11 @@ class VulkanCaptureManager : public CaptureManager
         GFXRECON_UNREFERENCED_PARAMETER(device);
         GFXRECON_UNREFERENCED_PARAMETER(buffer);
 
+        // GFXRECON_WRITE_CONSOLE("%s(GetMemoryTrackingMode(): %u GetPageGuardAlignBufferSizes(): %u)",
+        //                        __func__,
+        //                        GetMemoryTrackingMode(),
+        //                        GetPageGuardAlignBufferSizes());
+
         if ((GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPageGuard) &&
             GetPageGuardAlignBufferSizes() && (pMemoryRequirements != nullptr))
         {
@@ -484,6 +490,24 @@ class VulkanCaptureManager : public CaptureManager
 
             GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, pMemoryRequirements->size);
             GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, pMemoryRequirements->alignment);
+
+            pMemoryRequirements->size = manager->GetAlignedSize(static_cast<size_t>(pMemoryRequirements->size));
+            pMemoryRequirements->alignment =
+                manager->GetAlignedSize(static_cast<size_t>(pMemoryRequirements->alignment));
+        }
+        else if ((GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPagemap) &&
+                 GetPageGuardAlignBufferSizes() && (pMemoryRequirements != nullptr))
+        {
+            util::PagemapManager* manager = util::PagemapManager::Get();
+            assert(manager != nullptr);
+
+            GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, pMemoryRequirements->size);
+            GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, pMemoryRequirements->alignment);
+
+            // GFXRECON_WRITE_CONSOLE("%s() pMemoryRequirements->alignment: 0x%" PRIx64 " -> 0x%" PRIx64 " ",
+            //                        __func__,
+            //                        pMemoryRequirements->alignment,
+            //                        manager->GetAlignedSize(static_cast<size_t>(pMemoryRequirements->alignment)));
 
             pMemoryRequirements->size = manager->GetAlignedSize(static_cast<size_t>(pMemoryRequirements->size));
             pMemoryRequirements->alignment =
@@ -498,6 +522,11 @@ class VulkanCaptureManager : public CaptureManager
         GFXRECON_UNREFERENCED_PARAMETER(device);
         GFXRECON_UNREFERENCED_PARAMETER(pInfo);
 
+        // GFXRECON_WRITE_CONSOLE("%s(GetMemoryTrackingMode(): %u GetPageGuardAlignBufferSizes(): %u)",
+        //                        __func__,
+        //                        GetMemoryTrackingMode(),
+        //                        GetPageGuardAlignBufferSizes());
+
         if ((GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPageGuard) &&
             GetPageGuardAlignBufferSizes() && (pMemoryRequirements != nullptr))
         {
@@ -506,6 +535,26 @@ class VulkanCaptureManager : public CaptureManager
 
             GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, pMemoryRequirements->memoryRequirements.size);
             GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, pMemoryRequirements->memoryRequirements.alignment);
+
+            pMemoryRequirements->memoryRequirements.size =
+                manager->GetAlignedSize(static_cast<size_t>(pMemoryRequirements->memoryRequirements.size));
+            pMemoryRequirements->memoryRequirements.alignment =
+                manager->GetAlignedSize(static_cast<size_t>(pMemoryRequirements->memoryRequirements.alignment));
+        }
+        else if ((GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPagemap) &&
+                 GetPageGuardAlignBufferSizes() && (pMemoryRequirements != nullptr))
+        {
+            util::PagemapManager* manager = util::PagemapManager::Get();
+            assert(manager != nullptr);
+
+            GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, pMemoryRequirements->memoryRequirements.size);
+            GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, pMemoryRequirements->memoryRequirements.alignment);
+
+            // GFXRECON_WRITE_CONSOLE(
+            //     "%s() pMemoryRequirements->memoryRequirements.alignment: 0x%" PRIx64 " -> 0x%" PRIx64 " ",
+            //     __func__,
+            //     pMemoryRequirements->memoryRequirements.alignment,
+            //     manager->GetAlignedSize(static_cast<size_t>(pMemoryRequirements->memoryRequirements.alignment)));
 
             pMemoryRequirements->memoryRequirements.size =
                 manager->GetAlignedSize(static_cast<size_t>(pMemoryRequirements->memoryRequirements.size));
@@ -897,6 +946,18 @@ class VulkanCaptureManager : public CaptureManager
     void PreProcess_vkFlushMappedMemoryRanges(VkDevice                   device,
                                               uint32_t                   memoryRangeCount,
                                               const VkMappedMemoryRange* pMemoryRanges);
+
+    void PostProcess_vkInvalidateMappedMemoryRanges(VkResult                   result,
+                                                    VkDevice                   device,
+                                                    uint32_t                   memoryRangeCount,
+                                                    const VkMappedMemoryRange* pMemoryRanges);
+
+    void PostProcess_vkGetPhysicalDeviceMemoryProperties(VkPhysicalDevice                  physicalDevice,
+                                                         VkPhysicalDeviceMemoryProperties* pMemoryProperties);
+    void PostProcess_vkGetPhysicalDeviceMemoryProperties2(VkPhysicalDevice                   physicalDevice,
+                                                          VkPhysicalDeviceMemoryProperties2* pMemoryProperties);
+    void PostProcess_vkGetPhysicalDeviceMemoryProperties2KHR(VkPhysicalDevice                   physicalDevice,
+                                                             VkPhysicalDeviceMemoryProperties2* pMemoryProperties);
 
     void PreProcess_vkUnmapMemory(VkDevice device, VkDeviceMemory memory);
 

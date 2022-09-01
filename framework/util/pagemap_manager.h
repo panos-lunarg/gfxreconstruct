@@ -33,6 +33,7 @@
 #include <unordered_map>
 #include <functional>
 #include <mutex>
+#include <time.h>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(util)
@@ -53,49 +54,61 @@ class PagemapManager
     // typedef std::function<void(format::HandleId, uint64_t, uint64_t, const void*)> ModifiedMemoryFunc;
     typedef std::function<void(uint64_t, void*, size_t, size_t)> ModifiedMemoryFunc;
 
-    void ProcessMemoryEntry(uint64_t memory_id, const ModifiedMemoryFunc& handle_modified);
-    void ProcessMemoryEntries(const ModifiedMemoryFunc& handle_modified);
+    void   ProcessMemoryEntry(uint64_t memory_id, const ModifiedMemoryFunc& handle_modified);
+    void   ProcessMemoryEntries(const ModifiedMemoryFunc& handle_modified);
+    size_t GetAlignedSize(size_t size) const;
+    void   UpdateEntry(uint64_t memory_id, size_t offset, size_t size);
 
   private:
     struct MemoryInfo
     {
-        MemoryInfo(void* mm, void* sm, size_t mr, size_t np, size_t lss, bool d) :
-            mapped_memory(mm), shadow_memory(sm), mapped_range(mr), n_pages(np), last_segment_size(lss), dirty(d)
+        MemoryInfo(void* mm, void* sm, size_t mr, size_t ss, size_t np, size_t lss, bool d) :
+            mapped_memory(mm), shadow_memory(sm), mapped_range(mr), shadow_size(ss), n_pages(np),
+            last_segment_size(lss), dirty(d), aligned_offset(0)
         {
             // GFXRECON_WRITE_CONSOLE("%s()\n  mm: %p\n  sm: %p\n  mr: %zu\n  np: %zu\n", __func__, mm, sm, mr, np);
+            page_status.resize(n_pages);
         }
 
-        void*  mapped_memory;
-        void*  shadow_memory;
-        size_t mapped_range;
-        size_t n_pages;
-        size_t last_segment_size;
-        bool   dirty;
+        void*                mapped_memory;
+        void*                shadow_memory;
+        size_t               mapped_range;
+        size_t               shadow_size;
+        size_t               n_pages;
+        size_t               last_segment_size;
+        uint8_t              dirty;
+        size_t               aligned_offset;
+        int                  shadow_file_fd;
+        timespec             shadow_file_mtime;
+        std::vector<uint8_t> page_status;
     };
 
     PagemapManager(bool enable_copy_on_map);
+    int  CreateShadowFile(void* mapped_memory, size_t size) const;
+    bool ConnectToDaemon(void);
 
     void ProcessEntry(uint64_t memory_id, MemoryInfo* memory_info, const ModifiedMemoryFunc& handle_modified);
+    void GetFileModificationTime(int fd, timespec* m_time);
 
     void UpdatePageTableEntries();
     void UpdatePageTableEntry(MemoryInfo* mem_info);
-    void ClearSoftDirtyBits();
-    bool OpenPagemapFile();
-    void ClosePagemapFile();
+    void ProcessActiveRange(uint64_t                  memory_id,
+                            MemoryInfo*               memory_info,
+                            size_t                    start_index,
+                            size_t                    end_index,
+                            const ModifiedMemoryFunc& handle_modified);
 
     typedef std::unordered_map<uint64_t, MemoryInfo> MemoryInfoMap;
 
     static PagemapManager* instance_;
 
-    using hash_t                       = uint64_t;
-    static constexpr hash_t hash_seed_ = 0;
-    MemoryInfoMap           memory_info_;
-    std::mutex              tracked_memory_lock_;
-    FILE*                   pagemap_fd_;
-    char                    pagemap_filename_[64];
-    size_t                  system_page_size_;
-    size_t                  system_page_pot_shift_;
-    bool                    enable_copy_on_map_;
+    MemoryInfoMap memory_info_;
+    std::mutex    tracked_memory_lock_;
+    size_t        system_page_size_;
+    size_t        system_page_pot_shift_;
+    pid_t         pid_;
+    int           socket_;
+    bool          enable_copy_on_map_;
 };
 
 GFXRECON_END_NAMESPACE(util)

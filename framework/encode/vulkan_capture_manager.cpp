@@ -39,6 +39,8 @@
 
 #include <cassert>
 #include <unordered_set>
+#include <chrono>
+#include <thread>
 
 #if defined(__linux__) && !defined(__ANDROID__)
 #if defined(VK_USE_PLATFORM_XCB_KHR)
@@ -599,6 +601,10 @@ VkResult VulkanCaptureManager::OverrideCreateInstance(const VkInstanceCreateInfo
         auto api_version              = pCreateInfo->pApplicationInfo->apiVersion;
         auto instance_wrapper         = reinterpret_cast<InstanceWrapper*>(*pInstance);
         instance_wrapper->api_version = api_version;
+        if (pCreateInfo->pApplicationInfo->pApplicationName)
+            instance_wrapper->application_name = pCreateInfo->pApplicationInfo->pApplicationName;
+        if (pCreateInfo->pApplicationInfo->pEngineName)
+            instance_wrapper->engine_name = pCreateInfo->pApplicationInfo->pEngineName;
 
         // Warn when enabled API version is newer than the supported API version.
         if (api_version > VK_HEADER_VERSION_COMPLETE)
@@ -876,6 +882,9 @@ VkResult VulkanCaptureManager::OverrideAllocateMemory(VkDevice                  
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)
     const VkImportAndroidHardwareBufferInfoANDROID* import_ahb_info =
         FindAllocateMemoryExtensions(pAllocateInfo_unwrapped);
+
+    if (import_ahb_info)
+        GFXRECON_WRITE_CONSOLE("  %s(): AHB buffer", __func__);
 #endif
 
     bool                   uses_address         = false;
@@ -1198,6 +1207,7 @@ void VulkanCaptureManager::ProcessEnumeratePhysicalDevices(VkResult          res
                 }
 
                 physical_device_wrapper->instance_api_version = instance_wrapper->api_version;
+                physical_device_wrapper->instance_wrapper     = instance_wrapper;
 
                 WriteSetDevicePropertiesCommand(physical_device_id, properties);
                 WriteSetDeviceMemoryPropertiesCommand(physical_device_id, physical_device_wrapper->memory_properties);
@@ -1264,6 +1274,7 @@ bool VulkanCaptureManager::ProcessReferenceToAndroidHardwareBuffer(VkDevice devi
 
         if ((desc.usage & AHARDWAREBUFFER_USAGE_CPU_READ_MASK) != 0)
         {
+            GFXRECON_WRITE_CONSOLE("hmmmm");
 
             void* data   = nullptr;
             int   result = -1;
@@ -1700,6 +1711,129 @@ void VulkanCaptureManager::PostProcess_vkMapMemory(VkResult         result,
     }
 }
 
+void VulkanCaptureManager::PostProcess_vkInvalidateMappedMemoryRanges(VkResult                   result,
+                                                                      VkDevice                   device,
+                                                                      uint32_t                   memoryRangeCount,
+                                                                      const VkMappedMemoryRange* pMemoryRanges)
+{
+    GFXRECON_UNREFERENCED_PARAMETER(device);
+
+    // GFXRECON_WRITE_CONSOLE("%s()", __func__);
+
+    if (result == VK_SUCCESS && pMemoryRanges != nullptr)
+    {
+        if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPagemap)
+        {
+            util::PagemapManager* manager = util::PagemapManager::Get();
+            assert(manager != nullptr);
+
+            for (uint32_t i = 0; i < memoryRangeCount; ++i)
+            {
+                auto memory_wrapper = reinterpret_cast<const DeviceMemoryWrapper*>(pMemoryRanges[i].memory);
+
+                if ((memory_wrapper != nullptr) && (memory_wrapper->mapped_data != nullptr))
+                {
+                    manager->UpdateEntry(memory_wrapper->handle_id, pMemoryRanges[i].offset, pMemoryRanges[i].size);
+                }
+                else
+                {
+                    GFXRECON_LOG_WARNING("vkInvalidateMappedMemoryRanges called for memory that is not mapped");
+                }
+            }
+        }
+    }
+}
+
+void VulkanCaptureManager::PostProcess_vkGetPhysicalDeviceMemoryProperties(
+    VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties* pMemoryProperties)
+{
+    // GFXRECON_WRITE_CONSOLE("%s()", __func__);
+
+    auto physical_device_wrapper = reinterpret_cast<PhysicalDeviceWrapper*>(physicalDevice);
+    auto instance_wrapper        = reinterpret_cast<InstanceWrapper*>(physical_device_wrapper->instance_wrapper);
+
+    // GFXRECON_WRITE_CONSOLE("  application_name: %s",
+    //                        physical_device_wrapper->instance_wrapper->application_name.c_str());
+    // GFXRECON_WRITE_CONSOLE("  engine_name: %s", physical_device_wrapper->instance_wrapper->engine_name.c_str());
+
+    if (!strncmp("com.epicgames.fortnite", physical_device_wrapper->instance_wrapper->application_name.c_str(), 22))
+    {
+        if (pMemoryProperties && GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPagemap)
+        {
+            for (uint32_t i = 0; i < pMemoryProperties->memoryTypeCount; ++i)
+            {
+                if (pMemoryProperties->memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+                {
+                    pMemoryProperties->memoryTypes[i].propertyFlags &= ~VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+                }
+            }
+        }
+    }
+}
+
+void VulkanCaptureManager::PostProcess_vkGetPhysicalDeviceMemoryProperties2(
+    VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties2* pMemoryProperties)
+{
+    // GFXRECON_WRITE_CONSOLE("%s()", __func__);
+
+    auto physical_device_wrapper = reinterpret_cast<PhysicalDeviceWrapper*>(physicalDevice);
+    auto instance_wrapper        = reinterpret_cast<InstanceWrapper*>(physical_device_wrapper->instance_wrapper);
+
+    // GFXRECON_WRITE_CONSOLE("  application_name: %s",
+    //                        physical_device_wrapper->instance_wrapper->application_name.c_str());
+    // GFXRECON_WRITE_CONSOLE("  engine_name: %s", physical_device_wrapper->instance_wrapper->engine_name.c_str());
+
+    if (!strncmp("com.epicgames.fortnite", physical_device_wrapper->instance_wrapper->application_name.c_str(), 22))
+    {
+        if (pMemoryProperties && GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPagemap)
+        {
+            for (uint32_t i = 0; i < pMemoryProperties->memoryProperties.memoryTypeCount; ++i)
+            {
+                if (pMemoryProperties->memoryProperties.memoryTypes[i].propertyFlags &
+                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+                {
+                    // GFXRECON_WRITE_CONSOLE("pMemoryProperties->memoryProperties.memoryTypes[%u].propertyFlags: 0x%x ->",
+                    //                        i,
+                    //                        pMemoryProperties->memoryProperties.memoryTypes[i].propertyFlags);
+                    pMemoryProperties->memoryProperties.memoryTypes[i].propertyFlags &=
+                        ~VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+                    // GFXRECON_WRITE_CONSOLE("    0x%x",
+                    //                        pMemoryProperties->memoryProperties.memoryTypes[i].propertyFlags);
+                }
+            }
+        }
+    }
+}
+
+void VulkanCaptureManager::PostProcess_vkGetPhysicalDeviceMemoryProperties2KHR(
+    VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties2* pMemoryProperties)
+{
+    // GFXRECON_WRITE_CONSOLE("%s()", __func__);
+
+    auto physical_device_wrapper = reinterpret_cast<PhysicalDeviceWrapper*>(physicalDevice);
+    auto instance_wrapper        = reinterpret_cast<InstanceWrapper*>(physical_device_wrapper->instance_wrapper);
+
+    // GFXRECON_WRITE_CONSOLE("  application_name: %s",
+    //                        physical_device_wrapper->instance_wrapper->application_name.c_str());
+    // GFXRECON_WRITE_CONSOLE("  engine_name: %s", physical_device_wrapper->instance_wrapper->engine_name.c_str());
+
+    if (!strncmp("com.epicgames.fortnite", physical_device_wrapper->instance_wrapper->application_name.c_str(), 22))
+    {
+        if (pMemoryProperties && GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPagemap)
+        {
+            for (uint32_t i = 0; i < pMemoryProperties->memoryProperties.memoryTypeCount; ++i)
+            {
+                if (pMemoryProperties->memoryProperties.memoryTypes[i].propertyFlags &
+                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+                {
+                    pMemoryProperties->memoryProperties.memoryTypes[i].propertyFlags &=
+                        ~VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+                }
+            }
+        }
+    }
+}
+
 void VulkanCaptureManager::PreProcess_vkFlushMappedMemoryRanges(VkDevice                   device,
                                                                 uint32_t                   memoryRangeCount,
                                                                 const VkMappedMemoryRange* pMemoryRanges)
@@ -1893,11 +2027,6 @@ void VulkanCaptureManager::PreProcess_vkFreeMemory(VkDevice                     
                 // Remove memory tracking.
                 manager->RemoveTrackedMemory(wrapper->handle_id);
             }
-            else if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kUnassisted)
-            {
-                std::lock_guard<std::mutex> lock(mapped_memory_lock_);
-                mapped_memory_.erase(wrapper);
-            }
             else if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPagemap)
             {
                 util::PagemapManager* manager = util::PagemapManager::Get();
@@ -1905,6 +2034,11 @@ void VulkanCaptureManager::PreProcess_vkFreeMemory(VkDevice                     
 
                 // Remove memory tracking.
                 manager->RemoveTrackedMemory(wrapper->handle_id);
+            }
+            else if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kUnassisted)
+            {
+                std::lock_guard<std::mutex> lock(mapped_memory_lock_);
+                mapped_memory_.erase(wrapper);
             }
         }
     }
@@ -2079,8 +2213,12 @@ void VulkanCaptureManager::PreProcess_vkQueueSubmit2(VkQueue              queue,
     QueueSubmitWriteFillMemoryCmd();
 }
 
+// std::mutex queue_submit_lock_;
+
 void VulkanCaptureManager::QueueSubmitWriteFillMemoryCmd()
 {
+    // std::lock_guard<std::mutex> lock(queue_submit_lock_);
+
     if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kPageGuard)
     {
         util::PageGuardManager* manager = util::PageGuardManager::Get();
