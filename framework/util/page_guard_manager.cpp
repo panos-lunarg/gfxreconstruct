@@ -188,6 +188,7 @@ static void PageGuardExceptionHandler(int id, siginfo_t* info, void* data)
 #endif
 
 PageGuardManager* PageGuardManager::instance_ = nullptr;
+constexpr int64_t PageGuardManager::signal_watcher_thread_period;
 
 void PageGuardManager::InitializeSystemExceptionContext(void)
 {
@@ -204,7 +205,8 @@ PageGuardManager::PageGuardManager() :
     exception_handler_(nullptr), exception_handler_count_(0), system_page_size_(GetSystemPageSize()),
     system_page_pot_shift_(GetSystemPagePotShift()), enable_copy_on_map_(kDefaultEnableCopyOnMap),
     enable_separate_read_(kDefaultEnableSeparateRead), unblock_sigsegv_(kDefaultUnblockSIGSEGV),
-    enable_read_write_same_page_(kDefaultEnableReadWriteSamePage)
+    signal_handler_watcher_(kDefaultSignalHandlerWatcher),
+    enable_read_write_same_page_(kDefaultEnableReadWriteSamePage), signal_handler_watcher_thread()
 {
     InitializeSystemExceptionContext();
 }
@@ -212,12 +214,14 @@ PageGuardManager::PageGuardManager() :
 PageGuardManager::PageGuardManager(bool enable_copy_on_map,
                                    bool enable_separate_read,
                                    bool expect_read_write_same_page,
-                                   bool unblock_SIGSEGV) :
+                                   bool unblock_SIGSEGV,
+                                   bool signal_handler_watcher) :
     exception_handler_(nullptr),
     exception_handler_count_(0), system_page_size_(GetSystemPageSize()),
     system_page_pot_shift_(GetSystemPagePotShift()), enable_copy_on_map_(enable_copy_on_map),
     enable_separate_read_(enable_separate_read), unblock_sigsegv_(unblock_SIGSEGV),
-    enable_read_write_same_page_(expect_read_write_same_page)
+    signal_handler_watcher_(signal_handler_watcher), enable_read_write_same_page_(expect_read_write_same_page),
+    signal_handler_watcher_thread()
 {
     InitializeSystemExceptionContext();
 }
@@ -230,15 +234,51 @@ PageGuardManager::~PageGuardManager()
     }
 }
 
+void* PageGuardManager::signal_handler_watcher_f(void* args)
+{
+    bool* active = static_cast<bool*>(args);
+
+    while (*active)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(PageGuardManager::signal_watcher_thread_period));
+
+        struct sigaction current_handler;
+        int              result = sigaction(SIGSEGV, nullptr, &current_handler);
+
+        if (result != -1 && current_handler.sa_sigaction != PageGuardExceptionHandler)
+        {
+            GFXRECON_WRITE_CONSOLE("Signal handler has been removed. Re-installing.")
+
+            struct sigaction sa = {};
+            sa.sa_flags         = SA_SIGINFO;
+            sigemptyset(&sa.sa_mask);
+            sa.sa_sigaction = PageGuardExceptionHandler;
+
+            result = sigaction(SIGSEGV, &sa, nullptr);
+            if (result == -1)
+                GFXRECON_LOG_WARNING("sigaction failed: %s", strerror(errno));
+        }
+    }
+
+    return NULL;
+}
+
 void PageGuardManager::Create(bool enable_copy_on_map,
                               bool enable_separate_read,
                               bool expect_read_write_same_page,
-                              bool unblock_SIGSEGV)
+                              bool unblock_SIGSEGV,
+                              bool signal_handler_watcher)
 {
     if (instance_ == nullptr)
     {
-        instance_ = new PageGuardManager(
-            enable_copy_on_map, enable_separate_read, expect_read_write_same_page, unblock_SIGSEGV);
+        instance_ = new PageGuardManager(enable_copy_on_map,
+                                         enable_separate_read,
+                                         expect_read_write_same_page,
+                                         unblock_SIGSEGV,
+                                         signal_handler_watcher);
+
+        instance_->signal_handler_watcher_thread =
+            std::thread(signal_handler_watcher_f, &instance_->signal_handler_watcher_);
     }
     else
     {
@@ -250,6 +290,9 @@ void PageGuardManager::Destroy()
 {
     if (instance_ != nullptr)
     {
+        instance_->signal_handler_watcher_ = false;
+        instance_->signal_handler_watcher_thread.join();
+
         delete instance_;
         instance_ = nullptr;
     }

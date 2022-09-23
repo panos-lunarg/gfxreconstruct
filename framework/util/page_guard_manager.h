@@ -27,6 +27,7 @@
 
 #include "util/defines.h"
 #include "util/page_status_tracker.h"
+#include "util/platform.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -46,6 +47,7 @@ class PageGuardManager
     static const bool kDefaultEnableSeparateRead      = true;
     static const bool kDefaultEnableReadWriteSamePage = true;
     static const bool kDefaultUnblockSIGSEGV          = false;
+    static const bool kDefaultSignalHandlerWatcher    = false;
 
     static const uintptr_t kNullShadowHandle = 0;
 
@@ -56,8 +58,11 @@ class PageGuardManager
     typedef std::function<void(uint64_t, void*, size_t, size_t)> ModifiedMemoryFunc;
 
   public:
-    static void
-    Create(bool enable_copy_on_map, bool enable_separate_read, bool expect_read_write_same_page, bool unblock_SIGSEGV);
+    static void Create(bool enable_copy_on_map,
+                       bool enable_separate_read,
+                       bool expect_read_write_same_page,
+                       bool unblock_SIGSEGV,
+                       bool signal_handler_watcher);
 
     static void Destroy();
 
@@ -112,7 +117,8 @@ class PageGuardManager
     PageGuardManager(bool enable_copy_on_map,
                      bool enable_separate_read,
                      bool expect_read_write_same_page,
-                     bool unblock_SIGSEGV);
+                     bool unblock_SIGSEGV,
+                     bool signal_handler_watcher);
 
     ~PageGuardManager();
 
@@ -225,9 +231,16 @@ class PageGuardManager
     const bool               enable_copy_on_map_;
     const bool               enable_separate_read_;
     const bool               unblock_sigsegv_;
+    bool                     signal_handler_watcher_;
 
     // Only applies to WIN32 builds and Linux/Android builds with PAGE_GUARD_ENABLE_UCONTEXT_WRITE_DETECTION defined.
     const bool enable_read_write_same_page_;
+
+    std::thread  signal_handler_watcher_thread;
+    static void* signal_handler_watcher_f(void*);
+
+    // Signal watcher thread period in miliseconds
+    static constexpr int64_t signal_watcher_thread_period{ 100 };
 };
 
 GFXRECON_END_NAMESPACE(util)
