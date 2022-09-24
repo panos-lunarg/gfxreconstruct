@@ -236,6 +236,8 @@ PageGuardManager::~PageGuardManager()
 
 void* PageGuardManager::signal_handler_watcher_f(void* args)
 {
+#if !defined(WIN32)
+    // On Android and Linux, watch the installed signal handlers and reinstall if necessary.
     bool* active = static_cast<bool*>(args);
 
     while (*active)
@@ -259,6 +261,7 @@ void* PageGuardManager::signal_handler_watcher_f(void* args)
                 GFXRECON_LOG_WARNING("sigaction failed: %s", strerror(errno));
         }
     }
+#endif
 
     return NULL;
 }

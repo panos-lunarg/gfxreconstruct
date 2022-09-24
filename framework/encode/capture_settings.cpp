@@ -414,9 +414,11 @@ void CaptureSettings::ProcessOptions(OptionsMap* options, CaptureSettings* setti
         FindOption(options, kOptionKeyPageGuardExternalMemory), settings->trace_settings_.page_guard_external_memory);
     settings->trace_settings_.page_guard_unblock_sigsegv = ParseBoolString(
         FindOption(options, kOptionKeyPageGuardUnblockSigSegV), settings->trace_settings_.page_guard_unblock_sigsegv);
+#if !defined(WIN32)
     settings->trace_settings_.page_guard_signal_handler_watcher =
         ParseBoolString(FindOption(options, kOptionKeyPageGuardSignalHandlerWatcher),
                         settings->trace_settings_.page_guard_signal_handler_watcher);
+#endif
 
     // Debug options
     settings->trace_settings_.debug_layer =
