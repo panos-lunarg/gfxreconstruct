@@ -1653,6 +1653,8 @@ void VulkanCaptureManager::PostProcess_vkMapMemory(VkResult         result,
         auto wrapper = reinterpret_cast<DeviceMemoryWrapper*>(memory);
         assert(wrapper != nullptr);
 
+        wrapper->never_mapped = false;
+
         if (wrapper->mapped_data == nullptr)
         {
             if ((GetCaptureMode() & kModeTrack) == kModeTrack)

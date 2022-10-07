@@ -167,6 +167,7 @@ struct DeviceMemoryWrapper : public HandleWrapper<VkDeviceMemory>
     uintptr_t        shadow_allocation{ util::PageGuardManager::kNullShadowHandle };
     AHardwareBuffer* hardware_buffer{ nullptr };
     format::HandleId hardware_buffer_memory_id{ format::kNullHandleId };
+    bool             never_mapped{ true };
 
     // State tracking info for memory with device addresses.
     format::HandleId device_id{ format::kNullHandleId };

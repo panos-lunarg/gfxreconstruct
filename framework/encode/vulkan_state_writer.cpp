@@ -1104,6 +1104,12 @@ void VulkanStateWriter::ProcessBufferMemory(const DeviceWrapper*                
 
         assert((buffer_wrapper != nullptr) && (memory_wrapper != nullptr));
 
+        // No reason dumping something that has never been accessed by the host
+        if (memory_wrapper->never_mapped)
+        {
+            continue;
+        }
+
         if (snapshot_entry.need_staging_copy)
         {
             VkCommandBufferBeginInfo begin_info = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -1250,6 +1256,12 @@ void VulkanStateWriter::ProcessImageMemory(const DeviceWrapper*                 
 
         assert((image_wrapper != nullptr) && ((image_wrapper->is_swapchain_image && memory_wrapper == nullptr) ||
                                               (!image_wrapper->is_swapchain_image && memory_wrapper != nullptr)));
+
+        // No reason dumping something that has never been accessed by the host
+        if (memory_wrapper->never_mapped)
+        {
+            continue;
+        }
 
         if (snapshot_entry.need_staging_copy)
         {
