@@ -621,7 +621,7 @@ class VulkanReplayConsumerBodyGenerator(
                                     postexpr.append(
                                         'PostProcessExternalObject(VK_SUCCESS, (*{}->GetPointer()), static_cast<void*>(*{}), format::ApiCallId::ApiCall_{name}, "{name}");'
                                         .format(value.name, arg_name, name=name)
-                                    )                                    
+                                    )
                             else:
                                 expr += '{paramname}->IsNull() ? nullptr : {paramname}->AllocateOutputData(1);'.format(
                                     paramname=value.name
@@ -635,7 +635,7 @@ class VulkanReplayConsumerBodyGenerator(
                                     postexpr.append(
                                         'PostProcessExternalObject(VK_SUCCESS, (*{paramname}->GetPointer()), *{paramname}->GetOutputPointer(), format::ApiCallId::ApiCall_{name}, "{name}");'
                                         .format(paramname=value.name, name=name)
-                                    )                                    
+                                    )
                         elif self.is_handle(value.base_type):
                             # Add mapping for the newly created handle
                             preexpr.append(
