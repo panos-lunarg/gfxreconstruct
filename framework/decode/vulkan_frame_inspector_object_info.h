@@ -24,9 +24,8 @@
 #define GFXRECON_DECODE_VULKAN_FRAME_INSPECTOR_OBJECT_INFO_H
 
 #include "format/format.h"
+#include "vulkan/vulkan.h"
 
-#include <vector>
-#include <memory>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)
@@ -37,7 +36,10 @@ struct VulkanCommandInfo
 };
 
 struct VulkanCommandBindPipelineInfo : public VulkanCommandInfo
-{};
+{
+    VkPipelineBindPoint pipelineBindPoint;
+    format::HandleId    pipeline;
+};
 
 struct VulkanCommandSetViewportInfo : public VulkanCommandInfo
 {};
@@ -681,6 +683,8 @@ struct VulkanCommandDrawMeshTasksIndirectEXTInfo : public VulkanCommandInfo
 struct VulkanCommandDrawMeshTasksIndirectCountEXTInfo : public VulkanCommandInfo
 {};
 
+struct GFXRCommandFillMemory : public VulkanCommandInfo
+{};
 
 GFXRECON_END_NAMESPACE(gfxrecon)
 GFXRECON_END_NAMESPACE(decode)
