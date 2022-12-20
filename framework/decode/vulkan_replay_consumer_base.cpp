@@ -2529,6 +2529,7 @@ VulkanReplayConsumerBase::OverrideCreateDevice(VkResult            original_resu
             device_info->replay_device_group = std::move(replay_device_group);
             device_info->extensions          = std::move(extensions);
             device_info->parent              = physical_device;
+            device_info->ci                  = pCreateInfo->GetPointer();
 
             // Create the memory allocator for the selected physical device.
             auto replay_device_info = physical_device_info->replay_device_info;

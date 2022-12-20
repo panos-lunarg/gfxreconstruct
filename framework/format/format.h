@@ -52,6 +52,7 @@ typedef uint64_t SizeTEncodeType;
 typedef uint64_t AddressEncodeType;
 typedef uint8_t  CharEncodeType;  // Encoding type for UTF-8 strings.
 typedef uint16_t WCharEncodeType; // Encoding type for LPCWSTR (UTF-16) strings.
+typedef uint64_t CommandIndexType;
 
 typedef HandleEncodeType HandleId;
 typedef uint64_t         ThreadId;
