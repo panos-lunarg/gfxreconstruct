@@ -140,7 +140,7 @@ class FileProcessor
     std::vector<uint8_t>                compressed_parameter_buffer_;
     util::Compressor*                   compressor_;
     /// @brief Incremented at the end of every block successfully processed.
-    uint64_t block_index_;
+    format::CommandIndexType block_index_;
 };
 
 GFXRECON_END_NAMESPACE(decode)

@@ -30,7 +30,7 @@
 #define  GFXRECON_GENERATED_VULKAN_OBJECT_INFO_TABLE_BASE2_H
 
 #include "decode/vulkan_object_info_table_base.h"
-
+#include "decode/vulkan_frame_inspector_object_info.h"
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)

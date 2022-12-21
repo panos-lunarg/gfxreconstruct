@@ -25,10 +25,8 @@
 
 #include "decode/vulkan_resource_allocator.h"
 #include "decode/vulkan_resource_initializer.h"
-#include "decode/vulkan_frame_inspector_object_info.h"
 #include "decode/window.h"
 #include "format/format.h"
-#include "generated/generated_vulkan_dispatch_table.h"
 #include "graphics/vulkan_device_util.h"
 #include "util/defines.h"
 
@@ -139,12 +137,6 @@ enum SwapchainKHRArrayIndices : uint32_t
 enum ValidationCacheEXTArrayIndices : uint32_t
 {
     kValidationCacheEXTArrayGetValidationCacheDataEXT = 0
-};
-
-enum VulkanCommandBufferState : uint8_t
-{
-    kRecording,
-    kCompleted
 };
 
 //
@@ -267,8 +259,6 @@ struct DeviceInfo : public VulkanObjectInfo<VkDevice>
     graphics::VulkanDevicePropertyFeatureInfo property_feature_info;
 
     std::unordered_map<uint32_t, VkDeviceQueueCreateFlags> queue_family_creation_flags;
-
-    const VkDeviceCreateInfo* ci;
 
     std::vector<VkPhysicalDevice> replay_device_group;
 };
@@ -446,14 +436,6 @@ struct DeferredOperationKHRInfo : public VulkanObjectInfo<VkDeferredOperationKHR
     // Record CreateRayTracingPipelinesKHR parameters for safety.
     std::vector<VkRayTracingPipelineCreateInfoKHR>                 record_modified_create_infos;
     std::vector<std::vector<VkRayTracingShaderGroupCreateInfoKHR>> record_modified_pgroups;
-};
-
-struct CommandBufferInfo : public VulkanPoolObjectInfo<VkCommandBuffer>
-{
-    std::vector<std::unique_ptr<VulkanCommandInfo>> command_list;
-    VulkanCommandBufferState                        state;
-    VkCommandBufferLevel                            level;
-    VkResult                                        begin_result;
 };
 
 //

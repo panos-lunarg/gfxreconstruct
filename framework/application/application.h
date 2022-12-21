@@ -25,6 +25,7 @@
 #define GFXRECON_APPLICATION_APPLICATION_H
 
 #include "application/wsi_context.h"
+#include "decode/vulkan_consumer_base.h"
 #include "decode/file_processor.h"
 #include "decode/window.h"
 #include "util/defines.h"
@@ -78,6 +79,12 @@ class Application final
 
     void StopRunning() { running_ = false; }
 
+    void SetConsumer(decode::VulkanConsumerBase* consumer) { vulkan_consumer_ = consumer; }
+
+    decode::VulkanConsumerBase* GetConsuer() { return vulkan_consumer_; }
+
+    void InspectFrame();
+
   private:
     // clang-format off
     std::string                                                  name_;              ///< Application name to display in window title bar.
@@ -90,6 +97,7 @@ class Application final
     graphics::FpsInfo*           fps_info_;                 ///< A optional FPS info object that logs the FPS across a configured framerange.
                                                             ///< capture file data.
     // clang-format on
+    decode::VulkanConsumerBase* vulkan_consumer_;
 };
 
 GFXRECON_END_NAMESPACE(application)

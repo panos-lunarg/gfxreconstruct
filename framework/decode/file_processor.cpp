@@ -505,7 +505,8 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
                 {
                     if (decoder->SupportsMetaDataId(meta_data_id))
                     {
-                        decoder->DispatchFillMemoryCommand(header.thread_id,
+                        decoder->DispatchFillMemoryCommand(block_index_,
+                                                           header.thread_id,
                                                            header.memory_id,
                                                            header.memory_offset,
                                                            header.memory_size,
@@ -550,7 +551,7 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
                 if (decoder->SupportsMetaDataId(meta_data_id))
                 {
                     decoder->DispatchResizeWindowCommand(
-                        command.thread_id, command.surface_id, command.width, command.height);
+                        block_index_, command.thread_id, command.surface_id, command.width, command.height);
                 }
             }
         }
@@ -578,8 +579,12 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
             {
                 if (decoder->SupportsMetaDataId(meta_data_id))
                 {
-                    decoder->DispatchResizeWindowCommand2(
-                        command.thread_id, command.surface_id, command.width, command.height, command.pre_transform);
+                    decoder->DispatchResizeWindowCommand2(block_index_,
+                                                          command.thread_id,
+                                                          command.surface_id,
+                                                          command.width,
+                                                          command.height,
+                                                          command.pre_transform);
                 }
             }
         }
@@ -614,7 +619,7 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
                 {
                     if (decoder->SupportsMetaDataId(meta_data_id))
                     {
-                        decoder->DispatchDisplayMessageCommand(header.thread_id, message);
+                        decoder->DispatchDisplayMessageCommand(block_index_, header.thread_id, message);
                     }
                 }
             }
@@ -670,7 +675,8 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
                 {
                     if (decoder->SupportsMetaDataId(meta_data_id))
                     {
-                        decoder->DispatchCreateHardwareBufferCommand(header.thread_id,
+                        decoder->DispatchCreateHardwareBufferCommand(block_index_,
+                                                                     header.thread_id,
                                                                      header.memory_id,
                                                                      header.buffer_id,
                                                                      header.format,
@@ -741,7 +747,8 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
                 {
                     if (decoder->SupportsMetaDataId(meta_data_id))
                     {
-                        decoder->DispatchCreateHardwareBufferCommand(header.thread_id,
+                        decoder->DispatchCreateHardwareBufferCommand(block_index_,
+                                                                     header.thread_id,
                                                                      header.memory_id,
                                                                      header.buffer_id,
                                                                      header.format,
@@ -787,7 +794,7 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
             {
                 if (decoder->SupportsMetaDataId(meta_data_id))
                 {
-                    decoder->DispatchDestroyHardwareBufferCommand(command.thread_id, command.buffer_id);
+                    decoder->DispatchDestroyHardwareBufferCommand(block_index_, command.thread_id, command.buffer_id);
                 }
             }
         }
@@ -829,7 +836,8 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
                 {
                     if (decoder->SupportsMetaDataId(meta_data_id))
                     {
-                        decoder->DispatchSetDevicePropertiesCommand(header.thread_id,
+                        decoder->DispatchSetDevicePropertiesCommand(block_index_,
+                                                                    header.thread_id,
                                                                     header.physical_device_id,
                                                                     header.api_version,
                                                                     header.driver_version,
@@ -903,7 +911,7 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
                     if (decoder->SupportsMetaDataId(meta_data_id))
                     {
                         decoder->DispatchSetDeviceMemoryPropertiesCommand(
-                            header.thread_id, header.physical_device_id, types, heaps);
+                            block_index_, header.thread_id, header.physical_device_id, types, heaps);
                     }
                 }
             }
@@ -938,7 +946,7 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
                 if (decoder->SupportsMetaDataId(meta_data_id))
                 {
                     decoder->DispatchSetOpaqueAddressCommand(
-                        header.thread_id, header.device_id, header.object_id, header.address);
+                        block_index_, header.thread_id, header.device_id, header.object_id, header.address);
                 }
             }
         }
@@ -968,7 +976,8 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
             {
                 if (decoder->SupportsMetaDataId(meta_data_id))
                 {
-                    decoder->DispatchSetRayTracingShaderGroupHandlesCommand(header.thread_id,
+                    decoder->DispatchSetRayTracingShaderGroupHandlesCommand(block_index_,
+                                                                            header.thread_id,
                                                                             header.device_id,
                                                                             header.pipeline_id,
                                                                             static_cast<size_t>(header.data_size),
@@ -1018,7 +1027,8 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
                 {
                     if (decoder->SupportsMetaDataId(meta_data_id))
                     {
-                        decoder->DispatchSetSwapchainImageStateCommand(header.thread_id,
+                        decoder->DispatchSetSwapchainImageStateCommand(block_index_,
+                                                                       header.thread_id,
                                                                        header.device_id,
                                                                        header.swapchain_id,
                                                                        header.last_presented_image,
@@ -1056,8 +1066,11 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
             {
                 if (decoder->SupportsMetaDataId(meta_data_id))
                 {
-                    decoder->DispatchBeginResourceInitCommand(
-                        header.thread_id, header.device_id, header.max_resource_size, header.max_copy_size);
+                    decoder->DispatchBeginResourceInitCommand(block_index_,
+                                                              header.thread_id,
+                                                              header.device_id,
+                                                              header.max_resource_size,
+                                                              header.max_copy_size);
                 }
             }
         }
@@ -1082,7 +1095,7 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
             {
                 if (decoder->SupportsMetaDataId(meta_data_id))
                 {
-                    decoder->DispatchEndResourceInitCommand(header.thread_id, header.device_id);
+                    decoder->DispatchEndResourceInitCommand(block_index_, header.thread_id, header.device_id);
                 }
             }
         }
@@ -1124,7 +1137,8 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
                 {
                     if (decoder->SupportsMetaDataId(meta_data_id))
                     {
-                        decoder->DispatchInitBufferCommand(header.thread_id,
+                        decoder->DispatchInitBufferCommand(block_index_,
+                                                           header.thread_id,
                                                            header.device_id,
                                                            header.buffer_id,
                                                            header.data_size,
@@ -1196,7 +1210,8 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
             {
                 if (decoder->SupportsMetaDataId(meta_data_id))
                 {
-                    decoder->DispatchInitImageCommand(header.thread_id,
+                    decoder->DispatchInitImageCommand(block_index_,
+                                                      header.thread_id,
                                                       header.device_id,
                                                       header.image_id,
                                                       header.data_size,
@@ -1274,7 +1289,7 @@ bool FileProcessor::ProcessStateMarker(const format::BlockHeader& block_header, 
 
 bool FileProcessor::ProcessAnnotation(const format::BlockHeader& block_header, format::AnnotationType annotation_type)
 {
-    bool     success      = false;
+    bool                                             success      = false;
     decltype(format::AnnotationHeader::label_length) label_length = 0;
     decltype(format::AnnotationHeader::data_length)  data_length  = 0;
 

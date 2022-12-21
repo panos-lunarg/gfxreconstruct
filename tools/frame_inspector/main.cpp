@@ -25,11 +25,8 @@
 
 #include "application/application.h"
 #include "decode/file_processor.h"
-#include "decode/vulkan_replay_options.h"
-#include "decode/vulkan_tracked_object_info_table.h"
 #include "generated/generated_vulkan_decoder.h"
-#include "generated/generated_vulkan_replay_consumer.h"
-#include "graphics/fps_info.h"
+#include "generated/generated_vulkan_frame_inspector_consumer.h"
 #include "util/argument_parser.h"
 #include "util/logging.h"
 
@@ -112,42 +109,27 @@ int main(int argc, const char** argv)
             std::string wsi_extension = GetWsiExtensionName(GetWsiPlatform(arg_parser));
             auto        application =
                 std::make_shared<gfxrecon::application::Application>(kApplicationName, wsi_extension, &file_processor);
-
             gfxrecon::decode::VulkanTrackedObjectInfoTable tracked_object_info_table;
             gfxrecon::decode::VulkanReplayOptions          replay_options =
                 GetVulkanReplayOptions(arg_parser, filename, &tracked_object_info_table);
-            gfxrecon::decode::VulkanReplayConsumer replay_consumer(application, replay_options);
-            application->SetConsumer(&replay_consumer);
-
-            gfxrecon::decode::VulkanDecoder decoder;
+            gfxrecon::decode::VulkanFrameInspectorConsumer frame_inspector_consumer(application, replay_options);
+            gfxrecon::decode::VulkanDecoder                decoder;
 
             uint32_t start_frame, end_frame;
             bool     has_mfr = GetMeasurementFrameRange(arg_parser, start_frame, end_frame);
 
-            gfxrecon::graphics::FpsInfo fps_info(static_cast<uint64_t>(start_frame),
-                                                 static_cast<uint64_t>(end_frame),
-                                                 has_mfr,
-                                                 replay_options.quit_after_measurement_frame_range,
-                                                 replay_options.flush_measurement_frame_range);
+            frame_inspector_consumer.SetFatalErrorHandler(
+                [](const char* message) { throw std::runtime_error(message); });
 
-            replay_consumer.SetFatalErrorHandler([](const char* message) { throw std::runtime_error(message); });
-            replay_consumer.SetFpsInfo(&fps_info);
-
-            decoder.AddConsumer(&replay_consumer);
+            decoder.AddConsumer(&frame_inspector_consumer);
+            application->SetConsumer(&frame_inspector_consumer);
             file_processor.AddDecoder(&decoder);
             application->SetPauseFrame(GetPauseFrame(arg_parser));
 
             // Warn if the capture layer is active.
             CheckActiveLayers(gfxrecon::util::platform::GetEnv(kLayerEnvVar));
 
-            fps_info.BeginFile();
-
-            application->SetFpsInfo(&fps_info);
             application->Run();
-
-            // XXX if the final frame ended with a Present, this would be the *next* frame
-            // Add one so that it matches the trim range frame number semantic
-            fps_info.EndFile(file_processor.GetCurrentFrameNumber() + 1);
 
             if ((file_processor.GetCurrentFrameNumber() > 0) &&
                 (file_processor.GetErrorState() == gfxrecon::decode::FileProcessor::kErrorNone))
@@ -159,10 +141,6 @@ int main(int argc, const char** argv)
                         "Measurements were never started, cannot calculate measurement range FPS.",
                         start_frame,
                         file_processor.GetCurrentFrameNumber());
-                }
-                else
-                {
-                    fps_info.LogToConsole();
                 }
             }
             else if (file_processor.GetErrorState() != gfxrecon::decode::FileProcessor::kErrorNone)

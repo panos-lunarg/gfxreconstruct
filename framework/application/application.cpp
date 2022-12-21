@@ -22,6 +22,8 @@
 */
 
 #include "application/application.h"
+#include "decode/vulkan_frame_inspector_consumer_base.h"
+#include "decode/vulkan_frame_inspector_indirect_commands_info.h"
 #include "util/logging.h"
 #include "util/platform.h"
 
@@ -62,7 +64,7 @@ Application::Application(const std::string&     name,
                          decode::FileProcessor* file_processor) :
     name_(name),
     file_processor_(file_processor), cli_wsi_extension_(cli_wsi_extension), running_(false), paused_(false),
-    pause_frame_(0)
+    pause_frame_(0), vulkan_consumer_(nullptr)
 {
     if (!cli_wsi_extension_.empty())
     {
@@ -154,6 +156,9 @@ void Application::Run()
             // PlaySingleFrame() increments this->current_frame_number_ *if* there's an end-of-frame
             PlaySingleFrame();
 
+            // Reset consumer between frames
+            vulkan_consumer_->Reset();
+
             if (fps_info_ != nullptr)
             {
                 fps_info_->EndFrame(frame_number);
@@ -181,6 +186,98 @@ void Application::SetPaused(bool paused)
     }
 }
 
+void Application::InspectFrame()
+{
+    decode::VulkanFrameInspectorConsumerBase* frame_inspector =
+        dynamic_cast<decode::VulkanFrameInspectorConsumerBase*>(vulkan_consumer_);
+    assert(frame_inspector);
+
+    decode::serialized_commands_map_t& commands = frame_inspector->GetCommands();
+
+    GFXRECON_WRITE_CONSOLE("---------------")
+    for (const auto& sit : commands)
+    {
+        decode::SerializedCommands* command_ptr = sit.second.get();
+        GFXRECON_WRITE_CONSOLE("  + %s\n", serialized_command_to_str(command_ptr->type));
+
+        if (command_ptr->type == decode::SERIALIZED_CMD_QUEUE_SUBMIT)
+        {
+            decode::QueueSubmitInfo* submit_info = dynamic_cast<decode::QueueSubmitInfo*>(command_ptr);
+            assert(submit_info);
+
+            for (auto cmd_buf : submit_info->command_buffers)
+            {
+                // For some reason a map with only one ellement causes a seg fault. skip it for now
+                if (cmd_buf->command_list.size() > 1)
+                {
+                    for (const auto& cit : cmd_buf->command_list)
+                    {
+                        decode::VulkanCommandInfo* vk_cmd = cit.second.get();
+                        assert(vk_cmd);
+
+                        GFXRECON_WRITE_CONSOLE("    - %s", vulkan_command_to_str(vk_cmd->type));
+
+                        switch (vk_cmd->type)
+                        {
+
+                            case decode::VULKAN_CMD_BEGIN_RENDER_PASS:
+                                break;
+                            case decode::VULKAN_CMD_BIND_PIPELINE:
+                                break;
+                            case decode::VULKAN_CMD_BIND_DESCRIPTOR_SETS:
+                                break;
+                            case decode::VULKAN_CMD_SET_VIEWPORT:
+                            {
+                                decode::VulkanCommandSetViewportInfo* set_viewport =
+                                    dynamic_cast<decode::VulkanCommandSetViewportInfo*>(vk_cmd);
+                                assert(set_viewport);
+
+                                for (const auto viewport : set_viewport->viewports)
+                                {
+                                    GFXRECON_WRITE_CONSOLE(
+                                        "      - %f %f %f %f", viewport.x, viewport.y, viewport.width, viewport.height);
+                                }
+                            }
+                            break;
+                            case decode::VULKAN_CMD_SET_SCISSOR:
+                                break;
+                            case decode::VULKAN_CMD_DRAW_INDIRECT:
+                            {
+                                decode::VulkanCommandDrawIndirectInfo* indirect =
+                                    dynamic_cast<decode::VulkanCommandDrawIndirectInfo*>(vk_cmd);
+                                assert(indirect);
+
+                                GFXRECON_WRITE_CONSOLE("      - vertexCount: %u", indirect->GetParams().vertexCount)
+                                GFXRECON_WRITE_CONSOLE("      - firstInstance: %u", indirect->GetParams().firstInstance)
+                                GFXRECON_WRITE_CONSOLE("      - firstVertex: %u", indirect->GetParams().firstVertex)
+                                GFXRECON_WRITE_CONSOLE("      - instanceCount: %u", indirect->GetParams().instanceCount)
+                            }
+                            break;
+                            case decode::VULKAN_CMD_DRAW:
+                            {
+                                decode::VulkanCommandDrawInfo* draw =
+                                    dynamic_cast<decode::VulkanCommandDrawInfo*>(vk_cmd);
+                                assert(draw);
+
+                                GFXRECON_WRITE_CONSOLE("      - vertexCount: %u", draw->vertexCount)
+                                GFXRECON_WRITE_CONSOLE("      - firstInstance: %u", draw->firstInstance)
+                                GFXRECON_WRITE_CONSOLE("      - firstVertex: %u", draw->firstVertex)
+                                GFXRECON_WRITE_CONSOLE("      - instanceCount: %u", draw->instanceCount)
+                            }
+                            break;
+                            case decode::VULKAN_CMD_END_RENDER_PASS:
+                                break;
+                            default:
+                                assert(0);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    GFXRECON_WRITE_CONSOLE("---------------")
+}
+
 bool Application::PlaySingleFrame()
 {
     bool success = false;
@@ -188,6 +285,8 @@ bool Application::PlaySingleFrame()
     if (file_processor_)
     {
         success = file_processor_->ProcessNextFrame();
+
+        InspectFrame();
 
         if (success)
         {
