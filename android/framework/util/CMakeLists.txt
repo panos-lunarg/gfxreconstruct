@@ -35,6 +35,8 @@ target_sources(gfxrecon_util
                    ${GFXRECON_SOURCE_DIR}/framework/util/platform.h
                    ${GFXRECON_SOURCE_DIR}/framework/util/settings_loader.h
                    ${GFXRECON_SOURCE_DIR}/framework/util/settings_loader.cpp
+                   ${GFXRECON_SOURCE_DIR}/framework/util/socket.h
+                   ${GFXRECON_SOURCE_DIR}/framework/util/socket_linux.cpp
                    ${GFXRECON_SOURCE_DIR}/framework/util/strings.h
                    ${GFXRECON_SOURCE_DIR}/framework/util/strings.cpp
                    ${GFXRECON_SOURCE_DIR}/framework/util/options.h

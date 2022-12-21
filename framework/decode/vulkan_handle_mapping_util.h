@@ -340,6 +340,28 @@ void RemoveHandleArray(format::HandleId                                    pool_
     }
 }
 
+template <typename S>
+void RemovePoolObjectHandle(format::HandleId       pool_id,
+                            format::HandleId       id,
+                            VulkanObjectInfoTable* object_info_table,
+                            S* (VulkanObjectInfoTable::*GetPoolInfoFunc)(format::HandleId),
+                            void (VulkanObjectInfoTable::*RemoveFunc)(format::HandleId))
+{
+    assert(object_info_table != nullptr);
+
+    if (id != format::kNullHandleId)
+    {
+        auto pool_info = (object_info_table->*GetPoolInfoFunc)(pool_id);
+
+        (object_info_table->*RemoveFunc)(id);
+
+        if (pool_info != nullptr)
+        {
+            pool_info->child_ids.erase(id);
+        }
+    }
+}
+
 inline format::HandleId GetPoolId(const Decoded_VkCommandBufferAllocateInfo* info)
 {
     if (info != nullptr)

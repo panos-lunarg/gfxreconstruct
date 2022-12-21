@@ -34,6 +34,7 @@
 #include "util/argument_parser.h"
 #include "util/logging.h"
 #include "util/platform.h"
+#include "util/socket.h"
 
 #include <android_native_app_glue.h>
 #include <android/log.h>
@@ -49,6 +50,8 @@
 const char kArgsExtentKey[]      = "args";
 const char kDefaultCaptureFile[] = "/sdcard/gfxrecon_capture" GFXRECON_FILE_EXTENSION;
 const char kLayerProperty[]      = "debug.vulkan.layers";
+const char kDefaultAddress[]     = "localhost";
+const char kDefaultPort[]        = "3490";
 
 const int32_t kSwipeDistance = 200;
 
@@ -76,7 +79,7 @@ void android_main(struct android_app* app)
     {
         run = false;
     }
-    else if (arg_parser.IsInvalid() || (arg_parser.GetPositionalArgumentsCount() > 1))
+    else if (arg_parser.IsInvalid())
     {
         PrintUsage(kApplicationName);
         run = false;
@@ -84,8 +87,15 @@ void android_main(struct android_app* app)
 
     if (run)
     {
-        std::string filename = kDefaultCaptureFile;
+        std::string filename    = kDefaultCaptureFile;
+        std::string address     = kDefaultAddress;
+        std::string port        = kDefaultPort;
+        bool        remote_file = false;
 
+        if (arg_parser.GetPositionalArgumentsCount() == 0)
+        {
+            remote_file = GetRemoteFileLocation(arg_parser, address, port);
+        }
         if (arg_parser.GetPositionalArgumentsCount() == 1)
         {
             const std::vector<std::string>& positional_arguments = arg_parser.GetPositionalArguments();
@@ -96,9 +106,20 @@ void android_main(struct android_app* app)
         {
             gfxrecon::decode::FileProcessor file_processor;
 
-            if (!file_processor.Initialize(filename))
+            const bool init_processor =
+                remote_file ? file_processor.InitializeOverSocket(gfxrecon::util::Socket::kNetworkSocket, address, port)
+                            : file_processor.Initialize(filename);
+
+            if (!init_processor)
             {
-                GFXRECON_WRITE_CONSOLE("Failed to load file %s.", filename.c_str());
+                if (remote_file)
+                {
+                    GFXRECON_WRITE_CONSOLE("Failed to establish connection to %s:%s.", address.c_str(), port.c_str());
+                }
+                else
+                {
+                    GFXRECON_WRITE_CONSOLE("Failed to load file %s.", filename.c_str());
+                }
             }
             else
             {

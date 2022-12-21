@@ -1,6 +1,6 @@
 /*
-** Copyright (c) 2018 Valve Corporation
-** Copyright (c) 2018 LunarG, Inc.
+** Copyright (c) 2018,2023 Valve Corporation
+** Copyright (c) 2018,2023 LunarG, Inc.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and associated documentation files (the "Software"),
@@ -30,6 +30,7 @@
 #include "decode/api_decoder.h"
 #include "util/compressor.h"
 #include "util/defines.h"
+#include "util/socket.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -55,7 +56,14 @@ class FileProcessor
         kErrorReadingBlockData             = -7,
         kErrorReadingCompressedBlockData   = -8,
         kErrorInvalidFourCC                = -9,
-        kErrorUnsupportedCompressionType   = -10
+        kErrorUnsupportedCompressionType   = -10,
+        kErrorSocket                       = -11
+    };
+
+    enum FileLocation
+    {
+        kLocalFile,
+        kNetworkFile
     };
 
   public:
@@ -77,6 +85,7 @@ class FileProcessor
     }
 
     bool Initialize(const std::string& filename);
+    bool InitializeOverSocket(util::Socket::SocketType socket_type, const std::string& address, const std::string& ip);
 
     // Returns true if there are more frames to process, false if all frames have been processed or an error has
     // occurred.  Use GetErrorState() to determine error condition.
@@ -112,7 +121,7 @@ class FileProcessor
 
     bool ProcessMetaData(const format::BlockHeader& block_header, format::MetaDataId meta_data_id);
 
-    bool IsFrameDelimiter(format::ApiCallId call_id) const;
+    static bool IsFrameDelimiter(format::ApiCallId call_id);
 
     void HandleBlockReadError(Error error_code, const char* error_message);
 
@@ -154,8 +163,10 @@ class FileProcessor
     std::vector<uint8_t>                parameter_buffer_;
     std::vector<uint8_t>                compressed_parameter_buffer_;
     util::Compressor*                   compressor_;
-    uint64_t                            api_call_index_;
-    uint64_t                            block_limit_;
+    format::CommandIndexType            api_call_index_;
+    format::CommandIndexType            block_limit_;
+    util::Socket                        socket;
+    FileLocation                        file_location_;
 };
 
 GFXRECON_END_NAMESPACE(decode)

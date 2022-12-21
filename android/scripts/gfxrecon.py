@@ -81,6 +81,7 @@ def CreateReplayParser():
     parser.add_argument('--validate', action='store_true', default=False, help='Enables the Khronos Vulkan validation layer (forwarded to replay tool)')
     parser.add_argument('--onhb', '--omit-null-hardware-buffers', action='store_true', default=False, help='Omit Vulkan calls that would pass a NULL AHardwareBuffer* (forwarded to replay tool)')
     parser.add_argument('--use-captured-swapchain-indices', action='store_true', default=False, help='Use the swapchain indices stored in the capture directly on the swapchain setup for replay. The default without this option is to use a Virtual Swapchain of images which match the swapchain in effect at capture time and which are copied to the underlying swapchain of the implementation being replayed on.')
+    parser.add_argument('--remote-file',  default=False, help='Specify address:port')
 
     parser.add_argument('-m', '--memory-translation', metavar='MODE', choices=['none', 'remap', 'realign', 'rebind'], help='Enable memory translation for replay on GPUs with memory types that are not compatible with the capture GPU\'s memory types.  Available modes are: none, remap, realign, rebind (forwarded to replay tool)')
     parser.add_argument('file', nargs='?', help='File on device to play (forwarded to replay tool)')
@@ -146,11 +147,12 @@ def MakeExtrasString(args):
         arg_list.append('-m')
         arg_list.append('{}'.format(args.memory_translation))
 
+    if args.remote_file:
+        arg_list.append('--remote-file')
+        arg_list.append('{}'.format(args.remote_file))
+
     if args.file:
         arg_list.append(args.file)
-    elif not args.version:
-        print('gfxrecon.py release: error: the following arguments are required: file')
-        return None
 
     return ' '.join(arg_list)
 

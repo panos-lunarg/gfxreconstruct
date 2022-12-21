@@ -99,6 +99,7 @@ const char kMeasurementRangeArgument[]           = "--measurement-frame-range";
 const char kQuitAfterMeasurementRangeOption[]    = "--quit-after-measurement-range";
 const char kFlushMeasurementRangeOption[]        = "--flush-measurement-range";
 const char kEnableUseCapturedSwapchainIndices[]  = "--use-captured-swapchain-indices";
+const char kRemoteFile[]                         = "--remote-file";
 #if defined(WIN32)
 const char kApiFamilyOption[] = "--api";
 const char kDxTwoPassReplay[] = "--dx12-two-pass-replay";
@@ -865,6 +866,34 @@ static bool CheckOptionPrintUsage(const char* exe_name, const gfxrecon::util::Ar
     {
         PrintUsage(exe_name);
         return true;
+    }
+
+    return false;
+}
+
+static bool GetRemoteFileLocation(const gfxrecon::util::ArgumentParser& arg_parser, std::string& ip, std::string& port)
+{
+    const std::string& value = arg_parser.GetArgumentValue(kRemoteFile);
+
+    if (!value.empty())
+    {
+        switch (std::count(value.begin(), value.end(), ':'))
+        {
+            case 0:
+                ip = value;
+                return true;
+
+            case 1:
+            {
+                std::string::size_type n = value.find(':');
+                ip                       = value.substr(0, n);
+                port                     = value.substr(n + 1);
+                return true;
+            }
+
+            default:
+                return false;
+        }
     }
 
     return false;

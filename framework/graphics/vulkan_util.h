@@ -61,6 +61,11 @@ static T* GetPNextStruct(const Parent_T* parent, VkStructureType struct_type)
     return nullptr;
 }
 
+bool memory_type_from_properties(const VkPhysicalDeviceMemoryProperties& memory_properties,
+                                 uint32_t                                typeBits,
+                                 VkFlags                                 requirements_mask,
+                                 uint32_t*                               typeIndex);
+
 GFXRECON_END_NAMESPACE(graphics)
 GFXRECON_END_NAMESPACE(gfxrecon)
 

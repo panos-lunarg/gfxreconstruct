@@ -44,7 +44,9 @@ void Dx12DecoderBase::DispatchStateEndMarker(uint64_t frame_number)
     }
 }
 
-void Dx12DecoderBase::DispatchDisplayMessageCommand(format::ThreadId thread_id, const std::string& message)
+void Dx12DecoderBase::DispatchDisplayMessageCommand(format::CommandIndexType command_index,
+                                                    format::ThreadId         thread_id,
+                                                    const std::string&       message)
 {
     GFXRECON_UNREFERENCED_PARAMETER(thread_id);
 
@@ -54,8 +56,12 @@ void Dx12DecoderBase::DispatchDisplayMessageCommand(format::ThreadId thread_id, 
     }
 }
 
-void Dx12DecoderBase::DispatchFillMemoryCommand(
-    format::ThreadId thread_id, uint64_t memory_id, uint64_t offset, uint64_t size, const uint8_t* data)
+void Dx12DecoderBase::DispatchFillMemoryCommand(format::CommandIndexType command_index,
+                                                format::ThreadId         thread_id,
+                                                uint64_t                 memory_id,
+                                                uint64_t                 offset,
+                                                uint64_t                 size,
+                                                const uint8_t*           data)
 {
     GFXRECON_UNREFERENCED_PARAMETER(thread_id);
 
@@ -74,10 +80,11 @@ void Dx12DecoderBase::DispatchFillMemoryResourceValueCommand(
     }
 }
 
-void Dx12DecoderBase::DispatchResizeWindowCommand(format::ThreadId thread_id,
-                                                  format::HandleId surface_id,
-                                                  uint32_t         width,
-                                                  uint32_t         height)
+void Dx12DecoderBase::DispatchResizeWindowCommand(format::CommandIndexType command_index,
+                                                  format::ThreadId         thread_id,
+                                                  format::HandleId         surface_id,
+                                                  uint32_t                 width,
+                                                  uint32_t                 height)
 {
     GFXRECON_UNREFERENCED_PARAMETER(thread_id);
 
@@ -87,8 +94,12 @@ void Dx12DecoderBase::DispatchResizeWindowCommand(format::ThreadId thread_id,
     }
 }
 
-void Dx12DecoderBase::DispatchResizeWindowCommand2(
-    format::ThreadId thread_id, format::HandleId surface_id, uint32_t width, uint32_t height, uint32_t pre_transform)
+void Dx12DecoderBase::DispatchResizeWindowCommand2(format::CommandIndexType command_index,
+                                                   format::ThreadId         thread_id,
+                                                   format::HandleId         surface_id,
+                                                   uint32_t                 width,
+                                                   uint32_t                 height,
+                                                   uint32_t                 pre_transform)
 {
     GFXRECON_UNREFERENCED_PARAMETER(thread_id);
 
@@ -99,6 +110,7 @@ void Dx12DecoderBase::DispatchResizeWindowCommand2(
 }
 
 void Dx12DecoderBase::DispatchCreateHardwareBufferCommand(
+    format::CommandIndexType                            command_index,
     format::ThreadId                                    thread_id,
     format::HandleId                                    memory_id,
     uint64_t                                            buffer_id,
@@ -119,7 +131,9 @@ void Dx12DecoderBase::DispatchCreateHardwareBufferCommand(
     }
 }
 
-void Dx12DecoderBase::DispatchDestroyHardwareBufferCommand(format::ThreadId thread_id, uint64_t buffer_id)
+void Dx12DecoderBase::DispatchDestroyHardwareBufferCommand(format::CommandIndexType command_index,
+                                                           format::ThreadId         thread_id,
+                                                           uint64_t                 buffer_id)
 {
     GFXRECON_UNREFERENCED_PARAMETER(thread_id);
 
@@ -141,13 +155,14 @@ void Dx12DecoderBase::DispatchCreateHeapAllocationCommand(format::ThreadId threa
     }
 }
 
-void Dx12DecoderBase::DispatchSetDevicePropertiesCommand(format::ThreadId   thread_id,
-                                                         format::HandleId   physical_device_id,
-                                                         uint32_t           api_version,
-                                                         uint32_t           driver_version,
-                                                         uint32_t           vendor_id,
-                                                         uint32_t           device_id,
-                                                         uint32_t           device_type,
+void Dx12DecoderBase::DispatchSetDevicePropertiesCommand(format::CommandIndexType command_index,
+                                                         format::ThreadId         thread_id,
+                                                         format::HandleId         physical_device_id,
+                                                         uint32_t                 api_version,
+                                                         uint32_t                 driver_version,
+                                                         uint32_t                 vendor_id,
+                                                         uint32_t                 device_id,
+                                                         uint32_t                 device_type,
                                                          const uint8_t      pipeline_cache_uuid[format::kUuidSize],
                                                          const std::string& device_name)
 {
@@ -180,10 +195,11 @@ void Dx12DecoderBase::DispatchSetDeviceMemoryPropertiesCommand(
     }
 }
 
-void Dx12DecoderBase::DispatchSetOpaqueAddressCommand(format::ThreadId thread_id,
-                                                      format::HandleId device_id,
-                                                      format::HandleId object_id,
-                                                      uint64_t         address)
+void Dx12DecoderBase::DispatchSetOpaqueAddressCommand(format::CommandIndexType command_index,
+                                                      format::ThreadId         thread_id,
+                                                      format::HandleId         device_id,
+                                                      format::HandleId         object_id,
+                                                      uint64_t                 address)
 {
     GFXRECON_UNREFERENCED_PARAMETER(thread_id);
 
@@ -193,11 +209,12 @@ void Dx12DecoderBase::DispatchSetOpaqueAddressCommand(format::ThreadId thread_id
     }
 }
 
-void Dx12DecoderBase::DispatchSetRayTracingShaderGroupHandlesCommand(format::ThreadId thread_id,
-                                                                     format::HandleId device_id,
-                                                                     format::HandleId pipeline_id,
-                                                                     size_t           data_size,
-                                                                     const uint8_t*   data)
+void Dx12DecoderBase::DispatchSetRayTracingShaderGroupHandlesCommand(format::CommandIndexType command_index,
+                                                                     format::ThreadId         thread_id,
+                                                                     format::HandleId         device_id,
+                                                                     format::HandleId         pipeline_id,
+                                                                     size_t                   data_size,
+                                                                     const uint8_t*           data)
 {
     GFXRECON_UNREFERENCED_PARAMETER(thread_id);
 
@@ -208,6 +225,7 @@ void Dx12DecoderBase::DispatchSetRayTracingShaderGroupHandlesCommand(format::Thr
 }
 
 void Dx12DecoderBase::DispatchSetSwapchainImageStateCommand(
+    format::CommandIndexType                            command_index,
     format::ThreadId                                    thread_id,
     format::HandleId                                    device_id,
     format::HandleId                                    swapchain_id,
@@ -222,10 +240,11 @@ void Dx12DecoderBase::DispatchSetSwapchainImageStateCommand(
     }
 }
 
-void Dx12DecoderBase::DispatchBeginResourceInitCommand(format::ThreadId thread_id,
-                                                       format::HandleId device_id,
-                                                       uint64_t         max_resource_size,
-                                                       uint64_t         max_copy_size)
+void Dx12DecoderBase::DispatchBeginResourceInitCommand(format::CommandIndexType command_index,
+                                                       format::ThreadId         thread_id,
+                                                       format::HandleId         device_id,
+                                                       uint64_t                 max_resource_size,
+                                                       uint64_t                 max_copy_size)
 {
     GFXRECON_UNREFERENCED_PARAMETER(thread_id);
 
@@ -235,7 +254,9 @@ void Dx12DecoderBase::DispatchBeginResourceInitCommand(format::ThreadId thread_i
     }
 }
 
-void Dx12DecoderBase::DispatchEndResourceInitCommand(format::ThreadId thread_id, format::HandleId device_id)
+void Dx12DecoderBase::DispatchEndResourceInitCommand(format::CommandIndexType command_index,
+                                                     format::ThreadId         thread_id,
+                                                     format::HandleId         device_id)
 {
     GFXRECON_UNREFERENCED_PARAMETER(thread_id);
 
@@ -245,11 +266,12 @@ void Dx12DecoderBase::DispatchEndResourceInitCommand(format::ThreadId thread_id,
     }
 }
 
-void Dx12DecoderBase::DispatchInitBufferCommand(format::ThreadId thread_id,
-                                                format::HandleId device_id,
-                                                format::HandleId buffer_id,
-                                                uint64_t         data_size,
-                                                const uint8_t*   data)
+void Dx12DecoderBase::DispatchInitBufferCommand(format::CommandIndexType command_index,
+                                                format::ThreadId         thread_id,
+                                                format::HandleId         device_id,
+                                                format::HandleId         buffer_id,
+                                                uint64_t                 data_size,
+                                                const uint8_t*           data)
 {
     GFXRECON_UNREFERENCED_PARAMETER(thread_id);
 
@@ -259,7 +281,8 @@ void Dx12DecoderBase::DispatchInitBufferCommand(format::ThreadId thread_id,
     }
 }
 
-void Dx12DecoderBase::DispatchInitImageCommand(format::ThreadId             thread_id,
+void Dx12DecoderBase::DispatchInitImageCommand(format::CommandIndexType     command_index,
+                                               format::ThreadId             thread_id,
                                                format::HandleId             device_id,
                                                format::HandleId             image_id,
                                                uint64_t                     data_size,
