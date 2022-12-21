@@ -254,17 +254,7 @@ void Application::InspectFrame()
                             }
                             break;
                             case decode::VULKAN_CMD_DRAW:
-                            {
-                                decode::VulkanCommandDrawInfo* draw =
-                                    dynamic_cast<decode::VulkanCommandDrawInfo*>(vk_cmd);
-                                assert(draw);
-
-                                GFXRECON_WRITE_CONSOLE("      - vertexCount: %u", draw->vertexCount)
-                                GFXRECON_WRITE_CONSOLE("      - firstInstance: %u", draw->firstInstance)
-                                GFXRECON_WRITE_CONSOLE("      - firstVertex: %u", draw->firstVertex)
-                                GFXRECON_WRITE_CONSOLE("      - instanceCount: %u", draw->instanceCount)
-                            }
-                            break;
+                                break;
                             case decode::VULKAN_CMD_END_RENDER_PASS:
                                 break;
                             default:
