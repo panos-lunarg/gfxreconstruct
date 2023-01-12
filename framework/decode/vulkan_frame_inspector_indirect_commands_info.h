@@ -87,15 +87,15 @@ class VulkanIndirectCommandInfo : public VulkanCommandInfo
 
             // Create auxiliary buffer and device memory
             {
-                const VkBufferCreateInfo buffer_create_info = { .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-                                                                .pNext = NULL,
-                                                                .flags = 0,
-                                                                .size  = drawCount * params_size_,
-                                                                .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
-                                                                         VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                                                                .sharingMode           = VK_SHARING_MODE_EXCLUSIVE,
-                                                                .queueFamilyIndexCount = 0,
-                                                                .pQueueFamilyIndices   = NULL };
+                VkBufferCreateInfo buffer_create_info;
+                buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+                buffer_create_info.pNext = NULL;
+                buffer_create_info.flags = 0;
+                buffer_create_info.size  = drawCount * params_size_;
+                buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+                buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+                buffer_create_info.queueFamilyIndexCount = 0;
+                buffer_create_info.pQueueFamilyIndices   = NULL;
 
                 VkResult err = device_table_->CreateBuffer(
                     device_info_->handle, &buffer_create_info, nullptr, &indirect_buffer_copy_);

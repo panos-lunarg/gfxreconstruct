@@ -29,6 +29,7 @@
 #include "decode/vulkan_frame_inspector_vulkan_commands_info.h"
 #include "decode/vulkan_frame_inspector_indirect_commands_info.h"
 
+#include "decode/vulkan_feature_util.h"
 #include "decode/vulkan_frame_inspector_consumer_base.h"
 #include "decode/custom_vulkan_struct_handle_mappers.h"
 #include "decode/vulkan_handle_mapping_util.h"
@@ -115,7 +116,7 @@ void VulkanFrameInspectorConsumerBase::ProcessInitBufferCommand(format::CommandI
     command->device_id = device_id;
     command->buffer_id = buffer_id;
     command->data_size = data_size;
-    command->data      = std::make_unique<uint8_t>(data_size);
+    command->data      = std::make_unique<uint8_t[]>(data_size);
     util::platform::MemoryCopy(command->data.get(), data_size, data, data_size);
 
     commands_.emplace(command_index, std::move(command));
@@ -141,7 +142,7 @@ void VulkanFrameInspectorConsumerBase::ProcessInitImageCommand(format::CommandIn
     command->aspect      = aspect;
     command->layout      = layout;
     command->level_sizes = level_sizes;
-    command->data        = std::make_unique<uint8_t>(data_size);
+    command->data        = std::make_unique<uint8_t[]>(data_size);
     util::platform::MemoryCopy(command->data.get(), data_size, data, data_size);
 
     commands_.emplace(command_index, std::move(command));
@@ -169,15 +170,119 @@ VkResult VulkanFrameInspectorConsumerBase::OverrideCreateInstance(
     auto replay_allocator   = pAllocator->GetPointer();
     auto replay_instance    = pInstance->GetHandlePointer();
 
-    VkResult result = create_instance_proc_(replay_create_info, replay_allocator, replay_instance);
+    // Replace WSI extension in extension list.
+    std::vector<const char*> filtered_extensions;
+    VkInstanceCreateInfo     modified_create_info{};
+
+    if (replay_create_info != nullptr)
+    {
+        // If VkDebugUtilsMessengerCreateInfoEXT or VkDebugReportCallbackCreateInfoEXT are in the pNext chain, update
+        // the callback pointers.
+        // ProcessCreateInstanceDebugCallbackInfo(pCreateInfo->GetMetaStructPointer());
+
+        if (replay_create_info->ppEnabledExtensionNames)
+        {
+            // If a specific WSI extension was selected on the command line we need to make sure that extension is
+            // loaded
+            // assert(application_);
+            //for (const auto& itr : application_->GetWsiContexts())
+            //{
+                //filtered_extensions.push_back(itr.first.c_str());
+            // }
+
+            for (uint32_t i = 0; i < replay_create_info->enabledExtensionCount; ++i)
+            {
+                auto current_extension = replay_create_info->ppEnabledExtensionNames[i];
+                filtered_extensions.push_back(current_extension);
+                #if 0
+
+                if (kSurfaceExtensions.find(current_extension) != kSurfaceExtensions.end())
+                {
+                    application_->InitializeWsiContext(current_extension);
+                }
+                #endif
+            }
+
+            PFN_vkEnumerateInstanceExtensionProperties instance_extension_proc =
+                reinterpret_cast<PFN_vkEnumerateInstanceExtensionProperties>(
+                    get_instance_proc_addr_(nullptr, "vkEnumerateInstanceExtensionProperties"));
+            std::vector<VkExtensionProperties> properties;
+            if (feature_util::GetInstanceExtensions(instance_extension_proc, &properties) == VK_SUCCESS)
+            {
+                if (options_.remove_unsupported_features)
+                {
+                    // Remove enabled extensions that are not available from the replay instance.
+                    // Proc addresses that can't be used in layers so are not generated into shared dispatch table, but
+                    // are needed in the replay application.
+                    feature_util::RemoveUnsupportedExtensions(properties, &filtered_extensions);
+                }
+                else
+                {
+                    // Check that the requested extensions are present and print warnings if not.
+                    for (auto extensionIter = filtered_extensions.begin(); extensionIter != filtered_extensions.end();
+                         ++extensionIter)
+                    {
+                        if (!feature_util::IsSupportedExtension(properties, *extensionIter))
+                        {
+                            GFXRECON_LOG_WARNING("Extension %s, is not supported by the replay device.",
+                                                 *extensionIter);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                GFXRECON_LOG_WARNING("Failed to get instance extensions. Cannot perform sanity checks or filters for "
+                                     "extension availability.");
+            }
+        }
+
+        modified_create_info                         = (*replay_create_info);
+        modified_create_info.enabledExtensionCount   = static_cast<uint32_t>(filtered_extensions.size());
+        modified_create_info.ppEnabledExtensionNames = filtered_extensions.data();
+    }
+    else
+    {
+        GFXRECON_LOG_WARNING("The vkCreateInstance parameter pCreateInfo is NULL.");
+    }
+
+    // Disable layers; any layers needed for replay should be enabled for the replay app with the VK_INSTANCE_LAYERS
+    // environment variable or debug.vulkan.layers Android property.
+    if (modified_create_info.enabledLayerCount > 0)
+    {
+        GFXRECON_LOG_INFO(
+            "Replay has removed the following layers from VkInstanceCreateInfo when calling vkCreateInstance:");
+
+        for (uint32_t i = 0; i < modified_create_info.enabledLayerCount; ++i)
+        {
+            GFXRECON_LOG_INFO("\t%s", modified_create_info.ppEnabledLayerNames[i]);
+        }
+
+        modified_create_info.enabledLayerCount   = 0;
+        modified_create_info.ppEnabledLayerNames = nullptr;
+    }
+
+    VkResult result = create_instance_proc_(&modified_create_info, replay_allocator, replay_instance);
 
     if (result == VK_SUCCESS)
     {
         AddInstanceTable(*replay_instance);
+
+        if (modified_create_info.pApplicationInfo != nullptr)
+        {
+            auto instance_info = reinterpret_cast<InstanceInfo*>(pInstance->GetConsumerData(0));
+            assert(instance_info != nullptr);
+
+            instance_info->api_version = modified_create_info.pApplicationInfo->apiVersion;
+            instance_info->enabled_extensions.assign(modified_create_info.ppEnabledExtensionNames,
+                                                     modified_create_info.ppEnabledExtensionNames +
+                                                         modified_create_info.enabledExtensionCount);
+        }
     }
 
     return result;
 }
+
 
 VkResult VulkanFrameInspectorConsumerBase::OverrideBeginCommandBuffer(
     const ApiCallInfo&                                      call_info,
@@ -806,7 +911,7 @@ VulkanFrameInspectorConsumerBase::OverrideQueueSubmit(const ApiCallInfo&        
     command->queue                   = queue_info;
     const VkSubmitInfo* submit_infos = pSubmits->GetPointer();
     bool                has_indirect = false;
-    VkResult            result;
+    VkResult            result = VK_SUCCESS;
     VkFence             fence = VK_NULL_HANDLE;
 
     if (fence_info != nullptr)
@@ -869,7 +974,7 @@ VulkanFrameInspectorConsumerBase::OverrideQueueSubmit(const ApiCallInfo&        
     if (options_.surface_index == -1 && submit_infos->waitSemaphoreCount)
     {
         GetDeviceTable(device)->QueueSubmit(
-            queue_info->handle, pSubmits->GetLength(), pSubmits->GetPointer(), submission_fence);
+            queue_info->handle, static_cast<uint32_t>(pSubmits->GetLength()), pSubmits->GetPointer(), submission_fence);
     }
     else
     {

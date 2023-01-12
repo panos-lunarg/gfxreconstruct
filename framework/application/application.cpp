@@ -64,7 +64,7 @@ Application::Application(const std::string&     name,
                          decode::FileProcessor* file_processor) :
     name_(name),
     file_processor_(file_processor), cli_wsi_extension_(cli_wsi_extension), running_(false), paused_(false),
-    pause_frame_(0), vulkan_consumer_(nullptr)
+    pause_frame_(0), vulkan_consumer_(nullptr), fps_info_(nullptr)
 {
     if (!cli_wsi_extension_.empty())
     {
@@ -207,59 +207,56 @@ void Application::InspectFrame()
 
             for (auto cmd_buf : submit_info->command_buffers)
             {
-                // For some reason a map with only one ellement causes a seg fault. skip it for now
-                if (cmd_buf->command_list.size() > 1)
+                for (const auto& cit : cmd_buf->command_list)
                 {
-                    for (const auto& cit : cmd_buf->command_list)
+                    decode::VulkanCommandInfo* vk_cmd = cit.second.get();
+                    assert(vk_cmd);
+
+                    GFXRECON_WRITE_CONSOLE("    - %s", vulkan_command_to_str(vk_cmd->type));
+
+                    switch (vk_cmd->type)
                     {
-                        decode::VulkanCommandInfo* vk_cmd = cit.second.get();
-                        assert(vk_cmd);
 
-                        GFXRECON_WRITE_CONSOLE("    - %s", vulkan_command_to_str(vk_cmd->type));
-
-                        switch (vk_cmd->type)
+                        case decode::VULKAN_CMD_BEGIN_RENDER_PASS:
+                            break;
+                        case decode::VULKAN_CMD_BIND_PIPELINE:
+                            break;
+                        case decode::VULKAN_CMD_BIND_DESCRIPTOR_SETS:
+                            break;
+                        case decode::VULKAN_CMD_SET_VIEWPORT:
                         {
+                            decode::VulkanCommandSetViewportInfo* set_viewport =
+                                dynamic_cast<decode::VulkanCommandSetViewportInfo*>(vk_cmd);
+                            assert(set_viewport);
 
-                            case decode::VULKAN_CMD_BEGIN_RENDER_PASS:
-                                break;
-                            case decode::VULKAN_CMD_BIND_PIPELINE:
-                                break;
-                            case decode::VULKAN_CMD_BIND_DESCRIPTOR_SETS:
-                                break;
-                            case decode::VULKAN_CMD_SET_VIEWPORT:
+                            for (const auto viewport : set_viewport->viewports)
                             {
-                                decode::VulkanCommandSetViewportInfo* set_viewport =
-                                    dynamic_cast<decode::VulkanCommandSetViewportInfo*>(vk_cmd);
-                                assert(set_viewport);
-
-                                for (const auto viewport : set_viewport->viewports)
-                                {
-                                    GFXRECON_WRITE_CONSOLE(
-                                        "      - %f %f %f %f", viewport.x, viewport.y, viewport.width, viewport.height);
-                                }
+                                GFXRECON_WRITE_CONSOLE(
+                                    "      - %f %f %f %f", viewport.x, viewport.y, viewport.width, viewport.height);
                             }
-                            break;
-                            case decode::VULKAN_CMD_SET_SCISSOR:
-                                break;
-                            case decode::VULKAN_CMD_DRAW_INDIRECT:
-                            {
-                                decode::VulkanCommandDrawIndirectInfo* indirect =
-                                    dynamic_cast<decode::VulkanCommandDrawIndirectInfo*>(vk_cmd);
-                                assert(indirect);
-
-                                GFXRECON_WRITE_CONSOLE("      - vertexCount: %u", indirect->GetParams().vertexCount)
-                                GFXRECON_WRITE_CONSOLE("      - firstInstance: %u", indirect->GetParams().firstInstance)
-                                GFXRECON_WRITE_CONSOLE("      - firstVertex: %u", indirect->GetParams().firstVertex)
-                                GFXRECON_WRITE_CONSOLE("      - instanceCount: %u", indirect->GetParams().instanceCount)
-                            }
-                            break;
-                            case decode::VULKAN_CMD_DRAW:
-                                break;
-                            case decode::VULKAN_CMD_END_RENDER_PASS:
-                                break;
-                            default:
-                                assert(0);
                         }
+                        break;
+                        case decode::VULKAN_CMD_SET_SCISSOR:
+                            break;
+                        case decode::VULKAN_CMD_DRAW_INDIRECT:
+                        {
+                            decode::VulkanCommandDrawIndirectInfo* indirect =
+                                dynamic_cast<decode::VulkanCommandDrawIndirectInfo*>(vk_cmd);
+                            assert(indirect);
+
+                            GFXRECON_WRITE_CONSOLE("      - vertexCount: %u", indirect->GetParams().vertexCount)
+                            GFXRECON_WRITE_CONSOLE("      - firstInstance: %u", indirect->GetParams().firstInstance)
+                            GFXRECON_WRITE_CONSOLE("      - firstVertex: %u", indirect->GetParams().firstVertex)
+                            GFXRECON_WRITE_CONSOLE("      - instanceCount: %u", indirect->GetParams().instanceCount)
+                        }
+                        break;
+                        case decode::VULKAN_CMD_DRAW:
+                            break;
+                        case decode::VULKAN_CMD_END_RENDER_PASS:
+                            break;
+                        default:
+                            printf("Unhandled VULKAN_CMD type %d\n", vk_cmd->type);
+                            // assert(0);
                     }
                 }
             }

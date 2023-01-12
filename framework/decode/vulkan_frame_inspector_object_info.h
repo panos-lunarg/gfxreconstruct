@@ -246,11 +246,11 @@ struct QueueSubmitInfo : public SerializedCommands
     QueueSubmitInfo(format::CommandIndexType index, serialized_command_types type) : SerializedCommands(index, type) {}
 
     std::vector<CommandBufferInfo*>   command_buffers;
-    const QueueInfo*                  queue;
+    const QueueInfo*                  queue = nullptr;
     std::vector<SemaphoreInfo*>       wait_semaphores;
     std::vector<VkPipelineStageFlags> wait_dst_stage_mask;
     std::vector<SemaphoreInfo*>       signal_semaphores;
-    const FenceInfo*                  fence;
+    const FenceInfo*                  fence = nullptr;
 };
 
 struct WaitForPresentInfo : public SerializedCommands
@@ -351,7 +351,7 @@ struct GFXRCommandInitBufferCommand : public SerializedCommands
     format::HandleId         device_id;
     format::HandleId         buffer_id;
     uint64_t                 data_size;
-    std::unique_ptr<uint8_t> data;
+    std::unique_ptr<uint8_t[]> data;
 };
 
 struct GFXRCommandInitImageCommand : public SerializedCommands
@@ -366,7 +366,7 @@ struct GFXRCommandInitImageCommand : public SerializedCommands
     uint32_t                 aspect;
     uint32_t                 layout;
     std::vector<uint64_t>    level_sizes;
-    std::unique_ptr<uint8_t> data;
+    std::unique_ptr<uint8_t[]> data;
 };
 
 using serialized_commands_map_t = std::map<format::CommandIndexType, std::unique_ptr<SerializedCommands>>;
