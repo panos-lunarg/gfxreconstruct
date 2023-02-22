@@ -232,12 +232,15 @@ if (MSVC)
     endif()
 endif()
 
+# Define a static library for Perfetto.
+add_library(perfetto STATIC ${CMAKE_SOURCE_DIR}/external/perfetto/perfetto.cc)
+
 target_include_directories(gfxrecon_decode
                            PUBLIC
                                ${CMAKE_SOURCE_DIR}/framework
                                $<$<BOOL:${D3D12_SUPPORT}>:${CMAKE_SOURCE_DIR}/external/AgilitySDK/inc>)
 
-target_link_libraries(gfxrecon_decode gfxrecon_graphics gfxrecon_format gfxrecon_util vulkan_registry vulkan_memory_allocator platform_specific $<$<BOOL:${D3D12_SUPPORT}>:dxguid.lib>)
+target_link_libraries(gfxrecon_decode gfxrecon_graphics gfxrecon_format gfxrecon_util vulkan_registry vulkan_memory_allocator platform_specific perfetto $<$<BOOL:${D3D12_SUPPORT}>:dxguid.lib>)
 
 common_build_directives(gfxrecon_decode)
 

@@ -3060,7 +3060,7 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
                                                        const QueueInfo*  queue_info,
                                                        uint32_t          submitCount,
                                                        const StructPointerDecoder<Decoded_VkSubmitInfo>* pSubmits,
-                                                       const FenceInfo*                                  fence_info)
+                                                       const FenceInfo*                                  fence_info, VkFence fence_)
 {
     assert((queue_info != nullptr) && (pSubmits != nullptr));
 
@@ -3080,7 +3080,7 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
     // tracked.
     if ((!have_imported_semaphores_) && (options_.surface_index == -1))
     {
-        result = func(queue_info->handle, submitCount, submit_infos, fence);
+        result = func(queue_info->handle, submitCount, submit_infos, fence != VK_NULL_HANDLE ? fence : fence_);
     }
     else
     {
@@ -3113,7 +3113,7 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
 
         if (altered_submits.empty())
         {
-            result = func(queue_info->handle, submitCount, submit_infos, fence);
+            result = func(queue_info->handle, submitCount, submit_infos, fence != VK_NULL_HANDLE ? fence : fence_);
         }
         else
         {
@@ -3170,7 +3170,7 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
             result = func(queue_info->handle,
                           static_cast<uint32_t>(modified_submit_infos.size()),
                           modified_submit_infos.data(),
-                          fence);
+                          fence != VK_NULL_HANDLE ? fence : fence_);
         }
     }
 
