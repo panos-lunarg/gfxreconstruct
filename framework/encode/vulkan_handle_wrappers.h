@@ -129,9 +129,12 @@ struct InstanceWrapper : public HandleWrapper<VkInstance>
     uint32_t                            api_version{ VK_MAKE_VERSION(1, 0, 0) };
 };
 
+struct DeviceWrapper;
+
 struct QueueWrapper : public HandleWrapper<VkQueue>
 {
-    DeviceTable* layer_table_ref{ nullptr };
+    DeviceTable*   layer_table_ref{ nullptr };
+    DeviceWrapper* device_wrapper{ nullptr };
 };
 
 struct DeviceWrapper : public HandleWrapper<VkDevice>

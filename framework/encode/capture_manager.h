@@ -70,6 +70,7 @@ class CaptureManager
     {
         if (capture_mode_ != kModeDisabled)
         {
+            ++block_index_;
             return InitApiCallCapture(call_id);
         }
 
@@ -80,6 +81,7 @@ class CaptureManager
     {
         if ((capture_mode_ & kModeWrite) == kModeWrite)
         {
+            ++block_index_;
             return InitApiCallCapture(call_id);
         }
 
@@ -139,6 +141,9 @@ class CaptureManager
     virtual CaptureSettings::TraceSettings GetDefaultTraceSettings();
 
     bool GetIUnknownWrappingSetting() const { return iunknown_wrapping_; }
+
+    uint64_t GetBlockIndex() const { return block_index_; }
+    bool     GetEmitPerfettoData() const { return emit_perfetto_data_; }
 
   protected:
     typedef std::shared_mutex ApiCallMutexT;
@@ -256,6 +261,7 @@ class CaptureManager
     util::Keyboard                    keyboard_;
     std::string                       screenshot_prefix_;
     uint32_t                          global_frame_count_;
+    uint64_t                          block_index_;
 
     void WriteToFile(const void* data, size_t size);
 
@@ -314,6 +320,7 @@ class CaptureManager
     bool                                    disable_dxr_;
     uint32_t                                accel_struct_padding_;
     bool                                    iunknown_wrapping_;
+    bool                                    emit_perfetto_data_;
 };
 
 GFXRECON_END_NAMESPACE(encode)

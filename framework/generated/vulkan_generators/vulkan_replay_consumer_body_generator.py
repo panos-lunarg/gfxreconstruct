@@ -236,7 +236,7 @@ class VulkanReplayConsumerBodyGenerator(
 
     def make_consumer_func_body(self, return_type, name, values):
         """Return VulkanReplayConsumer class member function definition."""
-        body = 'TRACE_EVENT("ObjectCreation", "Process_{}");\n'.format(name)
+        body = ''
         is_override = name in self.REPLAY_OVERRIDES
 
         args, preexpr, postexpr = self.make_body_expressions(

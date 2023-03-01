@@ -84,7 +84,7 @@ void VulkanCaptureManager::DestroyInstance()
 void VulkanCaptureManager::WriteTrackedState(util::FileOutputStream* file_stream, format::ThreadId thread_id)
 {
     VulkanStateWriter state_writer(file_stream, compressor_.get(), thread_id);
-    state_tracker_->WriteState(&state_writer, GetCurrentFrame());
+    block_index_ += state_tracker_->WriteState(&state_writer, GetCurrentFrame());
 }
 
 void VulkanCaptureManager::SetLayerFuncs(PFN_vkCreateInstance create_instance, PFN_vkCreateDevice create_device)

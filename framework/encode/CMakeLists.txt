@@ -101,6 +101,10 @@ target_sources(gfxrecon_encode
                     $<$<BOOL:${D3D12_SUPPORT}>:${CMAKE_SOURCE_DIR}/framework/generated/generated_dx12_state_table.h>
                     $<$<BOOL:${D3D12_SUPPORT}>:${CMAKE_SOURCE_DIR}/framework/generated/generated_dx12_command_list_util.h>
                     $<$<BOOL:${D3D12_SUPPORT}>:${CMAKE_SOURCE_DIR}/framework/generated/generated_dx12_command_list_util.cpp>
+                    ${CMAKE_CURRENT_LIST_DIR}/perfetto/custom_perfetto_encoder_commands.h
+                    ${CMAKE_CURRENT_LIST_DIR}/perfetto/custom_perfetto_encoder_commands.cpp
+                    ${CMAKE_CURRENT_LIST_DIR}/perfetto/perfetto_tracing_categories.h
+                    ${CMAKE_CURRENT_LIST_DIR}/perfetto/perfetto_tracing_categories.cpp
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_encode_pnext_struct.cpp
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_api_call_encoders.h
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_api_call_encoders.cpp
@@ -112,7 +116,7 @@ target_sources(gfxrecon_encode
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_struct_handle_wrappers.h
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_struct_handle_wrappers.cpp
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_state_table.h
-
+                    ${CMAKE_SOURCE_DIR}/framework/generated/perfetto/generated_perfetto_encoder_commands.h
 )
 
 if (MSVC AND (MSVC_VERSION LESS 1920))
@@ -126,13 +130,16 @@ if (MSVC)
     set_source_files_properties(${CMAKE_SOURCE_DIR}/framework/generated/generated_dx12_wrappers.cpp PROPERTIES COMPILE_FLAGS /bigobj)
 endif()
 
+# Define a static library for Perfetto.
+add_library(perfetto STATIC ${CMAKE_SOURCE_DIR}/external/perfetto/perfetto.cc)
+
 target_include_directories(gfxrecon_encode
                            PUBLIC
                                ${CMAKE_BINARY_DIR}
                                ${CMAKE_SOURCE_DIR}/framework
                                $<$<BOOL:${D3D12_SUPPORT}>:${CMAKE_SOURCE_DIR}/external/AgilitySDK/inc>)
 
-target_link_libraries(gfxrecon_encode gfxrecon_graphics gfxrecon_format gfxrecon_util vulkan_registry platform_specific)
+target_link_libraries(gfxrecon_encode gfxrecon_graphics gfxrecon_format gfxrecon_util vulkan_registry platform_specific perfetto)
 
 common_build_directives(gfxrecon_encode)
 

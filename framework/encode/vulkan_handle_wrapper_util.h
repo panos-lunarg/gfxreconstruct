@@ -243,6 +243,7 @@ inline void CreateWrappedHandle<DeviceWrapper, NoParentWrapper, QueueWrapper>(
 
         wrapper                  = reinterpret_cast<QueueWrapper*>(*handle);
         wrapper->layer_table_ref = &parent_wrapper->layer_table;
+        wrapper->device_wrapper  = parent_wrapper;
         parent_wrapper->child_queues.push_back(wrapper);
     }
 }

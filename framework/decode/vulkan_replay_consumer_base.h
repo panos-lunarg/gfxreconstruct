@@ -510,7 +510,7 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                  const QueueInfo*                                  queue_info,
                                  uint32_t                                          submitCount,
                                  const StructPointerDecoder<Decoded_VkSubmitInfo>* pSubmits,
-                                 const FenceInfo*                                  fence_info, VkFence fence);
+                                 const FenceInfo*                                  fence_info);
 
     VkResult OverrideQueueSubmit2(PFN_vkQueueSubmit2                                 func,
                                   VkResult                                           original_result,
