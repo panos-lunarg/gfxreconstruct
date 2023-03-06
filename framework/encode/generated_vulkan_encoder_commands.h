@@ -30,7 +30,7 @@
 #define GFXRECON_ENCODE_GENERATED_VULKAN_ENCODER_COMMANDS_H
 
 #include "encode/custom_vulkan_encoder_commands.h"
-#include "generated/perfetto/generated_perfetto_encoder_commands.h"
+#include "encode/perfetto/perfetto_encoder_commands.h"
 
 #include "encode/vulkan_capture_manager.h"
 #include "format/api_call_id.h"

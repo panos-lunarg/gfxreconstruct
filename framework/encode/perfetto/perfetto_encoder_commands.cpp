@@ -21,7 +21,7 @@
 ** DEALINGS IN THE SOFTWARE.
 */
 
-#include "encode/perfetto/custom_perfetto_encoder_commands.h"
+#include "encode/perfetto/perfetto_encoder_commands.h"
 #include "encode/perfetto/perfetto_tracing_categories.h"
 #include "encode/vulkan_capture_manager.h"
 #include "format/api_call_id.h"
@@ -40,8 +40,6 @@ void InitializePerfetto(VulkanCaptureManager* manager)
 
     if (!initialized && manager->GetEmitPerfettoData())
     {
-        std::cout << "Init perfetto" << std::endl;
-
         // Initialize perfetto
         perfetto::TracingInitArgs args;
         args.backends |= perfetto::kInProcessBackend;

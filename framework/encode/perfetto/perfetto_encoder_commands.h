@@ -35,7 +35,7 @@ GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(encode)
 
 template <format::ApiCallId Id>
-struct CustomPerfettoEncoderPreCall
+struct PerfettoEncoderPreCall
 {
     template <typename... Args>
     static void Dispatch(VulkanCaptureManager*, Args...)
@@ -43,7 +43,7 @@ struct CustomPerfettoEncoderPreCall
 };
 
 template <format::ApiCallId Id>
-struct CustomPerfettoEncoderPostCall
+struct PerfettoEncoderPostCall
 {
     template <typename... Args>
     static void Dispatch(VulkanCaptureManager*, Args...)
@@ -60,7 +60,7 @@ void Process_QueueSubmit(
 void InitializePerfetto(VulkanCaptureManager* manager);
 
 template <>
-struct CustomPerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkCreateInstance>
+struct PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkCreateInstance>
 {
     template <typename... Args>
     static void Dispatch(VulkanCaptureManager* manager, Args... args)
@@ -70,7 +70,7 @@ struct CustomPerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkCreateInstance>
 };
 
 template <>
-struct CustomPerfettoEncoderPostCall<format::ApiCallId::ApiCall_vkCreateInstance>
+struct PerfettoEncoderPostCall<format::ApiCallId::ApiCall_vkCreateInstance>
 {
     template <typename... Args>
     static void Dispatch(VulkanCaptureManager* manager, VkResult result, Args... args)
@@ -85,7 +85,7 @@ struct CustomPerfettoEncoderPostCall<format::ApiCallId::ApiCall_vkCreateInstance
 };
 
 template <>
-struct CustomPerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>
+struct PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>
 {
     template <typename... Args>
     static void Dispatch(VulkanCaptureManager* manager, Args... args)
@@ -99,17 +99,14 @@ struct CustomPerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR
 };
 
 template <>
-struct CustomPerfettoEncoderPostCall<format::ApiCallId::ApiCall_vkQueueSubmit>
+struct PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>
 {
     template <typename... Args>
-    static void Dispatch(VulkanCaptureManager* manager, VkResult result, Args... args)
+    static void Dispatch(VulkanCaptureManager* manager, Args... args)
     {
         assert(manager);
 
-        if (result == VK_SUCCESS)
-        {
-            Process_QueueSubmit(manager, args...);
-        }
+        Process_QueueSubmit(manager, args...);
     }
 };
 

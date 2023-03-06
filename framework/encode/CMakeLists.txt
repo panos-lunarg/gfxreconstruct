@@ -101,8 +101,8 @@ target_sources(gfxrecon_encode
                     $<$<BOOL:${D3D12_SUPPORT}>:${CMAKE_SOURCE_DIR}/framework/generated/generated_dx12_state_table.h>
                     $<$<BOOL:${D3D12_SUPPORT}>:${CMAKE_SOURCE_DIR}/framework/generated/generated_dx12_command_list_util.h>
                     $<$<BOOL:${D3D12_SUPPORT}>:${CMAKE_SOURCE_DIR}/framework/generated/generated_dx12_command_list_util.cpp>
-                    ${CMAKE_CURRENT_LIST_DIR}/perfetto/custom_perfetto_encoder_commands.h
-                    ${CMAKE_CURRENT_LIST_DIR}/perfetto/custom_perfetto_encoder_commands.cpp
+                    ${CMAKE_CURRENT_LIST_DIR}/perfetto/perfetto_encoder_commands.h
+                    ${CMAKE_CURRENT_LIST_DIR}/perfetto/perfetto_encoder_commands.cpp
                     ${CMAKE_CURRENT_LIST_DIR}/perfetto/perfetto_tracing_categories.h
                     ${CMAKE_CURRENT_LIST_DIR}/perfetto/perfetto_tracing_categories.cpp
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_encode_pnext_struct.cpp
@@ -116,7 +116,6 @@ target_sources(gfxrecon_encode
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_struct_handle_wrappers.h
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_struct_handle_wrappers.cpp
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_state_table.h
-                    ${CMAKE_SOURCE_DIR}/framework/generated/perfetto/generated_perfetto_encoder_commands.h
 )
 
 if (MSVC AND (MSVC_VERSION LESS 1920))
