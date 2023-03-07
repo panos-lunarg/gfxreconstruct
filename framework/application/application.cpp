@@ -22,6 +22,7 @@
 */
 
 #include "application/application.h"
+#include "decode/vulkan_frame_inspector_consumer_client_base.h"
 #include "util/logging.h"
 #include "util/platform.h"
 
@@ -62,7 +63,7 @@ Application::Application(const std::string&     name,
                          decode::FileProcessor* file_processor) :
     name_(name),
     file_processor_(file_processor), cli_wsi_extension_(cli_wsi_extension), running_(false), paused_(false),
-    pause_frame_(0), fps_info_(nullptr)
+    pause_frame_(0), fps_info_(nullptr), vulkan_consumer_(nullptr)
 {
     if (!cli_wsi_extension_.empty())
     {
@@ -181,6 +182,18 @@ void Application::SetPaused(bool paused)
     }
 }
 
+void Application::InspectFrame()
+{
+    decode::VulkanFrameInspectorConsumerClientBase* frame_inspector =
+        dynamic_cast<decode::VulkanFrameInspectorConsumerClientBase*>(vulkan_consumer_);
+
+    if (frame_inspector)
+    {
+        frame_inspector->DumpFrame();
+        frame_inspector->Reset();
+    }
+}
+
 bool Application::PlaySingleFrame()
 {
     bool success = false;
@@ -188,6 +201,11 @@ bool Application::PlaySingleFrame()
     if (file_processor_)
     {
         success = file_processor_->ProcessNextFrame();
+
+        if (vulkan_consumer_)
+        {
+            InspectFrame();
+        }
 
         if (success)
         {

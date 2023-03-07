@@ -56,6 +56,7 @@ typedef uint16_t WCharEncodeType; // Encoding type for LPCWSTR (UTF-16) strings.
 
 typedef HandleEncodeType HandleId;
 typedef uint64_t         ThreadId;
+typedef uint64_t         CommandIndexType;
 
 const uint32_t kCompressedBlockTypeBit    = 0x80000000;
 const size_t   kUuidSize                  = 16;
