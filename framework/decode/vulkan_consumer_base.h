@@ -170,6 +170,8 @@ class VulkanConsumerBase
                                                               format::HandleId                 descriptorUpdateTemplate,
                                                               DescriptorUpdateTemplateDecoder* pData)
     {}
+
+    virtual void Reset() {}
 };
 
 GFXRECON_END_NAMESPACE(decode)

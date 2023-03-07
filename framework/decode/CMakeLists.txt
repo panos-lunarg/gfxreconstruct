@@ -142,6 +142,14 @@ target_sources(gfxrecon_decode
                     ${CMAKE_CURRENT_LIST_DIR}/vulkan_enum_util.h
                     ${CMAKE_CURRENT_LIST_DIR}/vulkan_feature_util.h
                     ${CMAKE_CURRENT_LIST_DIR}/vulkan_feature_util.cpp
+                    ${CMAKE_CURRENT_LIST_DIR}/vulkan_frame_inspector_client_indirect_commands.h
+                    ${CMAKE_CURRENT_LIST_DIR}/vulkan_frame_inspector_client_object_info.h
+                    ${CMAKE_CURRENT_LIST_DIR}/vulkan_frame_inspector_client_vulkan_commands_info.h
+                    ${CMAKE_CURRENT_LIST_DIR}/vulkan_frame_inspector_consumer_client_base.cpp
+                    ${CMAKE_CURRENT_LIST_DIR}/vulkan_frame_inspector_consumer_client_base.h
+                    ${CMAKE_CURRENT_LIST_DIR}/vulkan_frame_inspector_consumer_client_object_table.cpp
+                    ${CMAKE_CURRENT_LIST_DIR}/vulkan_frame_inspector_consumer_client_object_table.h
+                    ${CMAKE_CURRENT_LIST_DIR}/vulkan_frame_inspector_serialized_commands.h
                     ${CMAKE_CURRENT_LIST_DIR}/vulkan_handle_mapping_util.h
                     ${CMAKE_CURRENT_LIST_DIR}/vulkan_handle_mapping_util.cpp
                     ${CMAKE_CURRENT_LIST_DIR}/vulkan_object_cleanup_util.h
@@ -179,6 +187,8 @@ target_sources(gfxrecon_decode
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_decoder.h
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_decoder.cpp
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_feature_util.cpp
+                    ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_frame_inspector_consumer_client.h
+                    ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_frame_inspector_consumer_client.cpp
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_referenced_resource_consumer.h
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_referenced_resource_consumer.cpp
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_replay_consumer.h
