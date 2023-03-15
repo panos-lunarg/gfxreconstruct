@@ -32,6 +32,8 @@
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(encode)
 
+#if !defined(WIN32)
+
 void InitializePerfetto(VulkanCaptureManager* manager)
 {
     static bool initialized = false;
@@ -144,6 +146,8 @@ void Process_QueueSubmit(
         }
     }
 }
+
+#endif // !defined(WIN32)
 
 GFXRECON_END_NAMESPACE(gfxrecon)
 GFXRECON_END_NAMESPACE(encode)

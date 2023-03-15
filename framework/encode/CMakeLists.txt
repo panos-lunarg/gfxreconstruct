@@ -101,10 +101,10 @@ target_sources(gfxrecon_encode
                     $<$<BOOL:${D3D12_SUPPORT}>:${CMAKE_SOURCE_DIR}/framework/generated/generated_dx12_state_table.h>
                     $<$<BOOL:${D3D12_SUPPORT}>:${CMAKE_SOURCE_DIR}/framework/generated/generated_dx12_command_list_util.h>
                     $<$<BOOL:${D3D12_SUPPORT}>:${CMAKE_SOURCE_DIR}/framework/generated/generated_dx12_command_list_util.cpp>
-                    ${CMAKE_CURRENT_LIST_DIR}/perfetto/perfetto_encoder_commands.h
-                    ${CMAKE_CURRENT_LIST_DIR}/perfetto/perfetto_encoder_commands.cpp
-                    ${CMAKE_CURRENT_LIST_DIR}/perfetto/perfetto_tracing_categories.h
-                    ${CMAKE_CURRENT_LIST_DIR}/perfetto/perfetto_tracing_categories.cpp
+                    $<$<BOOL:${UNIX}>:${CMAKE_CURRENT_LIST_DIR}/perfetto/perfetto_encoder_commands.h>
+                    $<$<BOOL:${UNIX}>:${CMAKE_CURRENT_LIST_DIR}/perfetto/perfetto_encoder_commands.cpp>
+                    $<$<BOOL:${UNIX}>:${CMAKE_CURRENT_LIST_DIR}/perfetto/perfetto_tracing_categories.h>
+                    $<$<BOOL:${UNIX}>:${CMAKE_CURRENT_LIST_DIR}/perfetto/perfetto_tracing_categories.cpp>
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_encode_pnext_struct.cpp
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_api_call_encoders.h
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_api_call_encoders.cpp
@@ -130,7 +130,10 @@ if (MSVC)
 endif()
 
 # Define a static library for Perfetto.
-add_library(perfetto STATIC ${CMAKE_SOURCE_DIR}/external/perfetto/perfetto.cc)
+
+if(UNIX)
+    add_library(perfetto STATIC ${CMAKE_SOURCE_DIR}/external/perfetto/perfetto.cc)
+endif()
 
 target_include_directories(gfxrecon_encode
                            PUBLIC
@@ -138,7 +141,7 @@ target_include_directories(gfxrecon_encode
                                ${CMAKE_SOURCE_DIR}/framework
                                $<$<BOOL:${D3D12_SUPPORT}>:${CMAKE_SOURCE_DIR}/external/AgilitySDK/inc>)
 
-target_link_libraries(gfxrecon_encode gfxrecon_graphics gfxrecon_format gfxrecon_util vulkan_registry platform_specific perfetto)
+target_link_libraries(gfxrecon_encode gfxrecon_graphics gfxrecon_format gfxrecon_util vulkan_registry platform_specific $<$<BOOL:${UNIX}>:perfetto>)
 
 common_build_directives(gfxrecon_encode)
 

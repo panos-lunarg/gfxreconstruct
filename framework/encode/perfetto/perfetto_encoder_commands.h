@@ -54,6 +54,8 @@ struct PerfettoEncoderPostCall
     {}
 };
 
+#if !defined(WIN32)
+
 void Process_QueueSubmit(
     VulkanCaptureManager* manager, VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence);
 
@@ -109,6 +111,8 @@ struct PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>
         Process_QueueSubmit(manager, args...);
     }
 };
+
+#endif // !defined(WIN32)
 
 GFXRECON_END_NAMESPACE(gfxrecon)
 GFXRECON_END_NAMESPACE(encode)
