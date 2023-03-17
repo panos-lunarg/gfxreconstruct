@@ -42,8 +42,8 @@ class FileStreamer
     bool StreamFile();
 
   private:
-    bool ReadBytes(void* buffer, size_t buffer_size);
-    bool IsFileValid() const { return (file_descriptor_ && !feof(file_descriptor_) && !ferror(file_descriptor_)); }
+    size_t ReadBytes(void* buffer, size_t buffer_size);
+    bool   IsFileValid() const { return (file_descriptor_ && !feof(file_descriptor_) && !ferror(file_descriptor_)); }
 
     FILE*                file_descriptor_ = nullptr;
     size_t               bytes_read_      = 0;

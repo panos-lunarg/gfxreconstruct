@@ -100,33 +100,33 @@ int main(int argc, const char** argv)
         const std::vector<std::string>& positional_arguments = arg_parser.GetPositionalArguments();
         std::string                     filename             = positional_arguments[0];
 
-        // gfxrecon::util::FileStreamer streamer;
-        // streamer.Initialize(filename, "localhost", "3490");
+        gfxrecon::util::FileStreamer streamer;
+        streamer.Initialize(filename, "localhost", "3490");
 
-        // while (streamer.StreamFile())
-        // {}
+        while (streamer.StreamFile())
+        {}
 
-        gfxrecon::decode::FileProcessor file_processor;
-        if (!file_processor.Initialize(filename))
-        {
-            return_code = -1;
-        }
-        else
-        {
-            auto application = std::make_shared<gfxrecon::application::Application>(kApplicationName, &file_processor);
+        // gfxrecon::decode::FileProcessor file_processor;
+        // if (!file_processor.Initialize(filename))
+        // {
+        //     return_code = -1;
+        // }
+        // else
+        // {
+        //     auto application = std::make_shared<gfxrecon::application::Application>(kApplicationName, &file_processor);
 
-            gfxrecon::decode::VulkanTrackedObjectInfoTable tracked_object_info_table;
-            gfxrecon::decode::VulkanReplayOptions          vulkan_replay_options =
-                GetVulkanReplayOptions(arg_parser, filename, &tracked_object_info_table);
+        //     gfxrecon::decode::VulkanTrackedObjectInfoTable tracked_object_info_table;
+        //     gfxrecon::decode::VulkanReplayOptions          vulkan_replay_options =
+        //         GetVulkanReplayOptions(arg_parser, filename, &tracked_object_info_table);
 
-            gfxrecon::decode::VulkanFrameInspectorConsumerClient vulkan_replay_consumer(vulkan_replay_options);
-            gfxrecon::decode::VulkanDecoder                      vulkan_decoder;
+        //     gfxrecon::decode::VulkanFrameInspectorConsumerClient vulkan_replay_consumer(vulkan_replay_options);
+        //     gfxrecon::decode::VulkanDecoder                      vulkan_decoder;
 
-            vulkan_decoder.AddConsumer(&vulkan_replay_consumer);
-            file_processor.AddDecoder(&vulkan_decoder);
+        //     vulkan_decoder.AddConsumer(&vulkan_replay_consumer);
+        //     file_processor.AddDecoder(&vulkan_decoder);
 
-            application->Run();
-        }
+        //     application->Run();
+        // }
     }
     catch (std::runtime_error error)
     {

@@ -49,39 +49,25 @@ bool FileStreamer::Initialize(const std::string& filename, const std::string& ip
     return true;
 }
 
-bool FileStreamer::ReadBytes(void* buffer, size_t buffer_size)
+size_t FileStreamer::ReadBytes(void* buffer, size_t buffer_size)
 {
     assert(file_descriptor_);
 
     size_t bytes_read = util::platform::FileRead(buffer, 1, buffer_size, file_descriptor_);
     bytes_read_ += bytes_read;
 
-    return bytes_read == buffer_size;
+    return bytes_read;
 }
 
 bool FileStreamer::StreamFile()
 {
     while (true)
     {
-        uint64_t size;
-        int      ret = socket.Receive(&size, sizeof(size));
-        if (ret != sizeof(size))
-        {
-            return false;
-        }
+        const size_t size = 1024;
+        internal_buffer_.resize(size);
 
-        if (!size)
-        {
-            break;
-        }
-
-        if (internal_buffer_.size() < static_cast<size_t>(size))
-        {
-            internal_buffer_.resize(size);
-        }
-
-        bool success = ReadBytes(internal_buffer_.data(), size);
-        if (!success)
+        size_t bytes_read = ReadBytes(internal_buffer_.data(), size);
+        if (!bytes_read)
         {
             if (!IsFileValid())
             {
@@ -94,11 +80,7 @@ bool FileStreamer::StreamFile()
             }
         }
 
-        ret = socket.Send(internal_buffer_.data(), size);
-        if (ret != size)
-        {
-            return false;
-        }
+        int ret = socket.Send(internal_buffer_.data(), bytes_read);
     }
 
     return true;

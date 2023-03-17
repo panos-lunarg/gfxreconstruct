@@ -487,15 +487,6 @@ bool FileProcessor::ReadBytes(void* buffer, size_t buffer_size)
     }
     else
     {
-        const uint64_t size = static_cast<uint64_t>(buffer_size);
-        bytes_read          = socket.Send(&size, sizeof(size));
-
-        if (bytes_read != sizeof(size))
-        {
-            error_state_ = kErrorSocket;
-            assert(0);
-        }
-
         bytes_read = socket.Receive(buffer, buffer_size);
         if (bytes_read != buffer_size)
         {
