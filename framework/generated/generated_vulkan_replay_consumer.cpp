@@ -228,7 +228,7 @@ void VulkanReplayConsumer::Process_vkQueueSubmit(
     MapStructArrayHandles(pSubmits->GetMetaStructPointer(), pSubmits->GetLength(), GetObjectInfoTable());
     auto in_fence = GetObjectInfoTable().GetFenceInfo(fence);
 
-    VkResult replay_result = OverrideQueueSubmit(GetDeviceTable(in_queue->handle)->QueueSubmit, returnValue, in_queue, submitCount, pSubmits, in_fence);
+    VkResult replay_result = OverrideQueueSubmit(GetDeviceTable(in_queue->handle)->QueueSubmit, call_info, returnValue, in_queue, submitCount, pSubmits, in_fence);
     CheckResult("vkQueueSubmit", returnValue, replay_result);
 }
 
@@ -1357,6 +1357,18 @@ void VulkanReplayConsumer::Process_vkResetCommandPool(
     VkDevice in_device = MapHandle<DeviceInfo>(device, &VulkanObjectInfoTable::GetDeviceInfo);
     VkCommandPool in_commandPool = MapHandle<CommandPoolInfo>(commandPool, &VulkanObjectInfoTable::GetCommandPoolInfo);
 
+    CommandPoolInfo *pool_in = GetObjectInfoTable().GetCommandPoolInfo(commandPool);
+    if (pool_in)
+    {
+        for (const auto &cmd_buf_id : pool_in->child_ids)
+        {
+            CommandBufferInfo *cmd_buf_in = GetObjectInfoTable().GetCommandBufferInfo(cmd_buf_id);
+            if (cmd_buf_in){
+                cmd_buf_in->indirect_commands_info.clear();
+            }
+        }
+    }
+
     VkResult replay_result = GetDeviceTable(in_device)->ResetCommandPool(in_device, in_commandPool, flags);
     CheckResult("vkResetCommandPool", returnValue, replay_result);
 }
@@ -1428,6 +1440,9 @@ void VulkanReplayConsumer::Process_vkResetCommandBuffer(
     VkCommandBufferResetFlags                   flags)
 {
     VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
+
+    CommandBufferInfo *cmd_buf_info = GetObjectInfoTable().GetCommandBufferInfo(commandBuffer);
+    cmd_buf_info->indirect_commands_info.clear();
 
     VkResult replay_result = GetDeviceTable(in_commandBuffer)->ResetCommandBuffer(in_commandBuffer, flags);
     CheckResult("vkResetCommandBuffer", returnValue, replay_result);
@@ -1630,10 +1645,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirect(
     uint32_t                                    drawCount,
     uint32_t                                    stride)
 {
-    VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
-    VkBuffer in_buffer = MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
+    auto in_commandBuffer = GetObjectInfoTable().GetCommandBufferInfo(commandBuffer);
+    auto in_buffer = GetObjectInfoTable().GetBufferInfo(buffer);
 
-    GetDeviceTable(in_commandBuffer)->CmdDrawIndirect(in_commandBuffer, in_buffer, offset, drawCount, stride);
+    OverrideCmdDrawIndirect(GetDeviceTable(in_commandBuffer->handle)->CmdDrawIndirect, call_info, in_commandBuffer, in_buffer, offset, drawCount, stride);
 }
 
 void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirect(

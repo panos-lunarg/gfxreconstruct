@@ -25,6 +25,7 @@
 #define GFXRECON_DECODE_VULKAN_OBJECT_MAPPER_BASE_H
 
 #include "decode/vulkan_object_info.h"
+#include "decode/vulkan_indirect_commands_info.h"
 #include "format/format.h"
 #include "util/defines.h"
 

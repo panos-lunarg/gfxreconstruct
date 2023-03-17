@@ -105,6 +105,56 @@ void FreeChildObjects(VulkanObjectInfoTable* table,
     }
 }
 
+template <typename S, typename P, typename T>
+void FreePoolObjects(VulkanObjectInfoTable* table,
+                     const std::string&     parent_type_name,
+                     const std::string&     object_type_name,
+                     bool                   remove_entries,
+                     bool                   report_leaks,
+                     S* (VulkanObjectInfoTable::*GetParentInfoFunc)(format::HandleId),
+                     P* (VulkanObjectInfoTable::*GetPoolInfoFunc)(format::HandleId),
+                     void (VulkanObjectInfoTable::*VisitFunc)(std::function<void(const T*)>) const,
+                     void (VulkanObjectInfoTable::*RemoveFunc)(format::HandleId),
+                     std::function<void(const S*, const P*, const T*)> destroy_func)
+{
+    assert(table != nullptr);
+
+    // Visit all table entries and sort them by parent ID.  Using unordered_map to filter duplicate handles.
+    std::unordered_map<format::HandleId, std::unordered_map<typename T::HandleType, const T*>> objects;
+
+    (table->*VisitFunc)([&](const T* info) { AddChildObject(&objects, info); });
+
+    for (const auto& entry : objects)
+    {
+        auto parent_info = (table->*GetParentInfoFunc)(entry.first);
+
+        if (parent_info != nullptr)
+        {
+            // Free resources.
+            for (const auto& object_info : entry.second)
+            {
+                if (object_info.second != nullptr)
+                {
+                    auto pool_info = (table->*GetPoolInfoFunc)(object_info.second->pool_id);
+                    destroy_func(parent_info, pool_info, object_info.second);
+                    if (remove_entries)
+                    {
+                        (table->*RemoveFunc)(object_info.second->capture_id);
+                    }
+                }
+            }
+        }
+        else if (report_leaks)
+        {
+            GFXRECON_LOG_WARNING("Leaked %" PRIuPTR " %s objects allocated from %s ID %" PRIu64 " on exit",
+                                 entry.second.size(),
+                                 object_type_name.c_str(),
+                                 parent_type_name.c_str(),
+                                 entry.first);
+        }
+    }
+}
+
 template <typename T>
 void FreeParentObjects(VulkanObjectInfoTable* table,
                        bool                   remove_entries,
@@ -286,23 +336,23 @@ void FreeAllLiveObjects(VulkanObjectInfoTable*                                  
             get_device_table(parent_info->handle)->DestroyImageView(parent_info->handle, object_info->handle, nullptr);
         });
 
-    FreeChildObjects<DeviceInfo, ImageInfo>(
-        table,
-        GFXRECON_STR(VkDevice),
-        GFXRECON_STR(VkImage),
-        remove_entries,
-        report_leaks,
-        &VulkanObjectInfoTable::GetDeviceInfo,
-        &VulkanObjectInfoTable::VisitImageInfo,
-        &VulkanObjectInfoTable::RemoveImageInfo,
-        [&](const DeviceInfo* parent_info, const ImageInfo* object_info) {
-            assert((parent_info != nullptr) && (object_info != nullptr));
+    FreeChildObjects<DeviceInfo, ImageInfo>(table,
+                                            GFXRECON_STR(VkDevice),
+                                            GFXRECON_STR(VkImage),
+                                            remove_entries,
+                                            report_leaks,
+                                            &VulkanObjectInfoTable::GetDeviceInfo,
+                                            &VulkanObjectInfoTable::VisitImageInfo,
+                                            &VulkanObjectInfoTable::RemoveImageInfo,
+                                            [&](const DeviceInfo* parent_info, const ImageInfo* object_info) {
+                                                assert((parent_info != nullptr) && (object_info != nullptr));
 
-            auto allocator = parent_info->allocator.get();
-            assert(allocator != nullptr);
+                                                auto allocator = parent_info->allocator.get();
+                                                assert(allocator != nullptr);
 
-            allocator->DestroyImage(object_info->handle, nullptr, object_info->allocator_data);
-        });
+                                                allocator->DestroyImage(
+                                                    object_info->handle, nullptr, object_info->allocator_data);
+                                            });
 
     FreeChildObjects<DeviceInfo, BufferViewInfo>(
         table,
@@ -318,23 +368,23 @@ void FreeAllLiveObjects(VulkanObjectInfoTable*                                  
             get_device_table(parent_info->handle)->DestroyBufferView(parent_info->handle, object_info->handle, nullptr);
         });
 
-    FreeChildObjects<DeviceInfo, BufferInfo>(
-        table,
-        GFXRECON_STR(VkDevice),
-        GFXRECON_STR(VkBuffer),
-        remove_entries,
-        report_leaks,
-        &VulkanObjectInfoTable::GetDeviceInfo,
-        &VulkanObjectInfoTable::VisitBufferInfo,
-        &VulkanObjectInfoTable::RemoveBufferInfo,
-        [&](const DeviceInfo* parent_info, const BufferInfo* object_info) {
-            assert((parent_info != nullptr) && (object_info != nullptr));
+    FreeChildObjects<DeviceInfo, BufferInfo>(table,
+                                             GFXRECON_STR(VkDevice),
+                                             GFXRECON_STR(VkBuffer),
+                                             remove_entries,
+                                             report_leaks,
+                                             &VulkanObjectInfoTable::GetDeviceInfo,
+                                             &VulkanObjectInfoTable::VisitBufferInfo,
+                                             &VulkanObjectInfoTable::RemoveBufferInfo,
+                                             [&](const DeviceInfo* parent_info, const BufferInfo* object_info) {
+                                                 assert((parent_info != nullptr) && (object_info != nullptr));
 
-            auto allocator = parent_info->allocator.get();
-            assert(allocator != nullptr);
+                                                 auto allocator = parent_info->allocator.get();
+                                                 assert(allocator != nullptr);
 
-            allocator->DestroyBuffer(object_info->handle, nullptr, object_info->allocator_data);
-        });
+                                                 allocator->DestroyBuffer(
+                                                     object_info->handle, nullptr, object_info->allocator_data);
+                                             });
 
     FreeChildObjects<DeviceInfo, DeviceMemoryInfo>(
         table,
@@ -441,6 +491,22 @@ void FreeAllLiveObjects(VulkanObjectInfoTable*                                  
             assert((parent_info != nullptr) && (object_info != nullptr));
             get_device_table(parent_info->handle)
                 ->DestroyDescriptorUpdateTemplate(parent_info->handle, object_info->handle, nullptr);
+        });
+
+    FreePoolObjects<DeviceInfo, CommandPoolInfo, CommandBufferInfo>(
+        table,
+        GFXRECON_STR(VkDevice),
+        GFXRECON_STR(VkCommandBuffer),
+        true,
+        report_leaks,
+        &VulkanObjectInfoTable::GetDeviceInfo,
+        &VulkanObjectInfoTable::GetCommandPoolInfo,
+        &VulkanObjectInfoTable::VisitCommandBufferInfo,
+        &VulkanObjectInfoTable::RemoveCommandBufferInfo,
+        [&](const DeviceInfo* parent_info, const CommandPoolInfo* pool_info, const CommandBufferInfo* object_info) {
+            assert((parent_info != nullptr) && (object_info != nullptr));
+            get_device_table(parent_info->handle)
+                ->FreeCommandBuffers(parent_info->handle, pool_info->handle, 1, &object_info->handle);
         });
 
     FreeChildObjects<DeviceInfo, CommandPoolInfo>(
@@ -707,8 +773,6 @@ void FreeAllLiveObjects(VulkanObjectInfoTable*                                  
             table, &VulkanObjectInfoTable::VisitDisplayKHRInfo, &VulkanObjectInfoTable::RemoveDisplayKHRInfo);
         ClearObjects<DisplayModeKHRInfo>(
             table, &VulkanObjectInfoTable::VisitDisplayModeKHRInfo, &VulkanObjectInfoTable::RemoveDisplayModeKHRInfo);
-        ClearObjects<CommandBufferInfo>(
-            table, &VulkanObjectInfoTable::VisitCommandBufferInfo, &VulkanObjectInfoTable::RemoveCommandBufferInfo);
         ClearObjects<DescriptorSetInfo>(
             table, &VulkanObjectInfoTable::VisitDescriptorSetInfo, &VulkanObjectInfoTable::RemoveDescriptorSetInfo);
 

@@ -42,6 +42,8 @@ target_sources(gfxrecon_util
                     ${CMAKE_CURRENT_LIST_DIR}/driver_info.cpp
                     ${CMAKE_CURRENT_LIST_DIR}/file_path.h
                     ${CMAKE_CURRENT_LIST_DIR}/file_path.cpp
+                    ${CMAKE_CURRENT_LIST_DIR}/file_streamer.h
+                    ${CMAKE_CURRENT_LIST_DIR}/file_streamer.cpp
                     ${CMAKE_CURRENT_LIST_DIR}/hash.h
                     ${CMAKE_CURRENT_LIST_DIR}/hash.cpp
                     ${CMAKE_CURRENT_LIST_DIR}/image_writer.h
@@ -67,6 +69,7 @@ target_sources(gfxrecon_util
                     ${CMAKE_CURRENT_LIST_DIR}/platform.h
                     ${CMAKE_CURRENT_LIST_DIR}/settings_loader.h
                     ${CMAKE_CURRENT_LIST_DIR}/settings_loader.cpp
+                    ${CMAKE_CURRENT_LIST_DIR}/socket.h
                     ${CMAKE_CURRENT_LIST_DIR}/options.h
                     ${CMAKE_CURRENT_LIST_DIR}/options.cpp
                     $<$<BOOL:${D3D12_SUPPORT}>:${CMAKE_CURRENT_LIST_DIR}/interception/hooking_detours.h>
@@ -107,6 +110,10 @@ target_sources(gfxrecon_util
                     $<$<BOOL:${WAYLAND_FOUND}>:${CMAKE_CURRENT_LIST_DIR}/wayland_loader.cpp>
 )
 
+if (UNIX)
+target_sources(gfxrecon_util
+               PRIVATE ${CMAKE_CURRENT_LIST_DIR}/socket_linux.cpp)
+endif()
 
 target_include_directories(gfxrecon_util
                            PUBLIC

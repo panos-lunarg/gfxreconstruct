@@ -24,43 +24,40 @@
 #define GFXRECON_DECODE_VULKAN_FRAME_INSPECTOR_CLIENT_INDIRECT_COMMANDS_H
 
 #include "decode/vulkan_frame_inspector_client_vulkan_commands_info.h"
+#include "decode/vulkan_commands_info_common.h"
 #include "format/format.h"
 #include "graphics/vulkan_util.h"
 #include "vulkan/vulkan.h"
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)
+GFXRECON_BEGIN_NAMESPACE(client)
 
-template <typename T>
-class VulkanIndirectCommandInfo : public VulkanCommandInfo
+class VulkanIndirectCommandInfo
 {
   public:
-    VulkanIndirectCommandInfo(format::CommandIndexType index, vulkan_command_type type) : VulkanCommandInfo(index, type)
-    {}
-
-    const T& GetParams() { return command_params_; }
+    virtual const std::vector<indirect_draw_parameters_union>& GetParams() const { return command_params_; }
+    virtual std::vector<indirect_draw_parameters_union>&       GetParams() { return command_params_; }
 
   protected:
-    T command_params_;
+    std::vector<indirect_draw_parameters_union> command_params_;
 };
 
-struct draw_indirect_params_t
-{
-    uint32_t vertexCount;
-    uint32_t instanceCount;
-    uint32_t firstVertex;
-    uint32_t firstInstance;
-};
-
-class VulkanCommandDrawIndirectInfo : public VulkanIndirectCommandInfo<draw_indirect_params_t>
+class VulkanCommandDrawIndirectInfo : public VulkanIndirectCommandInfo, public VulkanDrawCommandsBaseInfo
 {
   public:
-    VulkanCommandDrawIndirectInfo(format::CommandIndexType index) :
-        VulkanIndirectCommandInfo(index, VULKAN_CMD_DRAW_INDIRECT)
+    VulkanCommandDrawIndirectInfo(format::CommandIndexType index, const FICommandBufferInfo* cmd_buffer_info) :
+        VulkanDrawCommandsBaseInfo(index, VULKAN_CMD_DRAW_INDIRECT, cmd_buffer_info)
     {}
+
+    format::HandleId buffer;
+    VkDeviceSize     offset;
+    uint32_t         draw_count;
+    uint32_t         stride;
 };
 
-GFXRECON_END_NAMESPACE(gfxrecon)
+GFXRECON_END_NAMESPACE(client)
 GFXRECON_END_NAMESPACE(decode)
+GFXRECON_END_NAMESPACE(gfxrecon)
 
 #endif /* GFXRECON_DECODE_VULKAN_FRAME_INSPECTOR_CLIENT_INDIRECT_COMMANDS_H */

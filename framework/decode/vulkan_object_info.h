@@ -30,7 +30,6 @@
 #include "generated/generated_vulkan_dispatch_table.h"
 #include "graphics/vulkan_device_util.h"
 #include "util/defines.h"
-
 #include "vulkan/vulkan.h"
 
 #include <memory>
@@ -183,7 +182,6 @@ struct VulkanPoolObjectInfo : public VulkanObjectInfo<T>
 // Declarations for Vulkan objects without additional replay state info.
 //
 
-typedef VulkanPoolObjectInfo<VkCommandBuffer>             CommandBufferInfo;
 typedef VulkanObjectInfo<VkEvent>                         EventInfo;
 typedef VulkanObjectInfo<VkQueryPool>                     QueryPoolInfo;
 typedef VulkanObjectInfo<VkBufferView>                    BufferViewInfo;

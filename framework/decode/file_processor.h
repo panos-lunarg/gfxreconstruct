@@ -30,6 +30,7 @@
 #include "decode/api_decoder.h"
 #include "util/compressor.h"
 #include "util/defines.h"
+#include "util/socket.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -55,7 +56,14 @@ class FileProcessor
         kErrorReadingBlockData             = -7,
         kErrorReadingCompressedBlockData   = -8,
         kErrorInvalidFourCC                = -9,
-        kErrorUnsupportedCompressionType   = -10
+        kErrorUnsupportedCompressionType   = -10,
+        kErrorSocket                       = -11
+    };
+
+    enum FileLocation
+    {
+        kLocalFile,
+        kNetworkFile
     };
 
   public:
@@ -77,6 +85,7 @@ class FileProcessor
     }
 
     bool Initialize(const std::string& filename);
+    bool InitializeOverSocket(util::Socket* socket);
 
     // Returns true if there are more frames to process, false if all frames have been processed or an error has
     // occurred.  Use GetErrorState() to determine error condition.
@@ -154,8 +163,10 @@ class FileProcessor
     std::vector<uint8_t>                parameter_buffer_;
     std::vector<uint8_t>                compressed_parameter_buffer_;
     util::Compressor*                   compressor_;
-    uint64_t                            api_call_index_;
-    uint64_t                            block_limit_;
+    format::CommandIndexType            api_call_index_;
+    format::CommandIndexType            block_limit_;
+    util::Socket*                       socket_;
+    FileLocation                        file_location_;
 };
 
 GFXRECON_END_NAMESPACE(decode)

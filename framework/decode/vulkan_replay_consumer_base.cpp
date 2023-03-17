@@ -198,6 +198,11 @@ VulkanReplayConsumerBase::~VulkanReplayConsumerBase()
     // Idle all devices before destroying other resources.
     WaitDevicesIdle();
 
+    if (options_.is_remote_file)
+    {
+        draw_indirect_commands.clear();
+    }
+
     // Cleanup screenshot resources before destroying device.
     object_info_table_.VisitDeviceInfo([this](const DeviceInfo* info) {
         assert(info != nullptr);
@@ -3070,10 +3075,11 @@ VkResult VulkanReplayConsumerBase::OverrideGetQueryPoolResults(PFN_vkGetQueryPoo
     return result;
 }
 
-VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
-                                                       VkResult          original_result,
-                                                       const QueueInfo*  queue_info,
-                                                       uint32_t          submitCount,
+VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit  func,
+                                                       const ApiCallInfo& call_info,
+                                                       VkResult           original_result,
+                                                       const QueueInfo*   queue_info,
+                                                       uint32_t           submitCount,
                                                        const StructPointerDecoder<Decoded_VkSubmitInfo>* pSubmits,
                                                        const FenceInfo*                                  fence_info)
 {
@@ -3192,6 +3198,43 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
     if ((options_.sync_queue_submissions) && (result == VK_SUCCESS))
     {
         GetDeviceTable(queue_info->handle)->QueueWaitIdle(queue_info->handle);
+    }
+
+    if (options_.is_remote_file)
+    {
+        // Fetch data from buffers used in indirect commands
+        const Decoded_VkSubmitInfo* submits     = pSubmits->GetMetaStructPointer();
+        const format::HandleId*     cmd_buf_ids = submits->pCommandBuffers.GetPointer();
+
+        for (uint32_t i = 0; i < submits->decoded_value->commandBufferCount; ++i)
+        {
+            CommandBufferInfo* cmd_buf_info = object_info_table_.GetCommandBufferInfo(cmd_buf_ids[i]);
+
+            if (cmd_buf_info->indirect_commands_info.size())
+            {
+                GFXRECON_WRITE_CONSOLE("%s() QueueWaitIdle", __func__);
+
+                GetDeviceTable(queue_info->handle)->QueueWaitIdle(queue_info->handle);
+
+                for (auto& indirect_cmd : cmd_buf_info->indirect_commands_info)
+                {
+                    indirect_cmd.second->FetchParameters();
+
+                    const VulkanCommandDrawIndirectInfo* draw_indirect =
+                        dynamic_cast<const VulkanCommandDrawIndirectInfo*>(indirect_cmd.second.get());
+                    assert(draw_indirect);
+
+                    GFXRECON_WRITE_CONSOLE("(%" PRIu64 ", %" PRIu64 ")", call_info.index, draw_indirect->GetIndex());
+                    draw_indirect->Dump();
+
+                    draw_indirect_commands.emplace_back(draw_indirect_command_t{ call_info.index,
+                                                                                 draw_indirect->GetIndex(),
+                                                                                 draw_indirect->GetType(),
+                                                                                 draw_indirect->GetDrawCount(),
+                                                                                 draw_indirect->GetParams() });
+                }
+            }
+        }
     }
 
     return result;
@@ -4429,6 +4472,38 @@ void VulkanReplayConsumerBase::OverrideCmdPipelineBarrier(
                                    pBufferMemoryBarriers->GetPointer(),
                                    imageMemoryBarrierCount,
                                    pImageMemoryBarriers->GetPointer());
+}
+
+void VulkanReplayConsumerBase::OverrideCmdDrawIndirect(PFN_vkCmdDrawIndirect func,
+                                                       const ApiCallInfo&    call_info,
+                                                       CommandBufferInfo*    command_buffer_info,
+                                                       BufferInfo*           buffer_info,
+                                                       VkDeviceSize          offset,
+                                                       uint32_t              drawCount,
+                                                       uint32_t              stride)
+{
+    if (options_.is_remote_file)
+    {
+        auto device_info = GetObjectInfoTable().GetDeviceInfo(command_buffer_info->parent_id);
+
+        PhysicalDeviceInfo* phys_dev_info = GetObjectInfoTable().GetPhysicalDeviceInfo(device_info->parent_id);
+
+        std::unique_ptr<VulkanCommandDrawIndirectInfo> command =
+            std::make_unique<VulkanCommandDrawIndirectInfo>(call_info.index,
+                                                            device_info,
+                                                            GetDeviceTable(device_info->handle),
+                                                            GetInstanceTable(phys_dev_info->handle),
+                                                            buffer_info);
+        command->Initialize(command_buffer_info, phys_dev_info, offset, drawCount, stride);
+
+        assert(GetInstanceTable(device_info->parent) == GetInstanceTable(phys_dev_info->handle));
+
+        assert(command_buffer_info->indirect_commands_info.find(call_info.index) ==
+               command_buffer_info->indirect_commands_info.end());
+        command_buffer_info->indirect_commands_info.insert({ call_info.index, std::move(command) });
+    }
+
+    func(command_buffer_info->handle, buffer_info->handle, offset, drawCount, stride);
 }
 
 VkResult VulkanReplayConsumerBase::OverrideCreateDescriptorUpdateTemplate(
@@ -6752,6 +6827,40 @@ void VulkanReplayConsumerBase::Process_vkUpdateDescriptorSetWithTemplateKHR(cons
 
     GetDeviceTable(in_device)->UpdateDescriptorSetWithTemplateKHR(
         in_device, in_descriptorSet, in_descriptorUpdateTemplate, pData->GetPointer());
+}
+
+bool VulkanReplayConsumerBase::SendIndirectCommandParamsOverSocket(util::Socket& socket)
+{
+    GFXRECON_WRITE_CONSOLE("%s\n", __func__)
+
+    size_t n   = draw_indirect_commands.size();
+    int    ret = socket.Send(&n, sizeof(n));
+    assert(ret > -1);
+
+    GFXRECON_WRITE_CONSOLE("%s n: %zu\n", __func__, n)
+
+    for (const auto& cmd : draw_indirect_commands)
+    {
+        ret = socket.Send(&cmd.queue_submit_index, sizeof(cmd.queue_submit_index));
+        assert(ret > -1);
+
+        ret = socket.Send(&cmd.command_index, sizeof(cmd.command_index));
+        assert(ret > -1);
+
+        ret = socket.Send(&cmd.command_type, sizeof(cmd.command_type));
+        assert(ret > -1);
+
+        ret = socket.Send(&cmd.draw_count, sizeof(cmd.draw_count));
+        assert(ret > -1);
+
+        ret = socket.Send(cmd.command_params.data(), cmd.draw_count * sizeof(indirect_draw_parameters_union));
+        assert(ret > -1);
+    }
+
+    socket.Receive(&n, sizeof(n));
+    GFXRECON_WRITE_CONSOLE("%s() Client received: %zu", __func__, n);
+
+    return true;
 }
 
 GFXRECON_END_NAMESPACE(decode)

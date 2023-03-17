@@ -56,6 +56,7 @@ struct VulkanReplayOptions : public ReplayOptions
     std::string                  screenshot_dir;
     std::string                  screenshot_file_prefix{ kDefaultScreenshotFilePrefix };
     std::string                  replace_dir;
+    bool                         is_remote_file{ false };
 };
 
 GFXRECON_END_NAMESPACE(decode)

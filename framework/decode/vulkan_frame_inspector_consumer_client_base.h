@@ -29,6 +29,7 @@
 #include "decode/vulkan_replay_options.h"
 #include "decode/vulkan_frame_inspector_client_object_info.h"
 #include "decode/vulkan_frame_inspector_serialized_commands.h"
+#include "decode/vulkan_frame_inspector_client_indirect_commands.h"
 #include "generated/generated_vulkan_consumer.h"
 #include "decode/vulkan_frame_inspector_consumer_client_object_table.h"
 
@@ -341,6 +342,13 @@ class VulkanFrameInspectorConsumerClientBase : public VulkanConsumer
                                           int32_t            vertexOffset,
                                           uint32_t           firstInstance) override;
 
+    virtual void Process_vkCmdDrawIndirect(const ApiCallInfo& call_info,
+                                           format::HandleId   commandBuffer,
+                                           format::HandleId   buffer,
+                                           VkDeviceSize       offset,
+                                           uint32_t           drawCount,
+                                           uint32_t           stride) override;
+
     virtual void Process_vkCmdBindDescriptorSets(const ApiCallInfo&                     call_info,
                                                  format::HandleId                       commandBuffer,
                                                  VkPipelineBindPoint                    pipelineBindPoint,
@@ -410,6 +418,8 @@ class VulkanFrameInspectorConsumerClientBase : public VulkanConsumer
 
     void DumpFrame() const;
 
+    bool GetIndirectCommandParamsOverSocket(util::Socket& socket);
+
   private:
     std::vector<std::unique_ptr<SerializedCommands>> commands_;
     VulkanFrameInspectorObjectTable                  object_table_;
@@ -424,8 +434,8 @@ class VulkanFrameInspectorConsumerClientBase : public VulkanConsumer
 
     void DeletePendingObjects();
 
-    // public:
-    //   serialized_commands_map_t& GetCommands() { return commands_; }
+    std::map<std::pair<format::CommandIndexType, format::CommandIndexType>, draw_indirect_command_t>
+        draw_indirect_params;
 };
 
 GFXRECON_END_NAMESPACE(decode)

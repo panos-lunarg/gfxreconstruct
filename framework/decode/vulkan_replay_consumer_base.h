@@ -29,6 +29,7 @@
 #include "decode/screenshot_handler.h"
 #include "decode/swapchain_image_tracker.h"
 #include "decode/vulkan_handle_mapping_util.h"
+#include "decode/vulkan_indirect_commands_info.h"
 #include "decode/vulkan_object_info.h"
 #include "decode/vulkan_object_info_table.h"
 #include "decode/vulkan_replay_options.h"
@@ -36,6 +37,7 @@
 #include "decode/vulkan_resource_tracking_consumer.h"
 #include "decode/vulkan_resource_initializer.h"
 #include "decode/vulkan_swapchain.h"
+#include "decode/vulkan_commands_info_common.h"
 #include "decode/window.h"
 #include "format/api_call_id.h"
 #include "format/platform_types.h"
@@ -44,6 +46,7 @@
 #include "graphics/fps_info.h"
 #include "util/defines.h"
 #include "util/logging.h"
+#include "util/socket.h"
 
 #include "application/application.h"
 
@@ -178,6 +181,8 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                                               format::HandleId                 descriptorSet,
                                                               format::HandleId                 descriptorUpdateTemplate,
                                                               DescriptorUpdateTemplateDecoder* pData) override;
+
+    bool SendIndirectCommandParamsOverSocket(util::Socket& socket);
 
   protected:
     const VulkanObjectInfoTable& GetObjectInfoTable() const { return object_info_table_; }
@@ -513,6 +518,7 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                          VkQueryResultFlags        flags);
 
     VkResult OverrideQueueSubmit(PFN_vkQueueSubmit                                 func,
+                                 const ApiCallInfo&                                call_info,
                                  VkResult                                          original_result,
                                  const QueueInfo*                                  queue_info,
                                  uint32_t                                          submitCount,
@@ -676,6 +682,14 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                     const StructPointerDecoder<Decoded_VkBufferMemoryBarrier>* pBufferMemoryBarriers,
                                     uint32_t                                                   imageMemoryBarrierCount,
                                     const StructPointerDecoder<Decoded_VkImageMemoryBarrier>*  pImageMemoryBarriers);
+
+    void OverrideCmdDrawIndirect(PFN_vkCmdDrawIndirect func,
+                                 const ApiCallInfo&    call_info,
+                                 CommandBufferInfo*    command_buffer_info,
+                                 BufferInfo*           buffer_info,
+                                 VkDeviceSize          offset,
+                                 uint32_t              drawCount,
+                                 uint32_t              stride);
 
     VkResult OverrideCreateDescriptorUpdateTemplate(
         PFN_vkCreateDescriptorUpdateTemplate                                      func,
@@ -1094,6 +1108,8 @@ class VulkanReplayConsumerBase : public VulkanConsumer
 
     // Used to track allocated external memory if replay uses VkImportMemoryHostPointerInfoEXT
     std::unordered_map<VkDeviceMemory, std::pair<void*, size_t>> external_memory_;
+
+    std::vector<draw_indirect_command_t> draw_indirect_commands;
 };
 
 GFXRECON_END_NAMESPACE(decode)

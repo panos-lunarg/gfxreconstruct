@@ -24,6 +24,7 @@
 #include "decode/vulkan_frame_inspector_consumer_client_base.h"
 #include "decode/vulkan_frame_inspector_client_vulkan_commands_info.h"
 #include "decode/vulkan_frame_inspector_client_object_info.h"
+#include "decode/vulkan_frame_inspector_client_indirect_commands.h"
 #include "format/format_util.h"
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
@@ -1110,6 +1111,27 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDraw(const ApiCallInfo
     command_buffer_in->EmplaceCommand(std::move(command));
 }
 
+void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDrawIndirect(const ApiCallInfo& call_info,
+                                                                       format::HandleId   commandBuffer,
+                                                                       format::HandleId   buffer,
+                                                                       VkDeviceSize       offset,
+                                                                       uint32_t           drawCount,
+                                                                       uint32_t           stride)
+{
+    FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
+    assert(command_buffer_in);
+
+    std::shared_ptr<client::VulkanCommandDrawIndirectInfo> command =
+        std::make_shared<client::VulkanCommandDrawIndirectInfo>(call_info.index, command_buffer_in);
+
+    command->buffer     = buffer;
+    command->offset     = offset;
+    command->draw_count = drawCount;
+    command->stride     = stride;
+
+    command_buffer_in->EmplaceCommand(std::move(command));
+}
+
 void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDrawIndexed(const ApiCallInfo& call_info,
                                                                       format::HandleId   commandBuffer,
                                                                       uint32_t           indexCount,
@@ -1286,11 +1308,16 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkQueueSubmit(const ApiCall
     for (uint32_t i = 0; i < submitCount; ++i)
     {
         const format::HandleId* cmd_buf_ids = submit_infos->pCommandBuffers.GetPointer();
-        FICommandBufferInfo* cmd_buf_info = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(cmd_buf_ids[i]));
-        assert(cmd_buf_info);
+        for (uint32_t cb = 0; cb < submit_infos->decoded_value->commandBufferCount; ++cb)
+        {
+            FICommandBufferInfo* cmd_buf_info =
+                dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(cmd_buf_ids[cb]));
+            assert(cmd_buf_info);
 
-        assert(queue_submit_info->command_buffers.find(cmd_buf_info->id) == queue_submit_info->command_buffers.end());
-        queue_submit_info->command_buffers.emplace(cmd_buf_info->id, cmd_buf_info->command_list);
+            assert(queue_submit_info->command_buffers.find(cmd_buf_info->id) ==
+                   queue_submit_info->command_buffers.end());
+            queue_submit_info->command_buffers.emplace(cmd_buf_info->id, cmd_buf_info->command_list);
+        }
 
         if (submit_infos->pSignalSemaphores.GetPointer())
         {
@@ -1305,6 +1332,46 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkQueueSubmit(const ApiCall
         if (submit_infos->pWaitDstStageMask.GetPointer())
         {
             queue_submit_info->wait_dst_stage_mask.push_back(submit_infos->pWaitDstStageMask.GetPointer()[i]);
+        }
+    }
+
+    for (auto& cmd_buf : queue_submit_info->command_buffers)
+    {
+        for (auto& cmd : cmd_buf.second)
+        {
+            if (cmd->type == VULKAN_CMD_DRAW_INDIRECT)
+            {
+                const auto& it = draw_indirect_params.find(std::make_pair(call_info.index, cmd->index));
+                if (it != draw_indirect_params.end())
+                {
+                    if (it->second.command_type == VULKAN_CMD_DRAW_INDIRECT)
+                    {
+                        client::VulkanCommandDrawIndirectInfo* draw_indirect =
+                            dynamic_cast<client::VulkanCommandDrawIndirectInfo*>(cmd.get());
+                        assert(draw_indirect);
+
+                        draw_indirect->GetParams() = std::move(it->second.command_params);
+                        draw_indirect->draw_count  = it->second.draw_count;
+                    }
+                    else
+                    {
+                        assert(0);
+                        GFXRECON_LOG_WARNING(
+                            "%s (%" PRIu64 ", %" PRIu64
+                            ") indirect command is of the wrong type. Expected VULKAN_CMD_DRAW_INDIRECT, got %s",
+                            __func__,
+                            call_info.index,
+                            cmd->index,
+                            vulkan_command_to_str(it->second.command_type));
+                    }
+                }
+                else
+                {
+                    assert(0);
+                    GFXRECON_LOG_WARNING(
+                        "%s (%" PRIu64 ", %" PRIu64 ") was not found", __func__, call_info.index, cmd->index);
+                }
+            }
         }
     }
 
@@ -1443,46 +1510,92 @@ void VulkanFrameInspectorConsumerClientBase::DumpFrame() const
             {
                 QueueSubmitInfo* queue_submit_info = reinterpret_cast<QueueSubmitInfo*>(serialize_cmd.get());
                 assert(queue_submit_info);
-                printf("vkQueueSubmit (%" PRIu64 ")\n", queue_submit_info->index);
+                GFXRECON_WRITE_CONSOLE("vkQueueSubmit (%" PRIu64 ")\n", queue_submit_info->index);
 
                 for (const auto& cmd_buf : queue_submit_info->command_buffers)
                 {
-                    printf("  vkCommandBuffer (%" PRIu64 ")\n", cmd_buf.first);
+                    GFXRECON_WRITE_CONSOLE("  vkCommandBuffer (%" PRIu64 ")\n", cmd_buf.first);
                     for (const auto& cmd : cmd_buf.second)
                     {
-                        printf("    - (%" PRIu64 ") %s\n", cmd->index, vulkan_command_to_str(cmd.get()));
+                        GFXRECON_WRITE_CONSOLE(
+                            "    - (%" PRIu64 ") %s\n", cmd->index, vulkan_command_to_str(cmd.get()));
                         switch (cmd->type)
                         {
                             case VULKAN_CMD_DRAW:
                             {
-                                VulkanCommandDrawInfo* draw_cmd = reinterpret_cast<VulkanCommandDrawInfo*>(cmd.get());
+                                VulkanCommandDrawInfo* draw_cmd = dynamic_cast<VulkanCommandDrawInfo*>(cmd.get());
+                                assert(draw_cmd);
 
-                                printf("Set Binding\n");
+                                GFXRECON_WRITE_CONSOLE("Set Binding\n");
                                 for (const auto& desc_set : draw_cmd->descriptor_sets)
                                 {
                                     for (const auto& binding : desc_set.second.bindings)
                                     {
-                                        printf("%u    %u        %s\n",
-                                               desc_set.first,
-                                               binding.first,
-                                               desc_type_to_str(binding.second.descriptor_type));
+                                        GFXRECON_WRITE_CONSOLE("%u    %u        %s\n",
+                                                               desc_set.first,
+                                                               binding.first,
+                                                               desc_type_to_str(binding.second.descriptor_type));
                                     }
                                 }
 
-                                printf("Pipeline: %" PRIu64 "\n", draw_cmd->pipeline->id);
+                                GFXRECON_WRITE_CONSOLE("Pipeline: %" PRIu64 "\n", draw_cmd->pipeline->id);
                                 if (draw_cmd->bound_vertex_buffers.size())
                                 {
-                                    printf("Vertex Buffers:\n");
+                                    GFXRECON_WRITE_CONSOLE("Vertex Buffers:\n");
                                     for (const auto& vert_buf : draw_cmd->bound_vertex_buffers)
                                     {
-                                        printf("  %u: %" PRIu64 " @ %zu\n",
-                                               vert_buf.first,
-                                               vert_buf.second.buffer->id,
-                                               vert_buf.second.offset);
+                                        GFXRECON_WRITE_CONSOLE("  %u: %" PRIu64 " @ %zu\n",
+                                                               vert_buf.first,
+                                                               vert_buf.second.buffer->id,
+                                                               vert_buf.second.offset);
                                     }
                                 }
                             }
                             break;
+
+                            case VULKAN_CMD_DRAW_INDIRECT:
+                            {
+                                client::VulkanCommandDrawIndirectInfo* draw_cmd =
+                                    dynamic_cast<client::VulkanCommandDrawIndirectInfo*>(cmd.get());
+                                assert(draw_cmd);
+
+                                GFXRECON_WRITE_CONSOLE("draw count: %u", draw_cmd->draw_count);
+
+                                for (uint32_t i = 0; i < draw_cmd->draw_count; ++i)
+                                {
+                                    GFXRECON_WRITE_CONSOLE("  %u: (vc: %u ic: %u fv: %u fi: %u)",
+                                                           i,
+                                                           draw_cmd->GetParams()[i].indirect.vertexCount,
+                                                           draw_cmd->GetParams()[i].indirect.instanceCount,
+                                                           draw_cmd->GetParams()[i].indirect.firstVertex,
+                                                           draw_cmd->GetParams()[i].indirect.firstInstance)
+                                }
+
+                                GFXRECON_WRITE_CONSOLE("Set Binding\n");
+                                for (const auto& desc_set : draw_cmd->descriptor_sets)
+                                {
+                                    for (const auto& binding : desc_set.second.bindings)
+                                    {
+                                        GFXRECON_WRITE_CONSOLE("%u    %u        %s\n",
+                                                               desc_set.first,
+                                                               binding.first,
+                                                               desc_type_to_str(binding.second.descriptor_type));
+                                    }
+                                }
+
+                                GFXRECON_WRITE_CONSOLE("Pipeline: %" PRIu64 "\n", draw_cmd->pipeline->id);
+                                if (draw_cmd->bound_vertex_buffers.size())
+                                {
+                                    GFXRECON_WRITE_CONSOLE("Vertex Buffers:\n");
+                                    for (const auto& vert_buf : draw_cmd->bound_vertex_buffers)
+                                    {
+                                        GFXRECON_WRITE_CONSOLE("  %u: %" PRIu64 " @ %zu\n",
+                                                               vert_buf.first,
+                                                               vert_buf.second.buffer->id,
+                                                               vert_buf.second.offset);
+                                    }
+                                }
+                            }
 
                             default:
                                 break;
@@ -1496,7 +1609,7 @@ void VulkanFrameInspectorConsumerClientBase::DumpFrame() const
             {
                 QueuePresentInfo* queue_present_info = reinterpret_cast<QueuePresentInfo*>(serialize_cmd.get());
                 assert(queue_present_info);
-                printf("vkQueuePresentKHR (%" PRIu64 ")\n", queue_present_info->index);
+                GFXRECON_WRITE_CONSOLE("vkQueuePresentKHR (%" PRIu64 ")\n", queue_present_info->index);
             }
             break;
 
@@ -1504,6 +1617,40 @@ void VulkanFrameInspectorConsumerClientBase::DumpFrame() const
                 assert(0);
         }
     }
+}
+
+bool VulkanFrameInspectorConsumerClientBase::GetIndirectCommandParamsOverSocket(util::Socket& socket)
+{
+    size_t n   = 0;
+    int    ret = socket.Receive(&n, sizeof(n));
+
+    size_t i;
+    for (i = 0; i < n; ++i)
+    {
+        draw_indirect_command_t cmd;
+
+        ret = socket.Receive(&cmd.queue_submit_index, sizeof(cmd.queue_submit_index));
+        assert(ret > -1);
+
+        ret = socket.Receive(&cmd.command_index, sizeof(cmd.command_index));
+        assert(ret > -1);
+
+        ret = socket.Receive(&cmd.command_type, sizeof(cmd.command_type));
+        assert(ret > -1);
+
+        ret = socket.Receive(&cmd.draw_count, sizeof(cmd.draw_count));
+        assert(ret > -1);
+
+        cmd.command_params.resize(cmd.draw_count);
+        ret = socket.Receive(cmd.command_params.data(), cmd.draw_count * sizeof(indirect_draw_parameters_union));
+        assert(ret > -1);
+
+        draw_indirect_params.insert({ std::make_pair(cmd.queue_submit_index, cmd.command_index), std::move(cmd) });
+    }
+
+    socket.Send(&i, sizeof(i));
+
+    return true;
 }
 
 GFXRECON_END_NAMESPACE(decode)

@@ -104,6 +104,7 @@ const char kFormatArgument[]                     = "--format";
 const char kIncludeBinariesOption[]              = "--include-binaries";
 const char kExpandFlagsOption[]                  = "--expand-flags";
 const char kFilePerFrameOption[]                 = "--file-per-frame";
+const char kRemoteFile[]                         = "--remote-file";
 #if defined(WIN32)
 const char kApiFamilyOption[]       = "--api";
 const char kDxTwoPassReplay[]       = "--dx12-two-pass-replay";
@@ -785,6 +786,14 @@ GetVulkanReplayOptions(const gfxrecon::util::ArgumentParser&           arg_parse
         replay_options.surface_index = std::stoi(surface_index);
     }
 
+    GFXRECON_WRITE_CONSOLE("ooo %s remote file?", __func__);
+    const std::string& value = arg_parser.GetArgumentValue(kRemoteFile);
+    if (!value.empty())
+    {
+        GFXRECON_WRITE_CONSOLE("ooo %s remote file!", __func__);
+        replay_options.is_remote_file = true;
+    }
+
     return replay_options;
 }
 
@@ -854,6 +863,34 @@ static bool CheckOptionPrintUsage(const char* exe_name, const gfxrecon::util::Ar
     {
         PrintUsage(exe_name);
         return true;
+    }
+
+    return false;
+}
+
+static bool GetRemoteFileLocation(const gfxrecon::util::ArgumentParser& arg_parser, std::string& ip, std::string& port)
+{
+    const std::string& value = arg_parser.GetArgumentValue(kRemoteFile);
+
+    if (!value.empty())
+    {
+        switch (std::count(value.begin(), value.end(), ':'))
+        {
+            case 0:
+                ip = value;
+                return true;
+
+            case 1:
+            {
+                std::string::size_type n = value.find(':');
+                ip                       = value.substr(0, n);
+                port                     = value.substr(n + 1);
+                return true;
+            }
+
+            default:
+                return false;
+        }
     }
 
     return false;

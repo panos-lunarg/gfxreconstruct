@@ -60,6 +60,8 @@ FileProcessor::~FileProcessor()
         fclose(file_descriptor_);
     }
 
+    socket_ = nullptr;
+
     DecodeAllocator::DestroyInstance();
 }
 
@@ -74,6 +76,8 @@ void FileProcessor::WaitDecodersIdle()
 bool FileProcessor::Initialize(const std::string& filename)
 {
     bool success = false;
+
+    file_location_ = kLocalFile;
 
     int32_t result = util::platform::FileOpen(&file_descriptor_, filename.c_str(), "rb");
 
@@ -101,25 +105,45 @@ bool FileProcessor::Initialize(const std::string& filename)
     return success;
 }
 
+bool FileProcessor::InitializeOverSocket(util::Socket* socket)
+{
+    GFXRECON_WRITE_CONSOLE("%s", __func__);
+
+    assert(socket);
+    socket_        = socket;
+    file_location_ = socket->GetType() == util::Socket::kNetworkSocket ? kNetworkFile : kLocalFile;
+
+    return ProcessFileHeader();
+}
+
 bool FileProcessor::ProcessNextFrame()
 {
-    bool success = IsFileValid();
+    bool success;
 
-    if (success)
+    if (file_location_ == kLocalFile)
     {
-        success = ProcessBlocks();
+        success = IsFileValid();
+
+        if (success)
+        {
+            success = ProcessBlocks();
+        }
+        else
+        {
+            // If not EOF, determine reason for invalid state.
+            if (file_descriptor_ == nullptr)
+            {
+                error_state_ = kErrorInvalidFileDescriptor;
+            }
+            else if (ferror(file_descriptor_))
+            {
+                error_state_ = kErrorReadingFile;
+            }
+        }
     }
     else
     {
-        // If not EOF, determine reason for invalid state.
-        if (file_descriptor_ == nullptr)
-        {
-            error_state_ = kErrorInvalidFileDescriptor;
-        }
-        else if (ferror(file_descriptor_))
-        {
-            error_state_ = kErrorReadingFile;
-        }
+        success = ProcessBlocks();
     }
 
     return success;
@@ -368,7 +392,8 @@ bool FileProcessor::ProcessBlocks()
             }
             else
             {
-                if (!feof(file_descriptor_))
+                if ((file_location_ == kLocalFile && !feof(file_descriptor_)) ||
+                    (file_location_ == kNetworkFile && socket_ && socket_->IsActive()))
                 {
                     // No data has been read for the current block, so we don't use 'HandleBlockReadError' here, as it
                     // assumes that the block header has been successfully read and will print an incomplete block at
@@ -377,6 +402,10 @@ bool FileProcessor::ProcessBlocks()
                     // EOF.
                     GFXRECON_LOG_ERROR("Failed to read block header");
                     error_state_ = kErrorReadingBlockHeader;
+                }
+                else if (file_location_ == kNetworkFile && (!socket_ || !socket_->IsActive()))
+                {
+                    error_state_ = kErrorNone;
                 }
             }
         }
@@ -395,6 +424,17 @@ bool FileProcessor::ReadBlockHeader(format::BlockHeader* block_header)
     if (ReadBytes(block_header, sizeof(*block_header)))
     {
         success = true;
+    }
+
+    if (file_location_ == kNetworkFile)
+    {
+        if (success && !block_header->size && !block_header->type)
+        {
+            assert(socket_);
+            GFXRECON_WRITE_CONSOLE("%s(): Received termination block", __func__)
+            socket_ = nullptr;
+            success = false;
+        }
     }
 
     return success;
@@ -442,14 +482,49 @@ bool FileProcessor::ReadCompressedParameterBuffer(size_t  compressed_buffer_size
 
 bool FileProcessor::ReadBytes(void* buffer, size_t buffer_size)
 {
-    size_t bytes_read = util::platform::FileRead(buffer, 1, buffer_size, file_descriptor_);
+    size_t bytes_read;
+
+    if (file_location_ == kLocalFile)
+    {
+        bytes_read = util::platform::FileRead(buffer, 1, buffer_size, file_descriptor_);
+    }
+    else
+    {
+        assert(socket_);
+        bytes_read = socket_->Receive(buffer, buffer_size);
+        if (bytes_read != buffer_size)
+        {
+            error_state_ = kErrorSocket;
+            assert(0);
+        }
+    }
+
     bytes_read_ += bytes_read;
     return (bytes_read == buffer_size);
 }
 
 bool FileProcessor::SkipBytes(size_t skip_size)
 {
-    bool success = util::platform::FileSeek(file_descriptor_, skip_size, util::platform::FileSeekCurrent);
+    bool success;
+    if (file_location_ == kLocalFile)
+    {
+        success = util::platform::FileSeek(file_descriptor_, skip_size, util::platform::FileSeekCurrent);
+    }
+    else
+    {
+        uint8_t* skipped_bytes = new uint8_t[skip_size];
+
+        if (skipped_bytes)
+        {
+            success = ReadBytes(skipped_bytes, skip_size);
+        }
+        else
+        {
+            success = false;
+        }
+
+        delete[] skipped_bytes;
+    }
 
     if (success)
     {
@@ -463,9 +538,17 @@ bool FileProcessor::SkipBytes(size_t skip_size)
 void FileProcessor::HandleBlockReadError(Error error_code, const char* error_message)
 {
     // Report incomplete block at end of file as a warning, other I/O errors as an error.
-    if (feof(file_descriptor_) && !ferror(file_descriptor_))
+    if (file_location_ == kLocalFile)
     {
-        GFXRECON_LOG_WARNING("Incomplete block at end of file");
+        if (feof(file_descriptor_) && !ferror(file_descriptor_))
+        {
+            GFXRECON_LOG_WARNING("Incomplete block at end of file");
+        }
+        else
+        {
+            GFXRECON_LOG_ERROR("%s", error_message);
+            error_state_ = error_code;
+        }
     }
     else
     {
@@ -1763,7 +1846,7 @@ bool FileProcessor::ProcessStateMarker(const format::BlockHeader& block_header, 
 
 bool FileProcessor::ProcessAnnotation(const format::BlockHeader& block_header, format::AnnotationType annotation_type)
 {
-    bool     success      = false;
+    bool                                             success      = false;
     decltype(format::AnnotationHeader::label_length) label_length = 0;
     decltype(format::AnnotationHeader::data_length)  data_length  = 0;
 
