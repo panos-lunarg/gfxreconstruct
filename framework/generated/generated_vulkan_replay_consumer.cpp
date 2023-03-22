@@ -2468,11 +2468,11 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCount(
     uint32_t                                    maxDrawCount,
     uint32_t                                    stride)
 {
-    VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
-    VkBuffer in_buffer = MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
-    VkBuffer in_countBuffer = MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);
+    auto in_commandBuffer = GetObjectInfoTable().GetCommandBufferInfo(commandBuffer);
+    auto in_buffer = GetObjectInfoTable().GetBufferInfo(buffer);
+    auto in_countBuffer = GetObjectInfoTable().GetBufferInfo(countBuffer);
 
-    GetDeviceTable(in_commandBuffer)->CmdDrawIndirectCount(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);
+    OverrideCmdDrawIndirectCount(GetDeviceTable(in_commandBuffer->handle)->CmdDrawIndirectCount, call_info, in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);
 }
 
 void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCount(

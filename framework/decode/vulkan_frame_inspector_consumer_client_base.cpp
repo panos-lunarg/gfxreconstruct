@@ -1131,6 +1131,30 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDrawIndirect(const Api
 
     command_buffer_in->EmplaceCommand(std::move(command));
 }
+void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDrawIndirectCount(const ApiCallInfo& call_info,
+                                                                            format::HandleId   commandBuffer,
+                                                                            format::HandleId   buffer,
+                                                                            VkDeviceSize       offset,
+                                                                            format::HandleId   countBuffer,
+                                                                            VkDeviceSize       countBufferOffset,
+                                                                            uint32_t           maxDrawCount,
+                                                                            uint32_t           stride)
+{
+    FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
+    assert(command_buffer_in);
+
+    std::shared_ptr<client::VulkanCommandDrawIndirectCountInfo> command =
+        std::make_shared<client::VulkanCommandDrawIndirectCountInfo>(call_info.index, command_buffer_in);
+
+    command->buffer              = buffer;
+    command->offset              = offset;
+    command->count_buffer        = countBuffer;
+    command->count_buffer_offset = countBufferOffset;
+    command->max_draw_count      = maxDrawCount;
+    command->stride              = stride;
+
+    command_buffer_in->EmplaceCommand(std::move(command));
+}
 
 void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDrawIndexed(const ApiCallInfo& call_info,
                                                                       format::HandleId   commandBuffer,
@@ -1335,42 +1359,41 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkQueueSubmit(const ApiCall
         }
     }
 
+    // Update indirect commands with the parameters received from the device
     for (auto& cmd_buf : queue_submit_info->command_buffers)
     {
         for (auto& cmd : cmd_buf.second)
         {
-            if (cmd->type == VULKAN_CMD_DRAW_INDIRECT)
+            const auto& it = draw_indirect_params.find(std::make_pair(call_info.index, cmd->index));
+            if (it != draw_indirect_params.end())
             {
-                const auto& it = draw_indirect_params.find(std::make_pair(call_info.index, cmd->index));
-                if (it != draw_indirect_params.end())
+                if (cmd->type == it->second.command_type)
                 {
-                    if (it->second.command_type == VULKAN_CMD_DRAW_INDIRECT)
-                    {
-                        client::VulkanCommandDrawIndirectInfo* draw_indirect =
-                            dynamic_cast<client::VulkanCommandDrawIndirectInfo*>(cmd.get());
-                        assert(draw_indirect);
+                    client::VulkanCommandDrawIndirectInfo* draw_indirect =
+                        dynamic_cast<client::VulkanCommandDrawIndirectInfo*>(cmd.get());
+                    assert(draw_indirect);
 
-                        draw_indirect->GetParams() = std::move(it->second.command_params);
-                        draw_indirect->draw_count  = it->second.draw_count;
-                    }
-                    else
-                    {
-                        assert(0);
-                        GFXRECON_LOG_WARNING(
-                            "%s (%" PRIu64 ", %" PRIu64
-                            ") indirect command is of the wrong type. Expected VULKAN_CMD_DRAW_INDIRECT, got %s",
-                            __func__,
-                            call_info.index,
-                            cmd->index,
-                            vulkan_command_to_str(it->second.command_type));
-                    }
+                    draw_indirect->GetParams() = std::move(it->second.command_params);
+                    draw_indirect->draw_count  = it->second.draw_count;
+                    draw_indirect->is_accurate = true;
                 }
                 else
                 {
+                    GFXRECON_LOG_WARNING("%s (%" PRIu64 ", %" PRIu64
+                                         ") indirect command is of the wrong type. Expected %s, got %s",
+                                         __func__,
+                                         call_info.index,
+                                         cmd->index,
+                                         vulkan_command_to_str(cmd->type),
+                                         vulkan_command_to_str(it->second.command_type));
                     assert(0);
-                    GFXRECON_LOG_WARNING(
-                        "%s (%" PRIu64 ", %" PRIu64 ") was not found", __func__, call_info.index, cmd->index);
                 }
+            }
+            else
+            {
+                GFXRECON_LOG_WARNING(
+                    "%s (%" PRIu64 ", %" PRIu64 ") was not found", __func__, call_info.index, cmd->index);
+                assert(0);
             }
         }
     }

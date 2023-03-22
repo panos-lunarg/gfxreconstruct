@@ -4506,6 +4506,47 @@ void VulkanReplayConsumerBase::OverrideCmdDrawIndirect(PFN_vkCmdDrawIndirect fun
     func(command_buffer_info->handle, buffer_info->handle, offset, drawCount, stride);
 }
 
+void VulkanReplayConsumerBase::OverrideCmdDrawIndirectCount(PFN_vkCmdDrawIndirectCount func,
+                                                            const ApiCallInfo&         call_info,
+                                                            CommandBufferInfo*         command_buffer_info,
+                                                            BufferInfo*                buffer_info,
+                                                            VkDeviceSize               offset,
+                                                            BufferInfo*                count_buffer_info,
+                                                            VkDeviceSize               count_buffer_offset,
+                                                            uint32_t                   maxDrawCount,
+                                                            uint32_t                   stride)
+{
+    if (options_.is_remote_file)
+    {
+        auto device_info = GetObjectInfoTable().GetDeviceInfo(command_buffer_info->parent_id);
+
+        PhysicalDeviceInfo* phys_dev_info = GetObjectInfoTable().GetPhysicalDeviceInfo(device_info->parent_id);
+
+        std::unique_ptr<VulkanCommandDrawIndirectCountInfo> command =
+            std::make_unique<VulkanCommandDrawIndirectCountInfo>(call_info.index,
+                                                                 device_info,
+                                                                 GetDeviceTable(device_info->handle),
+                                                                 GetInstanceTable(phys_dev_info->handle),
+                                                                 buffer_info,
+                                                                 count_buffer_info);
+        command->Initialize(command_buffer_info, phys_dev_info, offset, count_buffer_offset, maxDrawCount, stride);
+
+        assert(GetInstanceTable(device_info->parent) == GetInstanceTable(phys_dev_info->handle));
+
+        assert(command_buffer_info->indirect_commands_info.find(call_info.index) ==
+               command_buffer_info->indirect_commands_info.end());
+        command_buffer_info->indirect_commands_info.insert({ call_info.index, std::move(command) });
+    }
+
+    func(command_buffer_info->handle,
+         buffer_info->handle,
+         offset,
+         count_buffer_info->handle,
+         count_buffer_offset,
+         maxDrawCount,
+         stride);
+}
+
 VkResult VulkanReplayConsumerBase::OverrideCreateDescriptorUpdateTemplate(
     PFN_vkCreateDescriptorUpdateTemplate                                      func,
     VkResult                                                                  original_result,

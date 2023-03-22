@@ -691,6 +691,16 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                  uint32_t              drawCount,
                                  uint32_t              stride);
 
+    void OverrideCmdDrawIndirectCount(PFN_vkCmdDrawIndirectCount func,
+                                      const ApiCallInfo&         call_info,
+                                      CommandBufferInfo*         command_buffer_info,
+                                      BufferInfo*                buffer_info,
+                                      VkDeviceSize               offset,
+                                      BufferInfo*                count_buffer_info,
+                                      VkDeviceSize               count_buffer_offset,
+                                      uint32_t                   maxDrawCount,
+                                      uint32_t                   stride);
+
     VkResult OverrideCreateDescriptorUpdateTemplate(
         PFN_vkCreateDescriptorUpdateTemplate                                      func,
         VkResult                                                                  original_result,
@@ -1109,6 +1119,7 @@ class VulkanReplayConsumerBase : public VulkanConsumer
     // Used to track allocated external memory if replay uses VkImportMemoryHostPointerInfoEXT
     std::unordered_map<VkDeviceMemory, std::pair<void*, size_t>> external_memory_;
 
+    // Indirect command parameters received from the device
     std::vector<draw_indirect_command_t> draw_indirect_commands;
 };
 

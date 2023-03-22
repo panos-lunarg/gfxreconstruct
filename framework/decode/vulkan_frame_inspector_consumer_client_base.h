@@ -349,6 +349,15 @@ class VulkanFrameInspectorConsumerClientBase : public VulkanConsumer
                                            uint32_t           drawCount,
                                            uint32_t           stride) override;
 
+    virtual void Process_vkCmdDrawIndirectCount(const ApiCallInfo& call_info,
+                                                format::HandleId   commandBuffer,
+                                                format::HandleId   buffer,
+                                                VkDeviceSize       offset,
+                                                format::HandleId   countBuffer,
+                                                VkDeviceSize       countBufferOffset,
+                                                uint32_t           maxDrawCount,
+                                                uint32_t           stride) override;
+
     virtual void Process_vkCmdBindDescriptorSets(const ApiCallInfo&                     call_info,
                                                  format::HandleId                       commandBuffer,
                                                  VkPipelineBindPoint                    pipelineBindPoint,
