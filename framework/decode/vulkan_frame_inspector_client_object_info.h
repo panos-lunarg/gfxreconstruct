@@ -246,15 +246,6 @@ struct FIFramebufferInfo : public FIVulkanObjectInfo
     } create_info;
 };
 
-enum CommandBufferState
-{
-    kInitial,
-    kRecording,
-    kExecutable,
-    kPending,
-    kInvalid
-};
-
 struct FIDescriptorPoolInfo : public FIVulkanPoolInfo
 {
     FIDescriptorPoolInfo(format::HandleId parent_id, format::HandleId id) : FIVulkanPoolInfo(parent_id, id) {}
@@ -488,11 +479,26 @@ struct FICommandBufferInfo : public FIVulkanPoolObjectInfo
         FIVulkanPoolObjectInfo(parent_id, pool_id, id)
     {}
 
+    FICommandBufferInfo(const FICommandBufferInfo& other) :
+        FIVulkanPoolObjectInfo(other.parent_id, other.pool_id, other.id)
+    {
+        command_list           = other.command_list;
+        active_renderpass      = other.active_renderpass;
+        active_framebuffer     = other.active_framebuffer;
+        active_pipeline        = other.active_pipeline;
+        active_descriptor_sets = other.active_descriptor_sets;
+
+        bound_vertex_buffers = other.bound_vertex_buffers;
+        bound_index_buffer   = other.bound_index_buffer;
+    }
+
+    FICommandBufferInfo(const FICommandBufferInfo&& other) = delete;
+    FICommandBufferInfo& operator=(const FICommandBufferInfo& other) = delete;
+
     using vk_cmd_ptr_t   = std::shared_ptr<VulkanCommandInfo>;
     using command_list_t = std::vector<vk_cmd_ptr_t>;
 
-    command_list_t       command_list;
-
+    command_list_t                                     command_list;
     FIRenderPassInfo*                                  active_renderpass;
     FIFramebufferInfo*                                 active_framebuffer;
     FIPipelineInfo*                                    active_pipeline;
@@ -503,6 +509,7 @@ struct FICommandBufferInfo : public FIVulkanPoolObjectInfo
 
     struct
     {
+        VkCommandBufferLevel level;
     } create_info;
 
     void EmplaceCommand(vk_cmd_ptr_t command) { command_list.emplace_back(std::move(command)); }

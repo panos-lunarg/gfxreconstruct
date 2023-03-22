@@ -1659,10 +1659,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirect(
     uint32_t                                    drawCount,
     uint32_t                                    stride)
 {
-    VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
-    VkBuffer in_buffer = MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
+    auto in_commandBuffer = GetObjectInfoTable().GetCommandBufferInfo(commandBuffer);
+    auto in_buffer = GetObjectInfoTable().GetBufferInfo(buffer);
 
-    GetDeviceTable(in_commandBuffer)->CmdDrawIndexedIndirect(in_commandBuffer, in_buffer, offset, drawCount, stride);
+    OverrideCmdDrawIndexedIndirect(GetDeviceTable(in_commandBuffer->handle)->CmdDrawIndexedIndirect, call_info, in_commandBuffer, in_buffer, offset, drawCount, stride);
 }
 
 void VulkanReplayConsumer::Process_vkCmdDispatch(
@@ -2485,11 +2485,11 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCount(
     uint32_t                                    maxDrawCount,
     uint32_t                                    stride)
 {
-    VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
-    VkBuffer in_buffer = MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
-    VkBuffer in_countBuffer = MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);
+    auto in_commandBuffer = GetObjectInfoTable().GetCommandBufferInfo(commandBuffer);
+    auto in_buffer = GetObjectInfoTable().GetBufferInfo(buffer);
+    auto in_countBuffer = GetObjectInfoTable().GetBufferInfo(countBuffer);
 
-    GetDeviceTable(in_commandBuffer)->CmdDrawIndexedIndirectCount(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);
+    OverrideCmdDrawIndexedIndirectCount(GetDeviceTable(in_commandBuffer->handle)->CmdDrawIndexedIndirectCount, call_info, in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);
 }
 
 void VulkanReplayConsumer::Process_vkCreateRenderPass2(

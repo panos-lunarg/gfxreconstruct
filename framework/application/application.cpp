@@ -168,6 +168,59 @@ void Application::Run()
     }
 }
 
+void Application::DumpCommand(format::HandleId id)
+{
+    if (!vulkan_consumer_ || !file_processor_)
+    {
+        return;
+    }
+
+    bool     dumped = false, success = true;
+    uint32_t frame_number;
+    while (!dumped && success)
+    {
+        frame_number = file_processor_->GetCurrentFrameNumber() + 1;
+
+        if (fps_info_ != nullptr)
+        {
+            if (fps_info_->ShouldQuit(frame_number))
+            {
+                break;
+            }
+
+            fps_info_->BeginFrame(frame_number);
+        }
+
+        success = file_processor_->ProcessNextFrame();
+        if (success)
+        {
+            decode::VulkanFrameInspectorConsumerClientBase* frame_inspector =
+                dynamic_cast<decode::VulkanFrameInspectorConsumerClientBase*>(vulkan_consumer_);
+            assert(frame_inspector);
+
+            dumped = frame_inspector->DumpCommand(id);
+            frame_inspector->Reset();
+        }
+
+        if (fps_info_ != nullptr)
+        {
+            fps_info_->EndFrame(frame_number);
+
+            if (fps_info_->ShouldWaitIdleAfterFrame(frame_number))
+            {
+                file_processor_->WaitDecodersIdle();
+            }
+        }
+    }
+
+    GFXRECON_WRITE_CONSOLE("Frames: %u", frame_number);
+
+    if (!dumped)
+    {
+        GFXRECON_WRITE_CONSOLE("Command %" PRIu64 " not found", id);
+    }
+}
+
 void Application::SetPaused(bool paused)
 {
     paused_ = paused;
@@ -189,7 +242,7 @@ void Application::InspectFrame()
 
     if (frame_inspector)
     {
-        frame_inspector->DumpFrame();
+        // frame_inspector->DumpFrame();
         frame_inspector->Reset();
     }
 }

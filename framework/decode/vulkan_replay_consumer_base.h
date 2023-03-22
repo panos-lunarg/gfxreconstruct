@@ -701,6 +701,24 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                       uint32_t                   maxDrawCount,
                                       uint32_t                   stride);
 
+    void OverrideCmdDrawIndexedIndirect(PFN_vkCmdDrawIndexedIndirect func,
+                                        const ApiCallInfo&           call_info,
+                                        CommandBufferInfo*           command_buffer_info,
+                                        BufferInfo*                  buffer_info,
+                                        VkDeviceSize                 offset,
+                                        uint32_t                     drawCount,
+                                        uint32_t                     stride);
+
+    void OverrideCmdDrawIndexedIndirectCount(PFN_vkCmdDrawIndexedIndirectCount func,
+                                             const ApiCallInfo&                call_info,
+                                             CommandBufferInfo*                command_buffer_info,
+                                             BufferInfo*                       buffer_info,
+                                             VkDeviceSize                      offset,
+                                             BufferInfo*                       count_buffer_info,
+                                             VkDeviceSize                      count_buffer_offset,
+                                             uint32_t                          maxDrawCount,
+                                             uint32_t                          stride);
+
     VkResult OverrideCreateDescriptorUpdateTemplate(
         PFN_vkCreateDescriptorUpdateTemplate                                      func,
         VkResult                                                                  original_result,

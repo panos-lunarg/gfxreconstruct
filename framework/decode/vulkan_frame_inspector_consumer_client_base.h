@@ -39,7 +39,10 @@ GFXRECON_BEGIN_NAMESPACE(decode)
 class VulkanFrameInspectorConsumerClientBase : public VulkanConsumer
 {
   public:
-    VulkanFrameInspectorConsumerClientBase(const VulkanReplayOptions& options) : options_(options) {}
+    VulkanFrameInspectorConsumerClientBase(const VulkanReplayOptions& options) :
+        options_(options), frame_first_id_(0), frame_last_id_(0)
+    {}
+
     VulkanFrameInspectorConsumerClientBase(const VulkanFrameInspectorConsumerClientBase& other) = delete;
     VulkanFrameInspectorConsumerClientBase& operator=(const VulkanFrameInspectorConsumerClientBase& other) = delete;
 
@@ -239,6 +242,16 @@ class VulkanFrameInspectorConsumerClientBase : public VulkanConsumer
                                       StructPointerDecoder<Decoded_VkAllocationCallbacks>*        pAllocator,
                                       HandlePointerDecoder<VkPipeline>*                           pPipelines) override;
 
+    virtual void
+    Process_vkCreateComputePipelines(const ApiCallInfo&                                         call_info,
+                                     VkResult                                                   returnValue,
+                                     format::HandleId                                           device,
+                                     format::HandleId                                           pipelineCache,
+                                     uint32_t                                                   createInfoCount,
+                                     StructPointerDecoder<Decoded_VkComputePipelineCreateInfo>* pCreateInfos,
+                                     StructPointerDecoder<Decoded_VkAllocationCallbacks>*       pAllocator,
+                                     HandlePointerDecoder<VkPipeline>*                          pPipelines) override;
+
     virtual void Process_vkDestroyPipeline(const ApiCallInfo&                                   call_info,
                                            format::HandleId                                     device,
                                            format::HandleId                                     pipeline,
@@ -296,6 +309,11 @@ class VulkanFrameInspectorConsumerClientBase : public VulkanConsumer
                                               VkSubpassContents                                    contents) override;
 
     virtual void Process_vkCmdEndRenderPass(const ApiCallInfo& call_info, format::HandleId commandBuffer) override;
+
+    virtual void Process_vkCmdExecuteCommands(const ApiCallInfo&                     call_info,
+                                              format::HandleId                       commandBuffer,
+                                              uint32_t                               commandBufferCount,
+                                              HandlePointerDecoder<VkCommandBuffer>* pCommandBuffers) override;
 
     virtual void Process_vkCmdBindPipeline(const ApiCallInfo&  call_info,
                                            format::HandleId    commandBuffer,
@@ -358,6 +376,40 @@ class VulkanFrameInspectorConsumerClientBase : public VulkanConsumer
                                                 uint32_t           maxDrawCount,
                                                 uint32_t           stride) override;
 
+    virtual void Process_vkCmdDrawIndirectCountKHR(const ApiCallInfo& call_info,
+                                                   format::HandleId   commandBuffer,
+                                                   format::HandleId   buffer,
+                                                   VkDeviceSize       offset,
+                                                   format::HandleId   countBuffer,
+                                                   VkDeviceSize       countBufferOffset,
+                                                   uint32_t           maxDrawCount,
+                                                   uint32_t           stride) override;
+
+    virtual void Process_vkCmdDrawIndirectCountAMD(const ApiCallInfo& call_info,
+                                                   format::HandleId   commandBuffer,
+                                                   format::HandleId   buffer,
+                                                   VkDeviceSize       offset,
+                                                   format::HandleId   countBuffer,
+                                                   VkDeviceSize       countBufferOffset,
+                                                   uint32_t           maxDrawCount,
+                                                   uint32_t           stride) override;
+
+    virtual void Process_vkCmdDrawIndexedIndirect(const ApiCallInfo& call_info,
+                                                  format::HandleId   commandBuffer,
+                                                  format::HandleId   buffer,
+                                                  VkDeviceSize       offset,
+                                                  uint32_t           drawCount,
+                                                  uint32_t           stride) override;
+
+    virtual void Process_vkCmdDrawIndexedIndirectCount(const ApiCallInfo& call_info,
+                                                       format::HandleId   commandBuffer,
+                                                       format::HandleId   buffer,
+                                                       VkDeviceSize       offset,
+                                                       format::HandleId   countBuffer,
+                                                       VkDeviceSize       countBufferOffset,
+                                                       uint32_t           maxDrawCount,
+                                                       uint32_t           stride) override;
+
     virtual void Process_vkCmdBindDescriptorSets(const ApiCallInfo&                     call_info,
                                                  format::HandleId                       commandBuffer,
                                                  VkPipelineBindPoint                    pipelineBindPoint,
@@ -416,23 +468,29 @@ class VulkanFrameInspectorConsumerClientBase : public VulkanConsumer
 
     void EmplaceSerializedCommand(std::unique_ptr<SerializedCommands> command)
     {
-        commands_.emplace_back(std::move(command));
+        frame_commands_.emplace_back(std::move(command));
     }
 
     virtual void Reset() override
     {
-        commands_.clear();
+        // commands_.push_back(std::move(frame_commands_));
+        frame_commands_.clear();
         DeletePendingObjects();
+
+        frame_first_id_ = frame_last_id_ + 1;
     }
 
-    void DumpFrame() const;
+    void DumpFrame(uint32_t frame) const;
+    bool DumpCommand(format::HandleId id) const;
 
     bool GetIndirectCommandParamsOverSocket(util::Socket& socket);
 
   private:
-    std::vector<std::unique_ptr<SerializedCommands>> commands_;
-    VulkanFrameInspectorObjectTable                  object_table_;
-    const VulkanReplayOptions&                       options_;
+    std::vector<std::vector<std::unique_ptr<SerializedCommands>>> commands_;
+    std::vector<std::unique_ptr<SerializedCommands>>              frame_commands_;
+    VulkanFrameInspectorObjectTable                               object_table_;
+    const VulkanReplayOptions&                                    options_;
+    format::HandleId                                              frame_first_id_, frame_last_id_;
 
     struct
     {

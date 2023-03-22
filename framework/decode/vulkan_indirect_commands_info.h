@@ -367,12 +367,72 @@ class VulkanCommandDrawIndirectCountInfo : public VulkanIndirectCommandInfo
     }
 };
 
-// class VulkanCommandDrawIndexedIndirectInfo : public VulkanCommandInfo
-// {
-//     VulkanCommandDrawIndexedIndirectInfo(format::CommandIndexType index, vulkan_command_type type) :
-//         VulkanCommandInfo(index, type)
-//     {}
-// };
+class VulkanCommandDrawIndexedIndirectInfo : public VulkanIndirectCommandInfo
+{
+  public:
+    VulkanCommandDrawIndexedIndirectInfo(format::CommandIndexType     index,
+                                         const DeviceInfo*            device_info,
+                                         const encode::DeviceTable*   device_table,
+                                         const encode::InstanceTable* instance_table,
+                                         BufferInfo*                  buffer) :
+        VulkanIndirectCommandInfo(
+            index, VULKAN_CMD_DRAW_INDEXED_INDIRECT, device_info, device_table, instance_table, buffer, nullptr)
+    {}
+
+    void Initialize(const CommandBufferInfo*  command_buffer_info,
+                    const PhysicalDeviceInfo* phys_dev_info,
+                    VkDeviceSize              buffer_offset,
+                    uint32_t                  drawCount,
+                    uint32_t                  stride)
+    {
+        VulkanIndirectCommandInfo::Initialize(command_buffer_info, phys_dev_info, buffer_offset, 0, drawCount, stride);
+    }
+
+    void Dump() const
+    {
+        GFXRECON_WRITE_CONSOLE("  VULKAN_CMD_DRAW_INDEXED_INDIRECT: %u %u %u %u %u",
+                               command_params_[0].indexed_indirect.indexCount,
+                               command_params_[0].indexed_indirect.instanceCount,
+                               command_params_[0].indexed_indirect.firstIndex,
+                               command_params_[0].indexed_indirect.vertexOffset,
+                               command_params_[0].indexed_indirect.firstInstance);
+    }
+};
+
+class VulkanCommandDrawIndexedIndirectCountInfo : public VulkanIndirectCommandInfo
+{
+  public:
+    VulkanCommandDrawIndexedIndirectCountInfo(format::CommandIndexType     index,
+                                              const DeviceInfo*            device_info,
+                                              const encode::DeviceTable*   device_table,
+                                              const encode::InstanceTable* instance_table,
+                                              BufferInfo*                  buffer,
+                                              BufferInfo*                  count_buffer) :
+        VulkanIndirectCommandInfo(
+            index, VULKAN_CMD_DRAW_INDEXED_INDIRECT, device_info, device_table, instance_table, buffer, count_buffer_)
+    {}
+
+    void Initialize(const CommandBufferInfo*  command_buffer_info,
+                    const PhysicalDeviceInfo* phys_dev_info,
+                    VkDeviceSize              buffer_offset,
+                    VkDeviceSize              count_buffer_offset,
+                    uint32_t                  drawCount,
+                    uint32_t                  stride)
+    {
+        VulkanIndirectCommandInfo::Initialize(
+            command_buffer_info, phys_dev_info, buffer_offset, count_buffer_offset, drawCount, stride);
+    }
+
+    void Dump() const
+    {
+        GFXRECON_WRITE_CONSOLE("  VULKAN_CMD_DRAW_INDEXED_INDIRECT: %u %u %u %u %u",
+                               command_params_[0].indexed_indirect.indexCount,
+                               command_params_[0].indexed_indirect.instanceCount,
+                               command_params_[0].indexed_indirect.firstIndex,
+                               command_params_[0].indexed_indirect.vertexOffset,
+                               command_params_[0].indexed_indirect.firstInstance);
+    }
+};
 
 // class VulkanCommandDispatchIndirectInfo : public VulkanCommandInfo
 // {

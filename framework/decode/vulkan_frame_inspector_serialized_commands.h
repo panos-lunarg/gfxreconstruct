@@ -108,7 +108,7 @@ static const char* serialized_command_to_str(serialized_command_types type)
 struct SerializedCommands
 {
     SerializedCommands(format::CommandIndexType index, serialized_command_types type) : index(index), type(type) {}
-    virtual ~SerializedCommands() {}
+    virtual ~SerializedCommands() = default;
 
     format::CommandIndexType index;
     serialized_command_types type;
@@ -236,6 +236,7 @@ struct DeviceWaitIdle : public SerializedCommands
 struct QueueSubmitInfo : public SerializedCommands
 {
     QueueSubmitInfo(format::CommandIndexType index) : SerializedCommands(index, SERIALIZED_CMD_QUEUE_SUBMIT) {}
+    ~QueueSubmitInfo() = default;
 
     std::unordered_map<format::HandleId, FICommandBufferInfo::command_list_t> command_buffers;
     format::HandleId                                                          queue = format::kNullHandleId;

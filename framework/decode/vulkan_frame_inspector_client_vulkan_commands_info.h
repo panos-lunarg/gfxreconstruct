@@ -209,7 +209,7 @@ struct VulkanCommandDrawInfo : public VulkanDrawCommandsBaseInfo
 struct VulkanCommandDrawIndexedInfo : public VulkanDrawCommandsBaseInfo
 {
     VulkanCommandDrawIndexedInfo(format::CommandIndexType index, const FICommandBufferInfo* cmd_buffer_info) :
-        VulkanDrawCommandsBaseInfo(index, VULKAN_CMD_DRAW, cmd_buffer_info)
+        VulkanDrawCommandsBaseInfo(index, VULKAN_CMD_DRAW_INDEXED, cmd_buffer_info)
     {}
 
     uint32_t index_count;
@@ -397,12 +397,14 @@ struct VulkanCommandEndRenderPassInfo : public VulkanCommandInfo
     {}
 };
 
-// struct VulkanCommandExecuteCommandsInfo : public VulkanCommandInfo
-// {
-//     VulkanCommandExecuteCommandsInfo(format::CommandIndexType index) :
-//         VulkanCommandInfo(index, VULKAN_CMD_EXECUTE_COMMANDS)
-//     {}
-// };
+struct VulkanCommandExecuteCommandsInfo : public VulkanCommandInfo
+{
+    VulkanCommandExecuteCommandsInfo(format::CommandIndexType index) :
+        VulkanCommandInfo(index, VULKAN_CMD_EXECUTE_COMMANDS)
+    {}
+
+    std::vector<FICommandBufferInfo> command_buffers;
+};
 
 // struct VulkanCommandSetDeviceMaskInfo : public VulkanCommandInfo
 // {

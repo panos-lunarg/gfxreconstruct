@@ -36,8 +36,9 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateInstance(
     StructPointerDecoder<Decoded_VkInstanceCreateInfo>*  pCreateInfo,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
     HandlePointerDecoder<VkInstance>*                    pInstance)
-
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         std::unique_ptr<FIInstanceInfo> instance_info =
@@ -85,6 +86,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkDestroyInstance(
     format::HandleId                                     instance,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.objects.push_back(instance);
 }
 
@@ -95,6 +98,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkEnumeratePhysicalDevices(
     PointerDecoder<uint32_t>*               pPhysicalDeviceCount,
     HandlePointerDecoder<VkPhysicalDevice>* pPhysicalDevices)
 {
+    frame_last_id_ = call_info.index;
+
     if (pPhysicalDevices->GetPointer() && (returnValue == VK_SUCCESS || returnValue == VK_INCOMPLETE))
     {
         FIInstanceInfo* instance_info = dynamic_cast<FIInstanceInfo*>(object_table_.GetObject(instance));
@@ -120,6 +125,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateDevice(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
     HandlePointerDecoder<VkDevice>*                      pDevice)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         FIPhysicalDeviceInfo* phys_dev_info =
@@ -172,6 +179,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkDestroyDevice(
     format::HandleId                                     device,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.objects.push_back(device);
 }
 
@@ -183,6 +192,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateRenderPass(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>*  pAllocator,
     HandlePointerDecoder<VkRenderPass>*                   pRenderPass)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         std::unique_ptr<FIRenderPassInfo> renderpass_info =
@@ -199,7 +210,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateRenderPass(
         std::vector<FISubpassDescription> subpass_descriptions(ci->decoded_value->subpassCount);
         std::vector<VkSubpassDependency>  subpass_dependency(ci->decoded_value->subpassCount);
         for (uint32_t i = 0; i < ci->decoded_value->subpassCount; ++i)
-        {}
+        {
+        }
 
         object_table_.AddObject(std::move(renderpass_info));
     }
@@ -211,6 +223,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkDestroyRenderPass(
     format::HandleId                                     renderPass,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.objects.push_back(renderPass);
 }
 
@@ -222,6 +236,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateFramebuffer(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>*   pAllocator,
     HandlePointerDecoder<VkFramebuffer>*                   pFramebuffer)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         std::unique_ptr<FIFramebufferInfo> renderpass_info =
@@ -257,6 +273,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkDestroyFramebuffer(
     format::HandleId                                     framebuffer,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.objects.push_back(framebuffer);
 }
 
@@ -268,6 +286,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateDescriptorSetLayout
     StructPointerDecoder<Decoded_VkAllocationCallbacks>*           pAllocator,
     HandlePointerDecoder<VkDescriptorSetLayout>*                   pSetLayout)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         std::unique_ptr<FIDescriptorSetLayoutInfo> desc_set_layout_info =
@@ -313,6 +333,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkDestroyDescriptorSetLayou
     format::HandleId                                     descriptorSetLayout,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.objects.push_back(descriptorSetLayout);
 }
 
@@ -324,6 +346,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateDescriptorPool(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>*      pAllocator,
     HandlePointerDecoder<VkDescriptorPool>*                   pDescriptorPool)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         std::unique_ptr<FIDescriptorPoolInfo> desc_pool_info =
@@ -342,6 +366,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkAllocateDescriptorSets(
     StructPointerDecoder<Decoded_VkDescriptorSetAllocateInfo>* pAllocateInfo,
     HandlePointerDecoder<VkDescriptorSet>*                     pDescriptorSets)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         const auto* ai    = pAllocateInfo->GetPointer();
@@ -365,6 +391,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkFreeDescriptorSets(
     uint32_t                               descriptorSetCount,
     HandlePointerDecoder<VkDescriptorSet>* pDescriptorSets)
 {
+    frame_last_id_ = call_info.index;
+
     FIDescriptorPoolInfo* pool_info = dynamic_cast<FIDescriptorPoolInfo*>(object_table_.GetPool(descriptorPool));
     assert(pool_info);
 
@@ -381,6 +409,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkResetDescriptorPool(const
                                                                            format::HandleId           descriptorPool,
                                                                            VkDescriptorPoolResetFlags flags)
 {
+    frame_last_id_ = call_info.index;
+
     FIDescriptorPoolInfo* pool_info = dynamic_cast<FIDescriptorPoolInfo*>(object_table_.GetPool(descriptorPool));
     assert(pool_info);
 
@@ -396,6 +426,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkDestroyDescriptorPool(
     format::HandleId                                     descriptorPool,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.pools.push_back(descriptorPool);
 }
 
@@ -407,6 +439,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkUpdateDescriptorSets(
     uint32_t                                            descriptorCopyCount,
     StructPointerDecoder<Decoded_VkCopyDescriptorSet>*  pDescriptorCopies)
 {
+    frame_last_id_ = call_info.index;
+
     const Decoded_VkWriteDescriptorSet* desc_writes = pDescriptorWrites->GetMetaStructPointer();
 
     for (uint32_t i = 0; i < descriptorWriteCount; ++i)
@@ -419,6 +453,7 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkUpdateDescriptorSets(
 
         switch (write->descriptorType)
         {
+            // pImageInfo
             case VK_DESCRIPTOR_TYPE_SAMPLER:
             case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
             case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
@@ -440,7 +475,11 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkUpdateDescriptorSets(
             }
             break;
 
+            // pBufferInfo
             case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+            case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+            case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+            case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
             {
                 const Decoded_VkDescriptorBufferInfo* decoded_buf_info =
                     desc_writes[i].pBufferInfo->GetMetaStructPointer();
@@ -458,13 +497,21 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkUpdateDescriptorSets(
             }
             break;
 
-            case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+            // pTexelBufferView
             case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
-            case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
-            case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
-            case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
-                assert(0);
-                break;
+            case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+            {
+                const format::HandleId* buffer_view_id = desc_writes[i].pTexelBufferView.GetPointer();
+                assert(buffer_view_id);
+                FIBufferViewInfo* buffer_view =
+                    dynamic_cast<FIBufferViewInfo*>(object_table_.GetObject(*buffer_view_id));
+                assert(buffer_view);
+
+                FIDescriptorSetBinding binding;
+                binding.descriptor_type = write->descriptorType;
+                binding.binding.emplace_back(FIDescriptorSetBinding::binding_info{ {}, {}, { buffer_view } });
+            }
+            break;
 
             default:
                 assert(0);
@@ -481,6 +528,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreatePipelineLayout(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>*      pAllocator,
     HandlePointerDecoder<VkPipelineLayout>*                   pPipelineLayout)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         std::unique_ptr<FIPipelineLayoutInfo> pipeline_layout_info =
@@ -516,6 +565,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateShaderModule(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>*    pAllocator,
     HandlePointerDecoder<VkShaderModule>*                   pShaderModule)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         std::unique_ptr<FIShaderModuleInfo> shader_info =
@@ -541,6 +592,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkDestroyShaderModule(
     format::HandleId                                     shaderModule,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.objects.push_back(shaderModule);
 }
 
@@ -550,6 +603,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkDestroyPipelineLayout(
     format::HandleId                                     pipelineLayout,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.objects.push_back(pipelineLayout);
 }
 
@@ -561,6 +616,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateSampler(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
     HandlePointerDecoder<VkSampler>*                     pSampler)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         std::unique_ptr<FISamplerInfo> sampler_info = std::make_unique<FISamplerInfo>(device, *pSampler->GetPointer());
@@ -593,6 +650,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkDestroySampler(
     format::HandleId                                     sampler,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.objects.push_back(sampler);
 }
 
@@ -604,6 +663,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateBuffer(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
     HandlePointerDecoder<VkBuffer>*                      pBuffer)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         std::unique_ptr<FIBufferInfo> buffer_info = std::make_unique<FIBufferInfo>(device, *pBuffer->GetPointer());
@@ -634,6 +695,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkDestroyBuffer(
     format::HandleId                                     buffer,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.objects.push_back(buffer);
 }
 
@@ -645,6 +708,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateBufferView(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>*  pAllocator,
     HandlePointerDecoder<VkBufferView>*                   pView)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         std::unique_ptr<FIBufferViewInfo> view_info = std::make_unique<FIBufferViewInfo>(device, *pView->GetPointer());
@@ -670,6 +735,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkDestroyBufferView(
     format::HandleId                                     bufferView,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.objects.push_back(bufferView);
 }
 
@@ -681,6 +748,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateImage(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
     HandlePointerDecoder<VkImage>*                       pImage)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         std::unique_ptr<FIImageInfo> image_info = std::make_unique<FIImageInfo>(device, *pImage->GetPointer());
@@ -718,6 +787,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkDestroyImage(
     format::HandleId                                     image,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.objects.push_back(image);
 }
 
@@ -729,6 +800,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateImageView(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
     HandlePointerDecoder<VkImageView>*                   pView)
 {
+    frame_last_id_ = call_info.index;
+
     const Decoded_VkImageViewCreateInfo* ci = pCreateInfo->GetMetaStructPointer();
     if (!object_table_.GetObject(ci->image))
     {
@@ -764,6 +837,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkDestroyImageView(
     format::HandleId                                     imageView,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.objects.push_back(imageView);
 }
 
@@ -777,6 +852,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateGraphicsPipelines(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>*        pAllocator,
     HandlePointerDecoder<VkPipeline>*                           pPipelines)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         for (uint32_t i = 0; i < createInfoCount; ++i)
@@ -888,12 +965,56 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateGraphicsPipelines(
     }
 }
 
+void VulkanFrameInspectorConsumerClientBase::Process_vkCreateComputePipelines(
+    const ApiCallInfo&                                         call_info,
+    VkResult                                                   returnValue,
+    format::HandleId                                           device,
+    format::HandleId                                           pipelineCache,
+    uint32_t                                                   createInfoCount,
+    StructPointerDecoder<Decoded_VkComputePipelineCreateInfo>* pCreateInfos,
+    StructPointerDecoder<Decoded_VkAllocationCallbacks>*       pAllocator,
+    HandlePointerDecoder<VkPipeline>*                          pPipelines)
+{
+    frame_last_id_ = call_info.index;
+
+    if (returnValue == VK_SUCCESS)
+    {
+        for (uint32_t i = 0; i < createInfoCount; ++i)
+        {
+            std::unique_ptr<FIPipelineInfo> pipeline_info =
+                std::make_unique<FIPipelineInfo>(device, *pPipelines->GetPointer());
+
+            const auto ci = pCreateInfos->GetMetaStructPointer();
+
+            // Shader stages
+            if (ci->stage)
+            {
+                FIShaderModuleInfo* shader_info =
+                    dynamic_cast<FIShaderModuleInfo*>(object_table_.GetObject(ci->stage->module));
+                pipeline_info->create_info.stages.emplace(VK_SHADER_STAGE_COMPUTE_BIT,
+                                                          FIPipelineShaderStageInfo{ ci->decoded_value->stage.flags,
+                                                                                     ci->decoded_value->stage.stage,
+                                                                                     shader_info,
+                                                                                     ci->decoded_value->stage.pName });
+            }
+
+            // Layout
+            pipeline_info->create_info.layout =
+                dynamic_cast<FIPipelineLayoutInfo*>(object_table_.GetObject(ci->layout));
+
+            object_table_.AddObject(std::move(pipeline_info));
+        }
+    }
+}
+
 void VulkanFrameInspectorConsumerClientBase::Process_vkDestroyPipeline(
     const ApiCallInfo&                                   call_info,
     format::HandleId                                     device,
     format::HandleId                                     pipeline,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.objects.push_back(pipeline);
 }
 
@@ -905,6 +1026,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCreateCommandPool(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>*   pAllocator,
     HandlePointerDecoder<VkCommandPool>*                   pCommandPool)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         std::unique_ptr<FICommandPoolInfo> pool_info =
@@ -925,6 +1048,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkDestroyCommandPool(
     format::HandleId                                     commandPool,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.pools.push_back(commandPool);
 }
 
@@ -935,6 +1060,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkAllocateCommandBuffers(
     StructPointerDecoder<Decoded_VkCommandBufferAllocateInfo>* pAllocateInfo,
     HandlePointerDecoder<VkCommandBuffer>*                     pCommandBuffers)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         const auto ai = pAllocateInfo->GetMetaStructPointer();
@@ -944,6 +1071,9 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkAllocateCommandBuffers(
         {
             std::unique_ptr<FICommandBufferInfo> command_buffer_info =
                 std::make_unique<FICommandBufferInfo>(device, ai->commandPool, cmd_bufs[i]);
+            assert(command_buffer_info.get());
+
+            command_buffer_info->create_info.level = ai->decoded_value->level;
 
             object_table_.AddPoolObject(ai->commandPool, std::move(command_buffer_info));
         }
@@ -955,6 +1085,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkResetCommandBuffer(const 
                                                                           format::HandleId          commandBuffer,
                                                                           VkCommandBufferResetFlags flags)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 
@@ -967,6 +1099,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkResetCommandPool(const Ap
                                                                         format::HandleId        commandPool,
                                                                         VkCommandPoolResetFlags flags)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandPoolInfo* pool_info = dynamic_cast<FICommandPoolInfo*>(object_table_.GetPool(commandPool));
     assert(pool_info);
 
@@ -985,18 +1119,20 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkBeginCommandBuffer(
     format::HandleId                                        commandBuffer,
     StructPointerDecoder<Decoded_VkCommandBufferBeginInfo>* pBeginInfo)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 
     command_buffer_in->Reset();
-
-    assert(!command_buffer_in->command_list.size());
 }
 
 void VulkanFrameInspectorConsumerClientBase::Process_vkEndCommandBuffer(const ApiCallInfo& call_info,
                                                                         VkResult           returnValue,
                                                                         format::HandleId   commandBuffer)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 }
@@ -1008,6 +1144,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkFreeCommandBuffers(
     uint32_t                               commandBufferCount,
     HandlePointerDecoder<VkCommandBuffer>* pCommandBuffers)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandPoolInfo* pool_info = dynamic_cast<FICommandPoolInfo*>(object_table_.GetPool(commandPool));
     assert(pool_info);
 
@@ -1024,6 +1162,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdBeginRenderPass(
     StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* pRenderPassBegin,
     VkSubpassContents                                    contents)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 
@@ -1060,6 +1200,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdBeginRenderPass(
 void VulkanFrameInspectorConsumerClientBase::Process_vkCmdEndRenderPass(const ApiCallInfo& call_info,
                                                                         format::HandleId   commandBuffer)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 
@@ -1069,11 +1211,44 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdEndRenderPass(const Ap
     command_buffer_in->EmplaceCommand(std::move(command));
 }
 
+void VulkanFrameInspectorConsumerClientBase::Process_vkCmdExecuteCommands(
+    const ApiCallInfo&                     call_info,
+    format::HandleId                       commandBuffer,
+    uint32_t                               commandBufferCount,
+    HandlePointerDecoder<VkCommandBuffer>* pCommandBuffers)
+{
+    frame_last_id_ = call_info.index;
+
+    if (commandBufferCount)
+    {
+        FICommandBufferInfo* command_buffer_in =
+            dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
+        assert(command_buffer_in);
+
+        std::shared_ptr<VulkanCommandExecuteCommandsInfo> command =
+            std::make_shared<VulkanCommandExecuteCommandsInfo>(call_info.index);
+
+        const format::HandleId* cmd_buf_ids = pCommandBuffers->GetPointer();
+        for (uint32_t i = 0; i < commandBufferCount; ++i)
+        {
+            const FICommandBufferInfo* cmd_buf =
+                dynamic_cast<const FICommandBufferInfo*>(object_table_.GetObject(cmd_buf_ids[i]));
+            assert(cmd_buf);
+
+            command->command_buffers.emplace_back(*cmd_buf);
+        }
+
+        command_buffer_in->EmplaceCommand(std::move(command));
+    }
+}
+
 void VulkanFrameInspectorConsumerClientBase::Process_vkCmdBindPipeline(const ApiCallInfo&  call_info,
                                                                        format::HandleId    commandBuffer,
                                                                        VkPipelineBindPoint pipelineBindPoint,
                                                                        format::HandleId    pipeline)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 
@@ -1097,6 +1272,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDraw(const ApiCallInfo
                                                                uint32_t           firstVertex,
                                                                uint32_t           firstInstance)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 
@@ -1118,6 +1295,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDrawIndirect(const Api
                                                                        uint32_t           drawCount,
                                                                        uint32_t           stride)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 
@@ -1131,6 +1310,7 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDrawIndirect(const Api
 
     command_buffer_in->EmplaceCommand(std::move(command));
 }
+
 void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDrawIndirectCount(const ApiCallInfo& call_info,
                                                                             format::HandleId   commandBuffer,
                                                                             format::HandleId   buffer,
@@ -1140,11 +1320,117 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDrawIndirectCount(cons
                                                                             uint32_t           maxDrawCount,
                                                                             uint32_t           stride)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 
     std::shared_ptr<client::VulkanCommandDrawIndirectCountInfo> command =
         std::make_shared<client::VulkanCommandDrawIndirectCountInfo>(call_info.index, command_buffer_in);
+
+    command->buffer              = buffer;
+    command->offset              = offset;
+    command->count_buffer        = countBuffer;
+    command->count_buffer_offset = countBufferOffset;
+    command->max_draw_count      = maxDrawCount;
+    command->stride              = stride;
+
+    command_buffer_in->EmplaceCommand(std::move(command));
+}
+
+void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDrawIndexedIndirect(const ApiCallInfo& call_info,
+                                                                              format::HandleId   commandBuffer,
+                                                                              format::HandleId   buffer,
+                                                                              VkDeviceSize       offset,
+                                                                              uint32_t           drawCount,
+                                                                              uint32_t           stride)
+{
+    frame_last_id_ = call_info.index;
+
+    FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
+    assert(command_buffer_in);
+
+    std::shared_ptr<client::VulkanCommandDrawIndexedIndirectInfo> command =
+        std::make_shared<client::VulkanCommandDrawIndexedIndirectInfo>(call_info.index, command_buffer_in);
+
+    command->buffer     = buffer;
+    command->offset     = offset;
+    command->draw_count = drawCount;
+    command->stride     = stride;
+
+    command_buffer_in->EmplaceCommand(std::move(command));
+}
+
+void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDrawIndexedIndirectCount(const ApiCallInfo& call_info,
+                                                                                   format::HandleId   commandBuffer,
+                                                                                   format::HandleId   buffer,
+                                                                                   VkDeviceSize       offset,
+                                                                                   format::HandleId   countBuffer,
+                                                                                   VkDeviceSize       countBufferOffset,
+                                                                                   uint32_t           maxDrawCount,
+                                                                                   uint32_t           stride)
+{
+    frame_last_id_ = call_info.index;
+
+    FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
+    assert(command_buffer_in);
+
+    std::shared_ptr<client::VulkanCommandDrawIndexedIndirectCountInfo> command =
+        std::make_shared<client::VulkanCommandDrawIndexedIndirectCountInfo>(call_info.index, command_buffer_in);
+
+    command->buffer              = buffer;
+    command->offset              = offset;
+    command->count_buffer        = countBuffer;
+    command->count_buffer_offset = countBufferOffset;
+    command->max_draw_count      = maxDrawCount;
+    command->stride              = stride;
+
+    command_buffer_in->EmplaceCommand(std::move(command));
+}
+
+void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDrawIndirectCountKHR(const ApiCallInfo& call_info,
+                                                                               format::HandleId   commandBuffer,
+                                                                               format::HandleId   buffer,
+                                                                               VkDeviceSize       offset,
+                                                                               format::HandleId   countBuffer,
+                                                                               VkDeviceSize       countBufferOffset,
+                                                                               uint32_t           maxDrawCount,
+                                                                               uint32_t           stride)
+{
+    frame_last_id_ = call_info.index;
+
+    FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
+    assert(command_buffer_in);
+
+    std::shared_ptr<client::VulkanCommandDrawIndexedIndirectCountKHRInfo> command =
+        std::make_shared<client::VulkanCommandDrawIndexedIndirectCountKHRInfo>(call_info.index, command_buffer_in);
+
+    command->buffer              = buffer;
+    command->offset              = offset;
+    command->count_buffer        = countBuffer;
+    command->count_buffer_offset = countBufferOffset;
+    command->max_draw_count      = maxDrawCount;
+    command->stride              = stride;
+
+    command_buffer_in->EmplaceCommand(std::move(command));
+}
+
+void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDrawIndirectCountAMD(const ApiCallInfo& call_info,
+                                                                               format::HandleId   commandBuffer,
+                                                                               format::HandleId   buffer,
+                                                                               VkDeviceSize       offset,
+                                                                               format::HandleId   countBuffer,
+                                                                               VkDeviceSize       countBufferOffset,
+                                                                               uint32_t           maxDrawCount,
+                                                                               uint32_t           stride)
+{
+    frame_last_id_ = call_info.index;
+
+    FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
+    assert(command_buffer_in);
+
+    std::shared_ptr<client::VulkanCommandDrawIndexedIndirectCountAMDInfo> command =
+        std::make_shared<client::VulkanCommandDrawIndexedIndirectCountAMDInfo>(call_info.index, command_buffer_in);
 
     command->buffer              = buffer;
     command->offset              = offset;
@@ -1164,6 +1450,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdDrawIndexed(const ApiC
                                                                       int32_t            vertexOffset,
                                                                       uint32_t           firstInstance)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 
@@ -1186,6 +1474,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdSetViewport(
     uint32_t                                  viewportCount,
     StructPointerDecoder<Decoded_VkViewport>* pViewports)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 
@@ -1210,6 +1500,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdSetScissor(const ApiCa
                                                                      uint32_t           scissorCount,
                                                                      StructPointerDecoder<Decoded_VkRect2D>* pScissors)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 
@@ -1234,6 +1526,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdBindIndexBuffer(const 
                                                                           VkDeviceSize       offset,
                                                                           VkIndexType        indexType)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 
@@ -1246,11 +1540,10 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdBindIndexBuffer(const 
     command->buffer_info = buffer_info;
     command->offset      = offset;
     command->indexType   = indexType;
-
-    command_buffer_in->EmplaceCommand(std::move(command));
-
     command_buffer_in->bound_index_buffer =
         FIBoundIndexBufferInfo{ command->buffer_info, command->offset, command->indexType };
+
+    command_buffer_in->EmplaceCommand(std::move(command));
 }
 
 void VulkanFrameInspectorConsumerClientBase::Process_vkCmdBindVertexBuffers(const ApiCallInfo& call_info,
@@ -1260,6 +1553,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdBindVertexBuffers(cons
                                                                             HandlePointerDecoder<VkBuffer>* pBuffers,
                                                                             PointerDecoder<VkDeviceSize>*   pOffsets)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 
@@ -1294,6 +1589,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkCmdBindDescriptorSets(
     uint32_t                               dynamicOffsetCount,
     PointerDecoder<uint32_t>*              pDynamicOffsets)
 {
+    frame_last_id_ = call_info.index;
+
     FICommandBufferInfo* command_buffer_in = dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(commandBuffer));
     assert(command_buffer_in);
 
@@ -1326,6 +1623,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkQueueSubmit(const ApiCall
                                                                    StructPointerDecoder<Decoded_VkSubmitInfo>* pSubmits,
                                                                    format::HandleId                            fence)
 {
+    frame_last_id_ = call_info.index;
+
     std::unique_ptr<QueueSubmitInfo> queue_submit_info = std::make_unique<QueueSubmitInfo>(call_info.index);
 
     const Decoded_VkSubmitInfo* submit_infos = pSubmits->GetMetaStructPointer();
@@ -1338,62 +1637,74 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkQueueSubmit(const ApiCall
                 dynamic_cast<FICommandBufferInfo*>(object_table_.GetObject(cmd_buf_ids[cb]));
             assert(cmd_buf_info);
 
-            assert(queue_submit_info->command_buffers.find(cmd_buf_info->id) ==
-                   queue_submit_info->command_buffers.end());
+            // assert(queue_submit_info->command_buffers.find(cmd_buf_info->id) ==
+            //        queue_submit_info->command_buffers.end());
             queue_submit_info->command_buffers.emplace(cmd_buf_info->id, cmd_buf_info->command_list);
         }
 
-        if (submit_infos->pSignalSemaphores.GetPointer())
+        if (submit_infos->decoded_value->signalSemaphoreCount && submit_infos->pSignalSemaphores.GetPointer())
         {
-            queue_submit_info->signal_semaphores.push_back(submit_infos->pSignalSemaphores.GetPointer()[i]);
+            for (uint32_t s = 0; s < submit_infos->decoded_value->signalSemaphoreCount; ++s)
+            {
+                queue_submit_info->signal_semaphores.push_back(submit_infos->pSignalSemaphores.GetPointer()[s]);
+            }
         }
 
-        if (submit_infos->pWaitDstStageMask.GetPointer())
+        if (submit_infos->decoded_value->waitSemaphoreCount && submit_infos->pWaitSemaphores.GetPointer())
         {
-            queue_submit_info->wait_semaphores.push_back(submit_infos->pSignalSemaphores.GetPointer()[i]);
+            for (uint32_t s = 0; s < submit_infos->decoded_value->waitSemaphoreCount; ++s)
+            {
+                queue_submit_info->wait_semaphores.push_back(submit_infos->pWaitSemaphores.GetPointer()[s]);
+            }
         }
 
-        if (submit_infos->pWaitDstStageMask.GetPointer())
+        if (submit_infos->decoded_value->waitSemaphoreCount && submit_infos->pWaitDstStageMask.GetPointer())
         {
-            queue_submit_info->wait_dst_stage_mask.push_back(submit_infos->pWaitDstStageMask.GetPointer()[i]);
+            for (uint32_t s = 0; s < submit_infos->decoded_value->waitSemaphoreCount; ++s)
+            {
+                queue_submit_info->wait_dst_stage_mask.push_back(submit_infos->pWaitDstStageMask.GetPointer()[s]);
+            }
         }
     }
 
     // Update indirect commands with the parameters received from the device
-    for (auto& cmd_buf : queue_submit_info->command_buffers)
+    if (draw_indirect_params.size())
     {
-        for (auto& cmd : cmd_buf.second)
+        for (auto& cmd_buf : queue_submit_info->command_buffers)
         {
-            const auto& it = draw_indirect_params.find(std::make_pair(call_info.index, cmd->index));
-            if (it != draw_indirect_params.end())
+            for (auto& cmd : cmd_buf.second)
             {
-                if (cmd->type == it->second.command_type)
+                const auto& it = draw_indirect_params.find(std::make_pair(call_info.index, cmd->index));
+                if (it != draw_indirect_params.end())
                 {
-                    client::VulkanCommandDrawIndirectInfo* draw_indirect =
-                        dynamic_cast<client::VulkanCommandDrawIndirectInfo*>(cmd.get());
-                    assert(draw_indirect);
+                    if (cmd->type == it->second.command_type)
+                    {
+                        client::VulkanCommandDrawIndirectInfo* draw_indirect =
+                            dynamic_cast<client::VulkanCommandDrawIndirectInfo*>(cmd.get());
+                        assert(draw_indirect);
 
-                    draw_indirect->GetParams() = std::move(it->second.command_params);
-                    draw_indirect->draw_count  = it->second.draw_count;
-                    draw_indirect->is_accurate = true;
+                        draw_indirect->GetParams()  = std::move(it->second.command_params);
+                        draw_indirect->draw_count   = it->second.draw_count;
+                        draw_indirect->is_accurate_ = true;
+                    }
+                    else
+                    {
+                        GFXRECON_LOG_WARNING("%s (%" PRIu64 ", %" PRIu64
+                                             ") indirect command is of the wrong type. Expected %s, got %s",
+                                             __func__,
+                                             call_info.index,
+                                             cmd->index,
+                                             vulkan_command_to_str(cmd->type),
+                                             vulkan_command_to_str(it->second.command_type));
+                        assert(0);
+                    }
                 }
                 else
                 {
-                    GFXRECON_LOG_WARNING("%s (%" PRIu64 ", %" PRIu64
-                                         ") indirect command is of the wrong type. Expected %s, got %s",
-                                         __func__,
-                                         call_info.index,
-                                         cmd->index,
-                                         vulkan_command_to_str(cmd->type),
-                                         vulkan_command_to_str(it->second.command_type));
+                    GFXRECON_LOG_WARNING(
+                        "%s (%" PRIu64 ", %" PRIu64 ") was not found", __func__, call_info.index, cmd->index);
                     assert(0);
                 }
-            }
-            else
-            {
-                GFXRECON_LOG_WARNING(
-                    "%s (%" PRIu64 ", %" PRIu64 ") was not found", __func__, call_info.index, cmd->index);
-                assert(0);
             }
         }
     }
@@ -1410,6 +1721,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkQueuePresentKHR(
     format::HandleId                                queue,
     StructPointerDecoder<Decoded_VkPresentInfoKHR>* pPresentInfo)
 {
+    frame_last_id_ = call_info.index;
+
     std::unique_ptr<QueuePresentInfo> queue_present_info = std::make_unique<QueuePresentInfo>(call_info.index);
 
     const Decoded_VkPresentInfoKHR* pi = pPresentInfo->GetMetaStructPointer();
@@ -1439,6 +1752,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkAllocateMemory(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
     HandlePointerDecoder<VkDeviceMemory>*                pMemory)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         std::unique_ptr<FIDeviceMemoryInfo> dev_mem_info =
@@ -1459,6 +1774,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkFreeMemory(
     format::HandleId                                     memory,
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    frame_last_id_ = call_info.index;
+
     objects_pending_for_deletion_.objects.push_back(memory);
 }
 
@@ -1469,6 +1786,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkBindBufferMemory(const Ap
                                                                         format::HandleId   memory,
                                                                         VkDeviceSize       memoryOffset)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         FIBufferInfo* buffer_info = dynamic_cast<FIBufferInfo*>(object_table_.GetObject(buffer));
@@ -1489,6 +1808,8 @@ void VulkanFrameInspectorConsumerClientBase::Process_vkBindImageMemory(const Api
                                                                        format::HandleId   memory,
                                                                        VkDeviceSize       memoryOffset)
 {
+    frame_last_id_ = call_info.index;
+
     if (returnValue == VK_SUCCESS)
     {
         FIImageInfo* image_info = dynamic_cast<FIImageInfo*>(object_table_.GetObject(image));
@@ -1523,15 +1844,201 @@ void VulkanFrameInspectorConsumerClientBase::DeletePendingObjects()
     objects_pending_for_deletion_.pools.clear();
 }
 
-void VulkanFrameInspectorConsumerClientBase::DumpFrame() const
+static void DumpCommandInfo(const VulkanCommandInfo* cmd)
 {
-    for (const auto& serialize_cmd : commands_)
+    GFXRECON_WRITE_CONSOLE("    - (%" PRIu64 ") %s\n", cmd->index, vulkan_command_to_str(cmd));
+
+    switch (cmd->type)
     {
-        switch (serialize_cmd->type)
+        case VULKAN_CMD_DRAW:
+        {
+            const VulkanCommandDrawInfo* draw_cmd = dynamic_cast<const VulkanCommandDrawInfo*>(cmd);
+            assert(draw_cmd);
+
+            GFXRECON_WRITE_CONSOLE("Set Binding\n");
+            for (const auto& desc_set : draw_cmd->descriptor_sets)
+            {
+                for (const auto& binding : desc_set.second.bindings)
+                {
+                    GFXRECON_WRITE_CONSOLE("%u    %u        %s\n",
+                                           desc_set.first,
+                                           binding.first,
+                                           desc_type_to_str(binding.second.descriptor_type));
+                }
+            }
+
+            GFXRECON_WRITE_CONSOLE("Pipeline: %" PRIu64 "\n", draw_cmd->pipeline->id);
+            if (draw_cmd->bound_vertex_buffers.size())
+            {
+                GFXRECON_WRITE_CONSOLE("Vertex Buffers:\n");
+                for (const auto& vert_buf : draw_cmd->bound_vertex_buffers)
+                {
+                    GFXRECON_WRITE_CONSOLE("  %u: %" PRIu64 " @ %zu\n",
+                                           vert_buf.first,
+                                           vert_buf.second.buffer->id,
+                                           vert_buf.second.offset);
+                }
+            }
+        }
+        break;
+
+        case VULKAN_CMD_DRAW_INDEXED:
+        {
+            const VulkanCommandDrawIndexedInfo* draw_cmd = dynamic_cast<const VulkanCommandDrawIndexedInfo*>(cmd);
+            assert(draw_cmd);
+
+            GFXRECON_WRITE_CONSOLE("Index buffer: ", draw_cmd->bound_index_buffer.buffer_info->id);
+
+            GFXRECON_WRITE_CONSOLE("Set Binding\n");
+            for (const auto& desc_set : draw_cmd->descriptor_sets)
+            {
+                for (const auto& binding : desc_set.second.bindings)
+                {
+                    GFXRECON_WRITE_CONSOLE("%u    %u        %s\n",
+                                           desc_set.first,
+                                           binding.first,
+                                           desc_type_to_str(binding.second.descriptor_type));
+                }
+            }
+
+            GFXRECON_WRITE_CONSOLE("Pipeline: %" PRIu64 "\n", draw_cmd->pipeline->id);
+            if (draw_cmd->bound_vertex_buffers.size())
+            {
+                GFXRECON_WRITE_CONSOLE("Vertex Buffers:\n");
+                for (const auto& vert_buf : draw_cmd->bound_vertex_buffers)
+                {
+                    GFXRECON_WRITE_CONSOLE("  %u: %" PRIu64 " @ %zu\n",
+                                           vert_buf.first,
+                                           vert_buf.second.buffer->id,
+                                           vert_buf.second.offset);
+                }
+            }
+        }
+        break;
+
+        case VULKAN_CMD_DRAW_INDIRECT:
+        {
+            const client::VulkanCommandDrawIndirectInfo* draw_cmd =
+                dynamic_cast<const client::VulkanCommandDrawIndirectInfo*>(cmd);
+            assert(draw_cmd);
+
+            GFXRECON_WRITE_CONSOLE("draw count: %u", draw_cmd->draw_count);
+
+            for (uint32_t i = 0; i < draw_cmd->draw_count; ++i)
+            {
+                GFXRECON_WRITE_CONSOLE("  %u: (vc: %u ic: %u fv: %u fi: %u)",
+                                       i,
+                                       draw_cmd->GetParams()[i].indirect.vertexCount,
+                                       draw_cmd->GetParams()[i].indirect.instanceCount,
+                                       draw_cmd->GetParams()[i].indirect.firstVertex,
+                                       draw_cmd->GetParams()[i].indirect.firstInstance)
+            }
+
+            GFXRECON_WRITE_CONSOLE("Set Binding\n");
+            for (const auto& desc_set : draw_cmd->descriptor_sets)
+            {
+                for (const auto& binding : desc_set.second.bindings)
+                {
+                    GFXRECON_WRITE_CONSOLE("%u    %u        %s\n",
+                                           desc_set.first,
+                                           binding.first,
+                                           desc_type_to_str(binding.second.descriptor_type));
+                }
+            }
+
+            GFXRECON_WRITE_CONSOLE("Pipeline: %" PRIu64 "\n", draw_cmd->pipeline->id);
+            if (draw_cmd->bound_vertex_buffers.size())
+            {
+                GFXRECON_WRITE_CONSOLE("Vertex Buffers:\n");
+                for (const auto& vert_buf : draw_cmd->bound_vertex_buffers)
+                {
+                    GFXRECON_WRITE_CONSOLE("  %u: %" PRIu64 " @ %zu\n",
+                                           vert_buf.first,
+                                           vert_buf.second.buffer->id,
+                                           vert_buf.second.offset);
+                }
+            }
+        }
+
+        default:
+            break;
+    }
+}
+
+bool VulkanFrameInspectorConsumerClientBase::DumpCommand(format::HandleId id) const
+{
+    // printf("%s() [%" PRIu64 ", %" PRIu64 "]\n", __func__, frame_first_id_, frame_last_id_);
+    if (id > frame_last_id_)
+    {
+        return false;
+    }
+
+    for (const auto& serialized_cmd : frame_commands_)
+    {
+        if (serialized_cmd->index != id)
+        {
+            continue;
+        }
+
+        if (serialized_cmd->type == SERIALIZED_CMD_QUEUE_SUBMIT)
+        {
+            QueueSubmitInfo* queue_submit_info = reinterpret_cast<QueueSubmitInfo*>(serialized_cmd.get());
+            assert(queue_submit_info);
+            GFXRECON_WRITE_CONSOLE("vkQueueSubmit (%" PRIu64 ")\n", queue_submit_info->index);
+
+            for (const auto& cmd_buf : queue_submit_info->command_buffers)
+            {
+                GFXRECON_WRITE_CONSOLE("  vkCommandBuffer (%" PRIu64 ")\n", cmd_buf.first);
+                for (const auto& cmd : cmd_buf.second)
+                {
+                    if (cmd->type != VULKAN_CMD_EXECUTE_COMMANDS)
+                    {
+                        DumpCommandInfo(cmd.get());
+                    }
+                    else
+                    {
+                        VulkanCommandExecuteCommandsInfo* exec_cmd =
+                            dynamic_cast<VulkanCommandExecuteCommandsInfo*>(cmd.get());
+                        assert(exec_cmd);
+
+                        GFXRECON_WRITE_CONSOLE("    - (%" PRIu64 ") %s\n", cmd->index, vulkan_command_to_str(cmd.get()));
+
+                        for (const auto& cmd_buf : exec_cmd->command_buffers)
+                        {
+                            for (const auto& cmd : cmd_buf.command_list)
+                            {
+                                DumpCommandInfo(cmd.get());
+                            }
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+        else
+        {
+            GFXRECON_WRITE_CONSOLE("Command with id %" PRIu64 " is not a QueueSubmit command", id);
+        }
+    }
+
+    return false;
+}
+
+void VulkanFrameInspectorConsumerClientBase::DumpFrame(uint32_t frame) const
+{
+    if (frame > commands_.size())
+    {
+        return;
+    }
+
+    for (const auto& serialized_cmd : commands_[frame])
+    {
+        switch (serialized_cmd->type)
         {
             case SERIALIZED_CMD_QUEUE_SUBMIT:
             {
-                QueueSubmitInfo* queue_submit_info = reinterpret_cast<QueueSubmitInfo*>(serialize_cmd.get());
+                QueueSubmitInfo* queue_submit_info = reinterpret_cast<QueueSubmitInfo*>(serialized_cmd.get());
                 assert(queue_submit_info);
                 GFXRECON_WRITE_CONSOLE("vkQueueSubmit (%" PRIu64 ")\n", queue_submit_info->index);
 
@@ -1540,88 +2047,23 @@ void VulkanFrameInspectorConsumerClientBase::DumpFrame() const
                     GFXRECON_WRITE_CONSOLE("  vkCommandBuffer (%" PRIu64 ")\n", cmd_buf.first);
                     for (const auto& cmd : cmd_buf.second)
                     {
-                        GFXRECON_WRITE_CONSOLE(
-                            "    - (%" PRIu64 ") %s\n", cmd->index, vulkan_command_to_str(cmd.get()));
-                        switch (cmd->type)
+                        if (cmd->type != VULKAN_CMD_EXECUTE_COMMANDS)
                         {
-                            case VULKAN_CMD_DRAW:
+                            DumpCommandInfo(cmd.get());
+                        }
+                        else
+                        {
+                            VulkanCommandExecuteCommandsInfo* exec_cmd =
+                                dynamic_cast<VulkanCommandExecuteCommandsInfo*>(cmd.get());
+                            assert(exec_cmd);
+
+                            for (const auto& cmd_buf : exec_cmd->command_buffers)
                             {
-                                VulkanCommandDrawInfo* draw_cmd = dynamic_cast<VulkanCommandDrawInfo*>(cmd.get());
-                                assert(draw_cmd);
-
-                                GFXRECON_WRITE_CONSOLE("Set Binding\n");
-                                for (const auto& desc_set : draw_cmd->descriptor_sets)
+                                for (const auto& cmd : cmd_buf.command_list)
                                 {
-                                    for (const auto& binding : desc_set.second.bindings)
-                                    {
-                                        GFXRECON_WRITE_CONSOLE("%u    %u        %s\n",
-                                                               desc_set.first,
-                                                               binding.first,
-                                                               desc_type_to_str(binding.second.descriptor_type));
-                                    }
-                                }
-
-                                GFXRECON_WRITE_CONSOLE("Pipeline: %" PRIu64 "\n", draw_cmd->pipeline->id);
-                                if (draw_cmd->bound_vertex_buffers.size())
-                                {
-                                    GFXRECON_WRITE_CONSOLE("Vertex Buffers:\n");
-                                    for (const auto& vert_buf : draw_cmd->bound_vertex_buffers)
-                                    {
-                                        GFXRECON_WRITE_CONSOLE("  %u: %" PRIu64 " @ %zu\n",
-                                                               vert_buf.first,
-                                                               vert_buf.second.buffer->id,
-                                                               vert_buf.second.offset);
-                                    }
+                                    DumpCommandInfo(cmd.get());
                                 }
                             }
-                            break;
-
-                            case VULKAN_CMD_DRAW_INDIRECT:
-                            {
-                                client::VulkanCommandDrawIndirectInfo* draw_cmd =
-                                    dynamic_cast<client::VulkanCommandDrawIndirectInfo*>(cmd.get());
-                                assert(draw_cmd);
-
-                                GFXRECON_WRITE_CONSOLE("draw count: %u", draw_cmd->draw_count);
-
-                                for (uint32_t i = 0; i < draw_cmd->draw_count; ++i)
-                                {
-                                    GFXRECON_WRITE_CONSOLE("  %u: (vc: %u ic: %u fv: %u fi: %u)",
-                                                           i,
-                                                           draw_cmd->GetParams()[i].indirect.vertexCount,
-                                                           draw_cmd->GetParams()[i].indirect.instanceCount,
-                                                           draw_cmd->GetParams()[i].indirect.firstVertex,
-                                                           draw_cmd->GetParams()[i].indirect.firstInstance)
-                                }
-
-                                GFXRECON_WRITE_CONSOLE("Set Binding\n");
-                                for (const auto& desc_set : draw_cmd->descriptor_sets)
-                                {
-                                    for (const auto& binding : desc_set.second.bindings)
-                                    {
-                                        GFXRECON_WRITE_CONSOLE("%u    %u        %s\n",
-                                                               desc_set.first,
-                                                               binding.first,
-                                                               desc_type_to_str(binding.second.descriptor_type));
-                                    }
-                                }
-
-                                GFXRECON_WRITE_CONSOLE("Pipeline: %" PRIu64 "\n", draw_cmd->pipeline->id);
-                                if (draw_cmd->bound_vertex_buffers.size())
-                                {
-                                    GFXRECON_WRITE_CONSOLE("Vertex Buffers:\n");
-                                    for (const auto& vert_buf : draw_cmd->bound_vertex_buffers)
-                                    {
-                                        GFXRECON_WRITE_CONSOLE("  %u: %" PRIu64 " @ %zu\n",
-                                                               vert_buf.first,
-                                                               vert_buf.second.buffer->id,
-                                                               vert_buf.second.offset);
-                                    }
-                                }
-                            }
-
-                            default:
-                                break;
                         }
                     }
                 }
@@ -1630,7 +2072,7 @@ void VulkanFrameInspectorConsumerClientBase::DumpFrame() const
 
             case SERIALIZED_CMD_QUEUE_PRESENT:
             {
-                QueuePresentInfo* queue_present_info = reinterpret_cast<QueuePresentInfo*>(serialize_cmd.get());
+                QueuePresentInfo* queue_present_info = reinterpret_cast<QueuePresentInfo*>(serialized_cmd.get());
                 assert(queue_present_info);
                 GFXRECON_WRITE_CONSOLE("vkQueuePresentKHR (%" PRIu64 ")\n", queue_present_info->index);
             }

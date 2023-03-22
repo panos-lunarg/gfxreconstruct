@@ -36,8 +36,13 @@ GFXRECON_BEGIN_NAMESPACE(client)
 class VulkanIndirectCommandInfo
 {
   public:
+    VulkanIndirectCommandInfo() : is_accurate_(false) {}
+
     virtual const std::vector<indirect_draw_parameters_union>& GetParams() const { return command_params_; }
     virtual std::vector<indirect_draw_parameters_union>&       GetParams() { return command_params_; }
+
+    // Whether the command params have been update with actual values from the device
+    bool is_accurate_;
 
   protected:
     std::vector<indirect_draw_parameters_union> command_params_;
@@ -47,25 +52,22 @@ class VulkanCommandDrawIndirectInfo : public VulkanIndirectCommandInfo, public V
 {
   public:
     VulkanCommandDrawIndirectInfo(format::CommandIndexType index, const FICommandBufferInfo* cmd_buffer_info) :
-        VulkanDrawCommandsBaseInfo(index, VULKAN_CMD_DRAW_INDIRECT, cmd_buffer_info), buffer(format::kNullHandleId),
-        is_accurate(false)
+        VulkanIndirectCommandInfo(), VulkanDrawCommandsBaseInfo(index, VULKAN_CMD_DRAW_INDIRECT, cmd_buffer_info),
+        buffer(format::kNullHandleId)
     {}
 
     format::HandleId buffer;
     VkDeviceSize     offset;
     uint32_t         draw_count;
     uint32_t         stride;
-
-    // Whether the command params have been update with actual values from the device
-    bool is_accurate;
 };
 
 class VulkanCommandDrawIndirectCountInfo : public VulkanIndirectCommandInfo, public VulkanDrawCommandsBaseInfo
 {
   public:
     VulkanCommandDrawIndirectCountInfo(format::CommandIndexType index, const FICommandBufferInfo* cmd_buffer_info) :
-        VulkanDrawCommandsBaseInfo(index, VULKAN_CMD_DRAW_INDIRECT, cmd_buffer_info), buffer(format::kNullHandleId),
-        is_accurate(false)
+        VulkanIndirectCommandInfo(), VulkanDrawCommandsBaseInfo(index, VULKAN_CMD_DRAW_INDIRECT, cmd_buffer_info),
+        buffer(format::kNullHandleId)
     {}
 
     format::HandleId buffer;
@@ -74,9 +76,75 @@ class VulkanCommandDrawIndirectCountInfo : public VulkanIndirectCommandInfo, pub
     VkDeviceSize     count_buffer_offset;
     uint32_t         max_draw_count;
     uint32_t         stride;
+};
 
-    // Whether the command params have been update with actual values from the device
-    bool is_accurate;
+class VulkanCommandDrawIndexedIndirectInfo : public VulkanIndirectCommandInfo, public VulkanDrawCommandsBaseInfo
+{
+  public:
+    VulkanCommandDrawIndexedIndirectInfo(format::CommandIndexType index, const FICommandBufferInfo* cmd_buffer_info) :
+        VulkanIndirectCommandInfo(),
+        VulkanDrawCommandsBaseInfo(index, VULKAN_CMD_DRAW_INDEXED_INDIRECT, cmd_buffer_info),
+        buffer(format::kNullHandleId)
+    {}
+
+    format::HandleId buffer;
+    VkDeviceSize     offset;
+    uint32_t         draw_count;
+    uint32_t         stride;
+};
+
+class VulkanCommandDrawIndexedIndirectCountInfo : public VulkanIndirectCommandInfo, public VulkanDrawCommandsBaseInfo
+{
+  public:
+    VulkanCommandDrawIndexedIndirectCountInfo(format::CommandIndexType   index,
+                                              const FICommandBufferInfo* cmd_buffer_info) :
+        VulkanIndirectCommandInfo(),
+        VulkanDrawCommandsBaseInfo(index, VULKAN_CMD_DRAW_INDEXED_INDIRECT_COUNT, cmd_buffer_info),
+        buffer(format::kNullHandleId)
+    {}
+
+    format::HandleId buffer;
+    VkDeviceSize     offset;
+    format::HandleId count_buffer;
+    VkDeviceSize     count_buffer_offset;
+    uint32_t         max_draw_count;
+    uint32_t         stride;
+};
+
+class VulkanCommandDrawIndexedIndirectCountKHRInfo : public VulkanIndirectCommandInfo, public VulkanDrawCommandsBaseInfo
+{
+  public:
+    VulkanCommandDrawIndexedIndirectCountKHRInfo(format::CommandIndexType   index,
+                                                 const FICommandBufferInfo* cmd_buffer_info) :
+        VulkanIndirectCommandInfo(),
+        VulkanDrawCommandsBaseInfo(index, VULKAN_CMD_DRAW_INDEXED_INDIRECT_COUNT, cmd_buffer_info),
+        buffer(format::kNullHandleId)
+    {}
+
+    format::HandleId buffer;
+    VkDeviceSize     offset;
+    format::HandleId count_buffer;
+    VkDeviceSize     count_buffer_offset;
+    uint32_t         max_draw_count;
+    uint32_t         stride;
+};
+
+class VulkanCommandDrawIndexedIndirectCountAMDInfo : public VulkanIndirectCommandInfo, public VulkanDrawCommandsBaseInfo
+{
+  public:
+    VulkanCommandDrawIndexedIndirectCountAMDInfo(format::CommandIndexType   index,
+                                                 const FICommandBufferInfo* cmd_buffer_info) :
+        VulkanIndirectCommandInfo(),
+        VulkanDrawCommandsBaseInfo(index, VULKAN_CMD_DRAW_INDEXED_INDIRECT_COUNT, cmd_buffer_info),
+        buffer(format::kNullHandleId)
+    {}
+
+    format::HandleId buffer;
+    VkDeviceSize     offset;
+    format::HandleId count_buffer;
+    VkDeviceSize     count_buffer_offset;
+    uint32_t         max_draw_count;
+    uint32_t         stride;
 };
 
 GFXRECON_END_NAMESPACE(client)

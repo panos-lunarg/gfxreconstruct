@@ -64,6 +64,7 @@ class Application final
     bool IsRunning() const { return running_; }
 
     void Run();
+    void DumpCommand(format::HandleId id);
 
     bool GetPaused() const { return paused_; }
 

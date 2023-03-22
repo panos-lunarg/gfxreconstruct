@@ -101,12 +101,12 @@ int main(int argc, const char** argv)
         std::string                     filename             = positional_arguments[0];
         gfxrecon::util::Socket          socket;
 
-        socket.IntializeAsClient(gfxrecon::util::Socket::kNetworkSocket, "localhost", "3490");
-        gfxrecon::util::FileStreamer streamer;
-        streamer.Initialize(filename, &socket);
+        // socket.IntializeAsClient(gfxrecon::util::Socket::kNetworkSocket, "localhost", "3490");
+        // gfxrecon::util::FileStreamer streamer;
+        // streamer.Initialize(filename, &socket);
 
-        while (streamer.StreamFile())
-        {}
+        // while (streamer.StreamFile())
+        // {}
 
         gfxrecon::decode::FileProcessor file_processor;
         if (!file_processor.Initialize(filename))
@@ -128,7 +128,7 @@ int main(int argc, const char** argv)
             file_processor.AddDecoder(&vulkan_decoder);
             application->SetConsumer(&vulkan_frame_inspector);
 
-            vulkan_frame_inspector.GetIndirectCommandParamsOverSocket(socket);
+            // vulkan_frame_inspector.GetIndirectCommandParamsOverSocket(socket);
 
             application->Run();
         }
