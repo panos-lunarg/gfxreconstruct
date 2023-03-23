@@ -38,7 +38,6 @@ set(CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" "${CMAKE_SOURCE_DIR}/external/cmake-modules")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-include_directories(${CMAKE_SOURCE_DIR}/external/perfetto)
 
 # Version info
 set(GFXRECONSTRUCT_PROJECT_VERSION_MAJOR 0)
@@ -289,3 +288,4 @@ if (${RUN_TESTS})
 endif()
 
 add_subdirectory(scripts)
+add_subdirectory(plugins)

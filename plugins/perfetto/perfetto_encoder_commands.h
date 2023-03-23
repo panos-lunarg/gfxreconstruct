@@ -25,14 +25,17 @@
 #define GFXRECON_ENCODE_CUSTOM_PERFETTO_VULKAN_ENCODER_COMMANDS_H
 
 #include "encode/vulkan_capture_manager.h"
-#include "encode/perfetto/perfetto_tracing_categories.h"
+#include "perfetto_tracing_categories.h"
 #include "format/api_call_id.h"
 #include "util/defines.h"
 
 #include <iostream>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
-GFXRECON_BEGIN_NAMESPACE(encode)
+GFXRECON_BEGIN_NAMESPACE(plugins)
+GFXRECON_BEGIN_NAMESPACE(plugin_perfetto)
+
+using namespace encode;
 
 template <format::ApiCallId Id>
 struct PerfettoEncoderPreCall
@@ -67,7 +70,8 @@ struct PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkCreateInstance>
     template <typename... Args>
     static void Dispatch(VulkanCaptureManager* manager, Args... args)
     {
-        TRACE_EVENT_BEGIN("GFXR", "vkCreateInstance", "Command ID:", manager->GetBlockIndex());
+        // TRACE_EVENT_BEGIN("GFXR", "vkCreateInstance", "Command ID:", manager->GetBlockIndex());
+        InitializePerfetto(manager);
     }
 };
 
@@ -114,7 +118,8 @@ struct PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>
 
 #endif // !defined(WIN32)
 
+GFXRECON_END_NAMESPACE(plugin_perfetto)
+GFXRECON_END_NAMESPACE(plugins)
 GFXRECON_END_NAMESPACE(gfxrecon)
-GFXRECON_END_NAMESPACE(encode)
 
 #endif /* GFXRECON_ENCODE_CUSTOM_PERFETTO_VULKAN_ENCODER_COMMANDS_H */

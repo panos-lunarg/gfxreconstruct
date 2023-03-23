@@ -40,7 +40,6 @@
 #include <cassert>
 #include <unordered_map>
 
-
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(encode)
 
@@ -231,6 +230,26 @@ std::string PrepScreenshotPrefix(const std::string& dir)
     return out;
 }
 
+void CaptureManager::LoadPlugins()
+{
+    loaded_plugin plugin;
+    plugin.handle =
+        util::platform::OpenLibrary("/media/panos/c8ab071b-3a55-4a04-a6d9-9eed1a64a9fa/panosa/Projects/gfxreconstruct/"
+                                    "build/plugins/perfetto/libgfxrecon_perfetto_plugin.so");
+    assert(plugin.handle);
+
+    const size_t n_funcs = sizeof(plugins::func_table_pre) / sizeof(plugins::func_table_pre[0]);
+    for (const char* name : plugins::func_table_pre)
+    {
+        // printf("name: %s\n", name);
+        plugin.funcs_pre[name] =
+            reinterpret_cast<PFN_vkVoidFunction>(util::platform::GetProcAddress(plugin.handle, name));
+    }
+    // assert(plugin.funcs_pre["CreateInstance_PreCall"]);
+    loaded_plugins_.push_back(std::move(plugin));
+    // assert(loaded_plugins_[0].funcs_pre["CreateInstance_PreCall"]);
+}
+
 bool CaptureManager::Initialize(std::string base_filename, const CaptureSettings::TraceSettings& trace_settings)
 {
     bool success = true;
@@ -377,6 +396,8 @@ bool CaptureManager::Initialize(std::string base_filename, const CaptureSettings
     {
         capture_mode_ = kModeDisabled;
     }
+
+    LoadPlugins();
 
     return success;
 }

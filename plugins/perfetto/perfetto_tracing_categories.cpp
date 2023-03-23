@@ -21,7 +21,7 @@
 ** DEALINGS IN THE SOFTWARE.
 */
 
-#include "encode/perfetto/perfetto_tracing_categories.h"
+#include "perfetto_tracing_categories.h"
 
 #if !defined(WIN32)
 

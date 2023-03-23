@@ -21,8 +21,8 @@
 ** DEALINGS IN THE SOFTWARE.
 */
 
-#include "encode/perfetto/perfetto_encoder_commands.h"
-#include "encode/perfetto/perfetto_tracing_categories.h"
+#include "perfetto_encoder_commands.h"
+#include "perfetto_tracing_categories.h"
 #include "encode/vulkan_capture_manager.h"
 #include "format/api_call_id.h"
 #include "util/defines.h"
@@ -30,7 +30,10 @@
 #include <thread>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
-GFXRECON_BEGIN_NAMESPACE(encode)
+GFXRECON_BEGIN_NAMESPACE(plugins)
+GFXRECON_BEGIN_NAMESPACE(plugin_perfetto)
+
+using namespace encode;
 
 #if !defined(WIN32)
 
@@ -149,5 +152,6 @@ void Process_QueueSubmit(
 
 #endif // !defined(WIN32)
 
+GFXRECON_END_NAMESPACE(plugin_perfetto)
+GFXRECON_END_NAMESPACE(plugins)
 GFXRECON_END_NAMESPACE(gfxrecon)
-GFXRECON_END_NAMESPACE(encode)

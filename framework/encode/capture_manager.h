@@ -36,6 +36,8 @@
 #include "util/defines.h"
 #include "util/file_output_stream.h"
 #include "util/keyboard.h"
+#include "util/platform.h"
+#include "plugins_func_table.h"
 
 #include <atomic>
 #include <cassert>
@@ -144,6 +146,16 @@ class CaptureManager
 
     uint64_t GetBlockIndex() const { return block_index_; }
     bool     GetEmitPerfettoData() const { return emit_perfetto_data_; }
+
+    struct loaded_plugin
+    {
+        util::platform::LibraryHandle                       handle;
+        std::unordered_map<std::string, PFN_vkVoidFunction> funcs_pre;
+        std::unordered_map<std::string, PFN_vkVoidFunction> funcs_post;
+    };
+
+    std::vector<loaded_plugin> loaded_plugins_;
+    void                       LoadPlugins();
 
   protected:
     typedef std::shared_mutex ApiCallMutexT;
