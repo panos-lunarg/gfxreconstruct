@@ -131,7 +131,7 @@ endif()
 
 # Define a static library for Perfetto.
 
-if(UNIX)
+if (UNIX)
     add_library(perfetto STATIC ${CMAKE_SOURCE_DIR}/external/perfetto/perfetto.cc)
 endif()
 

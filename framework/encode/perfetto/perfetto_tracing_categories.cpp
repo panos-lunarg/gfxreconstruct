@@ -23,4 +23,8 @@
 
 #include "encode/perfetto/perfetto_tracing_categories.h"
 
+#if !defined(WIN32)
+
 PERFETTO_TRACK_EVENT_STATIC_STORAGE();
+
+#endif
