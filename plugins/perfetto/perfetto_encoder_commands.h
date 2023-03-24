@@ -62,7 +62,7 @@ struct PerfettoEncoderPostCall
 void Process_QueueSubmit(
     VulkanCaptureManager* manager, VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence);
 
-void InitializePerfetto(VulkanCaptureManager* manager);
+void InitializePerfetto();
 
 template <>
 struct PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkCreateInstance>
@@ -70,8 +70,8 @@ struct PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkCreateInstance>
     template <typename... Args>
     static void Dispatch(VulkanCaptureManager* manager, Args... args)
     {
-        // TRACE_EVENT_BEGIN("GFXR", "vkCreateInstance", "Command ID:", manager->GetBlockIndex());
-        InitializePerfetto(manager);
+        InitializePerfetto();
+        TRACE_EVENT_BEGIN("GFXR", "vkCreateInstance", "Command ID:", manager->GetBlockIndex());
     }
 };
 
@@ -81,11 +81,7 @@ struct PerfettoEncoderPostCall<format::ApiCallId::ApiCall_vkCreateInstance>
     template <typename... Args>
     static void Dispatch(VulkanCaptureManager* manager, VkResult result, Args... args)
     {
-        if (result == VK_SUCCESS)
-        {
-            InitializePerfetto(manager);
-        }
-
+        InitializePerfetto();
         TRACE_EVENT_END("GFXR");
     }
 };

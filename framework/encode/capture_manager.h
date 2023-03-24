@@ -37,7 +37,7 @@
 #include "util/file_output_stream.h"
 #include "util/keyboard.h"
 #include "util/platform.h"
-#include "plugins_func_table.h"
+#include "plugins_entry_point_tables.h"
 
 #include <atomic>
 #include <cassert>
@@ -149,9 +149,9 @@ class CaptureManager
 
     struct loaded_plugin
     {
-        util::platform::LibraryHandle                       handle;
-        std::unordered_map<std::string, PFN_vkVoidFunction> funcs_pre;
-        std::unordered_map<std::string, PFN_vkVoidFunction> funcs_post;
+        util::platform::LibraryHandle   handle;
+        plugins::plugin_func_table_pre  func_table_pre;
+        plugins::plugin_func_table_post func_table_post;
     };
 
     std::vector<loaded_plugin> loaded_plugins_;

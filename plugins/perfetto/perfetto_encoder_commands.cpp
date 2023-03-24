@@ -24,7 +24,6 @@
 #include "perfetto_encoder_commands.h"
 #include "perfetto_tracing_categories.h"
 #include "encode/vulkan_capture_manager.h"
-#include "format/api_call_id.h"
 #include "util/defines.h"
 
 #include <thread>
@@ -37,13 +36,11 @@ using namespace encode;
 
 #if !defined(WIN32)
 
-void InitializePerfetto(VulkanCaptureManager* manager)
+void InitializePerfetto()
 {
     static bool initialized = false;
 
-    assert(manager);
-
-    if (!initialized && manager->GetEmitPerfettoData())
+    if (!initialized)
     {
         // Initialize perfetto
         perfetto::TracingInitArgs args;
@@ -113,7 +110,7 @@ void Process_QueueSubmit(
         DeviceWrapper* device_wrapper = queue_wrapper->device_wrapper;
         assert(device_wrapper);
 
-        if (queue_wrapper->layer_table_ref->WaitSemaphores != noop::WaitSemaphores && sem != VK_NULL_HANDLE)
+        if (queue_wrapper->layer_table_ref->WaitSemaphores != encode::noop::WaitSemaphores && sem != VK_NULL_HANDLE)
         {
             SemaphoreWrapper* sem_wrapper = reinterpret_cast<SemaphoreWrapper*>(sem);
             assert(sem_wrapper);
