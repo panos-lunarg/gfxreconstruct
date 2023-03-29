@@ -227,6 +227,13 @@ if (MSVC)
     endif()
 endif()
 
+if (TARGET ZLIB::ZLIB)
+    target_compile_definitions(gfxrecon_decode
+                               PUBLIC
+                                   ENABLE_PNG_SCREENSHOT
+                                   MAX_SCREENSHOT_THREADS=${MAX_SCREENSHOT_THREADS})
+endif()
+
 target_include_directories(gfxrecon_decode
                            PUBLIC
                                ${CMAKE_SOURCE_DIR}/framework

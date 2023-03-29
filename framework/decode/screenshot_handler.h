@@ -31,6 +31,8 @@
 
 #include "vulkan/vulkan.h"
 
+#include <atomic>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -41,13 +43,28 @@ GFXRECON_BEGIN_NAMESPACE(decode)
 class ScreenshotHandler : public ScreenshotHandlerBase
 {
   public:
-    ScreenshotHandler(ScreenshotFormat screenshot_format, const std::vector<ScreenshotRange>& screenshot_ranges) :
+    ScreenshotHandler(util::ScreenshotFormat screenshot_format, const std::vector<ScreenshotRange>& screenshot_ranges) :
         ScreenshotHandlerBase(screenshot_format, screenshot_ranges)
-    {}
+    {
+#if defined(MAX_SCREENSHOT_THREADS) && MAX_SCREENSHOT_THREADS > 1
+        StartThreads();
+#endif
+    }
 
-    ScreenshotHandler(ScreenshotFormat screenshot_format, std::vector<ScreenshotRange>&& screenshot_ranges) :
+    ScreenshotHandler(util::ScreenshotFormat screenshot_format, std::vector<ScreenshotRange>&& screenshot_ranges) :
         ScreenshotHandlerBase(screenshot_format, screenshot_ranges)
-    {}
+    {
+#if defined(MAX_SCREENSHOT_THREADS) && MAX_SCREENSHOT_THREADS > 1
+        StartThreads();
+#endif
+    }
+
+    ~ScreenshotHandler()
+    {
+#if defined(MAX_SCREENSHOT_THREADS) && MAX_SCREENSHOT_THREADS > 1
+        StopThreads();
+#endif
+    }
 
     void WriteImage(const std::string&                      filename_prefix,
                     VkDevice                                device,
@@ -112,6 +129,14 @@ class ScreenshotHandler : public ScreenshotHandlerBase
 
   private:
     CommandPools copy_resources_;
+
+#if defined(MAX_SCREENSHOT_THREADS) && MAX_SCREENSHOT_THREADS > 1
+    void StartThreads();
+    void StopThreads();
+
+    std::atomic_bool         pending_screenshot_;
+    std::vector<std::thread> screenshot_write_threads_;
+#endif
 };
 
 GFXRECON_END_NAMESPACE(decode)

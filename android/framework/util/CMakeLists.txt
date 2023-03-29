@@ -51,11 +51,13 @@ target_sources(gfxrecon_util
 target_compile_definitions(gfxrecon_util
                            PUBLIC
                                ENABLE_LZ4_COMPRESSION
-                               ENABLE_ZLIB_COMPRESSION)
+                               ENABLE_ZLIB_COMPRESSION
+                               ENABLE_PNG_SCREENSHOT)
 
 target_include_directories(gfxrecon_util
                            PUBLIC
                                ${GFXRECON_SOURCE_DIR}/external/precompiled/android/include
+                               ${GFXRECON_SOURCE_DIR}/external/stb
                                ${GFXRECON_SOURCE_DIR}/framework)
 
 target_link_libraries(gfxrecon_util

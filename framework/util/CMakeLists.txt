@@ -177,9 +177,13 @@ endif()
 if (TARGET ZLIB::ZLIB)
     target_compile_definitions(gfxrecon_util
                                PUBLIC
-                                   ENABLE_ZLIB_COMPRESSION
+                                   ENABLE_ZLIB_COMPRESSION ENABLE_PNG_SCREENSHOT
                                    $<$<BOOL:${WIN32}>:ZLIB_WINAPI>)
     target_link_libraries(gfxrecon_util ZLIB::ZLIB)
+
+    target_include_directories(gfxrecon_util
+                               PUBLIC
+                                   ${CMAKE_SOURCE_DIR}/external/stb)
 endif()
 
 if (TARGET ZSTD::ZSTD)

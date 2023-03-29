@@ -42,6 +42,9 @@ set(GFXRECONSTRUCT_PROJECT_VERSION_MAJOR 0)
 set(GFXRECONSTRUCT_PROJECT_VERSION_MINOR 9)
 set(GFXRECONSTRUCT_PROJECT_VERSION_PATCH 19)
 
+# Replay settings that can be modified
+set(MAX_SCREENSHOT_THREADS 4)
+
 set(GFXRECON_PROJECT_VERSION_SHA1 "unknown-build-source")
 
 option(BUILD_STATIC "Build static binaries for HPC clusters (will not build the tracer library)" OFF)
@@ -198,6 +201,7 @@ endif() # WIN32
 
 find_package(LZ4)
 find_package(ZSTD)
+find_package(PNG)
 
 if(UNIX)
     option(BUILD_WSI_XCB_SUPPORT "Build XCB WSI support" ON)

@@ -38,9 +38,120 @@ static constexpr size_t kUnormIndex = 0;
 static constexpr size_t kSrgbIndex  = 1;
 
 const VkFormat kImageFormats[][2] = {
-    // Vulkan image formats for ScreenshotFormat::kBmp
-    { VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_SRGB }
+    // Vulkan image formats for util::ScreenshotFormat::kBmp
+    { VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_SRGB },
+    // Vulkan image formats for util::ScreenshotFormat::kPng
+    { VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_R8G8B8A8_SRGB }
 };
+
+inline void OutputImage(const std::string&     filename,
+                        util::ScreenshotFormat file_format,
+                        uint32_t               width,
+                        uint32_t               height,
+                        uint64_t               size,
+                        void*                  data)
+{
+    switch (file_format)
+    {
+        default:
+            GFXRECON_LOG_ERROR("Screenshot format invalid!  Expected BMP or PNG, falling back to BMP.");
+            // Intentional fall-through
+        case util::ScreenshotFormat::kBmp:
+            if (!util::imagewriter::WriteBmpImage(filename + ".bmp", width, height, size, data))
+            {
+                GFXRECON_LOG_ERROR("Screenshot could not be created: failed to write BMP file %s", filename.c_str());
+            }
+            break;
+#ifdef ENABLE_PNG_SCREENSHOT
+        case util::ScreenshotFormat::kPng:
+            // For PNG format, we have to force the alpha channel to opaque, otherwise we get
+            // image artifacts on most image viewers from the transparency for anything that was
+            // rendered last to the image using transparency (think tree leaves).
+            uint32_t* working_data = reinterpret_cast<uint32_t*>(data);
+            for (uint32_t y = 0; y < height; ++y)
+            {
+                for (uint32_t x = 0; x < width; ++x)
+                {
+                    working_data[y * width + x] |= 0xFF000000;
+                }
+            }
+            if (!util::imagewriter::WritePngImage(filename + ".png", width, height, size, data))
+            {
+                GFXRECON_LOG_ERROR("Screenshot could not be created: failed to write PNG file %s", filename.c_str());
+            }
+            break;
+#endif // ENABLE_PNG_SCREENSHOT
+    }
+}
+
+#if defined(MAX_SCREENSHOT_THREADS) && MAX_SCREENSHOT_THREADS > 1
+struct ScreenshotImageThreadData
+{
+    bool                   valid = false;
+    std::string            filename;
+    util::ScreenshotFormat file_format;
+    std::vector<uint8_t>   data;
+    uint32_t               width  = 0;
+    uint32_t               height = 0;
+    size_t                 size   = 0;
+};
+std::atomic_bool                              g_exiting;
+static std::vector<ScreenshotImageThreadData> g_screenshot_thread_info;
+std::mutex                                    g_screenshot_write_mutex;
+
+static void WriteImageThread(int32_t index)
+{
+    while (!g_exiting)
+    {
+        bool valid = false;
+        {
+            std::unique_lock<std::mutex> lock(g_screenshot_write_mutex);
+            valid = g_screenshot_thread_info[index].valid;
+        }
+        // Do it this way so we're not sleeping while holding onto the lock
+        if (!valid)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+        OutputImage(g_screenshot_thread_info[index].filename,
+                    g_screenshot_thread_info[index].file_format,
+                    g_screenshot_thread_info[index].width,
+                    g_screenshot_thread_info[index].height,
+                    g_screenshot_thread_info[index].size,
+                    g_screenshot_thread_info[index].data.data());
+        {
+            std::unique_lock<std::mutex> lock(g_screenshot_write_mutex);
+            g_screenshot_thread_info[index].valid = false;
+        }
+    }
+}
+
+void ScreenshotHandler::StartThreads()
+{
+    pending_screenshot_ = false;
+    g_exiting           = false;
+    g_screenshot_thread_info.resize(MAX_SCREENSHOT_THREADS);
+    for (uint32_t ii = 0; ii < MAX_SCREENSHOT_THREADS; ++ii)
+    {
+        std::thread th(WriteImageThread, ii);
+        screenshot_write_threads_.push_back(std::move(th));
+    }
+}
+
+void ScreenshotHandler::StopThreads()
+{
+    g_exiting = true;
+    while (pending_screenshot_)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    for (uint32_t ii = 0; ii < screenshot_write_threads_.size(); ++ii)
+    {
+        screenshot_write_threads_[ii].join();
+    }
+}
+#endif // defined(MAX_SCREENSHOT_THREADS) && MAX_SCREENSHOT_THREADS > 1
 
 void ScreenshotHandler::WriteImage(const std::string&                      filename_prefix,
                                    VkDevice                                device,
@@ -345,14 +456,34 @@ void ScreenshotHandler::WriteImage(const std::string&                      filen
                                 1, &invalidate_range, &copy_resource.buffer_memory_data);
                         }
 
-                        std::string filename = filename_prefix;
-                        filename += ".bmp";
-
-                        if (!util::imagewriter::WriteBmpImage(filename, width, height, copy_resource.buffer_size, data))
+#if defined(MAX_SCREENSHOT_THREADS) && MAX_SCREENSHOT_THREADS > 1
+                        pending_screenshot_         = true;
+                        bool image_waiting_to_write = true;
+                        while (image_waiting_to_write)
                         {
-                            GFXRECON_LOG_ERROR("Screenshot could not be created: failed to write file %s",
-                                               filename.c_str());
+                            std::unique_lock<std::mutex> lock(g_screenshot_write_mutex);
+                            for (auto& thread_info : g_screenshot_thread_info)
+                            {
+                                if (!thread_info.valid)
+                                {
+                                    thread_info.data.resize(copy_resource.buffer_size);
+                                    memcpy(thread_info.data.data(), data, copy_resource.buffer_size);
+                                    thread_info.filename    = filename_prefix;
+                                    thread_info.file_format = screenshot_format_;
+                                    thread_info.width       = width;
+                                    thread_info.height      = height;
+                                    thread_info.size        = copy_resource.buffer_size;
+                                    thread_info.valid       = true;
+                                    image_waiting_to_write  = false;
+                                    break;
+                                }
+                            }
                         }
+                        pending_screenshot_ = false;
+#else
+                        OutputImage(
+                            filename_prefix, screenshot_format_, width, height, copy_resource.buffer_size, data);
+#endif
 
                         allocator->UnmapResourceMemoryDirect(copy_resource.buffer_data);
                     }

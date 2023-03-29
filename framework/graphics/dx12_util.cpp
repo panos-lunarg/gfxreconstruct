@@ -36,7 +36,8 @@ void TakeScreenshot(std::unique_ptr<graphics::DX12ImageRenderer>& image_renderer
                     ID3D12CommandQueue*                           queue,
                     IDXGISwapChain*                               swapchain,
                     uint32_t                                      frame_num,
-                    const std::string&                            filename_prefix)
+                    const std::string&                            filename_prefix,
+                    util::ScreenshotFormat                        screenshot_format)
 {
     if (queue != nullptr && swapchain != nullptr)
     {
@@ -104,14 +105,53 @@ void TakeScreenshot(std::unique_ptr<graphics::DX12ImageRenderer>& image_renderer
 
                             filename += "_frame_";
                             filename += std::to_string(frame_num);
-                            filename += ".bmp";
 
-                            util::imagewriter::WriteBmpImage(filename,
-                                                             static_cast<unsigned int>(fb_desc.Width),
-                                                             static_cast<unsigned int>(fb_desc.Height),
-                                                             datasize,
-                                                             std::data(captured_image.data),
-                                                             static_cast<unsigned int>(pitch));
+                            switch (screenshot_format)
+                            {
+                                default:
+                                    GFXRECON_LOG_ERROR(
+                                        "Screenshot format invalid!  Expected BMP or PNG, falling back to BMP.");
+                                    // Intentional fall-through
+                                case util::ScreenshotFormat::kBmp:
+                                    filename += ".bmp";
+                                    if (!util::imagewriter::WriteBmpImage(filename,
+                                                                          static_cast<unsigned int>(fb_desc.Width),
+                                                                          static_cast<unsigned int>(fb_desc.Height),
+                                                                          datasize,
+                                                                          std::data(captured_image.data),
+                                                                          static_cast<unsigned int>(pitch)))
+                                    {
+                                        GFXRECON_LOG_ERROR(
+                                            "Screenshot could not be created: failed to write BMP file %s",
+                                            filename.c_str());
+                                    }
+                                    break;
+                                case util::ScreenshotFormat::kPng:
+                                    // For PNG format, we have to force the alpha channel to opaque, otherwise we get
+                                    // image artifacts on most image viewers from the transparency for anything that was
+                                    // rendered last to the image using transparency (think tree leaves).
+                                    for (uint32_t y = 0; y < height; ++y)
+                                    {
+                                        uint32_t* working_data = reinterpret_cast<uint32_t*>(data) + y * pitch;
+                                        for (uint32_t x = 0; x < width; ++x)
+                                        {
+                                            working_data[x] |= 0xFF000000;
+                                        }
+                                    }
+                                    filename += ".png";
+                                    if (!util::imagewriter::WritePngImage(filename,
+                                                                          static_cast<unsigned int>(fb_desc.Width),
+                                                                          static_cast<unsigned int>(fb_desc.Height),
+                                                                          datasize,
+                                                                          std::data(captured_image.data),
+                                                                          static_cast<unsigned int>(pitch)))
+                                    {
+                                        GFXRECON_LOG_ERROR(
+                                            "Screenshot could not be created: failed to write PNG file %s",
+                                            filename.c_str());
+                                    }
+                                    break;
+                            }
                         }
                     }
                 }
@@ -890,7 +930,8 @@ bool IsUma(ID3D12Device* device)
     }
     else
     {
-        GFXRECON_LOG_ERROR("CheckFeatureSupport(D3D12_FEATURE_ARCHITECTURE,...) failed with result: %ld. The GPU will be assumed to be non-UMA.",
+        GFXRECON_LOG_ERROR("CheckFeatureSupport(D3D12_FEATURE_ARCHITECTURE,...) failed with result: %ld. The GPU will "
+                           "be assumed to be non-UMA.",
                            static_cast<long>(result));
     }
     return isUma;
@@ -903,7 +944,7 @@ uint64_t GetAvailableGpuAdapterMemory(IDXGIAdapter3* adapter, const bool is_uma)
     if (adapter != nullptr)
     {
         DXGI_QUERY_VIDEO_MEMORY_INFO video_memory_info = {};
-        DXGI_MEMORY_SEGMENT_GROUP memory_segment       = DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL;
+        DXGI_MEMORY_SEGMENT_GROUP    memory_segment    = DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL;
         if (is_uma)
         {
             memory_segment = DXGI_MEMORY_SEGMENT_GROUP_LOCAL;

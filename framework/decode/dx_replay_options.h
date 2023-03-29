@@ -27,6 +27,7 @@
 #include "decode/replay_options.h"
 
 #include "util/defines.h"
+#include "util/options.h"
 
 #include <vector>
 #include <string>
@@ -42,7 +43,7 @@ struct DxReplayOptions : public ReplayOptions
     std::vector<int32_t> AllowedDebugMessages;
     std::vector<int32_t> DeniedDebugMessages;
 
-    ScreenshotFormat             screenshot_format{ ScreenshotFormat::kBmp };
+    util::ScreenshotFormat       screenshot_format{ ScreenshotFormat::kBmp };
     std::vector<ScreenshotRange> screenshot_ranges;
     std::string                  screenshot_dir;
     std::string                  screenshot_file_prefix{ kDefaultScreenshotFilePrefix };
