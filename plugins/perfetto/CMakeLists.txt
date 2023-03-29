@@ -40,16 +40,17 @@ target_sources(gfxrecon_perfetto_plugin
                     ${CMAKE_CURRENT_LIST_DIR}/perfetto_tracing_categories.cpp
 )
 
-add_library(perfetto STATIC ${CMAKE_CURRENT_LIST_DIR}/../external/perfetto/perfetto.cc)
+add_library(perfetto STATIC ${CMAKE_CURRENT_LIST_DIR}/../external/perfetto/sdk/perfetto.cc)
 
 target_compile_definitions(gfxrecon_perfetto_plugin PRIVATE VK_NO_PROTOTYPES VK_ENABLE_BETA_EXTENSIONS)
+
 target_include_directories(gfxrecon_perfetto_plugin
                            PUBLIC
                                ${CMAKE_SOURCE_DIR}/plugins
-                               ${CMAKE_CURRENT_LIST_DIR}/../external/perfetto
+                               ${CMAKE_CURRENT_LIST_DIR}/../external/perfetto/sdk
                                ${CMAKE_SOURCE_DIR}/external/Vulkan-Headers/include
                                ${CMAKE_SOURCE_DIR}/framework)
 
-target_link_libraries(gfxrecon_perfetto_plugin gfxrecon_util perfetto)
+target_link_libraries(gfxrecon_perfetto_plugin gfxrecon_util gfxrecon_encode perfetto)
 
 common_build_directives(gfxrecon_perfetto_plugin)

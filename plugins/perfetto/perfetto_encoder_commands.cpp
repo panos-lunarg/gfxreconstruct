@@ -24,9 +24,10 @@
 #include "perfetto_encoder_commands.h"
 #include "perfetto_tracing_categories.h"
 #include "encode/vulkan_capture_manager.h"
+#include "generated/generated_vulkan_struct_handle_wrappers.h"
 #include "util/defines.h"
 
-#include <thread>
+#include <sstream>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(plugins)
@@ -56,95 +57,33 @@ void InitializePerfetto()
 void Process_QueueSubmit(
     VulkanCaptureManager* manager, VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence)
 {
+
+    TRACE_EVENT_INSTANT("GFXR", "vkQueueSubmit", [&](perfetto::EventContext ctx) {
+        const std::string command_index = std::to_string(manager->GetBlockIndex());
+        ctx.AddDebugAnnotation("vkQueueSubmit:", command_index.c_str());
+
+        auto                handle_unwrap_memory = VulkanCaptureManager::Get()->GetHandleUnwrapMemory();
+        const VkSubmitInfo* pSubmits_unwrapped = UnwrapStructArrayHandles(pSubmits, submitCount, handle_unwrap_memory);
+
+        std::vector<std::string> names, handles;
+        for (uint32_t i = 0; i < pSubmits_unwrapped->commandBufferCount; ++i)
+        {
+            names.push_back("vkCommandBuffer: " + std::to_string(i));
+            std::stringstream ss;
+            ss << std::hex << pSubmits_unwrapped->pCommandBuffers[i];
+            handles.push_back(ss.str());
+            ctx.AddDebugAnnotation(names[i].c_str(), perfetto::DynamicString{ handles[i].c_str() });
+        }
+    });
+}
+
+void Process_QueuePresent(VulkanCaptureManager* manager, VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
+{
+    assert(manager);
+
     const uint64_t    command_index = manager->GetBlockIndex();
-    const std::string submit_name   = "QueueSubmit: " + std::to_string(command_index);
-
-    // Piggyback fence
-    if (fence != VK_NULL_HANDLE)
-    {
-        QueueWrapper* queue_wrapper = reinterpret_cast<QueueWrapper*>(queue);
-        assert(queue_wrapper);
-
-        DeviceWrapper* device_wrapper = queue_wrapper->device_wrapper;
-        assert(device_wrapper);
-
-        FenceWrapper* fence_wrapper = reinterpret_cast<FenceWrapper*>(fence);
-        assert(fence_wrapper);
-
-        TRACE_EVENT_INSTANT("GFXR", perfetto::DynamicString{ submit_name.c_str() }, "Command ID:", command_index);
-        TRACE_EVENT_BEGIN("GFXR",
-                          perfetto::DynamicString{ submit_name.c_str() },
-                          perfetto::Track(command_index),
-                          "Command ID:",
-                          command_index);
-
-        std::thread worker_thread([=] {
-            queue_wrapper->layer_table_ref->WaitForFences(
-                device_wrapper->handle, 1, &fence_wrapper->handle, VK_TRUE, UINT64_MAX);
-
-            // Close the slice for the request now that we finished handling it.
-            TRACE_EVENT_END("GFXR", perfetto::Track(command_index));
-        });
-
-        worker_thread.detach();
-    }
-    else
-    {
-        // Piggyback a signal semaphore
-        VkSemaphore sem = VK_NULL_HANDLE;
-        if (submitCount && pSubmits)
-        {
-            for (uint32_t i = 0; i < submitCount; ++i)
-            {
-                if (pSubmits[i].signalSemaphoreCount && pSubmits[i].pSignalSemaphores)
-                {
-                    sem = pSubmits[i].pSignalSemaphores[0];
-                    break;
-                }
-            }
-        }
-
-        QueueWrapper* queue_wrapper = reinterpret_cast<QueueWrapper*>(queue);
-        assert(queue_wrapper);
-
-        DeviceWrapper* device_wrapper = queue_wrapper->device_wrapper;
-        assert(device_wrapper);
-
-        if (queue_wrapper->layer_table_ref->WaitSemaphores != encode::noop::WaitSemaphores && sem != VK_NULL_HANDLE)
-        {
-            SemaphoreWrapper* sem_wrapper = reinterpret_cast<SemaphoreWrapper*>(sem);
-            assert(sem_wrapper);
-
-            TRACE_EVENT_INSTANT("GFXR", perfetto::DynamicString{ submit_name.c_str() }, "Command ID:", command_index);
-            TRACE_EVENT_BEGIN("GFXR",
-                              perfetto::DynamicString{ submit_name.c_str() },
-                              perfetto::Track(command_index),
-                              "Command ID:",
-                              command_index);
-
-            std::thread worker_thread([=] {
-                const uint64_t            value[]   = { 1 };
-                const VkSemaphoreWaitInfo wait_info = { VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO,
-                                                        nullptr,
-                                                        VkSemaphoreWaitFlags(0),
-                                                        1,
-                                                        &sem_wrapper->handle,
-                                                        value };
-                queue_wrapper->layer_table_ref->WaitSemaphores(device_wrapper->handle, &wait_info, UINT64_MAX);
-
-                // Close the slice for the request now that we finished handling it.
-                TRACE_EVENT_END("GFXR", perfetto::Track(command_index));
-            });
-
-            worker_thread.detach();
-        }
-        else
-        {
-            // Nothing to piggyback
-            GFXRECON_LOG_WARNING("No perfetto data emitted for vkQueueSubmit(%" PRIu64 ")", command_index);
-            TRACE_EVENT_INSTANT("GFXR", perfetto::DynamicString{ submit_name.c_str() }, "Command ID:", command_index);
-        }
-    }
+    const std::string submit_name   = "QueuePresent: " + std::to_string(command_index);
+    TRACE_EVENT_INSTANT("GFXR", perfetto::DynamicString{ submit_name.c_str() }, "Command ID:", command_index);
 }
 
 #endif // !defined(WIN32)

@@ -28,7 +28,7 @@
 
 #include "perfetto.h"
 
-PERFETTO_DEFINE_CATEGORIES(perfetto::Category("GFXR").SetDescription("Object creation duration"));
+PERFETTO_DEFINE_CATEGORIES(perfetto::Category("GFXR").SetDescription("GFXR Queue submissions"));
 
 #endif
 

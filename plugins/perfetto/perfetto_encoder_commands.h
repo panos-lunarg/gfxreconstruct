@@ -25,7 +25,6 @@
 #define GFXRECON_ENCODE_CUSTOM_PERFETTO_VULKAN_ENCODER_COMMANDS_H
 
 #include "encode/vulkan_capture_manager.h"
-#include "perfetto_tracing_categories.h"
 #include "format/api_call_id.h"
 #include "util/defines.h"
 
@@ -59,10 +58,10 @@ struct PerfettoEncoderPostCall
 
 #if !defined(WIN32)
 
+void InitializePerfetto();
 void Process_QueueSubmit(
     VulkanCaptureManager* manager, VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence);
-
-void InitializePerfetto();
+void Process_QueuePresent(VulkanCaptureManager* manager, VkQueue queue, const VkPresentInfoKHR* pPresentInfo);
 
 template <>
 struct PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkCreateInstance>
@@ -71,7 +70,6 @@ struct PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkCreateInstance>
     static void Dispatch(VulkanCaptureManager* manager, Args... args)
     {
         InitializePerfetto();
-        TRACE_EVENT_BEGIN("GFXR", "vkCreateInstance", "Command ID:", manager->GetBlockIndex());
     }
 };
 
@@ -82,7 +80,6 @@ struct PerfettoEncoderPostCall<format::ApiCallId::ApiCall_vkCreateInstance>
     static void Dispatch(VulkanCaptureManager* manager, VkResult result, Args... args)
     {
         InitializePerfetto();
-        TRACE_EVENT_END("GFXR");
     }
 };
 
@@ -92,11 +89,7 @@ struct PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>
     template <typename... Args>
     static void Dispatch(VulkanCaptureManager* manager, Args... args)
     {
-        assert(manager);
-
-        const uint64_t    command_index = manager->GetBlockIndex();
-        const std::string submit_name   = "QueuePresent: " + std::to_string(command_index);
-        TRACE_EVENT_INSTANT("GFXR", perfetto::DynamicString{ submit_name.c_str() }, "Command ID:", command_index);
+        Process_QueuePresent(manager, args...);
     }
 };
 
