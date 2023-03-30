@@ -196,8 +196,8 @@ void VulkanStateWriter::WritePhysicalDeviceState(const VulkanStateTable& state_t
         // call and reference the same parameter buffer.
         if (processed.find(wrapper->create_parameters.get()) == processed.end())
         {
-            // Write command buffer creation call and add the parameter buffer to the processed set.
             WriteFunctionCall(wrapper->create_call_id, wrapper->create_parameters.get());
+            WriteHandleIdPair<PhysicalDeviceWrapper>(wrapper);
             processed.insert(wrapper->create_parameters.get());
         }
 
@@ -237,6 +237,7 @@ void VulkanStateWriter::WriteDeviceState(const VulkanStateTable& state_table)
 
         // Write device creation call.
         WriteFunctionCall(wrapper->create_call_id, wrapper->create_parameters.get());
+        WriteHandleIdPair<DeviceWrapper>(wrapper);
 
         // Idle device to ensure all pending work is complete prior to writing state snapshot.
         VkResult result = wrapper->layer_table.DeviceWaitIdle(wrapper->handle);
@@ -262,6 +263,8 @@ void VulkanStateWriter::WriteCommandBufferState(const VulkanStateTable& state_ta
             // Write command buffer creation call and add the parameter buffer to the processed set.
             WriteFunctionCall(wrapper->create_call_id, wrapper->create_parameters.get());
             processed.insert(wrapper->create_parameters.get());
+
+            WriteHandleIdPair<CommandBufferWrapper>(wrapper);
         }
 
         // Defer primary command buffer initialization until after secondary command buffers have been initialized.
@@ -359,6 +362,8 @@ void VulkanStateWriter::WriteFenceState(const VulkanStateTable& state_table)
             // flag.
             WriteCreateFence(device_wrapper->handle_id, wrapper->handle_id, signaled);
         }
+
+        WriteHandleIdPair<FenceWrapper>(wrapper);
     });
 }
 
@@ -380,6 +385,8 @@ void VulkanStateWriter::WriteEventState(const VulkanStateTable& state_table)
             // Write api call to signal the event.
             WriteSetEvent(device_wrapper->handle_id, wrapper->handle_id);
         }
+
+        WriteHandleIdPair<EventWrapper>(wrapper);
     });
 }
 
@@ -425,6 +432,8 @@ void VulkanStateWriter::WriteSemaphoreState(const VulkanStateTable& state_table)
         {
             signaled[wrapper->device].push_back(wrapper->handle_id);
         }
+
+        WriteHandleIdPair<SemaphoreWrapper>(wrapper);
     });
 
     if (!signaled.empty())
@@ -456,6 +465,8 @@ void VulkanStateWriter::WriteBufferViewState(const VulkanStateTable& state_table
         {
             // Write buffer view creation call.
             WriteFunctionCall(wrapper->create_call_id, wrapper->create_parameters.get());
+
+            WriteHandleIdPair<BufferViewWrapper>(wrapper);
         }
     });
 }
@@ -470,6 +481,8 @@ void VulkanStateWriter::WriteImageViewState(const VulkanStateTable& state_table)
         {
             // Write image view creation call.
             WriteFunctionCall(wrapper->create_call_id, wrapper->create_parameters.get());
+
+            WriteHandleIdPair<ImageViewWrapper>(wrapper);
         }
     });
 }
@@ -500,6 +513,8 @@ void VulkanStateWriter::WriteFramebufferState(const VulkanStateTable& state_tabl
 
             // Write framebuffer creation call.
             WriteFunctionCall(wrapper->create_call_id, wrapper->create_parameters.get());
+
+            WriteHandleIdPair<FramebufferWrapper>(wrapper);
         }
     });
 
@@ -540,6 +555,8 @@ void VulkanStateWriter::WritePipelineLayoutState(const VulkanStateTable& state_t
         }
 
         WriteFunctionCall(wrapper->create_call_id, wrapper->create_parameters.get());
+
+        WriteHandleIdPair<PipelineLayoutWrapper>(wrapper);
     });
 
     // Destroy any temporary resources that were created.
@@ -750,6 +767,8 @@ void VulkanStateWriter::WritePipelineState(const VulkanStateTable& state_table)
     {
         DestroyTemporaryDeviceObject(format::ApiCall_vkDestroyPipelineLayout, entry.first, entry.second);
     }
+
+    state_table.VisitWrappers([&](const PipelineWrapper* wrapper) { WriteHandleIdPair<PipelineWrapper>(wrapper); });
 }
 
 void VulkanStateWriter::WriteDescriptorSetState(const VulkanStateTable& state_table)
@@ -789,6 +808,8 @@ void VulkanStateWriter::WriteDescriptorSetState(const VulkanStateTable& state_ta
             // Write descriptor set creation call and add the parameter buffer to the processed set.
             WriteFunctionCall(wrapper->create_call_id, wrapper->create_parameters.get());
             processed.insert(wrapper->create_parameters.get());
+
+            WriteHandleIdPair<DescriptorSetWrapper>(wrapper);
         }
 
         // Write descriptor updates. This value will be processed by an EncodeStruct routine that expects all struct
@@ -1059,6 +1080,8 @@ void VulkanStateWriter::WriteDeviceMemoryState(const VulkanStateTable& state_tab
         }
 
         WriteFunctionCall(wrapper->create_call_id, wrapper->create_parameters.get());
+
+        WriteHandleIdPair<DeviceMemoryWrapper>(wrapper);
     });
 }
 
@@ -1076,6 +1099,8 @@ void VulkanStateWriter::WriteBufferState(const VulkanStateTable& state_table)
         }
 
         WriteFunctionCall(wrapper->create_call_id, wrapper->create_parameters.get());
+
+        WriteHandleIdPair<BufferWrapper>(wrapper);
     });
 }
 

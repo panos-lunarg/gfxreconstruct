@@ -1172,7 +1172,7 @@ class VulkanCaptureManager : public CaptureManager
     template <typename Wrapper>
     void WriteHandleIdPairs(VkResult result, uint32_t count, Wrapper** wrapped_handles)
     {
-        if (((GetCaptureMode() & kModeWrite) == kModeWrite) && result == VK_SUCCESS)
+        if (((GetCaptureMode() & kModeWrite) == kModeWrite) && result == VK_SUCCESS && wrapped_handles)
         {
             std::vector<format::CaptureIDHandleMapping::handle_id_pair> pairs;
             for (uint32_t i = 0; i < count; ++i)

@@ -292,6 +292,28 @@ class VulkanStateWriter
                                                      const void*      data);
 
     template <typename Wrapper>
+    void WriteHandleIdPair(const Wrapper* wrapped_handle)
+    {
+        const format::CaptureIDHandleMapping::handle_id_pair pair =
+            format::CaptureIDHandleMapping::handle_id_pair{ wrapped_handle->handle_id,
+                                                            reinterpret_cast<uint64_t>(wrapped_handle->handle) };
+
+        format::CaptureIDHandleMapping mapping;
+        mapping.meta_header.block_header.type = format::BlockType::kMetaDataBlock;
+        mapping.meta_header.block_header.size =
+            sizeof(mapping) + sizeof(format::CaptureIDHandleMapping::handle_id_pair);
+        mapping.meta_header.meta_data_id = format::MakeMetaDataId(format::ApiFamilyId::ApiFamily_Vulkan,
+                                                                  format::MetaDataType::kCaptureIDHandleMapping);
+        mapping.thread_id                = thread_id_;
+        mapping.pair_count               = 1;
+
+        output_stream_->Write(&mapping, sizeof(mapping));
+        output_stream_->Write(&pair, sizeof(format::CaptureIDHandleMapping::handle_id_pair));
+
+        ++blocks_written_;
+    }
+
+    template <typename Wrapper>
     void StandardCreateWrite(const VulkanStateTable& state_table)
     {
         std::set<util::MemoryOutputStream*> processed;
@@ -302,6 +324,8 @@ class VulkanStateWriter
             {
                 WriteFunctionCall(wrapper->create_call_id, wrapper->create_parameters.get());
                 processed.insert(wrapper->create_parameters.get());
+
+                WriteHandleIdPair<Wrapper>(wrapper);
             }
         });
     }
