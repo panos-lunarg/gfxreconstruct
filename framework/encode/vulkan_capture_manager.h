@@ -1169,6 +1169,34 @@ class VulkanCaptureManager : public CaptureManager
     void OverrideGetPhysicalDeviceSurfacePresentModesKHR(uint32_t* pPresentModeCount, VkPresentModeKHR* pPresentModes);
 #endif
 
+    template <typename Wrapper>
+    void WriteHandleIdPairs(VkResult result, uint32_t count, Wrapper** wrapped_handles)
+    {
+        if (((GetCaptureMode() & kModeWrite) == kModeWrite) && result == VK_SUCCESS)
+        {
+            std::vector<format::CaptureIDHandleMapping::handle_id_pair> pairs;
+            for (uint32_t i = 0; i < count; ++i)
+            {
+                pairs.emplace_back(format::CaptureIDHandleMapping::handle_id_pair{
+                    wrapped_handles[i]->handle_id, reinterpret_cast<uint64_t>(wrapped_handles[i]->handle) });
+            }
+
+            format::CaptureIDHandleMapping mappings;
+            mappings.meta_header.block_header.type = format::BlockType::kMetaDataBlock;
+            mappings.meta_header.block_header.size =
+                sizeof(mappings) + count * sizeof(format::CaptureIDHandleMapping::handle_id_pair);
+            mappings.meta_header.meta_data_id = format::MakeMetaDataId(format::ApiFamilyId::ApiFamily_Vulkan,
+                                                                       format::MetaDataType::kCaptureIDHandleMapping);
+            mappings.thread_id                = GetThreadData()->thread_id_;
+            mappings.pair_count               = count;
+
+            WriteToFile(&mappings, sizeof(mappings));
+            WriteToFile(pairs.data(), count * sizeof(format::CaptureIDHandleMapping::handle_id_pair));
+
+            ++block_index_;
+        }
+    }
+
   protected:
     VulkanCaptureManager() : CaptureManager(format::ApiFamilyId::ApiFamily_Vulkan) {}
 

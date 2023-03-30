@@ -137,6 +137,7 @@ enum class MetaDataType : uint16_t
     kCreateHardwareBufferCommand            = 24,
     kReserved25                             = 25,
     kDx12RuntimeInfoCommand                 = 26,
+    kCaptureIDHandleMapping                 = 27,
 };
 
 // MetaDataId is stored in the capture file and its type must be uint32_t to avoid breaking capture file compatibility.
@@ -337,9 +338,9 @@ struct DriverInfoBlock
 
 struct ExeFileInfoBlock
 {
-    MetaDataHeader              meta_header;
-    format::ThreadId            thread_id;
-    util::filepath::FileInfo    info_record;
+    MetaDataHeader           meta_header;
+    format::ThreadId         thread_id;
+    util::filepath::FileInfo info_record;
 };
 
 // Not a header because this command does not include a variable length data payload.
@@ -616,12 +617,24 @@ struct Dx12RuntimeInfoCommandHeader
     Dx12RuntimeInfo  runtime_info;
 };
 
+struct CaptureIDHandleMapping
+{
+    struct handle_id_pair
+    {
+        format::HandleId id;
+        uint64_t         handle;
+    };
+
+    MetaDataHeader   meta_header;
+    format::ThreadId thread_id;
+    uint32_t         pair_count;
+};
+
 // Restore size_t to normal behavior.
 #undef size_t
 
 #pragma pack(pop)
 
-GFXRECON_END_NAMESPACE(format)
-GFXRECON_END_NAMESPACE(gfxrecon)
+GFXRECON_END_NAMESPACE(format) GFXRECON_END_NAMESPACE(gfxrecon)
 
 #endif // GFXRECON_FORMAT_FORMAT_H

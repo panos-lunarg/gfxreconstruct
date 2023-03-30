@@ -189,6 +189,7 @@ class VulkanDecoderBase : public ApiDecoder
     virtual void DispatchDriverInfo(format::ThreadId thread_id, format::DriverInfoBlock& info) override {}
 
     virtual void DispatchExeFileInfo(format::ThreadId thread_id, format::ExeFileInfoBlock& info) override {}
+    virtual void AddHandleIdMappings(const std::vector<format::CaptureIDHandleMapping::handle_id_pair>& pairs) override;
 
   protected:
     const std::vector<VulkanConsumer*>& GetConsumers() const { return consumers_; }

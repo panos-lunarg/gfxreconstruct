@@ -66,7 +66,8 @@ class Dx12DecoderBase : public ApiDecoder
     virtual bool SupportsMetaDataId(format::MetaDataId meta_data_id) override
     {
         format::ApiFamilyId api = format::GetMetaDataApi(meta_data_id);
-        return (api == format::ApiFamilyId::ApiFamily_Dxgi) || (api == format::ApiFamilyId::ApiFamily_D3D12);
+        bool support = ((api == format::ApiFamilyId::ApiFamily_Dxgi) || (api == format::ApiFamilyId::ApiFamily_D3D12));
+        return support && format::GetMetaDataType(meta_data_id) != format::MetaDataType::kCaptureIDHandleMapping;
     }
 
     virtual void DecodeFunctionCall(format::ApiCallId  call_id,
@@ -207,6 +208,9 @@ class Dx12DecoderBase : public ApiDecoder
 
     virtual void
     DispatchGetDx12RuntimeInfo(const format::Dx12RuntimeInfoCommandHeader& dx12_runtime_info_header) override;
+
+    virtual void
+    AddHandleIdMappings(const std::vector<format::CaptureIDHandleMapping::handle_id_pair>& pairs) override{};
 
     virtual void SetCurrentBlockIndex(uint64_t block_index) override;
 

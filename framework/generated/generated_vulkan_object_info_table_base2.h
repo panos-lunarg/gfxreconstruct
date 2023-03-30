@@ -266,6 +266,238 @@ class VulkanObjectInfoTableBase2 : VulkanObjectInfoTableBase
     void VisitVideoSessionKHRInfo(std::function<void(const VideoSessionKHRInfo*)> visitor) const {  for (const auto& entry : videoSessionKHR_map_) { visitor(&entry.second); }  }
     void VisitVideoSessionParametersKHRInfo(std::function<void(const VideoSessionParametersKHRInfo*)> visitor) const {  for (const auto& entry : videoSessionParametersKHR_map_) { visitor(&entry.second); }  }
 
+    void InsertHandleIdPair(format::HandleId id, uint64_t handle)
+    {
+        if (accelerationStructureKHR_map_.find(id) != accelerationStructureKHR_map_.end())
+        {
+            accelerationStructureKHR_map_[id].capture_handle =
+                reinterpret_cast<AccelerationStructureKHRInfo::HandleType>(handle);
+        }
+
+        if (accelerationStructureNV_map_.find(id) != accelerationStructureNV_map_.end())
+        {
+            accelerationStructureNV_map_[id].capture_handle =
+                reinterpret_cast<AccelerationStructureNVInfo::HandleType>(handle);
+        }
+
+        if (buffer_map_.find(id) != buffer_map_.end())
+        {
+            buffer_map_[id].capture_handle = reinterpret_cast<BufferInfo::HandleType>(handle);
+        }
+
+        if (bufferView_map_.find(id) != bufferView_map_.end())
+        {
+            bufferView_map_[id].capture_handle = reinterpret_cast<BufferViewInfo::HandleType>(handle);
+        }
+
+        if (commandBuffer_map_.find(id) != commandBuffer_map_.end())
+        {
+            commandBuffer_map_[id].capture_handle = reinterpret_cast<CommandBufferInfo::HandleType>(handle);
+        }
+
+        if (commandPool_map_.find(id) != commandPool_map_.end())
+        {
+            commandPool_map_[id].capture_handle = reinterpret_cast<CommandPoolInfo::HandleType>(handle);
+        }
+
+        if (debugReportCallbackEXT_map_.find(id) != debugReportCallbackEXT_map_.end())
+        {
+            debugReportCallbackEXT_map_[id].capture_handle =
+                reinterpret_cast<DebugReportCallbackEXTInfo::HandleType>(handle);
+        }
+
+        if (debugUtilsMessengerEXT_map_.find(id) != debugUtilsMessengerEXT_map_.end())
+        {
+            debugUtilsMessengerEXT_map_[id].capture_handle =
+                reinterpret_cast<DebugUtilsMessengerEXTInfo::HandleType>(handle);
+        }
+
+        if (deferredOperationKHR_map_.find(id) != deferredOperationKHR_map_.end())
+        {
+            deferredOperationKHR_map_[id].capture_handle = reinterpret_cast<DeferredOperationKHRInfo::HandleType>(handle);
+        }
+
+        if (descriptorPool_map_.find(id) != descriptorPool_map_.end())
+        {
+            descriptorPool_map_[id].capture_handle = reinterpret_cast<DescriptorPoolInfo::HandleType>(handle);
+        }
+
+        if (descriptorSet_map_.find(id) != descriptorSet_map_.end())
+        {
+            descriptorSet_map_[id].capture_handle = reinterpret_cast<DescriptorSetInfo::HandleType>(handle);
+        }
+
+        if (descriptorSetLayout_map_.find(id) != descriptorSetLayout_map_.end())
+        {
+            descriptorSetLayout_map_[id].capture_handle = reinterpret_cast<DescriptorSetLayoutInfo::HandleType>(handle);
+        }
+
+        if (descriptorUpdateTemplate_map_.find(id) != descriptorUpdateTemplate_map_.end())
+        {
+            descriptorUpdateTemplate_map_[id].capture_handle =
+                reinterpret_cast<DescriptorUpdateTemplateInfo::HandleType>(handle);
+        }
+
+        if (device_map_.find(id) != device_map_.end())
+        {
+            device_map_[id].capture_handle = reinterpret_cast<DeviceInfo::HandleType>(handle);
+        }
+
+        if (deviceMemory_map_.find(id) != deviceMemory_map_.end())
+        {
+            deviceMemory_map_[id].capture_handle = reinterpret_cast<DeviceMemoryInfo::HandleType>(handle);
+        }
+
+        if (displayKHR_map_.find(id) != displayKHR_map_.end())
+        {
+            displayKHR_map_[id].capture_handle = reinterpret_cast<DisplayKHRInfo::HandleType>(handle);
+        }
+
+        if (displayModeKHR_map_.find(id) != displayModeKHR_map_.end())
+        {
+            displayModeKHR_map_[id].capture_handle = reinterpret_cast<DisplayModeKHRInfo::HandleType>(handle);
+        }
+
+        if (event_map_.find(id) != event_map_.end())
+        {
+            event_map_[id].capture_handle = reinterpret_cast<EventInfo::HandleType>(handle);
+        }
+
+        if (fence_map_.find(id) != fence_map_.end())
+        {
+            fence_map_[id].capture_handle = reinterpret_cast<FenceInfo::HandleType>(handle);
+        }
+
+        if (framebuffer_map_.find(id) != framebuffer_map_.end())
+        {
+            framebuffer_map_[id].capture_handle = reinterpret_cast<FramebufferInfo::HandleType>(handle);
+        }
+
+        if (image_map_.find(id) != image_map_.end())
+        {
+            image_map_[id].capture_handle = reinterpret_cast<ImageInfo::HandleType>(handle);
+        }
+
+        if (imageView_map_.find(id) != imageView_map_.end())
+        {
+            imageView_map_[id].capture_handle = reinterpret_cast<ImageViewInfo::HandleType>(handle);
+        }
+
+        if (indirectCommandsLayoutNV_map_.find(id) != indirectCommandsLayoutNV_map_.end())
+        {
+            indirectCommandsLayoutNV_map_[id].capture_handle =
+                reinterpret_cast<IndirectCommandsLayoutNVInfo::HandleType>(handle);
+        }
+
+        if (instance_map_.find(id) != instance_map_.end())
+        {
+            instance_map_[id].capture_handle = reinterpret_cast<InstanceInfo::HandleType>(handle);
+        }
+
+        if (micromapEXT_map_.find(id) != micromapEXT_map_.end())
+        {
+            micromapEXT_map_[id].capture_handle = reinterpret_cast<MicromapEXTInfo::HandleType>(handle);
+        }
+
+        if (opticalFlowSessionNV_map_.find(id) != opticalFlowSessionNV_map_.end())
+        {
+            opticalFlowSessionNV_map_[id].capture_handle = reinterpret_cast<OpticalFlowSessionNVInfo::HandleType>(handle);
+        }
+
+        if (performanceConfigurationINTEL_map_.find(id) != performanceConfigurationINTEL_map_.end())
+        {
+            performanceConfigurationINTEL_map_[id].capture_handle =
+                reinterpret_cast<PerformanceConfigurationINTELInfo::HandleType>(handle);
+        }
+
+        if (physicalDevice_map_.find(id) != physicalDevice_map_.end())
+        {
+            physicalDevice_map_[id].capture_handle = reinterpret_cast<PhysicalDeviceInfo::HandleType>(handle);
+        }
+
+        if (pipeline_map_.find(id) != pipeline_map_.end())
+        {
+            pipeline_map_[id].capture_handle = reinterpret_cast<PipelineInfo::HandleType>(handle);
+        }
+
+        if (pipelineCache_map_.find(id) != pipelineCache_map_.end())
+        {
+            pipelineCache_map_[id].capture_handle = reinterpret_cast<PipelineCacheInfo::HandleType>(handle);
+        }
+
+        if (pipelineLayout_map_.find(id) != pipelineLayout_map_.end())
+        {
+            pipelineLayout_map_[id].capture_handle = reinterpret_cast<PipelineLayoutInfo::HandleType>(handle);
+        }
+
+        if (privateDataSlot_map_.find(id) != privateDataSlot_map_.end())
+        {
+            privateDataSlot_map_[id].capture_handle = reinterpret_cast<PrivateDataSlotInfo::HandleType>(handle);
+        }
+
+        if (queryPool_map_.find(id) != queryPool_map_.end())
+        {
+            queryPool_map_[id].capture_handle = reinterpret_cast<QueryPoolInfo::HandleType>(handle);
+        }
+
+        if (queue_map_.find(id) != queue_map_.end())
+        {
+            queue_map_[id].capture_handle = reinterpret_cast<QueueInfo::HandleType>(handle);
+        }
+
+        if (renderPass_map_.find(id) != renderPass_map_.end())
+        {
+            renderPass_map_[id].capture_handle = reinterpret_cast<RenderPassInfo::HandleType>(handle);
+        }
+
+        if (sampler_map_.find(id) != sampler_map_.end())
+        {
+            sampler_map_[id].capture_handle = reinterpret_cast<SamplerInfo::HandleType>(handle);
+        }
+
+        if (samplerYcbcrConversion_map_.find(id) != samplerYcbcrConversion_map_.end())
+        {
+            samplerYcbcrConversion_map_[id].capture_handle =
+                reinterpret_cast<SamplerYcbcrConversionInfo::HandleType>(handle);
+        }
+
+        if (semaphore_map_.find(id) != semaphore_map_.end())
+        {
+            semaphore_map_[id].capture_handle = reinterpret_cast<SemaphoreInfo::HandleType>(handle);
+        }
+
+        if (shaderModule_map_.find(id) != shaderModule_map_.end())
+        {
+            shaderModule_map_[id].capture_handle = reinterpret_cast<ShaderModuleInfo::HandleType>(handle);
+        }
+
+        if (surfaceKHR_map_.find(id) != surfaceKHR_map_.end())
+        {
+            surfaceKHR_map_[id].capture_handle = reinterpret_cast<SurfaceKHRInfo::HandleType>(handle);
+        }
+
+        if (swapchainKHR_map_.find(id) != swapchainKHR_map_.end())
+        {
+            swapchainKHR_map_[id].capture_handle = reinterpret_cast<SwapchainKHRInfo::HandleType>(handle);
+        }
+
+        if (validationCacheEXT_map_.find(id) != validationCacheEXT_map_.end())
+        {
+            validationCacheEXT_map_[id].capture_handle = reinterpret_cast<ValidationCacheEXTInfo::HandleType>(handle);
+        }
+
+        if (videoSessionKHR_map_.find(id) != videoSessionKHR_map_.end())
+        {
+            videoSessionKHR_map_[id].capture_handle = reinterpret_cast<VideoSessionKHRInfo::HandleType>(handle);
+        }
+
+        if (videoSessionParametersKHR_map_.find(id) != videoSessionParametersKHR_map_.end())
+        {
+            videoSessionParametersKHR_map_[id].capture_handle =
+                reinterpret_cast<VideoSessionParametersKHRInfo::HandleType>(handle);
+        }
+    }
+
   protected:
      std::unordered_map<format::HandleId, AccelerationStructureKHRInfo> accelerationStructureKHR_map_;
      std::unordered_map<format::HandleId, AccelerationStructureNVInfo> accelerationStructureNV_map_;

@@ -6712,5 +6712,14 @@ void VulkanReplayConsumerBase::Process_vkUpdateDescriptorSetWithTemplateKHR(cons
         in_device, in_descriptorSet, in_descriptorUpdateTemplate, pData->GetPointer());
 }
 
+void VulkanReplayConsumerBase::Process_AddHandleIdMappings(
+    const std::vector<format::CaptureIDHandleMapping::handle_id_pair>& pairs)
+{
+    for (const auto& pair : pairs)
+    {
+        object_info_table_.InsertHandleIdPair(pair.id, pair.handle);
+    }
+}
+
 GFXRECON_END_NAMESPACE(decode)
 GFXRECON_END_NAMESPACE(gfxrecon)

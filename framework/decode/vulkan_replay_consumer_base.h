@@ -179,6 +179,9 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                                               format::HandleId                 descriptorUpdateTemplate,
                                                               DescriptorUpdateTemplateDecoder* pData) override;
 
+    virtual void
+    Process_AddHandleIdMappings(const std::vector<format::CaptureIDHandleMapping::handle_id_pair>& pairs) override;
+
   protected:
     const VulkanObjectInfoTable& GetObjectInfoTable() const { return object_info_table_; }
 
