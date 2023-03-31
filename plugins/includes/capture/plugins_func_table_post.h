@@ -26,8 +26,8 @@
 **
 */
 
-#ifndef GFXRECON_PLUGINS_FUNC_TABLE_POST_H
-#define GFXRECON_PLUGINS_FUNC_TABLE_POST_H
+#ifndef GFXRECON_PLUGINS_CAPTURE_FUNC_TABLE_POST_H
+#define GFXRECON_PLUGINS_CAPTURE_FUNC_TABLE_POST_H
 
 #include "format/platform_types.h"
 #include "util/defines.h"
@@ -55,6 +55,7 @@
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(plugins)
+GFXRECON_BEGIN_NAMESPACE(capture)
 
 // clang-format off
 typedef VkResult (VKAPI_PTR *PFN_CreateInstance_PostCall)(encode::VulkanCaptureManager* manager, VkResult result, const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance);
@@ -2546,7 +2547,8 @@ static void LoadPostFunctionTable(util::platform::GetProcAddress_t gpa, util::pl
     LoadPostFunction(gpa, handle, "GetPipelinePropertiesEXT_PostCall", &table->GetPipelinePropertiesEXT_PostCall);
 }
 
+GFXRECON_END_NAMESPACE(capture)
 GFXRECON_END_NAMESPACE(plugins)
 GFXRECON_END_NAMESPACE(gfxrecon)
 
-#endif // GFXRECON_PLUGINS_FUNC_TABLE_POST_H
+#endif // GFXRECON_PLUGINS_CAPTURE_FUNC_TABLE_POST_H

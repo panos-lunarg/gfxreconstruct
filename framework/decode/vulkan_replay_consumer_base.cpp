@@ -6721,5 +6721,24 @@ void VulkanReplayConsumerBase::Process_AddHandleIdMappings(
     }
 }
 
+void VulkanReplayConsumerBase::LoadPlugins()
+{
+    loaded_plugin plugin;
+    plugin.handle = util::platform::OpenLibrary("/media/panos/c8ab071b-3a55-4a04-a6d9-9eed1a64a9fa/panosa/Projects/"
+                                                "gfxreconstruct/build/plugins/perfetto/gfxrecon_perfetto_consumer_plugin.so");
+
+    if (!plugin.handle)
+    {
+        GFXRECON_LOG_ERROR("%s\n", dlerror());
+        exit(EXIT_FAILURE);
+    }
+    assert(plugin.handle);
+
+    plugins::replay::LoadPreFunctionTable(util::platform::GetProcAddress, plugin.handle, &plugin.func_table_pre);
+    plugins::replay::LoadPostFunctionTable(util::platform::GetProcAddress, plugin.handle, &plugin.func_table_post);
+
+    loaded_plugins_.push_back(std::move(plugin));
+}
+
 GFXRECON_END_NAMESPACE(decode)
 GFXRECON_END_NAMESPACE(gfxrecon)

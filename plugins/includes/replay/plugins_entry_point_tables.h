@@ -1,6 +1,6 @@
 /*
-** Copyright (c) 2018 Valve Corporation
-** Copyright (c) 2018 LunarG, Inc.
+** Copyright (c) 2023 Valve Corporation
+** Copyright (c) 2023 LunarG, Inc.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and associated documentation files (the "Software"),
@@ -21,12 +21,12 @@
 ** DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef GFXRECON_PLUGINS_ENTRY_POINT_TABLES_H
-#define GFXRECON_PLUGINS_ENTRY_POINT_TABLES_H
+#ifndef GFXRECON_PLUGINS_REPLAY_ENTRY_POINT_TABLES_H
+#define GFXRECON_PLUGINS_REPLAY_ENTRY_POINT_TABLES_H
 
 #include "entrypoints_pre.h"
 #include "entrypoints_post.h"
 #include "plugins_func_table_pre.h"
 #include "plugins_func_table_post.h"
 
-#endif // GFXRECON_PLUGINS_ENTRY_POINT_TABLES_H
+#endif // GFXRECON_PLUGINS_REPLAY_ENTRY_POINT_TABLES_H

@@ -21,8 +21,8 @@
 ** DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef GFXRECON_PLUGINS_FUNC_TABLE_PRE_H
-#define GFXRECON_PLUGINS_FUNC_TABLE_PRE_H
+#ifndef GFXRECON_PLUGINS_CAPTURE_FUNC_TABLE_PRE_H
+#define GFXRECON_PLUGINS_CAPTURE_FUNC_TABLE_PRE_H
 
 #include "format/platform_types.h"
 #include "util/defines.h"
@@ -50,6 +50,7 @@
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(plugins)
+GFXRECON_BEGIN_NAMESPACE(capture)
 
 // clang-format off
 typedef void (VKAPI_PTR *PFN_CreateInstance_PreCall)(encode::VulkanCaptureManager* manager, const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance);
@@ -2539,7 +2540,8 @@ static void LoadPreFunctionTable(util::platform::GetProcAddress_t gpa, util::pla
 }
 // clang-format on
 
+GFXRECON_END_NAMESPACE(capture)
 GFXRECON_END_NAMESPACE(plugins)
 GFXRECON_END_NAMESPACE(gfxrecon)
 
-#endif // GFXRECON_PLUGINS_FUNC_TABLE_PRE_H
+#endif // GFXRECON_PLUGINS_CAPTURE_FUNC_TABLE_PRE_H

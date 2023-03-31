@@ -234,7 +234,7 @@ void CaptureManager::LoadPlugins()
 {
     loaded_plugin plugin;
     plugin.handle = util::platform::OpenLibrary("/media/panos/c8ab071b-3a55-4a04-a6d9-9eed1a64a9fa/panosa/Projects/"
-                                                "gfxreconstruct/build/plugins/perfetto/libgfxrecon_perfetto_plugin.so");
+                                                "gfxreconstruct/build/plugins/perfetto/gfxrecon_perfetto_capture_plugin.so");
 
     if (!plugin.handle)
     {
@@ -243,8 +243,8 @@ void CaptureManager::LoadPlugins()
     }
     assert(plugin.handle);
 
-    plugins::LoadPreFunctionTable(util::platform::GetProcAddress, plugin.handle, &plugin.func_table_pre);
-    plugins::LoadPostFunctionTable(util::platform::GetProcAddress, plugin.handle, &plugin.func_table_post);
+    plugins::capture::LoadPreFunctionTable(util::platform::GetProcAddress, plugin.handle, &plugin.func_table_pre);
+    plugins::capture::LoadPostFunctionTable(util::platform::GetProcAddress, plugin.handle, &plugin.func_table_post);
 
     loaded_plugins_.push_back(std::move(plugin));
 }

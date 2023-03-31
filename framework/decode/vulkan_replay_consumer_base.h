@@ -44,6 +44,7 @@
 #include "graphics/fps_info.h"
 #include "util/defines.h"
 #include "util/logging.h"
+#include "includes/replay/plugins_entry_point_tables.h"
 
 #include "application/application.h"
 
@@ -181,6 +182,16 @@ class VulkanReplayConsumerBase : public VulkanConsumer
 
     virtual void
     Process_AddHandleIdMappings(const std::vector<format::CaptureIDHandleMapping::handle_id_pair>& pairs) override;
+
+    struct loaded_plugin
+    {
+        util::platform::LibraryHandle   handle;
+        plugins::replay::plugin_func_table_pre  func_table_pre;
+        plugins::replay::plugin_func_table_post func_table_post;
+    };
+
+    std::vector<loaded_plugin> loaded_plugins_;
+    void                       LoadPlugins();
 
   protected:
     const VulkanObjectInfoTable& GetObjectInfoTable() const { return object_info_table_; }

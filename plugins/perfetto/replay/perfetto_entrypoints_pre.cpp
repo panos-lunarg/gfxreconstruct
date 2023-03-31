@@ -26,34 +26,27 @@
 **
 */
 
-#include "../entrypoints_pre.h"
-#include "perfetto_encoder_commands.h"
+#include "includes/replay/entrypoints_pre.h"
+#include "perfetto_replay_commands.h"
 #include "format/api_call_id.h"
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(plugins)
+GFXRECON_BEGIN_NAMESPACE(replay)
 GFXRECON_BEGIN_NAMESPACE(plugin_perfetto)
 
 extern "C" {
-VKAPI_ATTR void VKAPI_CALL CreateInstance_PreCall(encode::VulkanCaptureManager* manager,
-    const VkInstanceCreateInfo*                 pCreateInfo,
-    const VkAllocationCallbacks*                pAllocator,
-    VkInstance*                                 pInstance)
-{ PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkCreateInstance>::Dispatch(manager, pCreateInfo, pAllocator, pInstance); }
+VKAPI_ATTR void VKAPI_CALL CreateInstance_PreCall(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult returnValue, StructPointerDecoder<Decoded_VkInstanceCreateInfo>* pCreateInfo, StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator, HandlePointerDecoder<VkInstance>* pInstance)
+{ PerfettoReplayPreCall<format::ApiCallId::ApiCall_vkCreateInstance>::Dispatch(consumer, call_info, returnValue, pCreateInfo, pAllocator, pInstance); }
 
-VKAPI_ATTR void VKAPI_CALL QueueSubmit_PreCall(encode::VulkanCaptureManager* manager,
-    VkQueue                                     queue,
-    uint32_t                                    submitCount,
-    const VkSubmitInfo*                         pSubmits,
-    VkFence                                     fence)
-{ PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>::Dispatch(manager, queue, submitCount, pSubmits, fence); }
+VKAPI_ATTR void VKAPI_CALL QueueSubmit_PreCall(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult returnValue, format::HandleId queue, uint32_t submitCount, StructPointerDecoder<Decoded_VkSubmitInfo>* pSubmits, format::HandleId fence)
+{ PerfettoReplayPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>::Dispatch(consumer, call_info, returnValue, queue, submitCount, pSubmits, fence); }
 
-VKAPI_ATTR void VKAPI_CALL QueuePresentKHR_PreCall(encode::VulkanCaptureManager* manager,
-    VkQueue                                     queue,
-    const VkPresentInfoKHR*                     pPresentInfo)
-{ PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>::Dispatch(manager, queue, pPresentInfo); }
+VKAPI_ATTR void VKAPI_CALL QueuePresentKHR_PreCall(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult returnValue, format::HandleId queue, StructPointerDecoder<Decoded_VkPresentInfoKHR>* pPresentInfo)
+{ PerfettoReplayPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>::Dispatch(consumer, call_info, returnValue, queue, pPresentInfo); }
 } // extern "C"
 
 GFXRECON_END_NAMESPACE(plugin_perfetto)
+GFXRECON_END_NAMESPACE(replay)
 GFXRECON_END_NAMESPACE(plugins)
 GFXRECON_END_NAMESPACE(gfxrecon)

@@ -28,6 +28,9 @@
 
 #include "generated/generated_vulkan_replay_consumer.h"
 
+#include "decode/generated_vulkan_consumer_pre_commands.h"
+#include "decode/generated_vulkan_consumer_post_commands.h"
+
 #include "decode/custom_vulkan_struct_handle_mappers.h"
 #include "decode/vulkan_handle_mapping_util.h"
 #include "generated/generated_vulkan_dispatch_table.h"
@@ -47,6 +50,8 @@ void VulkanReplayConsumer::Process_vkCreateInstance(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
     HandlePointerDecoder<VkInstance>*           pInstance)
 {
+    // ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateInstance>::Dispatch(this, call_info, pCreateInfo, pAllocator, pInstance);
+
     if (!pInstance->IsNull()) { pInstance->SetHandleLength(1); }
     InstanceInfo handle_info;
     pInstance->SetConsumerData(0, &handle_info);
@@ -55,6 +60,8 @@ void VulkanReplayConsumer::Process_vkCreateInstance(
     CheckResult("vkCreateInstance", returnValue, replay_result);
 
     AddHandle<InstanceInfo>(format::kNullHandleId, pInstance->GetPointer(), pInstance->GetHandlePointer(), std::move(handle_info), &VulkanObjectInfoTable::AddInstanceInfo);
+
+    // ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateInstance>::Dispatch(this, call_info, replay_result, pCreateInfo, pAllocator, pInstance);
 }
 
 void VulkanReplayConsumer::Process_vkDestroyInstance(

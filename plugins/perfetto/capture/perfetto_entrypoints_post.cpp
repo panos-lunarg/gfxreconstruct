@@ -1,9 +1,10 @@
-#include "../entrypoints_post.h"
+#include "includes/capture/entrypoints_post.h"
 #include "perfetto_encoder_commands.h"
 #include "format/api_call_id.h"
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(plugins)
+GFXRECON_BEGIN_NAMESPACE(capture)
 GFXRECON_BEGIN_NAMESPACE(plugin_perfetto)
 
 extern "C" {
@@ -15,5 +16,6 @@ return result;
 } // extern "C"
 
 GFXRECON_END_NAMESPACE(plugin_perfetto)
+GFXRECON_END_NAMESPACE(capture)
 GFXRECON_END_NAMESPACE(plugins)
 GFXRECON_END_NAMESPACE(gfxrecon)

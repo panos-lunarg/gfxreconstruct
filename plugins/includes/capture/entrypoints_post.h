@@ -26,8 +26,8 @@
 **
 */
 
-#ifndef PEFETTO_ENTRYPOINTS_POST_H
-#define PEFETTO_ENTRYPOINTS_POST_H
+#ifndef GFXR_PLUGINS_CAPTURE_ENTRYPOINTS_POST_H
+#define GFXR_PLUGINS_CAPTURE_ENTRYPOINTS_POST_H
 
 #include "format/platform_types.h"
 #include "util/defines.h"
@@ -48,6 +48,7 @@ GFXRECON_BEGIN_NAMESPACE(encode)
 GFXRECON_END_NAMESPACE(encode)
 
 GFXRECON_BEGIN_NAMESPACE(plugins)
+GFXRECON_BEGIN_NAMESPACE(capture)
 
 extern "C" {
 VKAPI_ATTR VkResult VKAPI_CALL CreateInstance_PostCall(encode::VulkanCaptureManager* manager, VkResult result, const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance);
@@ -665,7 +666,8 @@ VKAPI_ATTR void VKAPI_CALL BindAccelerationStructureMemoryKHR_PostCall(encode::V
 VKAPI_ATTR void VKAPI_CALL GetPipelinePropertiesEXT_PostCall(encode::VulkanCaptureManager* manager);
 }
 
+GFXRECON_END_NAMESPACE(capture)
 GFXRECON_END_NAMESPACE(plugins)
 GFXRECON_END_NAMESPACE(gfxrecon)
 
-#endif
+#endif // GFXR_PLUGINS_CAPTURE_ENTRYPOINTS_POST_H

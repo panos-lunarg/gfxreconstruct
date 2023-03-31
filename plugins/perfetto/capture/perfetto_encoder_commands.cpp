@@ -22,7 +22,7 @@
 */
 
 #include "perfetto_encoder_commands.h"
-#include "perfetto_tracing_categories.h"
+#include "../perfetto_tracing_categories.h"
 #include "encode/vulkan_capture_manager.h"
 #include "generated/generated_vulkan_struct_handle_wrappers.h"
 #include "util/defines.h"
@@ -31,6 +31,7 @@
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(plugins)
+GFXRECON_BEGIN_NAMESPACE(captur)
 GFXRECON_BEGIN_NAMESPACE(plugin_perfetto)
 
 using namespace encode;
@@ -89,5 +90,6 @@ void Process_QueuePresent(VulkanCaptureManager* manager, VkQueue queue, const Vk
 #endif // !defined(WIN32)
 
 GFXRECON_END_NAMESPACE(plugin_perfetto)
+GFXRECON_END_NAMESPACE(capture)
 GFXRECON_END_NAMESPACE(plugins)
 GFXRECON_END_NAMESPACE(gfxrecon)

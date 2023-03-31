@@ -26,8 +26,8 @@
 **
 */
 
-#ifndef PEFETTO_ENTRYPOINTS_PRE_H
-#define PEFETTO_ENTRYPOINTS_PRE_H
+#ifndef GFXR_PLUGINS_CAPTURE_ENTRYPOINTS_PRE_H
+#define GFXR_PLUGINS_CAPTURE_ENTRYPOINTS_PRE_H
 
 #include "format/platform_types.h"
 #include "util/defines.h"
@@ -48,6 +48,7 @@ GFXRECON_BEGIN_NAMESPACE(encode)
 GFXRECON_END_NAMESPACE(encode)
 
 GFXRECON_BEGIN_NAMESPACE(plugins)
+GFXRECON_BEGIN_NAMESPACE(capture)
 
 // clang-format on
 extern "C" {
@@ -667,7 +668,8 @@ VKAPI_ATTR void VKAPI_CALL GetPipelinePropertiesEXT_PreCall(encode::VulkanCaptur
 }
 // clang-format off
 
+GFXRECON_END_NAMESPACE(capture)
 GFXRECON_END_NAMESPACE(plugins)
 GFXRECON_END_NAMESPACE(gfxrecon)
 
-#endif
+#endif // GFXR_PLUGINS_CAPTURE_ENTRYPOINTS_PRE_H
