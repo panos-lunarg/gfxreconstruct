@@ -24,8 +24,8 @@
 #ifndef GFXRECON_PLUGINS_CAPTURE_ENTRY_POINT_TABLES_H
 #define GFXRECON_PLUGINS_CAPTURE_ENTRY_POINT_TABLES_H
 
-#include "entrypoints_pre.h"
-#include "entrypoints_post.h"
+#include "plugins_entrypoints_pre.h"
+#include "plugins_entrypoints_post.h"
 #include "plugins_func_table_pre.h"
 #include "plugins_func_table_post.h"
 

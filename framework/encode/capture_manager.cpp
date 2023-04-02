@@ -233,12 +233,13 @@ std::string PrepScreenshotPrefix(const std::string& dir)
 void CaptureManager::LoadPlugins()
 {
     loaded_plugin plugin;
-    plugin.handle = util::platform::OpenLibrary("/media/panos/c8ab071b-3a55-4a04-a6d9-9eed1a64a9fa/panosa/Projects/"
-                                                "gfxreconstruct/build/plugins/perfetto/gfxrecon_perfetto_capture_plugin.so");
+    plugin.handle = util::platform::OpenLibrary(
+        "/media/panos/c8ab071b-3a55-4a04-a6d9-9eed1a64a9fa/panosa/Projects/"
+        "gfxreconstruct/build/plugins/perfetto/capture/libgfxrecon_perfetto_capture_plugin.so");
 
     if (!plugin.handle)
     {
-        printf("%s\n", dlerror());
+        GFXRECON_LOG_ERROR("%s\n", dlerror());
         exit(EXIT_FAILURE);
     }
     assert(plugin.handle);

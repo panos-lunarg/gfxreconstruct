@@ -31,7 +31,7 @@
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(plugins)
-GFXRECON_BEGIN_NAMESPACE(captur)
+GFXRECON_BEGIN_NAMESPACE(capture)
 GFXRECON_BEGIN_NAMESPACE(plugin_perfetto)
 
 using namespace encode;
@@ -58,22 +58,17 @@ void InitializePerfetto()
 void Process_QueueSubmit(
     VulkanCaptureManager* manager, VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence)
 {
-
     TRACE_EVENT_INSTANT("GFXR", "vkQueueSubmit", [&](perfetto::EventContext ctx) {
-        const std::string command_index = std::to_string(manager->GetBlockIndex());
-        ctx.AddDebugAnnotation("vkQueueSubmit:", command_index.c_str());
+        ctx.AddDebugAnnotation(perfetto::DynamicString{ "vkQueueSubmit:" }, manager->GetBlockIndex());
 
-        auto                handle_unwrap_memory = VulkanCaptureManager::Get()->GetHandleUnwrapMemory();
+        auto                handle_unwrap_memory = manager->GetHandleUnwrapMemory();
         const VkSubmitInfo* pSubmits_unwrapped = UnwrapStructArrayHandles(pSubmits, submitCount, handle_unwrap_memory);
 
-        std::vector<std::string> names, handles;
         for (uint32_t i = 0; i < pSubmits_unwrapped->commandBufferCount; ++i)
         {
-            names.push_back("vkCommandBuffer: " + std::to_string(i));
-            std::stringstream ss;
-            ss << std::hex << pSubmits_unwrapped->pCommandBuffers[i];
-            handles.push_back(ss.str());
-            ctx.AddDebugAnnotation(names[i].c_str(), perfetto::DynamicString{ handles[i].c_str() });
+            ctx.AddDebugAnnotation<perfetto::DynamicString, void*>(
+                perfetto::DynamicString{ "vkCommandBuffer: " + std::to_string(i) },
+                pSubmits_unwrapped->pCommandBuffers[i]);
         }
     });
 }

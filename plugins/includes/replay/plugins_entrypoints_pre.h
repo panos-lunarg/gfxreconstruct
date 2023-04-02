@@ -56,6 +56,8 @@ GFXRECON_BEGIN_NAMESPACE(replay)
 
 using namespace decode;
 
+// clang-format off
+extern "C" {
 VKAPI_ATTR void VKAPI_CALL CreateInstance_PreCall(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult returnValue, StructPointerDecoder<Decoded_VkInstanceCreateInfo>* pCreateInfo, StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator, HandlePointerDecoder<VkInstance>* pInstance);
 VKAPI_ATTR void VKAPI_CALL DestroyInstance_PreCall(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, format::HandleId instance, StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator);
 VKAPI_ATTR void VKAPI_CALL EnumeratePhysicalDevices_PreCall(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult returnValue, format::HandleId instance, PointerDecoder<uint32_t>* pPhysicalDeviceCount, HandlePointerDecoder<VkPhysicalDevice>* pPhysicalDevices);
@@ -643,11 +645,8 @@ VKAPI_ATTR void VKAPI_CALL CmdSetRayTracingPipelineStackSizeKHR_PreCall(VulkanRe
 VKAPI_ATTR void VKAPI_CALL CmdDrawMeshTasksEXT_PreCall(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, format::HandleId commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
 VKAPI_ATTR void VKAPI_CALL CmdDrawMeshTasksIndirectEXT_PreCall(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, format::HandleId commandBuffer, format::HandleId buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride);
 VKAPI_ATTR void VKAPI_CALL CmdDrawMeshTasksIndirectCountEXT_PreCall(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, format::HandleId commandBuffer, format::HandleId buffer, VkDeviceSize offset, format::HandleId countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride);
-// clang-format on
-extern "C" {
-
 }
-// clang-format off
+// clang-format on
 
 GFXRECON_END_NAMESPACE(replay)
 GFXRECON_END_NAMESPACE(plugins)

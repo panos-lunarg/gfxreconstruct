@@ -1,6 +1,6 @@
 /*
-** Copyright (c) 2018-2021 Valve Corporation
-** Copyright (c) 2018-2022 LunarG, Inc.
+** Copyright (c) 2023 Valve Corporation
+** Copyright (c) 2023 LunarG, Inc.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and associated documentation files (the "Software"),
@@ -21,12 +21,7 @@
 ** DEALINGS IN THE SOFTWARE.
 */
 
-/*
-** This file is generated from the Khronos Vulkan XML API Registry.
-**
-*/
-
-#include "includes/replay/entrypoints_pre.h"
+#include "includes/replay/plugins_entrypoints_pre.h"
 #include "perfetto_replay_commands.h"
 #include "format/api_call_id.h"
 
@@ -35,15 +30,40 @@ GFXRECON_BEGIN_NAMESPACE(plugins)
 GFXRECON_BEGIN_NAMESPACE(replay)
 GFXRECON_BEGIN_NAMESPACE(plugin_perfetto)
 
-extern "C" {
-VKAPI_ATTR void VKAPI_CALL CreateInstance_PreCall(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult returnValue, StructPointerDecoder<Decoded_VkInstanceCreateInfo>* pCreateInfo, StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator, HandlePointerDecoder<VkInstance>* pInstance)
-{ PerfettoReplayPreCall<format::ApiCallId::ApiCall_vkCreateInstance>::Dispatch(consumer, call_info, returnValue, pCreateInfo, pAllocator, pInstance); }
+extern "C"
+{
+    VKAPI_ATTR void VKAPI_CALL CreateInstance_PreCall(VulkanReplayConsumerBase*                            consumer,
+                                                      const ApiCallInfo&                                   call_info,
+                                                      VkResult                                             returnValue,
+                                                      StructPointerDecoder<Decoded_VkInstanceCreateInfo>*  pCreateInfo,
+                                                      StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
+                                                      HandlePointerDecoder<VkInstance>*                    pInstance)
+    {
+        PerfettoReplayPreCall<format::ApiCallId::ApiCall_vkCreateInstance>::Dispatch(
+            consumer, call_info, returnValue, pCreateInfo, pAllocator, pInstance);
+    }
 
-VKAPI_ATTR void VKAPI_CALL QueueSubmit_PreCall(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult returnValue, format::HandleId queue, uint32_t submitCount, StructPointerDecoder<Decoded_VkSubmitInfo>* pSubmits, format::HandleId fence)
-{ PerfettoReplayPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>::Dispatch(consumer, call_info, returnValue, queue, submitCount, pSubmits, fence); }
+    VKAPI_ATTR void VKAPI_CALL QueueSubmit_PreCall(VulkanReplayConsumerBase*                   consumer,
+                                                   const ApiCallInfo&                          call_info,
+                                                   VkResult                                    returnValue,
+                                                   format::HandleId                            queue,
+                                                   uint32_t                                    submitCount,
+                                                   StructPointerDecoder<Decoded_VkSubmitInfo>* pSubmits,
+                                                   format::HandleId                            fence)
+    {
+        PerfettoReplayPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>::Dispatch(
+            consumer, call_info, returnValue, queue, submitCount, pSubmits, fence);
+    }
 
-VKAPI_ATTR void VKAPI_CALL QueuePresentKHR_PreCall(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult returnValue, format::HandleId queue, StructPointerDecoder<Decoded_VkPresentInfoKHR>* pPresentInfo)
-{ PerfettoReplayPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>::Dispatch(consumer, call_info, returnValue, queue, pPresentInfo); }
+    VKAPI_ATTR void VKAPI_CALL QueuePresentKHR_PreCall(VulkanReplayConsumerBase*                       consumer,
+                                                       const ApiCallInfo&                              call_info,
+                                                       VkResult                                        returnValue,
+                                                       format::HandleId                                queue,
+                                                       StructPointerDecoder<Decoded_VkPresentInfoKHR>* pPresentInfo)
+    {
+        PerfettoReplayPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>::Dispatch(
+            consumer, call_info, returnValue, queue, pPresentInfo);
+    }
 } // extern "C"
 
 GFXRECON_END_NAMESPACE(plugin_perfetto)

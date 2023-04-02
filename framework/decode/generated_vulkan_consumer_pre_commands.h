@@ -42,17 +42,13 @@ struct ConsumerPreCall
     template <typename... Args>
     static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
     {}
-};
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateInstance>
-{
     template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult, Args... args)
     {}
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyInstance>
 {
     template <typename... Args>
@@ -67,22 +63,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyInstance>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDevices>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.EnumeratePhysicalDevices_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures>
 {
     template <typename... Args>
@@ -97,7 +78,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatProperties>
 {
     template <typename... Args>
@@ -112,22 +93,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatPrope
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageFormatProperties>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties>
 {
     template <typename... Args>
@@ -142,7 +108,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamilyProperties>
 {
     template <typename... Args>
@@ -157,7 +123,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamily
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryProperties>
 {
     template <typename... Args>
@@ -172,22 +138,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryPrope
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDevice>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateDevice_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDevice>
 {
     template <typename... Args>
@@ -202,7 +153,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDevice>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceQueue>
 {
     template <typename... Args>
@@ -217,67 +168,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceQueue>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.QueueSubmit_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueWaitIdle>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.QueueWaitIdle_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDeviceWaitIdle>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.DeviceWaitIdle_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAllocateMemory>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.AllocateMemory_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkFreeMemory>
 {
     template <typename... Args>
@@ -292,22 +183,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkFreeMemory>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkMapMemory>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.MapMemory_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkUnmapMemory>
 {
     template <typename... Args>
@@ -322,37 +198,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkUnmapMemory>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkFlushMappedMemoryRanges>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.FlushMappedMemoryRanges_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkInvalidateMappedMemoryRanges>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.InvalidateMappedMemoryRanges_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryCommitment>
 {
     template <typename... Args>
@@ -367,37 +213,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryCommitment>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.BindBufferMemory_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindImageMemory>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.BindImageMemory_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements>
 {
     template <typename... Args>
@@ -412,7 +228,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements>
 {
     template <typename... Args>
@@ -427,7 +243,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequirements>
 {
     template <typename... Args>
@@ -442,7 +258,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequirem
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImageFormatProperties>
 {
     template <typename... Args>
@@ -457,37 +273,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImage
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueBindSparse>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.QueueBindSparse_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateFence>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateFence_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyFence>
 {
     template <typename... Args>
@@ -502,67 +288,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyFence>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetFences>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.ResetFences_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetFenceStatus>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetFenceStatus_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWaitForFences>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.WaitForFences_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSemaphore>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateSemaphore_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySemaphore>
 {
     template <typename... Args>
@@ -577,22 +303,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySemaphore>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateEvent>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateEvent_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyEvent>
 {
     template <typename... Args>
@@ -607,67 +318,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyEvent>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetEventStatus>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetEventStatus_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetEvent>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.SetEvent_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetEvent>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.ResetEvent_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateQueryPool>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateQueryPool_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyQueryPool>
 {
     template <typename... Args>
@@ -682,37 +333,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyQueryPool>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetQueryPoolResults>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetQueryPoolResults_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateBuffer>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateBuffer_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyBuffer>
 {
     template <typename... Args>
@@ -727,22 +348,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyBuffer>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateBufferView>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateBufferView_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyBufferView>
 {
     template <typename... Args>
@@ -757,22 +363,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyBufferView>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateImage>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateImage_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyImage>
 {
     template <typename... Args>
@@ -787,7 +378,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyImage>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSubresourceLayout>
 {
     template <typename... Args>
@@ -802,22 +393,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSubresourceLayout>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateImageView>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateImageView_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyImageView>
 {
     template <typename... Args>
@@ -832,22 +408,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyImageView>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateShaderModule>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateShaderModule_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyShaderModule>
 {
     template <typename... Args>
@@ -862,22 +423,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyShaderModule>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreatePipelineCache>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreatePipelineCache_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPipelineCache>
 {
     template <typename... Args>
@@ -892,67 +438,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPipelineCache>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPipelineCacheData>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPipelineCacheData_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkMergePipelineCaches>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.MergePipelineCaches_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateGraphicsPipelines>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateGraphicsPipelines_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateComputePipelines>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateComputePipelines_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPipeline>
 {
     template <typename... Args>
@@ -967,22 +453,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPipeline>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreatePipelineLayout>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreatePipelineLayout_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPipelineLayout>
 {
     template <typename... Args>
@@ -997,22 +468,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPipelineLayout>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSampler>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateSampler_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySampler>
 {
     template <typename... Args>
@@ -1027,22 +483,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySampler>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDescriptorSetLayout>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateDescriptorSetLayout_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorSetLayout>
 {
     template <typename... Args>
@@ -1057,22 +498,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorSetLayout>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDescriptorPool>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateDescriptorPool_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorPool>
 {
     template <typename... Args>
@@ -1087,52 +513,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorPool>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetDescriptorPool>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.ResetDescriptorPool_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAllocateDescriptorSets>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.AllocateDescriptorSets_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkFreeDescriptorSets>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.FreeDescriptorSets_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkUpdateDescriptorSets>
 {
     template <typename... Args>
@@ -1147,22 +528,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkUpdateDescriptorSets>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateFramebuffer>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateFramebuffer_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyFramebuffer>
 {
     template <typename... Args>
@@ -1177,22 +543,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyFramebuffer>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRenderPass>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateRenderPass_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyRenderPass>
 {
     template <typename... Args>
@@ -1207,7 +558,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyRenderPass>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRenderAreaGranularity>
 {
     template <typename... Args>
@@ -1222,22 +573,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRenderAreaGranularity>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateCommandPool>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateCommandPool_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyCommandPool>
 {
     template <typename... Args>
@@ -1252,37 +588,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyCommandPool>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetCommandPool>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.ResetCommandPool_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAllocateCommandBuffers>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.AllocateCommandBuffers_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkFreeCommandBuffers>
 {
     template <typename... Args>
@@ -1297,52 +603,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkFreeCommandBuffers>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBeginCommandBuffer>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.BeginCommandBuffer_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEndCommandBuffer>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.EndCommandBuffer_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetCommandBuffer>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.ResetCommandBuffer_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindPipeline>
 {
     template <typename... Args>
@@ -1357,7 +618,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindPipeline>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewport>
 {
     template <typename... Args>
@@ -1372,7 +633,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewport>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetScissor>
 {
     template <typename... Args>
@@ -1387,7 +648,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetScissor>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLineWidth>
 {
     template <typename... Args>
@@ -1402,7 +663,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLineWidth>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBias>
 {
     template <typename... Args>
@@ -1417,7 +678,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBias>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetBlendConstants>
 {
     template <typename... Args>
@@ -1432,7 +693,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetBlendConstants>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBounds>
 {
     template <typename... Args>
@@ -1447,7 +708,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBounds>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilCompareMask>
 {
     template <typename... Args>
@@ -1462,7 +723,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilCompareMask>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilWriteMask>
 {
     template <typename... Args>
@@ -1477,7 +738,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilWriteMask>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilReference>
 {
     template <typename... Args>
@@ -1492,7 +753,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilReference>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindDescriptorSets>
 {
     template <typename... Args>
@@ -1507,7 +768,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindDescriptorSets>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindIndexBuffer>
 {
     template <typename... Args>
@@ -1522,7 +783,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindIndexBuffer>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers>
 {
     template <typename... Args>
@@ -1537,7 +798,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDraw>
 {
     template <typename... Args>
@@ -1552,7 +813,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDraw>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexed>
 {
     template <typename... Args>
@@ -1567,7 +828,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexed>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirect>
 {
     template <typename... Args>
@@ -1582,7 +843,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirect>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirect>
 {
     template <typename... Args>
@@ -1597,7 +858,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirect>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDispatch>
 {
     template <typename... Args>
@@ -1612,7 +873,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDispatch>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDispatchIndirect>
 {
     template <typename... Args>
@@ -1627,7 +888,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDispatchIndirect>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer>
 {
     template <typename... Args>
@@ -1642,7 +903,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage>
 {
     template <typename... Args>
@@ -1657,7 +918,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage>
 {
     template <typename... Args>
@@ -1672,7 +933,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage>
 {
     template <typename... Args>
@@ -1687,7 +948,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer>
 {
     template <typename... Args>
@@ -1702,7 +963,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdUpdateBuffer>
 {
     template <typename... Args>
@@ -1717,7 +978,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdUpdateBuffer>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdFillBuffer>
 {
     template <typename... Args>
@@ -1732,7 +993,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdFillBuffer>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdClearColorImage>
 {
     template <typename... Args>
@@ -1747,7 +1008,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdClearColorImage>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdClearDepthStencilImage>
 {
     template <typename... Args>
@@ -1762,7 +1023,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdClearDepthStencilImage>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdClearAttachments>
 {
     template <typename... Args>
@@ -1777,7 +1038,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdClearAttachments>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage>
 {
     template <typename... Args>
@@ -1792,7 +1053,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent>
 {
     template <typename... Args>
@@ -1807,7 +1068,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent>
 {
     template <typename... Args>
@@ -1822,7 +1083,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents>
 {
     template <typename... Args>
@@ -1837,7 +1098,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier>
 {
     template <typename... Args>
@@ -1852,7 +1113,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginQuery>
 {
     template <typename... Args>
@@ -1867,7 +1128,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginQuery>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndQuery>
 {
     template <typename... Args>
@@ -1882,7 +1143,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndQuery>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResetQueryPool>
 {
     template <typename... Args>
@@ -1897,7 +1158,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResetQueryPool>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp>
 {
     template <typename... Args>
@@ -1912,7 +1173,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyQueryPoolResults>
 {
     template <typename... Args>
@@ -1927,7 +1188,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyQueryPoolResults>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPushConstants>
 {
     template <typename... Args>
@@ -1942,7 +1203,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPushConstants>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass>
 {
     template <typename... Args>
@@ -1957,7 +1218,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass>
 {
     template <typename... Args>
@@ -1972,7 +1233,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass>
 {
     template <typename... Args>
@@ -1987,7 +1248,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdExecuteCommands>
 {
     template <typename... Args>
@@ -2002,37 +1263,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdExecuteCommands>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory2>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.BindBufferMemory2_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindImageMemory2>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.BindImageMemory2_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPeerMemoryFeatures>
 {
     template <typename... Args>
@@ -2047,7 +1278,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPeerMemoryFeat
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDeviceMask>
 {
     template <typename... Args>
@@ -2062,7 +1293,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDeviceMask>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDispatchBase>
 {
     template <typename... Args>
@@ -2077,22 +1308,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDispatchBase>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceGroups>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.EnumeratePhysicalDeviceGroups_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements2>
 {
     template <typename... Args>
@@ -2107,7 +1323,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements2>
 {
     template <typename... Args>
@@ -2122,7 +1338,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements2
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequirements2>
 {
     template <typename... Args>
@@ -2137,7 +1353,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequirem
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures2>
 {
     template <typename... Args>
@@ -2152,7 +1368,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties2>
 {
     template <typename... Args>
@@ -2167,7 +1383,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties2
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatProperties2>
 {
     template <typename... Args>
@@ -2182,22 +1398,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatPrope
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageFormatProperties2>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties2_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamilyProperties2>
 {
     template <typename... Args>
@@ -2212,7 +1413,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamily
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryProperties2>
 {
     template <typename... Args>
@@ -2227,7 +1428,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryPrope
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImageFormatProperties2>
 {
     template <typename... Args>
@@ -2242,7 +1443,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImage
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkTrimCommandPool>
 {
     template <typename... Args>
@@ -2257,7 +1458,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkTrimCommandPool>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceQueue2>
 {
     template <typename... Args>
@@ -2272,22 +1473,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceQueue2>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSamplerYcbcrConversion>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateSamplerYcbcrConversion_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySamplerYcbcrConversion>
 {
     template <typename... Args>
@@ -2302,22 +1488,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySamplerYcbcrConversio
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDescriptorUpdateTemplate>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateDescriptorUpdateTemplate_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorUpdateTemplate>
 {
     template <typename... Args>
@@ -2332,7 +1503,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorUpdateTempl
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalBufferProperties>
 {
     template <typename... Args>
@@ -2347,7 +1518,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalBuf
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalFenceProperties>
 {
     template <typename... Args>
@@ -2362,7 +1533,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalFen
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalSemaphoreProperties>
 {
     template <typename... Args>
@@ -2377,7 +1548,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalSem
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutSupport>
 {
     template <typename... Args>
@@ -2392,7 +1563,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutSuppor
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCount>
 {
     template <typename... Args>
@@ -2407,7 +1578,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCount>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCount>
 {
     template <typename... Args>
@@ -2422,22 +1593,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCount>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRenderPass2>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateRenderPass2_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass2>
 {
     template <typename... Args>
@@ -2452,7 +1608,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass2>
 {
     template <typename... Args>
@@ -2467,7 +1623,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass2>
 {
     template <typename... Args>
@@ -2482,7 +1638,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetQueryPool>
 {
     template <typename... Args>
@@ -2497,127 +1653,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetQueryPool>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreCounterValue>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetSemaphoreCounterValue_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWaitSemaphores>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.WaitSemaphores_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSignalSemaphore>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.SignalSemaphore_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddress>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetBufferDeviceAddress_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferOpaqueCaptureAddress>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetBufferOpaqueCaptureAddress_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryOpaqueCaptureAddress>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDeviceMemoryOpaqueCaptureAddress_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceToolProperties>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceToolProperties_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreatePrivateDataSlot>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreatePrivateDataSlot_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPrivateDataSlot>
 {
     template <typename... Args>
@@ -2632,22 +1668,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPrivateDataSlot>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetPrivateData>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.SetPrivateData_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPrivateData>
 {
     template <typename... Args>
@@ -2662,7 +1683,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPrivateData>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent2>
 {
     template <typename... Args>
@@ -2677,7 +1698,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent2>
 {
     template <typename... Args>
@@ -2692,7 +1713,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents2>
 {
     template <typename... Args>
@@ -2707,7 +1728,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier2>
 {
     template <typename... Args>
@@ -2722,7 +1743,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp2>
 {
     template <typename... Args>
@@ -2737,22 +1758,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp2>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueSubmit2>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.QueueSubmit2_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer2>
 {
     template <typename... Args>
@@ -2767,7 +1773,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage2>
 {
     template <typename... Args>
@@ -2782,7 +1788,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage2>
 {
     template <typename... Args>
@@ -2797,7 +1803,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer2>
 {
     template <typename... Args>
@@ -2812,7 +1818,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage2>
 {
     template <typename... Args>
@@ -2827,7 +1833,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage2>
 {
     template <typename... Args>
@@ -2842,7 +1848,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRendering>
 {
     template <typename... Args>
@@ -2857,7 +1863,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRendering>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRendering>
 {
     template <typename... Args>
@@ -2872,7 +1878,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRendering>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCullMode>
 {
     template <typename... Args>
@@ -2887,7 +1893,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCullMode>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetFrontFace>
 {
     template <typename... Args>
@@ -2902,7 +1908,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetFrontFace>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveTopology>
 {
     template <typename... Args>
@@ -2917,7 +1923,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveTopology>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWithCount>
 {
     template <typename... Args>
@@ -2932,7 +1938,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWithCount>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetScissorWithCount>
 {
     template <typename... Args>
@@ -2947,7 +1953,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetScissorWithCount>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers2>
 {
     template <typename... Args>
@@ -2962,7 +1968,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers2>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthTestEnable>
 {
     template <typename... Args>
@@ -2977,7 +1983,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthTestEnable>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthWriteEnable>
 {
     template <typename... Args>
@@ -2992,7 +1998,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthWriteEnable>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthCompareOp>
 {
     template <typename... Args>
@@ -3007,7 +2013,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthCompareOp>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBoundsTestEnable>
 {
     template <typename... Args>
@@ -3022,7 +2028,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBoundsTestEnable>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilTestEnable>
 {
     template <typename... Args>
@@ -3037,7 +2043,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilTestEnable>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilOp>
 {
     template <typename... Args>
@@ -3052,7 +2058,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilOp>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizerDiscardEnable>
 {
     template <typename... Args>
@@ -3067,7 +2073,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizerDiscardEnabl
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBiasEnable>
 {
     template <typename... Args>
@@ -3082,7 +2088,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBiasEnable>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveRestartEnable>
 {
     template <typename... Args>
@@ -3097,7 +2103,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveRestartEnable
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceBufferMemoryRequirements>
 {
     template <typename... Args>
@@ -3112,7 +2118,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceBufferMemoryRequire
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageMemoryRequirements>
 {
     template <typename... Args>
@@ -3127,7 +2133,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageMemoryRequirem
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageSparseMemoryRequirements>
 {
     template <typename... Args>
@@ -3142,7 +2148,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageSparseMemoryRe
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySurfaceKHR>
 {
     template <typename... Args>
@@ -3157,82 +2163,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySurfaceKHR>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceSupportKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceSupportKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCapabilitiesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilitiesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceFormatsKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceFormatsKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfacePresentModesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceSurfacePresentModesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSwapchainKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateSwapchainKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySwapchainKHR>
 {
     template <typename... Args>
@@ -3247,412 +2178,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySwapchainKHR>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSwapchainImagesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetSwapchainImagesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireNextImageKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.AcquireNextImageKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.QueuePresentKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPresentCapabilitiesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDeviceGroupPresentCapabilitiesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupSurfacePresentModesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDeviceGroupSurfacePresentModesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDevicePresentRectanglesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDevicePresentRectanglesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireNextImage2KHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.AcquireNextImage2KHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPropertiesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceDisplayPropertiesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPlanePropertiesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceDisplayPlanePropertiesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneSupportedDisplaysKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDisplayPlaneSupportedDisplaysKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayModePropertiesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDisplayModePropertiesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDisplayModeKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateDisplayModeKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneCapabilitiesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDisplayPlaneCapabilitiesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDisplayPlaneSurfaceKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateDisplayPlaneSurfaceKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSharedSwapchainsKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateSharedSwapchainsKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateXlibSurfaceKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateXlibSurfaceKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceXlibPresentationSupportKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceXlibPresentationSupportKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateXcbSurfaceKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateXcbSurfaceKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceXcbPresentationSupportKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceXcbPresentationSupportKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateWaylandSurfaceKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateWaylandSurfaceKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceWaylandPresentationSupportKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceWaylandPresentationSupportKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateAndroidSurfaceKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateAndroidSurfaceKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateWin32SurfaceKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateWin32SurfaceKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceWin32PresentationSupportKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceWin32PresentationSupportKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceVideoCapabilitiesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceVideoCapabilitiesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceVideoFormatPropertiesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceVideoFormatPropertiesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateVideoSessionKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateVideoSessionKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyVideoSessionKHR>
 {
     template <typename... Args>
@@ -3667,67 +2193,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyVideoSessionKHR>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetVideoSessionMemoryRequirementsKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetVideoSessionMemoryRequirementsKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindVideoSessionMemoryKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.BindVideoSessionMemoryKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateVideoSessionParametersKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateVideoSessionParametersKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkUpdateVideoSessionParametersKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.UpdateVideoSessionParametersKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyVideoSessionParametersKHR>
 {
     template <typename... Args>
@@ -3742,7 +2208,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyVideoSessionParameter
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginVideoCodingKHR>
 {
     template <typename... Args>
@@ -3757,7 +2223,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginVideoCodingKHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndVideoCodingKHR>
 {
     template <typename... Args>
@@ -3772,7 +2238,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndVideoCodingKHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdControlVideoCodingKHR>
 {
     template <typename... Args>
@@ -3787,7 +2253,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdControlVideoCodingKHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDecodeVideoKHR>
 {
     template <typename... Args>
@@ -3802,7 +2268,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDecodeVideoKHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderingKHR>
 {
     template <typename... Args>
@@ -3817,7 +2283,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderingKHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderingKHR>
 {
     template <typename... Args>
@@ -3832,7 +2298,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderingKHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures2KHR>
 {
     template <typename... Args>
@@ -3847,7 +2313,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures2KH
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties2KHR>
 {
     template <typename... Args>
@@ -3862,7 +2328,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties2
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatProperties2KHR>
 {
     template <typename... Args>
@@ -3877,22 +2343,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatPrope
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageFormatProperties2KHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties2KHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamilyProperties2KHR>
 {
     template <typename... Args>
@@ -3907,7 +2358,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamily
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryProperties2KHR>
 {
     template <typename... Args>
@@ -3922,7 +2373,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryPrope
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImageFormatProperties2KHR>
 {
     template <typename... Args>
@@ -3937,7 +2388,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImage
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPeerMemoryFeaturesKHR>
 {
     template <typename... Args>
@@ -3952,7 +2403,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPeerMemoryFeat
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDeviceMaskKHR>
 {
     template <typename... Args>
@@ -3967,7 +2418,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDeviceMaskKHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDispatchBaseKHR>
 {
     template <typename... Args>
@@ -3982,7 +2433,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDispatchBaseKHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkTrimCommandPoolKHR>
 {
     template <typename... Args>
@@ -3997,22 +2448,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkTrimCommandPoolKHR>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceGroupsKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.EnumeratePhysicalDeviceGroupsKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalBufferPropertiesKHR>
 {
     template <typename... Args>
@@ -4027,67 +2463,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalBuf
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandleKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetMemoryWin32HandleKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandlePropertiesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetMemoryWin32HandlePropertiesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryFdKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetMemoryFdKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryFdPropertiesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetMemoryFdPropertiesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalSemaphorePropertiesKHR>
 {
     template <typename... Args>
@@ -4102,67 +2478,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalSem
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreWin32HandleKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.ImportSemaphoreWin32HandleKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreWin32HandleKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetSemaphoreWin32HandleKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreFdKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.ImportSemaphoreFdKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreFdKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetSemaphoreFdKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPushDescriptorSetKHR>
 {
     template <typename... Args>
@@ -4177,22 +2493,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPushDescriptorSetKHR>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDescriptorUpdateTemplateKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateDescriptorUpdateTemplateKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorUpdateTemplateKHR>
 {
     template <typename... Args>
@@ -4207,22 +2508,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorUpdateTempl
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRenderPass2KHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateRenderPass2KHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass2KHR>
 {
     template <typename... Args>
@@ -4237,7 +2523,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass2KHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass2KHR>
 {
     template <typename... Args>
@@ -4252,7 +2538,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass2KHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass2KHR>
 {
     template <typename... Args>
@@ -4267,22 +2553,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass2KHR>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSwapchainStatusKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetSwapchainStatusKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalFencePropertiesKHR>
 {
     template <typename... Args>
@@ -4297,82 +2568,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalFen
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportFenceWin32HandleKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.ImportFenceWin32HandleKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetFenceWin32HandleKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetFenceWin32HandleKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportFenceFdKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.ImportFenceFdKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetFenceFdKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetFenceFdKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR>
 {
     template <typename... Args>
@@ -4387,22 +2583,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamily
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireProfilingLockKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.AcquireProfilingLockKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleaseProfilingLockKHR>
 {
     template <typename... Args>
@@ -4417,97 +2598,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleaseProfilingLockKHR>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCapabilities2KHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilities2KHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceFormats2KHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceFormats2KHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayProperties2KHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceDisplayProperties2KHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPlaneProperties2KHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceDisplayPlaneProperties2KHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayModeProperties2KHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDisplayModeProperties2KHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneCapabilities2KHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDisplayPlaneCapabilities2KHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements2KHR>
 {
     template <typename... Args>
@@ -4522,7 +2613,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements2K
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements2KHR>
 {
     template <typename... Args>
@@ -4537,7 +2628,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements2
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequirements2KHR>
 {
     template <typename... Args>
@@ -4552,22 +2643,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequirem
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSamplerYcbcrConversionKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateSamplerYcbcrConversionKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySamplerYcbcrConversionKHR>
 {
     template <typename... Args>
@@ -4582,37 +2658,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySamplerYcbcrConversio
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory2KHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.BindBufferMemory2KHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindImageMemory2KHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.BindImageMemory2KHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutSupportKHR>
 {
     template <typename... Args>
@@ -4627,7 +2673,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutSuppor
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCountKHR>
 {
     template <typename... Args>
@@ -4642,7 +2688,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCountKHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCountKHR>
 {
     template <typename... Args>
@@ -4657,67 +2703,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCountK
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreCounterValueKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetSemaphoreCounterValueKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWaitSemaphoresKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.WaitSemaphoresKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSignalSemaphoreKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.SignalSemaphoreKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFragmentShadingRatesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceFragmentShadingRatesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetFragmentShadingRateKHR>
 {
     template <typename... Args>
@@ -4732,82 +2718,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetFragmentShadingRateKHR
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWaitForPresentKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.WaitForPresentKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddressKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetBufferDeviceAddressKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferOpaqueCaptureAddressKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetBufferOpaqueCaptureAddressKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryOpaqueCaptureAddressKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDeviceMemoryOpaqueCaptureAddressKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDeferredOperationKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateDeferredOperationKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDeferredOperationKHR>
 {
     template <typename... Args>
@@ -4822,97 +2733,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDeferredOperationKHR>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeferredOperationMaxConcurrencyKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDeferredOperationMaxConcurrencyKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeferredOperationResultKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDeferredOperationResultKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDeferredOperationJoinKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.DeferredOperationJoinKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPipelineExecutablePropertiesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPipelineExecutablePropertiesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPipelineExecutableStatisticsKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPipelineExecutableStatisticsKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPipelineExecutableInternalRepresentationsKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPipelineExecutableInternalRepresentationsKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEncodeVideoKHR>
 {
     template <typename... Args>
@@ -4927,7 +2748,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEncodeVideoKHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent2KHR>
 {
     template <typename... Args>
@@ -4942,7 +2763,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent2KHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent2KHR>
 {
     template <typename... Args>
@@ -4957,7 +2778,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent2KHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents2KHR>
 {
     template <typename... Args>
@@ -4972,7 +2793,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents2KHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier2KHR>
 {
     template <typename... Args>
@@ -4987,7 +2808,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier2KHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp2KHR>
 {
     template <typename... Args>
@@ -5002,22 +2823,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp2KHR>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueSubmit2KHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.QueueSubmit2KHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteBufferMarker2AMD>
 {
     template <typename... Args>
@@ -5032,7 +2838,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteBufferMarker2AMD>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetQueueCheckpointData2NV>
 {
     template <typename... Args>
@@ -5047,7 +2853,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetQueueCheckpointData2NV>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer2KHR>
 {
     template <typename... Args>
@@ -5062,7 +2868,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer2KHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage2KHR>
 {
     template <typename... Args>
@@ -5077,7 +2883,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage2KHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage2KHR>
 {
     template <typename... Args>
@@ -5092,7 +2898,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage2KHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer2KHR>
 {
     template <typename... Args>
@@ -5107,7 +2913,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer2KHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage2KHR>
 {
     template <typename... Args>
@@ -5122,7 +2928,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage2KHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage2KHR>
 {
     template <typename... Args>
@@ -5137,7 +2943,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage2KHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysIndirect2KHR>
 {
     template <typename... Args>
@@ -5152,7 +2958,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysIndirect2KHR>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceBufferMemoryRequirementsKHR>
 {
     template <typename... Args>
@@ -5167,7 +2973,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceBufferMemoryRequire
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageMemoryRequirementsKHR>
 {
     template <typename... Args>
@@ -5182,7 +2988,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageMemoryRequirem
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageSparseMemoryRequirementsKHR>
 {
     template <typename... Args>
@@ -5197,22 +3003,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageSparseMemoryRe
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDebugReportCallbackEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateDebugReportCallbackEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDebugReportCallbackEXT>
 {
     template <typename... Args>
@@ -5227,7 +3018,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDebugReportCallbackEX
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDebugReportMessageEXT>
 {
     template <typename... Args>
@@ -5242,37 +3033,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDebugReportMessageEXT>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDebugMarkerSetObjectTagEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.DebugMarkerSetObjectTagEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDebugMarkerSetObjectNameEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.DebugMarkerSetObjectNameEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerBeginEXT>
 {
     template <typename... Args>
@@ -5287,7 +3048,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerBeginEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerEndEXT>
 {
     template <typename... Args>
@@ -5302,7 +3063,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerEndEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerInsertEXT>
 {
     template <typename... Args>
@@ -5317,7 +3078,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerInsertEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindTransformFeedbackBuffersEXT>
 {
     template <typename... Args>
@@ -5332,7 +3093,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindTransformFeedbackBuff
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginTransformFeedbackEXT>
 {
     template <typename... Args>
@@ -5347,7 +3108,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginTransformFeedbackEXT
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndTransformFeedbackEXT>
 {
     template <typename... Args>
@@ -5362,7 +3123,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndTransformFeedbackEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginQueryIndexedEXT>
 {
     template <typename... Args>
@@ -5377,7 +3138,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginQueryIndexedEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndQueryIndexedEXT>
 {
     template <typename... Args>
@@ -5392,7 +3153,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndQueryIndexedEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectByteCountEXT>
 {
     template <typename... Args>
@@ -5407,37 +3168,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectByteCountEXT>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageViewHandleNVX>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetImageViewHandleNVX_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageViewAddressNVX>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetImageViewAddressNVX_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCountAMD>
 {
     template <typename... Args>
@@ -5452,7 +3183,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCountAMD>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCountAMD>
 {
     template <typename... Args>
@@ -5467,82 +3198,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCountA
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetShaderInfoAMD>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetShaderInfoAMD_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateStreamDescriptorSurfaceGGP>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateStreamDescriptorSurfaceGGP_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalImageFormatPropertiesNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceExternalImageFormatPropertiesNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandleNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetMemoryWin32HandleNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateViSurfaceNN>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateViSurfaceNN_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginConditionalRenderingEXT>
 {
     template <typename... Args>
@@ -5557,7 +3213,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginConditionalRendering
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndConditionalRenderingEXT>
 {
     template <typename... Args>
@@ -5572,7 +3228,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndConditionalRenderingEX
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWScalingNV>
 {
     template <typename... Args>
@@ -5587,157 +3243,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWScalingNV>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleaseDisplayEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.ReleaseDisplayEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireXlibDisplayEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.AcquireXlibDisplayEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRandROutputDisplayEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetRandROutputDisplayEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCapabilities2EXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilities2EXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDisplayPowerControlEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.DisplayPowerControlEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkRegisterDeviceEventEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.RegisterDeviceEventEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkRegisterDisplayEventEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.RegisterDisplayEventEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSwapchainCounterEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetSwapchainCounterEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRefreshCycleDurationGOOGLE>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetRefreshCycleDurationGOOGLE_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPastPresentationTimingGOOGLE>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPastPresentationTimingGOOGLE_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleEXT>
 {
     template <typename... Args>
@@ -5752,7 +3258,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleEnableEXT>
 {
     template <typename... Args>
@@ -5767,7 +3273,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleEnable
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleModeEXT>
 {
     template <typename... Args>
@@ -5782,7 +3288,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleModeEX
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetHdrMetadataEXT>
 {
     template <typename... Args>
@@ -5797,67 +3303,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetHdrMetadataEXT>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateIOSSurfaceMVK>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateIOSSurfaceMVK_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateMacOSSurfaceMVK>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateMacOSSurfaceMVK_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetDebugUtilsObjectNameEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.SetDebugUtilsObjectNameEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetDebugUtilsObjectTagEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.SetDebugUtilsObjectTagEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueBeginDebugUtilsLabelEXT>
 {
     template <typename... Args>
@@ -5872,7 +3318,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueBeginDebugUtilsLabelEXT
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueEndDebugUtilsLabelEXT>
 {
     template <typename... Args>
@@ -5887,7 +3333,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueEndDebugUtilsLabelEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueInsertDebugUtilsLabelEXT>
 {
     template <typename... Args>
@@ -5902,7 +3348,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueInsertDebugUtilsLabelEX
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginDebugUtilsLabelEXT>
 {
     template <typename... Args>
@@ -5917,7 +3363,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginDebugUtilsLabelEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndDebugUtilsLabelEXT>
 {
     template <typename... Args>
@@ -5932,7 +3378,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndDebugUtilsLabelEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdInsertDebugUtilsLabelEXT>
 {
     template <typename... Args>
@@ -5947,22 +3393,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdInsertDebugUtilsLabelEXT>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDebugUtilsMessengerEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateDebugUtilsMessengerEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDebugUtilsMessengerEXT>
 {
     template <typename... Args>
@@ -5977,7 +3408,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDebugUtilsMessengerEX
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSubmitDebugUtilsMessageEXT>
 {
     template <typename... Args>
@@ -5992,37 +3423,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSubmitDebugUtilsMessageEXT>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAndroidHardwareBufferPropertiesANDROID>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetAndroidHardwareBufferPropertiesANDROID_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryAndroidHardwareBufferANDROID>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetMemoryAndroidHardwareBufferANDROID_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetSampleLocationsEXT>
 {
     template <typename... Args>
@@ -6037,7 +3438,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetSampleLocationsEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMultisamplePropertiesEXT>
 {
     template <typename... Args>
@@ -6052,37 +3453,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMultisample
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageDrmFormatModifierPropertiesEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetImageDrmFormatModifierPropertiesEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateValidationCacheEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateValidationCacheEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyValidationCacheEXT>
 {
     template <typename... Args>
@@ -6097,37 +3468,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyValidationCacheEXT>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkMergeValidationCachesEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.MergeValidationCachesEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetValidationCacheDataEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetValidationCacheDataEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindShadingRateImageNV>
 {
     template <typename... Args>
@@ -6142,7 +3483,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindShadingRateImageNV>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportShadingRatePaletteNV>
 {
     template <typename... Args>
@@ -6157,7 +3498,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportShadingRatePal
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoarseSampleOrderNV>
 {
     template <typename... Args>
@@ -6172,22 +3513,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoarseSampleOrderNV>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateAccelerationStructureNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateAccelerationStructureNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyAccelerationStructureNV>
 {
     template <typename... Args>
@@ -6202,7 +3528,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyAccelerationStructure
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureMemoryRequirementsNV>
 {
     template <typename... Args>
@@ -6217,22 +3543,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureMemo
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindAccelerationStructureMemoryNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.BindAccelerationStructureMemoryNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructureNV>
 {
     template <typename... Args>
@@ -6247,7 +3558,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructur
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructureNV>
 {
     template <typename... Args>
@@ -6262,7 +3573,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructure
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysNV>
 {
     template <typename... Args>
@@ -6277,67 +3588,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysNV>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRayTracingPipelinesNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateRayTracingPipelinesNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupHandlesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetRayTracingShaderGroupHandlesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupHandlesNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetRayTracingShaderGroupHandlesNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureHandleNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetAccelerationStructureHandleNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteAccelerationStructuresPropertiesNV>
 {
     template <typename... Args>
@@ -6352,37 +3603,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteAccelerationStructur
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCompileDeferredNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CompileDeferredNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryHostPointerPropertiesEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetMemoryHostPointerPropertiesEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteBufferMarkerAMD>
 {
     template <typename... Args>
@@ -6397,37 +3618,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteBufferMarkerAMD>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceCalibrateableTimeDomainsEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetCalibratedTimestampsEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetCalibratedTimestampsEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksNV>
 {
     template <typename... Args>
@@ -6442,7 +3633,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksNV>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectNV>
 {
     template <typename... Args>
@@ -6457,7 +3648,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectNV>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectCountNV>
 {
     template <typename... Args>
@@ -6472,7 +3663,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectCoun
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetExclusiveScissorEnableNV>
 {
     template <typename... Args>
@@ -6487,7 +3678,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetExclusiveScissorEnable
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetExclusiveScissorNV>
 {
     template <typename... Args>
@@ -6502,7 +3693,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetExclusiveScissorNV>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCheckpointNV>
 {
     template <typename... Args>
@@ -6517,7 +3708,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCheckpointNV>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetQueueCheckpointDataNV>
 {
     template <typename... Args>
@@ -6532,22 +3723,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetQueueCheckpointDataNV>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkInitializePerformanceApiINTEL>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.InitializePerformanceApiINTEL_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkUninitializePerformanceApiINTEL>
 {
     template <typename... Args>
@@ -6562,112 +3738,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkUninitializePerformanceApiIN
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceMarkerINTEL>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CmdSetPerformanceMarkerINTEL_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceStreamMarkerINTEL>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CmdSetPerformanceStreamMarkerINTEL_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceOverrideINTEL>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CmdSetPerformanceOverrideINTEL_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquirePerformanceConfigurationINTEL>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.AcquirePerformanceConfigurationINTEL_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleasePerformanceConfigurationINTEL>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.ReleasePerformanceConfigurationINTEL_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueSetPerformanceConfigurationINTEL>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.QueueSetPerformanceConfigurationINTEL_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPerformanceParameterINTEL>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPerformanceParameterINTEL_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetLocalDimmingAMD>
 {
     template <typename... Args>
@@ -6682,172 +3753,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetLocalDimmingAMD>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateImagePipeSurfaceFUCHSIA>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateImagePipeSurfaceFUCHSIA_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateMetalSurfaceEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateMetalSurfaceEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddressEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetBufferDeviceAddressEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceToolPropertiesEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceToolPropertiesEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceCooperativeMatrixPropertiesNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceCooperativeMatrixPropertiesNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfacePresentModes2EXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceSurfacePresentModes2EXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireFullScreenExclusiveModeEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.AcquireFullScreenExclusiveModeEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleaseFullScreenExclusiveModeEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.ReleaseFullScreenExclusiveModeEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupSurfacePresentModes2EXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDeviceGroupSurfacePresentModes2EXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateHeadlessSurfaceEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateHeadlessSurfaceEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLineStippleEXT>
 {
     template <typename... Args>
@@ -6862,7 +3768,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLineStippleEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetQueryPoolEXT>
 {
     template <typename... Args>
@@ -6877,7 +3783,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetQueryPoolEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCullModeEXT>
 {
     template <typename... Args>
@@ -6892,7 +3798,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCullModeEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetFrontFaceEXT>
 {
     template <typename... Args>
@@ -6907,7 +3813,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetFrontFaceEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveTopologyEXT>
 {
     template <typename... Args>
@@ -6922,7 +3828,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveTopologyEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWithCountEXT>
 {
     template <typename... Args>
@@ -6937,7 +3843,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWithCountEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetScissorWithCountEXT>
 {
     template <typename... Args>
@@ -6952,7 +3858,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetScissorWithCountEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers2EXT>
 {
     template <typename... Args>
@@ -6967,7 +3873,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers2EXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthTestEnableEXT>
 {
     template <typename... Args>
@@ -6982,7 +3888,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthTestEnableEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthWriteEnableEXT>
 {
     template <typename... Args>
@@ -6997,7 +3903,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthWriteEnableEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthCompareOpEXT>
 {
     template <typename... Args>
@@ -7012,7 +3918,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthCompareOpEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBoundsTestEnableEXT>
 {
     template <typename... Args>
@@ -7027,7 +3933,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBoundsTestEnableE
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilTestEnableEXT>
 {
     template <typename... Args>
@@ -7042,7 +3948,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilTestEnableEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilOpEXT>
 {
     template <typename... Args>
@@ -7057,22 +3963,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilOpEXT>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleaseSwapchainImagesEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.ReleaseSwapchainImagesEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetGeneratedCommandsMemoryRequirementsNV>
 {
     template <typename... Args>
@@ -7087,22 +3978,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetGeneratedCommandsMemoryRe
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPreprocessGeneratedCommandsNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CmdPreprocessGeneratedCommandsNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdExecuteGeneratedCommandsNV>
 {
     template <typename... Args>
@@ -7117,7 +3993,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdExecuteGeneratedCommandsN
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindPipelineShaderGroupNV>
 {
     template <typename... Args>
@@ -7132,22 +4008,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindPipelineShaderGroupNV
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateIndirectCommandsLayoutNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateIndirectCommandsLayoutNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyIndirectCommandsLayoutNV>
 {
     template <typename... Args>
@@ -7162,52 +4023,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyIndirectCommandsLayou
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireDrmDisplayEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.AcquireDrmDisplayEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDrmDisplayEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDrmDisplayEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreatePrivateDataSlotEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreatePrivateDataSlotEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPrivateDataSlotEXT>
 {
     template <typename... Args>
@@ -7222,22 +4038,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPrivateDataSlotEXT>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetPrivateDataEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.SetPrivateDataEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPrivateDataEXT>
 {
     template <typename... Args>
@@ -7252,7 +4053,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPrivateDataEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetFragmentShadingRateEnumNV>
 {
     template <typename... Args>
@@ -7267,7 +4068,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetFragmentShadingRateEnu
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSubresourceLayout2EXT>
 {
     template <typename... Args>
@@ -7282,82 +4083,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSubresourceLayout2EX
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceFaultInfoEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDeviceFaultInfoEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireWinrtDisplayNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.AcquireWinrtDisplayNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetWinrtDisplayNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetWinrtDisplayNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDirectFBSurfaceEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateDirectFBSurfaceEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDirectFBPresentationSupportEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceDirectFBPresentationSupportEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetVertexInputEXT>
 {
     template <typename... Args>
@@ -7372,67 +4098,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetVertexInputEXT>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryZirconHandleFUCHSIA>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetMemoryZirconHandleFUCHSIA_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryZirconHandlePropertiesFUCHSIA>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetMemoryZirconHandlePropertiesFUCHSIA_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreZirconHandleFUCHSIA>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.ImportSemaphoreZirconHandleFUCHSIA_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreZirconHandleFUCHSIA>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetSemaphoreZirconHandleFUCHSIA_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindInvocationMaskHUAWEI>
 {
     template <typename... Args>
@@ -7447,22 +4113,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindInvocationMaskHUAWEI>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryRemoteAddressNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetMemoryRemoteAddressNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPatchControlPointsEXT>
 {
     template <typename... Args>
@@ -7477,7 +4128,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPatchControlPointsEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizerDiscardEnableEXT>
 {
     template <typename... Args>
@@ -7492,7 +4143,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizerDiscardEnabl
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBiasEnableEXT>
 {
     template <typename... Args>
@@ -7507,7 +4158,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBiasEnableEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLogicOpEXT>
 {
     template <typename... Args>
@@ -7522,7 +4173,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLogicOpEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveRestartEnableEXT>
 {
     template <typename... Args>
@@ -7537,37 +4188,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveRestartEnable
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateScreenSurfaceQNX>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateScreenSurfaceQNX_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceScreenPresentationSupportQNX>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceScreenPresentationSupportQNX_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorWriteEnableEXT>
 {
     template <typename... Args>
@@ -7582,7 +4203,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorWriteEnableEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMultiEXT>
 {
     template <typename... Args>
@@ -7597,7 +4218,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMultiEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMultiIndexedEXT>
 {
     template <typename... Args>
@@ -7612,22 +4233,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMultiIndexedEXT>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateMicromapEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateMicromapEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyMicromapEXT>
 {
     template <typename... Args>
@@ -7642,7 +4248,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyMicromapEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBuildMicromapsEXT>
 {
     template <typename... Args>
@@ -7657,82 +4263,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBuildMicromapsEXT>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBuildMicromapsEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.BuildMicromapsEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyMicromapEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CopyMicromapEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyMicromapToMemoryEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CopyMicromapToMemoryEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyMemoryToMicromapEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CopyMemoryToMicromapEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWriteMicromapsPropertiesEXT>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.WriteMicromapsPropertiesEXT_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyMicromapEXT>
 {
     template <typename... Args>
@@ -7747,7 +4278,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyMicromapEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyMicromapToMemoryEXT>
 {
     template <typename... Args>
@@ -7762,7 +4293,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyMicromapToMemoryEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyMemoryToMicromapEXT>
 {
     template <typename... Args>
@@ -7777,7 +4308,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyMemoryToMicromapEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteMicromapsPropertiesEXT>
 {
     template <typename... Args>
@@ -7792,7 +4323,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteMicromapsPropertiesE
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceMicromapCompatibilityEXT>
 {
     template <typename... Args>
@@ -7807,7 +4338,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceMicromapCompatibili
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMicromapBuildSizesEXT>
 {
     template <typename... Args>
@@ -7822,7 +4353,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMicromapBuildSizesEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawClusterHUAWEI>
 {
     template <typename... Args>
@@ -7837,7 +4368,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawClusterHUAWEI>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawClusterIndirectHUAWEI>
 {
     template <typename... Args>
@@ -7852,7 +4383,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawClusterIndirectHUAWEI
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetDeviceMemoryPriorityEXT>
 {
     template <typename... Args>
@@ -7867,7 +4398,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetDeviceMemoryPriorityEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutHostMappingInfoVALVE>
 {
     template <typename... Args>
@@ -7882,7 +4413,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutHostMa
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetHostMappingVALVE>
 {
     template <typename... Args>
@@ -7897,7 +4428,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetHostMappingV
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetTessellationDomainOriginEXT>
 {
     template <typename... Args>
@@ -7912,7 +4443,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetTessellationDomainOrig
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthClampEnableEXT>
 {
     template <typename... Args>
@@ -7927,7 +4458,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthClampEnableEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPolygonModeEXT>
 {
     template <typename... Args>
@@ -7942,7 +4473,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPolygonModeEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizationSamplesEXT>
 {
     template <typename... Args>
@@ -7957,7 +4488,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizationSamplesEX
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetSampleMaskEXT>
 {
     template <typename... Args>
@@ -7972,7 +4503,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetSampleMaskEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetAlphaToCoverageEnableEXT>
 {
     template <typename... Args>
@@ -7987,7 +4518,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetAlphaToCoverageEnableE
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetAlphaToOneEnableEXT>
 {
     template <typename... Args>
@@ -8002,7 +4533,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetAlphaToOneEnableEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLogicOpEnableEXT>
 {
     template <typename... Args>
@@ -8017,7 +4548,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLogicOpEnableEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendEnableEXT>
 {
     template <typename... Args>
@@ -8032,7 +4563,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendEnableEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendEquationEXT>
 {
     template <typename... Args>
@@ -8047,7 +4578,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendEquationEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorWriteMaskEXT>
 {
     template <typename... Args>
@@ -8062,7 +4593,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorWriteMaskEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizationStreamEXT>
 {
     template <typename... Args>
@@ -8077,7 +4608,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizationStreamEXT
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetConservativeRasterizationModeEXT>
 {
     template <typename... Args>
@@ -8092,7 +4623,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetConservativeRasterizat
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetExtraPrimitiveOverestimationSizeEXT>
 {
     template <typename... Args>
@@ -8107,7 +4638,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetExtraPrimitiveOveresti
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthClipEnableEXT>
 {
     template <typename... Args>
@@ -8122,7 +4653,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthClipEnableEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetSampleLocationsEnableEXT>
 {
     template <typename... Args>
@@ -8137,7 +4668,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetSampleLocationsEnableE
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendAdvancedEXT>
 {
     template <typename... Args>
@@ -8152,7 +4683,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendAdvancedEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetProvokingVertexModeEXT>
 {
     template <typename... Args>
@@ -8167,7 +4698,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetProvokingVertexModeEXT
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLineRasterizationModeEXT>
 {
     template <typename... Args>
@@ -8182,7 +4713,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLineRasterizationModeE
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLineStippleEnableEXT>
 {
     template <typename... Args>
@@ -8197,7 +4728,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLineStippleEnableEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthClipNegativeOneToOneEXT>
 {
     template <typename... Args>
@@ -8212,7 +4743,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthClipNegativeOneTo
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWScalingEnableNV>
 {
     template <typename... Args>
@@ -8227,7 +4758,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWScalingEnable
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportSwizzleNV>
 {
     template <typename... Args>
@@ -8242,7 +4773,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportSwizzleNV>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageToColorEnableNV>
 {
     template <typename... Args>
@@ -8257,7 +4788,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageToColorEnableN
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageToColorLocationNV>
 {
     template <typename... Args>
@@ -8272,7 +4803,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageToColorLocatio
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationModeNV>
 {
     template <typename... Args>
@@ -8287,7 +4818,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationMode
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationTableEnableNV>
 {
     template <typename... Args>
@@ -8302,7 +4833,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationTabl
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationTableNV>
 {
     template <typename... Args>
@@ -8317,7 +4848,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationTabl
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetShadingRateImageEnableNV>
 {
     template <typename... Args>
@@ -8332,7 +4863,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetShadingRateImageEnable
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRepresentativeFragmentTestEnableNV>
 {
     template <typename... Args>
@@ -8347,7 +4878,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRepresentativeFragment
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageReductionModeNV>
 {
     template <typename... Args>
@@ -8362,7 +4893,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageReductionModeN
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetShaderModuleIdentifierEXT>
 {
     template <typename... Args>
@@ -8377,7 +4908,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetShaderModuleIdentifierEXT
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetShaderModuleCreateInfoIdentifierEXT>
 {
     template <typename... Args>
@@ -8392,37 +4923,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetShaderModuleCreateInfoIde
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceOpticalFlowImageFormatsNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetPhysicalDeviceOpticalFlowImageFormatsNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateOpticalFlowSessionNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateOpticalFlowSessionNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyOpticalFlowSessionNV>
 {
     template <typename... Args>
@@ -8437,22 +4938,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyOpticalFlowSessionNV>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindOpticalFlowSessionImageNV>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.BindOpticalFlowSessionImageNV_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdOpticalFlowExecuteNV>
 {
     template <typename... Args>
@@ -8467,52 +4953,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdOpticalFlowExecuteNV>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetFramebufferTilePropertiesQCOM>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetFramebufferTilePropertiesQCOM_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDynamicRenderingTilePropertiesQCOM>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetDynamicRenderingTilePropertiesQCOM_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateAccelerationStructureKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateAccelerationStructureKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyAccelerationStructureKHR>
 {
     template <typename... Args>
@@ -8527,7 +4968,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyAccelerationStructure
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructuresKHR>
 {
     template <typename... Args>
@@ -8542,7 +4983,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructur
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructuresIndirectKHR>
 {
     template <typename... Args>
@@ -8557,52 +4998,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructur
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyAccelerationStructureToMemoryKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CopyAccelerationStructureToMemoryKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyMemoryToAccelerationStructureKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CopyMemoryToAccelerationStructureKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWriteAccelerationStructuresPropertiesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.WriteAccelerationStructuresPropertiesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructureKHR>
 {
     template <typename... Args>
@@ -8617,7 +5013,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructure
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructureToMemoryKHR>
 {
     template <typename... Args>
@@ -8632,7 +5028,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructure
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyMemoryToAccelerationStructureKHR>
 {
     template <typename... Args>
@@ -8647,22 +5043,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyMemoryToAccelerationS
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureDeviceAddressKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetAccelerationStructureDeviceAddressKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteAccelerationStructuresPropertiesKHR>
 {
     template <typename... Args>
@@ -8677,7 +5058,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteAccelerationStructur
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceAccelerationStructureCompatibilityKHR>
 {
     template <typename... Args>
@@ -8692,7 +5073,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceAccelerationStructu
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureBuildSizesKHR>
 {
     template <typename... Args>
@@ -8707,7 +5088,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureBuil
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysKHR>
 {
     template <typename... Args>
@@ -8722,37 +5103,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysKHR>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRayTracingPipelinesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.CreateRayTracingPipelinesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRayTracingCaptureReplayShaderGroupHandlesKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetRayTracingCaptureReplayShaderGroupHandlesKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysIndirectKHR>
 {
     template <typename... Args>
@@ -8767,22 +5118,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysIndirectKHR>
     }
 };
 
-template<>
-struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupStackSizeKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
-    {
-        assert(consumer);
-
-        for (auto &plugin : consumer->loaded_plugins_)
-        {
-            plugin.func_table_pre.GetRayTracingShaderGroupStackSizeKHR_PreCall(consumer, call_info, args...);
-        }
-    }
-};
-
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRayTracingPipelineStackSizeKHR>
 {
     template <typename... Args>
@@ -8797,7 +5133,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRayTracingPipelineStac
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksEXT>
 {
     template <typename... Args>
@@ -8812,7 +5148,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectEXT>
 {
     template <typename... Args>
@@ -8827,7 +5163,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectEXT>
     }
 };
 
-template<>
+template <>
 struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectCountEXT>
 {
     template <typename... Args>
@@ -8842,6 +5178,3635 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectCoun
     }
 };
 
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferOpaqueCaptureAddress>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetBufferOpaqueCaptureAddress_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryOpaqueCaptureAddress>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDeviceMemoryOpaqueCaptureAddress_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceXlibPresentationSupportKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceXlibPresentationSupportKHR_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceXcbPresentationSupportKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceXcbPresentationSupportKHR_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceWaylandPresentationSupportKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceWaylandPresentationSupportKHR_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceWin32PresentationSupportKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceWin32PresentationSupportKHR_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddressKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetBufferDeviceAddressKHR_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferOpaqueCaptureAddressKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetBufferOpaqueCaptureAddressKHR_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryOpaqueCaptureAddressKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDeviceMemoryOpaqueCaptureAddressKHR_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeferredOperationMaxConcurrencyKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDeferredOperationMaxConcurrencyKHR_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageViewHandleNVX>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetImageViewHandleNVX_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddressEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetBufferDeviceAddressEXT_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDirectFBPresentationSupportEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceDirectFBPresentationSupportEXT_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceScreenPresentationSupportQNX>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceScreenPresentationSupportQNX_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureDeviceAddressKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetAccelerationStructureDeviceAddressKHR_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupStackSizeKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetRayTracingShaderGroupStackSizeKHR_PreCall(consumer, call_info, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateInstance>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateInstance_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDevices>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.EnumeratePhysicalDevices_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageFormatProperties>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDevice>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateDevice_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.QueueSubmit_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueWaitIdle>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.QueueWaitIdle_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDeviceWaitIdle>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.DeviceWaitIdle_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAllocateMemory>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.AllocateMemory_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkMapMemory>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.MapMemory_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkFlushMappedMemoryRanges>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.FlushMappedMemoryRanges_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkInvalidateMappedMemoryRanges>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.InvalidateMappedMemoryRanges_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.BindBufferMemory_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindImageMemory>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.BindImageMemory_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueBindSparse>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.QueueBindSparse_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateFence>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateFence_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetFences>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.ResetFences_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetFenceStatus>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetFenceStatus_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWaitForFences>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.WaitForFences_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSemaphore>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateSemaphore_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateEvent>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateEvent_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetEventStatus>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetEventStatus_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetEvent>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.SetEvent_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetEvent>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.ResetEvent_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateQueryPool>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateQueryPool_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetQueryPoolResults>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetQueryPoolResults_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateBuffer>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateBuffer_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateBufferView>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateBufferView_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateImage>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateImage_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateImageView>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateImageView_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateShaderModule>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateShaderModule_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreatePipelineCache>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreatePipelineCache_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPipelineCacheData>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPipelineCacheData_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkMergePipelineCaches>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.MergePipelineCaches_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateGraphicsPipelines>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateGraphicsPipelines_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateComputePipelines>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateComputePipelines_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreatePipelineLayout>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreatePipelineLayout_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSampler>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateSampler_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDescriptorSetLayout>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateDescriptorSetLayout_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDescriptorPool>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateDescriptorPool_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetDescriptorPool>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.ResetDescriptorPool_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAllocateDescriptorSets>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.AllocateDescriptorSets_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkFreeDescriptorSets>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.FreeDescriptorSets_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateFramebuffer>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateFramebuffer_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRenderPass>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateRenderPass_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateCommandPool>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateCommandPool_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetCommandPool>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.ResetCommandPool_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAllocateCommandBuffers>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.AllocateCommandBuffers_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBeginCommandBuffer>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.BeginCommandBuffer_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEndCommandBuffer>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.EndCommandBuffer_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetCommandBuffer>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.ResetCommandBuffer_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory2>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.BindBufferMemory2_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindImageMemory2>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.BindImageMemory2_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceGroups>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.EnumeratePhysicalDeviceGroups_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageFormatProperties2>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties2_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSamplerYcbcrConversion>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateSamplerYcbcrConversion_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRenderPass2>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateRenderPass2_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreCounterValue>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetSemaphoreCounterValue_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWaitSemaphores>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.WaitSemaphores_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSignalSemaphore>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.SignalSemaphore_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceToolProperties>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceToolProperties_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreatePrivateDataSlot>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreatePrivateDataSlot_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetPrivateData>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.SetPrivateData_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueSubmit2>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.QueueSubmit2_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceSupportKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceSupportKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCapabilitiesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilitiesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceFormatsKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceFormatsKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfacePresentModesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceSurfacePresentModesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSwapchainKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateSwapchainKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSwapchainImagesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetSwapchainImagesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireNextImageKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.AcquireNextImageKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.QueuePresentKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPresentCapabilitiesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDeviceGroupPresentCapabilitiesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupSurfacePresentModesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDeviceGroupSurfacePresentModesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDevicePresentRectanglesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDevicePresentRectanglesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireNextImage2KHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.AcquireNextImage2KHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPropertiesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceDisplayPropertiesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPlanePropertiesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceDisplayPlanePropertiesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneSupportedDisplaysKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDisplayPlaneSupportedDisplaysKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayModePropertiesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDisplayModePropertiesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDisplayModeKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateDisplayModeKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneCapabilitiesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDisplayPlaneCapabilitiesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDisplayPlaneSurfaceKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateDisplayPlaneSurfaceKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSharedSwapchainsKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateSharedSwapchainsKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateXlibSurfaceKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateXlibSurfaceKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateXcbSurfaceKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateXcbSurfaceKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateWaylandSurfaceKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateWaylandSurfaceKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateAndroidSurfaceKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateAndroidSurfaceKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateWin32SurfaceKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateWin32SurfaceKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceVideoCapabilitiesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceVideoCapabilitiesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceVideoFormatPropertiesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceVideoFormatPropertiesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateVideoSessionKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateVideoSessionKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetVideoSessionMemoryRequirementsKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetVideoSessionMemoryRequirementsKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindVideoSessionMemoryKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.BindVideoSessionMemoryKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateVideoSessionParametersKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateVideoSessionParametersKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkUpdateVideoSessionParametersKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.UpdateVideoSessionParametersKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageFormatProperties2KHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties2KHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceGroupsKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.EnumeratePhysicalDeviceGroupsKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandleKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetMemoryWin32HandleKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandlePropertiesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetMemoryWin32HandlePropertiesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryFdKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetMemoryFdKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryFdPropertiesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetMemoryFdPropertiesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreWin32HandleKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.ImportSemaphoreWin32HandleKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreWin32HandleKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetSemaphoreWin32HandleKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreFdKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.ImportSemaphoreFdKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreFdKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetSemaphoreFdKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDescriptorUpdateTemplateKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateDescriptorUpdateTemplateKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRenderPass2KHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateRenderPass2KHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSwapchainStatusKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetSwapchainStatusKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportFenceWin32HandleKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.ImportFenceWin32HandleKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetFenceWin32HandleKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetFenceWin32HandleKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportFenceFdKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.ImportFenceFdKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetFenceFdKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetFenceFdKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireProfilingLockKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.AcquireProfilingLockKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCapabilities2KHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilities2KHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceFormats2KHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceFormats2KHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayProperties2KHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceDisplayProperties2KHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPlaneProperties2KHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceDisplayPlaneProperties2KHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayModeProperties2KHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDisplayModeProperties2KHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneCapabilities2KHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDisplayPlaneCapabilities2KHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSamplerYcbcrConversionKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateSamplerYcbcrConversionKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory2KHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.BindBufferMemory2KHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindImageMemory2KHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.BindImageMemory2KHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreCounterValueKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetSemaphoreCounterValueKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWaitSemaphoresKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.WaitSemaphoresKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSignalSemaphoreKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.SignalSemaphoreKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFragmentShadingRatesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceFragmentShadingRatesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWaitForPresentKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.WaitForPresentKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDeferredOperationKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateDeferredOperationKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeferredOperationResultKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDeferredOperationResultKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDeferredOperationJoinKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.DeferredOperationJoinKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPipelineExecutablePropertiesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPipelineExecutablePropertiesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPipelineExecutableStatisticsKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPipelineExecutableStatisticsKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPipelineExecutableInternalRepresentationsKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPipelineExecutableInternalRepresentationsKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueSubmit2KHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.QueueSubmit2KHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDebugReportCallbackEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateDebugReportCallbackEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDebugMarkerSetObjectTagEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.DebugMarkerSetObjectTagEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDebugMarkerSetObjectNameEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.DebugMarkerSetObjectNameEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageViewAddressNVX>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetImageViewAddressNVX_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetShaderInfoAMD>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetShaderInfoAMD_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateStreamDescriptorSurfaceGGP>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateStreamDescriptorSurfaceGGP_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalImageFormatPropertiesNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceExternalImageFormatPropertiesNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandleNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetMemoryWin32HandleNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateViSurfaceNN>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateViSurfaceNN_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleaseDisplayEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.ReleaseDisplayEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireXlibDisplayEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.AcquireXlibDisplayEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRandROutputDisplayEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetRandROutputDisplayEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCapabilities2EXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilities2EXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDisplayPowerControlEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.DisplayPowerControlEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkRegisterDeviceEventEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.RegisterDeviceEventEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkRegisterDisplayEventEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.RegisterDisplayEventEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSwapchainCounterEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetSwapchainCounterEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRefreshCycleDurationGOOGLE>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetRefreshCycleDurationGOOGLE_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPastPresentationTimingGOOGLE>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPastPresentationTimingGOOGLE_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateIOSSurfaceMVK>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateIOSSurfaceMVK_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateMacOSSurfaceMVK>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateMacOSSurfaceMVK_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetDebugUtilsObjectNameEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.SetDebugUtilsObjectNameEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetDebugUtilsObjectTagEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.SetDebugUtilsObjectTagEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDebugUtilsMessengerEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateDebugUtilsMessengerEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAndroidHardwareBufferPropertiesANDROID>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetAndroidHardwareBufferPropertiesANDROID_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryAndroidHardwareBufferANDROID>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetMemoryAndroidHardwareBufferANDROID_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageDrmFormatModifierPropertiesEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetImageDrmFormatModifierPropertiesEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateValidationCacheEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateValidationCacheEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkMergeValidationCachesEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.MergeValidationCachesEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetValidationCacheDataEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetValidationCacheDataEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateAccelerationStructureNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateAccelerationStructureNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindAccelerationStructureMemoryNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.BindAccelerationStructureMemoryNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRayTracingPipelinesNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateRayTracingPipelinesNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupHandlesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetRayTracingShaderGroupHandlesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupHandlesNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetRayTracingShaderGroupHandlesNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureHandleNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetAccelerationStructureHandleNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCompileDeferredNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CompileDeferredNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryHostPointerPropertiesEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetMemoryHostPointerPropertiesEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceCalibrateableTimeDomainsEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetCalibratedTimestampsEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetCalibratedTimestampsEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkInitializePerformanceApiINTEL>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.InitializePerformanceApiINTEL_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceMarkerINTEL>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CmdSetPerformanceMarkerINTEL_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceStreamMarkerINTEL>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CmdSetPerformanceStreamMarkerINTEL_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceOverrideINTEL>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CmdSetPerformanceOverrideINTEL_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquirePerformanceConfigurationINTEL>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.AcquirePerformanceConfigurationINTEL_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleasePerformanceConfigurationINTEL>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.ReleasePerformanceConfigurationINTEL_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueSetPerformanceConfigurationINTEL>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.QueueSetPerformanceConfigurationINTEL_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPerformanceParameterINTEL>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPerformanceParameterINTEL_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateImagePipeSurfaceFUCHSIA>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateImagePipeSurfaceFUCHSIA_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateMetalSurfaceEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateMetalSurfaceEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceToolPropertiesEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceToolPropertiesEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceCooperativeMatrixPropertiesNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceCooperativeMatrixPropertiesNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfacePresentModes2EXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceSurfacePresentModes2EXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireFullScreenExclusiveModeEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.AcquireFullScreenExclusiveModeEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleaseFullScreenExclusiveModeEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.ReleaseFullScreenExclusiveModeEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupSurfacePresentModes2EXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDeviceGroupSurfacePresentModes2EXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateHeadlessSurfaceEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateHeadlessSurfaceEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleaseSwapchainImagesEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.ReleaseSwapchainImagesEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateIndirectCommandsLayoutNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateIndirectCommandsLayoutNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireDrmDisplayEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.AcquireDrmDisplayEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDrmDisplayEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDrmDisplayEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreatePrivateDataSlotEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreatePrivateDataSlotEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetPrivateDataEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.SetPrivateDataEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceFaultInfoEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDeviceFaultInfoEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireWinrtDisplayNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.AcquireWinrtDisplayNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetWinrtDisplayNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetWinrtDisplayNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDirectFBSurfaceEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateDirectFBSurfaceEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryZirconHandleFUCHSIA>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetMemoryZirconHandleFUCHSIA_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryZirconHandlePropertiesFUCHSIA>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetMemoryZirconHandlePropertiesFUCHSIA_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreZirconHandleFUCHSIA>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.ImportSemaphoreZirconHandleFUCHSIA_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreZirconHandleFUCHSIA>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetSemaphoreZirconHandleFUCHSIA_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryRemoteAddressNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetMemoryRemoteAddressNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateScreenSurfaceQNX>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateScreenSurfaceQNX_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateMicromapEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateMicromapEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBuildMicromapsEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.BuildMicromapsEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyMicromapEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CopyMicromapEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyMicromapToMemoryEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CopyMicromapToMemoryEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyMemoryToMicromapEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CopyMemoryToMicromapEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWriteMicromapsPropertiesEXT>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.WriteMicromapsPropertiesEXT_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceOpticalFlowImageFormatsNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetPhysicalDeviceOpticalFlowImageFormatsNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateOpticalFlowSessionNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateOpticalFlowSessionNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindOpticalFlowSessionImageNV>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.BindOpticalFlowSessionImageNV_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetFramebufferTilePropertiesQCOM>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetFramebufferTilePropertiesQCOM_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDynamicRenderingTilePropertiesQCOM>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetDynamicRenderingTilePropertiesQCOM_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateAccelerationStructureKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateAccelerationStructureKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyAccelerationStructureToMemoryKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CopyAccelerationStructureToMemoryKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyMemoryToAccelerationStructureKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CopyMemoryToAccelerationStructureKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWriteAccelerationStructuresPropertiesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.WriteAccelerationStructuresPropertiesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRayTracingPipelinesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.CreateRayTracingPipelinesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
+
+template <>
+struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRayTracingCaptureReplayShaderGroupHandlesKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    {
+        assert(consumer);
+
+        for (auto &plugin : consumer->loaded_plugins_)
+        {
+            plugin.func_table_pre.GetRayTracingCaptureReplayShaderGroupHandlesKHR_PreCall(consumer, call_info, result, args...);
+        }
+    }
+};
 GFXRECON_END_NAMESPACE(decode)
 GFXRECON_END_NAMESPACE(gfxrecon)
 

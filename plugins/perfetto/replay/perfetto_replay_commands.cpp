@@ -1,6 +1,6 @@
 /*
-** Copyright (c) 2018-2021 Valve Corporation
-** Copyright (c) 2018-2022 LunarG, Inc.
+** Copyright (c) 2023 Valve Corporation
+** Copyright (c) 2023 LunarG, Inc.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and associated documentation files (the "Software"),
@@ -25,6 +25,8 @@
 #include "../perfetto_tracing_categories.h"
 #include "util/defines.h"
 
+#include <vector>
+#include <string>
 #include <sstream>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
@@ -36,7 +38,7 @@ using namespace decode;
 
 #if !defined(WIN32)
 
-void InitializePerfetto()
+static void InitializePerfetto()
 {
     static bool initialized = false;
 
@@ -53,44 +55,55 @@ void InitializePerfetto()
     }
 }
 
-void Process_QueueSubmit(decode::VulkanReplayConsumerBase*                   consumer,
-                         const decode::ApiCallInfo&                          call_info,
-                         VkResult                                            returnValue,
-                         format::HandleId                                    queue,
-                         uint32_t                                            submitCount,
-                         decode::StructPointerDecoder<Decoded_VkSubmitInfo>* pSubmits,
-                         format::HandleId                                    fence)
+void Process_CreateInstance_Pre(VulkanReplayConsumerBase*                            consumer,
+                                const ApiCallInfo&                                   call_info,
+                                VkResult                                             returnValue,
+                                StructPointerDecoder<Decoded_VkInstanceCreateInfo>*  pCreateInfo,
+                                StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
+                                HandlePointerDecoder<VkInstance>*                    pInstance)
 {
+    InitializePerfetto();
 
-    // TRACE_EVENT_INSTANT("GFXR", "vkQueueSubmit", [&](perfetto::EventContext ctx) {
-    //     const std::string command_index = std::to_string(call_info.index);
-    //     ctx.AddDebugAnnotation("vkQueueSubmit:", command_index.c_str());
-
-    //     auto                handle_unwrap_memory = VulkanCaptureManager::Get()->GetHandleUnwrapMemory();
-    //     const VkSubmitInfo* pSubmits_unwrapped = UnwrapStructArrayHandles(pSubmits, submitCount, handle_unwrap_memory);
-
-    //     std::vector<std::string> names, handles;
-    //     for (uint32_t i = 0; i < pSubmits_unwrapped->commandBufferCount; ++i)
-    //     {
-    //         names.push_back("vkCommandBuffer: " + std::to_string(i));
-    //         std::stringstream ss;
-    //         ss << std::hex << pSubmits_unwrapped->pCommandBuffers[i];
-    //         handles.push_back(ss.str());
-    //         ctx.AddDebugAnnotation(names[i].c_str(), perfetto::DynamicString{ handles[i].c_str() });
-    //     }
-    // });
+    const uint64_t    command_index = call_info.index;
+    const std::string submit_name   = "vkCreateInstance: " + std::to_string(command_index);
+    TRACE_EVENT_INSTANT("GFXR", perfetto::DynamicString{ submit_name.c_str() }, "Command ID:", command_index);
 }
 
-void Process_QueuePresent(decode::VulkanReplayConsumerBase*                       consumer,
-                          const decode::ApiCallInfo&                              call_info,
-                          VkResult                                                returnValue,
-                          format::HandleId                                        queue,
-                          decode::StructPointerDecoder<Decoded_VkPresentInfoKHR>* pPresentInfo)
+void Process_QueueSubmit(VulkanReplayConsumerBase*                   consumer,
+                         const ApiCallInfo&                          call_info,
+                         VkResult                                    returnValue,
+                         format::HandleId                            queue,
+                         uint32_t                                    submitCount,
+                         StructPointerDecoder<Decoded_VkSubmitInfo>* pSubmits,
+                         format::HandleId                            fence)
+{
+    TRACE_EVENT_INSTANT("GFXR", "vkQueueSubmit", [&](perfetto::EventContext ctx) {
+        ctx.AddDebugAnnotation("vkQueueSubmit:", call_info.index);
+
+        const Decoded_VkSubmitInfo* submit_info_data   = pSubmits->GetMetaStructPointer();
+        const format::HandleId*     command_buffer_ids = submit_info_data->pCommandBuffers.GetPointer();
+
+        for (uint32_t i = 0; i < submit_info_data->decoded_value->commandBufferCount; ++i)
+        {
+            CommandBufferInfo* cmd_buf_info =
+                consumer->GetObjectInfoTable().GetCommandBufferInfo(command_buffer_ids[i]);
+
+            ctx.AddDebugAnnotation<perfetto::DynamicString, void*>(
+                perfetto::DynamicString{ "vkCommandBuffer: " + std::to_string(i) }, cmd_buf_info->capture_handle);
+        }
+    });
+}
+
+void Process_QueuePresent(VulkanReplayConsumerBase*                       consumer,
+                          const ApiCallInfo&                              call_info,
+                          VkResult                                        returnValue,
+                          format::HandleId                                queue,
+                          StructPointerDecoder<Decoded_VkPresentInfoKHR>* pPresentInfo)
 {
     assert(consumer);
 
     const uint64_t    command_index = call_info.index;
-    const std::string submit_name   = "QueuePresent: " + std::to_string(command_index);
+    const std::string submit_name   = "vkQueuePresent: " + std::to_string(command_index);
     TRACE_EVENT_INSTANT("GFXR", perfetto::DynamicString{ submit_name.c_str() }, "Command ID:", command_index);
 }
 

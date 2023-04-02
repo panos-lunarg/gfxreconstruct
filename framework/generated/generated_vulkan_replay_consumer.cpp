@@ -50,7 +50,7 @@ void VulkanReplayConsumer::Process_vkCreateInstance(
     StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
     HandlePointerDecoder<VkInstance>*           pInstance)
 {
-    // ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateInstance>::Dispatch(this, call_info, pCreateInfo, pAllocator, pInstance);
+    ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateInstance>::Dispatch(this, call_info, returnValue, pCreateInfo, pAllocator, pInstance);
 
     if (!pInstance->IsNull()) { pInstance->SetHandleLength(1); }
     InstanceInfo handle_info;
@@ -61,7 +61,7 @@ void VulkanReplayConsumer::Process_vkCreateInstance(
 
     AddHandle<InstanceInfo>(format::kNullHandleId, pInstance->GetPointer(), pInstance->GetHandlePointer(), std::move(handle_info), &VulkanObjectInfoTable::AddInstanceInfo);
 
-    // ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateInstance>::Dispatch(this, call_info, replay_result, pCreateInfo, pAllocator, pInstance);
+    ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateInstance>::Dispatch(this, call_info, replay_result, pCreateInfo, pAllocator, pInstance);
 }
 
 void VulkanReplayConsumer::Process_vkDestroyInstance(
@@ -230,6 +230,8 @@ void VulkanReplayConsumer::Process_vkQueueSubmit(
     StructPointerDecoder<Decoded_VkSubmitInfo>* pSubmits,
     format::HandleId                            fence)
 {
+    ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>::Dispatch(this, call_info, returnValue, queue, submitCount, pSubmits, fence);
+
     auto in_queue = GetObjectInfoTable().GetQueueInfo(queue);
 
     MapStructArrayHandles(pSubmits->GetMetaStructPointer(), pSubmits->GetLength(), GetObjectInfoTable());
@@ -237,6 +239,8 @@ void VulkanReplayConsumer::Process_vkQueueSubmit(
 
     VkResult replay_result = OverrideQueueSubmit(GetDeviceTable(in_queue->handle)->QueueSubmit, returnValue, in_queue, submitCount, pSubmits, in_fence);
     CheckResult("vkQueueSubmit", returnValue, replay_result);
+
+    ConsumerPostCall<format::ApiCallId::ApiCall_vkQueueSubmit>::Dispatch(this, call_info, returnValue, queue, submitCount, pSubmits, fence);
 }
 
 void VulkanReplayConsumer::Process_vkQueueWaitIdle(
@@ -3280,12 +3284,16 @@ void VulkanReplayConsumer::Process_vkQueuePresentKHR(
     format::HandleId                            queue,
     StructPointerDecoder<Decoded_VkPresentInfoKHR>* pPresentInfo)
 {
+    ConsumerPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>::Dispatch(this, call_info, returnValue, queue, pPresentInfo);
+
     auto in_queue = GetObjectInfoTable().GetQueueInfo(queue);
 
     MapStructHandles(pPresentInfo->GetMetaStructPointer(), GetObjectInfoTable());
 
     VkResult replay_result = OverrideQueuePresentKHR(GetDeviceTable(in_queue->handle)->QueuePresentKHR, returnValue, in_queue, pPresentInfo);
     CheckResult("vkQueuePresentKHR", returnValue, replay_result);
+
+    ConsumerPostCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>::Dispatch(this, call_info, returnValue, queue, pPresentInfo);
 }
 
 void VulkanReplayConsumer::Process_vkGetDeviceGroupPresentCapabilitiesKHR(

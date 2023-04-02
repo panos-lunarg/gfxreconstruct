@@ -33,9 +33,9 @@ target_sources(gfxrecon_perfetto_capture_plugin
                     ${CMAKE_CURRENT_LIST_DIR}/perfetto_encoder_commands.cpp
                     ${CMAKE_CURRENT_LIST_DIR}/perfetto_encoder_commands.h
                     ${CMAKE_CURRENT_LIST_DIR}/perfetto_entrypoints_post.cpp
-                    ${CMAKE_CURRENT_LIST_DIR}/../../includes/capture/entrypoints_post.h
+                    ${CMAKE_CURRENT_LIST_DIR}/../../includes/capture/plugins_entrypoints_post.h
                     ${CMAKE_CURRENT_LIST_DIR}/perfetto_entrypoints_pre.cpp
-                    ${CMAKE_CURRENT_LIST_DIR}/../../includes/capture/entrypoints_pre.h
+                    ${CMAKE_CURRENT_LIST_DIR}/../../includes/capture/plugins_entrypoints_pre.h
                     ${CMAKE_CURRENT_LIST_DIR}/../perfetto_tracing_categories.h
                     ${CMAKE_CURRENT_LIST_DIR}/../perfetto_tracing_categories.cpp
 )

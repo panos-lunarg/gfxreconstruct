@@ -183,6 +183,8 @@ VulkanReplayConsumerBase::VulkanReplayConsumerBase(std::shared_ptr<application::
     {
         GFXRECON_LOG_WARNING("This debugging feature has not been implemented for Vulkan.");
     }
+
+    LoadPlugins();
 }
 
 VulkanReplayConsumerBase::~VulkanReplayConsumerBase()
@@ -6724,8 +6726,9 @@ void VulkanReplayConsumerBase::Process_AddHandleIdMappings(
 void VulkanReplayConsumerBase::LoadPlugins()
 {
     loaded_plugin plugin;
-    plugin.handle = util::platform::OpenLibrary("/media/panos/c8ab071b-3a55-4a04-a6d9-9eed1a64a9fa/panosa/Projects/"
-                                                "gfxreconstruct/build/plugins/perfetto/gfxrecon_perfetto_consumer_plugin.so");
+    plugin.handle = util::platform::OpenLibrary(
+        "/media/panos/c8ab071b-3a55-4a04-a6d9-9eed1a64a9fa/panosa/Projects/"
+        "gfxreconstruct/build/plugins/perfetto/replay/libgfxrecon_perfetto_replay_plugin.so");
 
     if (!plugin.handle)
     {

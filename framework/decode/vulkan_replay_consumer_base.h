@@ -193,10 +193,10 @@ class VulkanReplayConsumerBase : public VulkanConsumer
     std::vector<loaded_plugin> loaded_plugins_;
     void                       LoadPlugins();
 
+    VulkanObjectInfoTable& GetObjectInfoTable() { return object_info_table_; }
+
   protected:
     const VulkanObjectInfoTable& GetObjectInfoTable() const { return object_info_table_; }
-
-    VulkanObjectInfoTable& GetObjectInfoTable() { return object_info_table_; }
 
     const encode::InstanceTable* GetInstanceTable(const void* handle) const;
 
