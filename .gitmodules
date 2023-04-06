@@ -1,3 +1,6 @@
 [submodule "external/Vulkan-Headers"]
 	path = external/Vulkan-Headers
 	url = https://github.com/KhronosGroup/Vulkan-Headers.git
+[submodule "plugins/external/perfetto"]
+	path = plugins/external/perfetto
+	url = https://android.googlesource.com/platform/external/perfetto
