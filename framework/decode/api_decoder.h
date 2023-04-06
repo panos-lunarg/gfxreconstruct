@@ -37,9 +37,13 @@ GFXRECON_BEGIN_NAMESPACE(decode)
 
 struct ApiCallInfo
 {
-    uint64_t         index{ 0 };
-    format::ThreadId thread_id{ 0 };
+    ApiCallInfo() = default;
+
+    uint64_t         index;
+    format::ThreadId thread_id;
 };
+
+static_assert(std::is_pod<ApiCallInfo>::value, "is not a POD");
 
 class ApiDecoder
 {

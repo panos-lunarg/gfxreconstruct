@@ -234,6 +234,7 @@ void VulkanReplayConsumer::Process_vkQueueSubmit(
 
     auto in_queue = GetObjectInfoTable().GetQueueInfo(queue);
 
+    const VkSubmitInfo* submit_infos = pSubmits->GetPointer();
     MapStructArrayHandles(pSubmits->GetMetaStructPointer(), pSubmits->GetLength(), GetObjectInfoTable());
     auto in_fence = GetObjectInfoTable().GetFenceInfo(fence);
 

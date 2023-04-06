@@ -178,6 +178,7 @@ struct VulkanPoolObjectInfo : public VulkanObjectInfo<T>
     format::HandleId pool_id{ format::kNullHandleId }; // ID of the pool that the object was allocated from.
 };
 
+
 //
 // Declarations for Vulkan objects without additional replay state info.
 //

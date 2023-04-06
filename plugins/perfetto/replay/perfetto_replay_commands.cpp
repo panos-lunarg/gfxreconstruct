@@ -55,12 +55,11 @@ static void InitializePerfetto()
     }
 }
 
-void Process_CreateInstance_Pre(VulkanReplayConsumerBase*                            consumer,
-                                const ApiCallInfo&                                   call_info,
-                                VkResult                                             returnValue,
-                                StructPointerDecoder<Decoded_VkInstanceCreateInfo>*  pCreateInfo,
-                                StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
-                                HandlePointerDecoder<VkInstance>*                    pInstance)
+void PreProcess_CreateInstance(const ApiCallInfo&                                   call_info,
+                               VkResult                                             returnValue,
+                               StructPointerDecoder<Decoded_VkInstanceCreateInfo>*  pCreateInfo,
+                               StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
+                               HandlePointerDecoder<VkInstance>*                    pInstance)
 {
     InitializePerfetto();
 
@@ -69,39 +68,35 @@ void Process_CreateInstance_Pre(VulkanReplayConsumerBase*                       
     TRACE_EVENT_INSTANT("GFXR", perfetto::DynamicString{ submit_name.c_str() }, "Command ID:", command_index);
 }
 
-void Process_QueueSubmit(VulkanReplayConsumerBase*                   consumer,
-                         const ApiCallInfo&                          call_info,
-                         VkResult                                    returnValue,
-                         format::HandleId                            queue,
-                         uint32_t                                    submitCount,
-                         StructPointerDecoder<Decoded_VkSubmitInfo>* pSubmits,
-                         format::HandleId                            fence)
+void PreProcess_QueueSubmit(const ApiCallInfo&                          call_info,
+                            VkResult                                    returnValue,
+                            format::HandleId                            queue,
+                            uint32_t                                    submitCount,
+                            StructPointerDecoder<Decoded_VkSubmitInfo>* pSubmits,
+                            format::HandleId                            fence)
 {
-    TRACE_EVENT_INSTANT("GFXR", "vkQueueSubmit", [&](perfetto::EventContext ctx) {
-        ctx.AddDebugAnnotation("vkQueueSubmit:", call_info.index);
+    // TRACE_EVENT_INSTANT("GFXR", "vkQueueSubmit", [&](perfetto::EventContext ctx) {
+    //     ctx.AddDebugAnnotation("vkQueueSubmit:", call_info.index);
 
-        const Decoded_VkSubmitInfo* submit_info_data   = pSubmits->GetMetaStructPointer();
-        const format::HandleId*     command_buffer_ids = submit_info_data->pCommandBuffers.GetPointer();
+    //     const Decoded_VkSubmitInfo* submit_info_data   = pSubmits->GetMetaStructPointer();
+    //     const format::HandleId*     command_buffer_ids = submit_info_data->pCommandBuffers.GetPointer();
 
-        for (uint32_t i = 0; i < submit_info_data->decoded_value->commandBufferCount; ++i)
-        {
-            CommandBufferInfo* cmd_buf_info =
-                consumer->GetObjectInfoTable().GetCommandBufferInfo(command_buffer_ids[i]);
+    //     for (uint32_t i = 0; i < submit_info_data->decoded_value->commandBufferCount; ++i)
+    //     {
+    //         CommandBufferInfo* cmd_buf_info =
+    //             consumer->GetObjectInfoTable().GetCommandBufferInfo(command_buffer_ids[i]);
 
-            ctx.AddDebugAnnotation<perfetto::DynamicString, void*>(
-                perfetto::DynamicString{ "vkCommandBuffer: " + std::to_string(i) }, cmd_buf_info->capture_handle);
-        }
-    });
+    //         ctx.AddDebugAnnotation<perfetto::DynamicString, void*>(
+    //             perfetto::DynamicString{ "vkCommandBuffer: " + std::to_string(i) }, cmd_buf_info->capture_handle);
+    //     }
+    // });
 }
 
-void Process_QueuePresent(VulkanReplayConsumerBase*                       consumer,
-                          const ApiCallInfo&                              call_info,
-                          VkResult                                        returnValue,
-                          format::HandleId                                queue,
-                          StructPointerDecoder<Decoded_VkPresentInfoKHR>* pPresentInfo)
+void PreProcess_QueuePresent(const ApiCallInfo&                              call_info,
+                             VkResult                                        returnValue,
+                             format::HandleId                                queue,
+                             StructPointerDecoder<Decoded_VkPresentInfoKHR>* pPresentInfo)
 {
-    assert(consumer);
-
     const uint64_t    command_index = call_info.index;
     const std::string submit_name   = "vkQueuePresent: " + std::to_string(command_index);
     TRACE_EVENT_INSTANT("GFXR", perfetto::DynamicString{ submit_name.c_str() }, "Command ID:", command_index);

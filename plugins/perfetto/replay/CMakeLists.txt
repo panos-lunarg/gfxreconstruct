@@ -49,6 +49,6 @@ target_include_directories(gfxrecon_perfetto_replay_plugin
                                ${CMAKE_SOURCE_DIR}/external/Vulkan-Headers/include
                                ${CMAKE_SOURCE_DIR}/framework)
 
-target_link_libraries(gfxrecon_perfetto_replay_plugin gfxrecon_util gfxrecon_decode perfetto)
+target_link_libraries(gfxrecon_perfetto_replay_plugin gfxrecon_util perfetto)
 
 common_build_directives(gfxrecon_perfetto_replay_plugin)

@@ -58,7 +58,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyInstance>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyInstance_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyInstance_PreCall(call_info, args...);
         }
     }
 };
@@ -73,7 +73,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceFeatures_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceFeatures_PreCall(call_info, args...);
         }
     }
 };
@@ -88,7 +88,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatPrope
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceFormatProperties_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceFormatProperties_PreCall(call_info, args...);
         }
     }
 };
@@ -103,7 +103,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceProperties_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceProperties_PreCall(call_info, args...);
         }
     }
 };
@@ -118,7 +118,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamily
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyProperties_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyProperties_PreCall(call_info, args...);
         }
     }
 };
@@ -133,7 +133,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryPrope
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceMemoryProperties_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceMemoryProperties_PreCall(call_info, args...);
         }
     }
 };
@@ -148,7 +148,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDevice>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDevice_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyDevice_PreCall(call_info, args...);
         }
     }
 };
@@ -163,7 +163,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceQueue>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceQueue_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceQueue_PreCall(call_info, args...);
         }
     }
 };
@@ -178,7 +178,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkFreeMemory>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.FreeMemory_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.FreeMemory_PreCall(call_info, args...);
         }
     }
 };
@@ -193,7 +193,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkUnmapMemory>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.UnmapMemory_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.UnmapMemory_PreCall(call_info, args...);
         }
     }
 };
@@ -208,7 +208,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryCommitment>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceMemoryCommitment_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceMemoryCommitment_PreCall(call_info, args...);
         }
     }
 };
@@ -223,7 +223,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferMemoryRequirements_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetBufferMemoryRequirements_PreCall(call_info, args...);
         }
     }
 };
@@ -238,7 +238,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageMemoryRequirements_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetImageMemoryRequirements_PreCall(call_info, args...);
         }
     }
 };
@@ -253,7 +253,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequirem
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageSparseMemoryRequirements_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetImageSparseMemoryRequirements_PreCall(call_info, args...);
         }
     }
 };
@@ -268,7 +268,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImage
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSparseImageFormatProperties_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSparseImageFormatProperties_PreCall(call_info, args...);
         }
     }
 };
@@ -283,7 +283,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyFence>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyFence_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyFence_PreCall(call_info, args...);
         }
     }
 };
@@ -298,7 +298,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySemaphore>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroySemaphore_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroySemaphore_PreCall(call_info, args...);
         }
     }
 };
@@ -313,7 +313,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyEvent>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyEvent_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyEvent_PreCall(call_info, args...);
         }
     }
 };
@@ -328,7 +328,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyQueryPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyQueryPool_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyQueryPool_PreCall(call_info, args...);
         }
     }
 };
@@ -343,7 +343,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyBuffer_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyBuffer_PreCall(call_info, args...);
         }
     }
 };
@@ -358,7 +358,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyBufferView>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyBufferView_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyBufferView_PreCall(call_info, args...);
         }
     }
 };
@@ -373,7 +373,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyImage_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyImage_PreCall(call_info, args...);
         }
     }
 };
@@ -388,7 +388,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSubresourceLayout>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageSubresourceLayout_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetImageSubresourceLayout_PreCall(call_info, args...);
         }
     }
 };
@@ -403,7 +403,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyImageView>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyImageView_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyImageView_PreCall(call_info, args...);
         }
     }
 };
@@ -418,7 +418,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyShaderModule>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyShaderModule_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyShaderModule_PreCall(call_info, args...);
         }
     }
 };
@@ -433,7 +433,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPipelineCache>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyPipelineCache_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyPipelineCache_PreCall(call_info, args...);
         }
     }
 };
@@ -448,7 +448,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPipeline>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyPipeline_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyPipeline_PreCall(call_info, args...);
         }
     }
 };
@@ -463,7 +463,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPipelineLayout>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyPipelineLayout_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyPipelineLayout_PreCall(call_info, args...);
         }
     }
 };
@@ -478,7 +478,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySampler>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroySampler_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroySampler_PreCall(call_info, args...);
         }
     }
 };
@@ -493,7 +493,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorSetLayout>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDescriptorSetLayout_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyDescriptorSetLayout_PreCall(call_info, args...);
         }
     }
 };
@@ -508,7 +508,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDescriptorPool_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyDescriptorPool_PreCall(call_info, args...);
         }
     }
 };
@@ -523,7 +523,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkUpdateDescriptorSets>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.UpdateDescriptorSets_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.UpdateDescriptorSets_PreCall(call_info, args...);
         }
     }
 };
@@ -538,7 +538,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyFramebuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyFramebuffer_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyFramebuffer_PreCall(call_info, args...);
         }
     }
 };
@@ -553,7 +553,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyRenderPass>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyRenderPass_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyRenderPass_PreCall(call_info, args...);
         }
     }
 };
@@ -568,7 +568,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRenderAreaGranularity>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetRenderAreaGranularity_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetRenderAreaGranularity_PreCall(call_info, args...);
         }
     }
 };
@@ -583,7 +583,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyCommandPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyCommandPool_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyCommandPool_PreCall(call_info, args...);
         }
     }
 };
@@ -598,7 +598,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkFreeCommandBuffers>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.FreeCommandBuffers_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.FreeCommandBuffers_PreCall(call_info, args...);
         }
     }
 };
@@ -613,7 +613,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindPipeline>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindPipeline_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBindPipeline_PreCall(call_info, args...);
         }
     }
 };
@@ -628,7 +628,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewport>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetViewport_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetViewport_PreCall(call_info, args...);
         }
     }
 };
@@ -643,7 +643,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetScissor>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetScissor_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetScissor_PreCall(call_info, args...);
         }
     }
 };
@@ -658,7 +658,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLineWidth>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetLineWidth_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetLineWidth_PreCall(call_info, args...);
         }
     }
 };
@@ -673,7 +673,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBias>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthBias_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthBias_PreCall(call_info, args...);
         }
     }
 };
@@ -688,7 +688,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetBlendConstants>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetBlendConstants_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetBlendConstants_PreCall(call_info, args...);
         }
     }
 };
@@ -703,7 +703,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBounds>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthBounds_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthBounds_PreCall(call_info, args...);
         }
     }
 };
@@ -718,7 +718,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilCompareMask>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetStencilCompareMask_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetStencilCompareMask_PreCall(call_info, args...);
         }
     }
 };
@@ -733,7 +733,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilWriteMask>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetStencilWriteMask_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetStencilWriteMask_PreCall(call_info, args...);
         }
     }
 };
@@ -748,7 +748,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilReference>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetStencilReference_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetStencilReference_PreCall(call_info, args...);
         }
     }
 };
@@ -763,7 +763,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindDescriptorSets>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindDescriptorSets_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBindDescriptorSets_PreCall(call_info, args...);
         }
     }
 };
@@ -778,7 +778,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindIndexBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindIndexBuffer_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBindIndexBuffer_PreCall(call_info, args...);
         }
     }
 };
@@ -793,7 +793,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindVertexBuffers_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBindVertexBuffers_PreCall(call_info, args...);
         }
     }
 };
@@ -808,7 +808,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDraw>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDraw_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDraw_PreCall(call_info, args...);
         }
     }
 };
@@ -823,7 +823,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexed>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndexed_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawIndexed_PreCall(call_info, args...);
         }
     }
 };
@@ -838,7 +838,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirect>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndirect_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawIndirect_PreCall(call_info, args...);
         }
     }
 };
@@ -853,7 +853,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirect>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndexedIndirect_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawIndexedIndirect_PreCall(call_info, args...);
         }
     }
 };
@@ -868,7 +868,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDispatch>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDispatch_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDispatch_PreCall(call_info, args...);
         }
     }
 };
@@ -883,7 +883,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDispatchIndirect>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDispatchIndirect_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDispatchIndirect_PreCall(call_info, args...);
         }
     }
 };
@@ -898,7 +898,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyBuffer_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyBuffer_PreCall(call_info, args...);
         }
     }
 };
@@ -913,7 +913,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyImage_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyImage_PreCall(call_info, args...);
         }
     }
 };
@@ -928,7 +928,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBlitImage_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBlitImage_PreCall(call_info, args...);
         }
     }
 };
@@ -943,7 +943,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyBufferToImage_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyBufferToImage_PreCall(call_info, args...);
         }
     }
 };
@@ -958,7 +958,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyImageToBuffer_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyImageToBuffer_PreCall(call_info, args...);
         }
     }
 };
@@ -973,7 +973,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdUpdateBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdUpdateBuffer_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdUpdateBuffer_PreCall(call_info, args...);
         }
     }
 };
@@ -988,7 +988,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdFillBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdFillBuffer_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdFillBuffer_PreCall(call_info, args...);
         }
     }
 };
@@ -1003,7 +1003,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdClearColorImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdClearColorImage_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdClearColorImage_PreCall(call_info, args...);
         }
     }
 };
@@ -1018,7 +1018,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdClearDepthStencilImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdClearDepthStencilImage_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdClearDepthStencilImage_PreCall(call_info, args...);
         }
     }
 };
@@ -1033,7 +1033,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdClearAttachments>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdClearAttachments_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdClearAttachments_PreCall(call_info, args...);
         }
     }
 };
@@ -1048,7 +1048,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdResolveImage_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdResolveImage_PreCall(call_info, args...);
         }
     }
 };
@@ -1063,7 +1063,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetEvent_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetEvent_PreCall(call_info, args...);
         }
     }
 };
@@ -1078,7 +1078,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdResetEvent_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdResetEvent_PreCall(call_info, args...);
         }
     }
 };
@@ -1093,7 +1093,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWaitEvents_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdWaitEvents_PreCall(call_info, args...);
         }
     }
 };
@@ -1108,7 +1108,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdPipelineBarrier_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdPipelineBarrier_PreCall(call_info, args...);
         }
     }
 };
@@ -1123,7 +1123,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginQuery>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginQuery_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBeginQuery_PreCall(call_info, args...);
         }
     }
 };
@@ -1138,7 +1138,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndQuery>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndQuery_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdEndQuery_PreCall(call_info, args...);
         }
     }
 };
@@ -1153,7 +1153,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResetQueryPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdResetQueryPool_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdResetQueryPool_PreCall(call_info, args...);
         }
     }
 };
@@ -1168,7 +1168,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteTimestamp_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdWriteTimestamp_PreCall(call_info, args...);
         }
     }
 };
@@ -1183,7 +1183,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyQueryPoolResults>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyQueryPoolResults_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyQueryPoolResults_PreCall(call_info, args...);
         }
     }
 };
@@ -1198,7 +1198,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPushConstants>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdPushConstants_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdPushConstants_PreCall(call_info, args...);
         }
     }
 };
@@ -1213,7 +1213,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginRenderPass_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBeginRenderPass_PreCall(call_info, args...);
         }
     }
 };
@@ -1228,7 +1228,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdNextSubpass_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdNextSubpass_PreCall(call_info, args...);
         }
     }
 };
@@ -1243,7 +1243,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndRenderPass_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdEndRenderPass_PreCall(call_info, args...);
         }
     }
 };
@@ -1258,7 +1258,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdExecuteCommands>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdExecuteCommands_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdExecuteCommands_PreCall(call_info, args...);
         }
     }
 };
@@ -1273,7 +1273,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPeerMemoryFeat
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceGroupPeerMemoryFeatures_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceGroupPeerMemoryFeatures_PreCall(call_info, args...);
         }
     }
 };
@@ -1288,7 +1288,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDeviceMask>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDeviceMask_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDeviceMask_PreCall(call_info, args...);
         }
     }
 };
@@ -1303,7 +1303,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDispatchBase>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDispatchBase_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDispatchBase_PreCall(call_info, args...);
         }
     }
 };
@@ -1318,7 +1318,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageMemoryRequirements2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetImageMemoryRequirements2_PreCall(call_info, args...);
         }
     }
 };
@@ -1333,7 +1333,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements2
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferMemoryRequirements2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetBufferMemoryRequirements2_PreCall(call_info, args...);
         }
     }
 };
@@ -1348,7 +1348,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequirem
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageSparseMemoryRequirements2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetImageSparseMemoryRequirements2_PreCall(call_info, args...);
         }
     }
 };
@@ -1363,7 +1363,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceFeatures2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceFeatures2_PreCall(call_info, args...);
         }
     }
 };
@@ -1378,7 +1378,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties2
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceProperties2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceProperties2_PreCall(call_info, args...);
         }
     }
 };
@@ -1393,7 +1393,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatPrope
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceFormatProperties2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceFormatProperties2_PreCall(call_info, args...);
         }
     }
 };
@@ -1408,7 +1408,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamily
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyProperties2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyProperties2_PreCall(call_info, args...);
         }
     }
 };
@@ -1423,7 +1423,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryPrope
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceMemoryProperties2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceMemoryProperties2_PreCall(call_info, args...);
         }
     }
 };
@@ -1438,7 +1438,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImage
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSparseImageFormatProperties2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSparseImageFormatProperties2_PreCall(call_info, args...);
         }
     }
 };
@@ -1453,7 +1453,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkTrimCommandPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.TrimCommandPool_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.TrimCommandPool_PreCall(call_info, args...);
         }
     }
 };
@@ -1468,7 +1468,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceQueue2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceQueue2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceQueue2_PreCall(call_info, args...);
         }
     }
 };
@@ -1483,7 +1483,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySamplerYcbcrConversio
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroySamplerYcbcrConversion_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroySamplerYcbcrConversion_PreCall(call_info, args...);
         }
     }
 };
@@ -1498,7 +1498,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorUpdateTempl
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDescriptorUpdateTemplate_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyDescriptorUpdateTemplate_PreCall(call_info, args...);
         }
     }
 };
@@ -1513,7 +1513,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalBuf
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceExternalBufferProperties_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceExternalBufferProperties_PreCall(call_info, args...);
         }
     }
 };
@@ -1528,7 +1528,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalFen
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceExternalFenceProperties_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceExternalFenceProperties_PreCall(call_info, args...);
         }
     }
 };
@@ -1543,7 +1543,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalSem
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceExternalSemaphoreProperties_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceExternalSemaphoreProperties_PreCall(call_info, args...);
         }
     }
 };
@@ -1558,7 +1558,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutSuppor
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDescriptorSetLayoutSupport_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDescriptorSetLayoutSupport_PreCall(call_info, args...);
         }
     }
 };
@@ -1573,7 +1573,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCount>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndirectCount_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawIndirectCount_PreCall(call_info, args...);
         }
     }
 };
@@ -1588,7 +1588,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCount>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndexedIndirectCount_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawIndexedIndirectCount_PreCall(call_info, args...);
         }
     }
 };
@@ -1603,7 +1603,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginRenderPass2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBeginRenderPass2_PreCall(call_info, args...);
         }
     }
 };
@@ -1618,7 +1618,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdNextSubpass2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdNextSubpass2_PreCall(call_info, args...);
         }
     }
 };
@@ -1633,7 +1633,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndRenderPass2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdEndRenderPass2_PreCall(call_info, args...);
         }
     }
 };
@@ -1648,7 +1648,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetQueryPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ResetQueryPool_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.ResetQueryPool_PreCall(call_info, args...);
         }
     }
 };
@@ -1663,7 +1663,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPrivateDataSlot>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyPrivateDataSlot_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyPrivateDataSlot_PreCall(call_info, args...);
         }
     }
 };
@@ -1678,7 +1678,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPrivateData>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPrivateData_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPrivateData_PreCall(call_info, args...);
         }
     }
 };
@@ -1693,7 +1693,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetEvent2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetEvent2_PreCall(call_info, args...);
         }
     }
 };
@@ -1708,7 +1708,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdResetEvent2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdResetEvent2_PreCall(call_info, args...);
         }
     }
 };
@@ -1723,7 +1723,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWaitEvents2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdWaitEvents2_PreCall(call_info, args...);
         }
     }
 };
@@ -1738,7 +1738,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdPipelineBarrier2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdPipelineBarrier2_PreCall(call_info, args...);
         }
     }
 };
@@ -1753,7 +1753,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteTimestamp2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdWriteTimestamp2_PreCall(call_info, args...);
         }
     }
 };
@@ -1768,7 +1768,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyBuffer2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyBuffer2_PreCall(call_info, args...);
         }
     }
 };
@@ -1783,7 +1783,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyImage2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyImage2_PreCall(call_info, args...);
         }
     }
 };
@@ -1798,7 +1798,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyBufferToImage2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyBufferToImage2_PreCall(call_info, args...);
         }
     }
 };
@@ -1813,7 +1813,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyImageToBuffer2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyImageToBuffer2_PreCall(call_info, args...);
         }
     }
 };
@@ -1828,7 +1828,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBlitImage2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBlitImage2_PreCall(call_info, args...);
         }
     }
 };
@@ -1843,7 +1843,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdResolveImage2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdResolveImage2_PreCall(call_info, args...);
         }
     }
 };
@@ -1858,7 +1858,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRendering>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginRendering_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBeginRendering_PreCall(call_info, args...);
         }
     }
 };
@@ -1873,7 +1873,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRendering>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndRendering_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdEndRendering_PreCall(call_info, args...);
         }
     }
 };
@@ -1888,7 +1888,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCullMode>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCullMode_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetCullMode_PreCall(call_info, args...);
         }
     }
 };
@@ -1903,7 +1903,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetFrontFace>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetFrontFace_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetFrontFace_PreCall(call_info, args...);
         }
     }
 };
@@ -1918,7 +1918,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveTopology>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPrimitiveTopology_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetPrimitiveTopology_PreCall(call_info, args...);
         }
     }
 };
@@ -1933,7 +1933,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWithCount>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetViewportWithCount_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetViewportWithCount_PreCall(call_info, args...);
         }
     }
 };
@@ -1948,7 +1948,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetScissorWithCount>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetScissorWithCount_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetScissorWithCount_PreCall(call_info, args...);
         }
     }
 };
@@ -1963,7 +1963,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindVertexBuffers2_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBindVertexBuffers2_PreCall(call_info, args...);
         }
     }
 };
@@ -1978,7 +1978,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthTestEnable>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthTestEnable_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthTestEnable_PreCall(call_info, args...);
         }
     }
 };
@@ -1993,7 +1993,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthWriteEnable>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthWriteEnable_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthWriteEnable_PreCall(call_info, args...);
         }
     }
 };
@@ -2008,7 +2008,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthCompareOp>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthCompareOp_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthCompareOp_PreCall(call_info, args...);
         }
     }
 };
@@ -2023,7 +2023,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBoundsTestEnable>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthBoundsTestEnable_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthBoundsTestEnable_PreCall(call_info, args...);
         }
     }
 };
@@ -2038,7 +2038,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilTestEnable>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetStencilTestEnable_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetStencilTestEnable_PreCall(call_info, args...);
         }
     }
 };
@@ -2053,7 +2053,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilOp>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetStencilOp_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetStencilOp_PreCall(call_info, args...);
         }
     }
 };
@@ -2068,7 +2068,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizerDiscardEnabl
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetRasterizerDiscardEnable_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetRasterizerDiscardEnable_PreCall(call_info, args...);
         }
     }
 };
@@ -2083,7 +2083,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBiasEnable>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthBiasEnable_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthBiasEnable_PreCall(call_info, args...);
         }
     }
 };
@@ -2098,7 +2098,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveRestartEnable
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPrimitiveRestartEnable_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetPrimitiveRestartEnable_PreCall(call_info, args...);
         }
     }
 };
@@ -2113,7 +2113,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceBufferMemoryRequire
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceBufferMemoryRequirements_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceBufferMemoryRequirements_PreCall(call_info, args...);
         }
     }
 };
@@ -2128,7 +2128,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageMemoryRequirem
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceImageMemoryRequirements_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceImageMemoryRequirements_PreCall(call_info, args...);
         }
     }
 };
@@ -2143,7 +2143,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageSparseMemoryRe
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceImageSparseMemoryRequirements_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceImageSparseMemoryRequirements_PreCall(call_info, args...);
         }
     }
 };
@@ -2158,7 +2158,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySurfaceKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroySurfaceKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroySurfaceKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2173,7 +2173,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySwapchainKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroySwapchainKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroySwapchainKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2188,7 +2188,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyVideoSessionKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyVideoSessionKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyVideoSessionKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2203,7 +2203,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyVideoSessionParameter
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyVideoSessionParametersKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyVideoSessionParametersKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2218,7 +2218,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginVideoCodingKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginVideoCodingKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBeginVideoCodingKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2233,7 +2233,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndVideoCodingKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndVideoCodingKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdEndVideoCodingKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2248,7 +2248,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdControlVideoCodingKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdControlVideoCodingKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdControlVideoCodingKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2263,7 +2263,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDecodeVideoKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDecodeVideoKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDecodeVideoKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2278,7 +2278,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderingKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginRenderingKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBeginRenderingKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2293,7 +2293,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderingKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndRenderingKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdEndRenderingKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2308,7 +2308,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures2KH
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceFeatures2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceFeatures2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2323,7 +2323,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties2
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceProperties2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceProperties2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2338,7 +2338,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatPrope
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceFormatProperties2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceFormatProperties2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2353,7 +2353,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamily
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyProperties2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyProperties2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2368,7 +2368,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryPrope
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceMemoryProperties2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceMemoryProperties2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2383,7 +2383,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImage
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSparseImageFormatProperties2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSparseImageFormatProperties2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2398,7 +2398,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPeerMemoryFeat
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceGroupPeerMemoryFeaturesKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceGroupPeerMemoryFeaturesKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2413,7 +2413,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDeviceMaskKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDeviceMaskKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDeviceMaskKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2428,7 +2428,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDispatchBaseKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDispatchBaseKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDispatchBaseKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2443,7 +2443,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkTrimCommandPoolKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.TrimCommandPoolKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.TrimCommandPoolKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2458,7 +2458,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalBuf
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceExternalBufferPropertiesKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceExternalBufferPropertiesKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2473,7 +2473,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalSem
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceExternalSemaphorePropertiesKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceExternalSemaphorePropertiesKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2488,7 +2488,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPushDescriptorSetKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdPushDescriptorSetKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdPushDescriptorSetKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2503,7 +2503,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorUpdateTempl
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDescriptorUpdateTemplateKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyDescriptorUpdateTemplateKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2518,7 +2518,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginRenderPass2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBeginRenderPass2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2533,7 +2533,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdNextSubpass2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdNextSubpass2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2548,7 +2548,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndRenderPass2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdEndRenderPass2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2563,7 +2563,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalFen
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceExternalFencePropertiesKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceExternalFencePropertiesKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2578,7 +2578,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamily
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2593,7 +2593,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleaseProfilingLockKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ReleaseProfilingLockKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.ReleaseProfilingLockKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2608,7 +2608,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements2K
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageMemoryRequirements2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetImageMemoryRequirements2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2623,7 +2623,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements2
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferMemoryRequirements2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetBufferMemoryRequirements2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2638,7 +2638,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequirem
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageSparseMemoryRequirements2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetImageSparseMemoryRequirements2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2653,7 +2653,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroySamplerYcbcrConversio
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroySamplerYcbcrConversionKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroySamplerYcbcrConversionKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2668,7 +2668,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutSuppor
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDescriptorSetLayoutSupportKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDescriptorSetLayoutSupportKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2683,7 +2683,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCountKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndirectCountKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawIndirectCountKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2698,7 +2698,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCountK
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndexedIndirectCountKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawIndexedIndirectCountKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2713,7 +2713,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetFragmentShadingRateKHR
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetFragmentShadingRateKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetFragmentShadingRateKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2728,7 +2728,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDeferredOperationKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDeferredOperationKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyDeferredOperationKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2743,7 +2743,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEncodeVideoKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEncodeVideoKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdEncodeVideoKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2758,7 +2758,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetEvent2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetEvent2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2773,7 +2773,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdResetEvent2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdResetEvent2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2788,7 +2788,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWaitEvents2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdWaitEvents2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2803,7 +2803,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdPipelineBarrier2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdPipelineBarrier2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2818,7 +2818,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteTimestamp2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdWriteTimestamp2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2833,7 +2833,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteBufferMarker2AMD>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteBufferMarker2AMD_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdWriteBufferMarker2AMD_PreCall(call_info, args...);
         }
     }
 };
@@ -2848,7 +2848,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetQueueCheckpointData2NV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetQueueCheckpointData2NV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetQueueCheckpointData2NV_PreCall(call_info, args...);
         }
     }
 };
@@ -2863,7 +2863,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyBuffer2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyBuffer2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2878,7 +2878,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyImage2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyImage2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2893,7 +2893,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyBufferToImage2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyBufferToImage2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2908,7 +2908,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyImageToBuffer2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyImageToBuffer2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2923,7 +2923,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBlitImage2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBlitImage2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2938,7 +2938,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdResolveImage2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdResolveImage2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2953,7 +2953,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysIndirect2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdTraceRaysIndirect2KHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdTraceRaysIndirect2KHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2968,7 +2968,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceBufferMemoryRequire
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceBufferMemoryRequirementsKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceBufferMemoryRequirementsKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2983,7 +2983,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageMemoryRequirem
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceImageMemoryRequirementsKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceImageMemoryRequirementsKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -2998,7 +2998,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageSparseMemoryRe
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceImageSparseMemoryRequirementsKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceImageSparseMemoryRequirementsKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -3013,7 +3013,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDebugReportCallbackEX
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDebugReportCallbackEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyDebugReportCallbackEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3028,7 +3028,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDebugReportMessageEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DebugReportMessageEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DebugReportMessageEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3043,7 +3043,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerBeginEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDebugMarkerBeginEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDebugMarkerBeginEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3058,7 +3058,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerEndEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDebugMarkerEndEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDebugMarkerEndEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3073,7 +3073,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerInsertEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDebugMarkerInsertEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDebugMarkerInsertEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3088,7 +3088,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindTransformFeedbackBuff
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindTransformFeedbackBuffersEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBindTransformFeedbackBuffersEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3103,7 +3103,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginTransformFeedbackEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginTransformFeedbackEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBeginTransformFeedbackEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3118,7 +3118,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndTransformFeedbackEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndTransformFeedbackEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdEndTransformFeedbackEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3133,7 +3133,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginQueryIndexedEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginQueryIndexedEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBeginQueryIndexedEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3148,7 +3148,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndQueryIndexedEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndQueryIndexedEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdEndQueryIndexedEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3163,7 +3163,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectByteCountEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndirectByteCountEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawIndirectByteCountEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3178,7 +3178,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCountAMD>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndirectCountAMD_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawIndirectCountAMD_PreCall(call_info, args...);
         }
     }
 };
@@ -3193,7 +3193,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCountA
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndexedIndirectCountAMD_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawIndexedIndirectCountAMD_PreCall(call_info, args...);
         }
     }
 };
@@ -3208,7 +3208,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginConditionalRendering
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginConditionalRenderingEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBeginConditionalRenderingEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3223,7 +3223,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndConditionalRenderingEX
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndConditionalRenderingEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdEndConditionalRenderingEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3238,7 +3238,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWScalingNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetViewportWScalingNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetViewportWScalingNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3253,7 +3253,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDiscardRectangleEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDiscardRectangleEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3268,7 +3268,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleEnable
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDiscardRectangleEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDiscardRectangleEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3283,7 +3283,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleModeEX
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDiscardRectangleModeEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDiscardRectangleModeEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3298,7 +3298,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetHdrMetadataEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.SetHdrMetadataEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.SetHdrMetadataEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3313,7 +3313,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueBeginDebugUtilsLabelEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueBeginDebugUtilsLabelEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.QueueBeginDebugUtilsLabelEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3328,7 +3328,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueEndDebugUtilsLabelEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueEndDebugUtilsLabelEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.QueueEndDebugUtilsLabelEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3343,7 +3343,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueInsertDebugUtilsLabelEX
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueInsertDebugUtilsLabelEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.QueueInsertDebugUtilsLabelEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3358,7 +3358,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBeginDebugUtilsLabelEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginDebugUtilsLabelEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBeginDebugUtilsLabelEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3373,7 +3373,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdEndDebugUtilsLabelEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndDebugUtilsLabelEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdEndDebugUtilsLabelEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3388,7 +3388,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdInsertDebugUtilsLabelEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdInsertDebugUtilsLabelEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdInsertDebugUtilsLabelEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3403,7 +3403,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyDebugUtilsMessengerEX
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDebugUtilsMessengerEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyDebugUtilsMessengerEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3418,7 +3418,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSubmitDebugUtilsMessageEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.SubmitDebugUtilsMessageEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.SubmitDebugUtilsMessageEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3433,7 +3433,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetSampleLocationsEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetSampleLocationsEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetSampleLocationsEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3448,7 +3448,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMultisample
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceMultisamplePropertiesEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceMultisamplePropertiesEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3463,7 +3463,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyValidationCacheEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyValidationCacheEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyValidationCacheEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3478,7 +3478,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindShadingRateImageNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindShadingRateImageNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBindShadingRateImageNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3493,7 +3493,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportShadingRatePal
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetViewportShadingRatePaletteNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetViewportShadingRatePaletteNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3508,7 +3508,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoarseSampleOrderNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCoarseSampleOrderNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetCoarseSampleOrderNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3523,7 +3523,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyAccelerationStructure
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyAccelerationStructureNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyAccelerationStructureNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3538,7 +3538,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureMemo
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetAccelerationStructureMemoryRequirementsNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetAccelerationStructureMemoryRequirementsNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3553,7 +3553,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructur
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBuildAccelerationStructureNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBuildAccelerationStructureNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3568,7 +3568,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructure
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyAccelerationStructureNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyAccelerationStructureNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3583,7 +3583,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdTraceRaysNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdTraceRaysNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3598,7 +3598,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteAccelerationStructur
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteAccelerationStructuresPropertiesNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdWriteAccelerationStructuresPropertiesNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3613,7 +3613,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteBufferMarkerAMD>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteBufferMarkerAMD_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdWriteBufferMarkerAMD_PreCall(call_info, args...);
         }
     }
 };
@@ -3628,7 +3628,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMeshTasksNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawMeshTasksNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3643,7 +3643,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMeshTasksIndirectNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawMeshTasksIndirectNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3658,7 +3658,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectCoun
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMeshTasksIndirectCountNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawMeshTasksIndirectCountNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3673,7 +3673,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetExclusiveScissorEnable
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetExclusiveScissorEnableNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetExclusiveScissorEnableNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3688,7 +3688,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetExclusiveScissorNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetExclusiveScissorNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetExclusiveScissorNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3703,7 +3703,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCheckpointNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCheckpointNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetCheckpointNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3718,7 +3718,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetQueueCheckpointDataNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetQueueCheckpointDataNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetQueueCheckpointDataNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3733,7 +3733,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkUninitializePerformanceApiIN
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.UninitializePerformanceApiINTEL_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.UninitializePerformanceApiINTEL_PreCall(call_info, args...);
         }
     }
 };
@@ -3748,7 +3748,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetLocalDimmingAMD>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.SetLocalDimmingAMD_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.SetLocalDimmingAMD_PreCall(call_info, args...);
         }
     }
 };
@@ -3763,7 +3763,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLineStippleEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetLineStippleEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetLineStippleEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3778,7 +3778,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetQueryPoolEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ResetQueryPoolEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.ResetQueryPoolEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3793,7 +3793,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCullModeEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCullModeEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetCullModeEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3808,7 +3808,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetFrontFaceEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetFrontFaceEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetFrontFaceEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3823,7 +3823,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveTopologyEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPrimitiveTopologyEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetPrimitiveTopologyEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3838,7 +3838,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWithCountEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetViewportWithCountEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetViewportWithCountEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3853,7 +3853,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetScissorWithCountEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetScissorWithCountEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetScissorWithCountEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3868,7 +3868,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers2EXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindVertexBuffers2EXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBindVertexBuffers2EXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3883,7 +3883,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthTestEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthTestEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthTestEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3898,7 +3898,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthWriteEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthWriteEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthWriteEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3913,7 +3913,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthCompareOpEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthCompareOpEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthCompareOpEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3928,7 +3928,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBoundsTestEnableE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthBoundsTestEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthBoundsTestEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3943,7 +3943,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilTestEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetStencilTestEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetStencilTestEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3958,7 +3958,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilOpEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetStencilOpEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetStencilOpEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -3973,7 +3973,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetGeneratedCommandsMemoryRe
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetGeneratedCommandsMemoryRequirementsNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetGeneratedCommandsMemoryRequirementsNV_PreCall(call_info, args...);
         }
     }
 };
@@ -3988,7 +3988,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdExecuteGeneratedCommandsN
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdExecuteGeneratedCommandsNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdExecuteGeneratedCommandsNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4003,7 +4003,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindPipelineShaderGroupNV
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindPipelineShaderGroupNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBindPipelineShaderGroupNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4018,7 +4018,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyIndirectCommandsLayou
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyIndirectCommandsLayoutNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyIndirectCommandsLayoutNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4033,7 +4033,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyPrivateDataSlotEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyPrivateDataSlotEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyPrivateDataSlotEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4048,7 +4048,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPrivateDataEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPrivateDataEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPrivateDataEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4063,7 +4063,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetFragmentShadingRateEnu
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetFragmentShadingRateEnumNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetFragmentShadingRateEnumNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4078,7 +4078,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageSubresourceLayout2EX
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageSubresourceLayout2EXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetImageSubresourceLayout2EXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4093,7 +4093,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetVertexInputEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetVertexInputEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetVertexInputEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4108,7 +4108,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBindInvocationMaskHUAWEI>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindInvocationMaskHUAWEI_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBindInvocationMaskHUAWEI_PreCall(call_info, args...);
         }
     }
 };
@@ -4123,7 +4123,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPatchControlPointsEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPatchControlPointsEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetPatchControlPointsEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4138,7 +4138,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizerDiscardEnabl
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetRasterizerDiscardEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetRasterizerDiscardEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4153,7 +4153,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBiasEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthBiasEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthBiasEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4168,7 +4168,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLogicOpEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetLogicOpEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetLogicOpEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4183,7 +4183,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveRestartEnable
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPrimitiveRestartEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetPrimitiveRestartEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4198,7 +4198,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorWriteEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetColorWriteEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetColorWriteEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4213,7 +4213,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMultiEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMultiEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawMultiEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4228,7 +4228,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMultiIndexedEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMultiIndexedEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawMultiIndexedEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4243,7 +4243,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyMicromapEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyMicromapEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyMicromapEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4258,7 +4258,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBuildMicromapsEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBuildMicromapsEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBuildMicromapsEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4273,7 +4273,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyMicromapEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyMicromapEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyMicromapEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4288,7 +4288,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyMicromapToMemoryEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyMicromapToMemoryEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyMicromapToMemoryEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4303,7 +4303,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyMemoryToMicromapEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyMemoryToMicromapEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyMemoryToMicromapEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4318,7 +4318,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteMicromapsPropertiesE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteMicromapsPropertiesEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdWriteMicromapsPropertiesEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4333,7 +4333,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceMicromapCompatibili
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceMicromapCompatibilityEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceMicromapCompatibilityEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4348,7 +4348,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMicromapBuildSizesEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMicromapBuildSizesEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetMicromapBuildSizesEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4363,7 +4363,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawClusterHUAWEI>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawClusterHUAWEI_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawClusterHUAWEI_PreCall(call_info, args...);
         }
     }
 };
@@ -4378,7 +4378,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawClusterIndirectHUAWEI
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawClusterIndirectHUAWEI_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawClusterIndirectHUAWEI_PreCall(call_info, args...);
         }
     }
 };
@@ -4393,7 +4393,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetDeviceMemoryPriorityEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.SetDeviceMemoryPriorityEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.SetDeviceMemoryPriorityEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4408,7 +4408,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutHostMa
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDescriptorSetLayoutHostMappingInfoVALVE_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDescriptorSetLayoutHostMappingInfoVALVE_PreCall(call_info, args...);
         }
     }
 };
@@ -4423,7 +4423,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetHostMappingV
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDescriptorSetHostMappingVALVE_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDescriptorSetHostMappingVALVE_PreCall(call_info, args...);
         }
     }
 };
@@ -4438,7 +4438,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetTessellationDomainOrig
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetTessellationDomainOriginEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetTessellationDomainOriginEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4453,7 +4453,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthClampEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthClampEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthClampEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4468,7 +4468,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPolygonModeEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPolygonModeEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetPolygonModeEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4483,7 +4483,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizationSamplesEX
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetRasterizationSamplesEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetRasterizationSamplesEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4498,7 +4498,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetSampleMaskEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetSampleMaskEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetSampleMaskEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4513,7 +4513,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetAlphaToCoverageEnableE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetAlphaToCoverageEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetAlphaToCoverageEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4528,7 +4528,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetAlphaToOneEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetAlphaToOneEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetAlphaToOneEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4543,7 +4543,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLogicOpEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetLogicOpEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetLogicOpEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4558,7 +4558,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetColorBlendEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetColorBlendEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4573,7 +4573,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendEquationEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetColorBlendEquationEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetColorBlendEquationEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4588,7 +4588,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorWriteMaskEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetColorWriteMaskEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetColorWriteMaskEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4603,7 +4603,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizationStreamEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetRasterizationStreamEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetRasterizationStreamEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4618,7 +4618,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetConservativeRasterizat
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetConservativeRasterizationModeEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetConservativeRasterizationModeEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4633,7 +4633,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetExtraPrimitiveOveresti
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetExtraPrimitiveOverestimationSizeEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetExtraPrimitiveOverestimationSizeEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4648,7 +4648,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthClipEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthClipEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthClipEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4663,7 +4663,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetSampleLocationsEnableE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetSampleLocationsEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetSampleLocationsEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4678,7 +4678,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendAdvancedEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetColorBlendAdvancedEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetColorBlendAdvancedEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4693,7 +4693,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetProvokingVertexModeEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetProvokingVertexModeEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetProvokingVertexModeEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4708,7 +4708,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLineRasterizationModeE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetLineRasterizationModeEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetLineRasterizationModeEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4723,7 +4723,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetLineStippleEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetLineStippleEnableEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetLineStippleEnableEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4738,7 +4738,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthClipNegativeOneTo
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthClipNegativeOneToOneEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetDepthClipNegativeOneToOneEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4753,7 +4753,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWScalingEnable
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetViewportWScalingEnableNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetViewportWScalingEnableNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4768,7 +4768,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportSwizzleNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetViewportSwizzleNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetViewportSwizzleNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4783,7 +4783,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageToColorEnableN
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCoverageToColorEnableNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetCoverageToColorEnableNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4798,7 +4798,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageToColorLocatio
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCoverageToColorLocationNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetCoverageToColorLocationNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4813,7 +4813,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationMode
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCoverageModulationModeNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetCoverageModulationModeNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4828,7 +4828,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationTabl
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCoverageModulationTableEnableNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetCoverageModulationTableEnableNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4843,7 +4843,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationTabl
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCoverageModulationTableNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetCoverageModulationTableNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4858,7 +4858,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetShadingRateImageEnable
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetShadingRateImageEnableNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetShadingRateImageEnableNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4873,7 +4873,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRepresentativeFragment
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetRepresentativeFragmentTestEnableNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetRepresentativeFragmentTestEnableNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4888,7 +4888,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageReductionModeN
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCoverageReductionModeNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetCoverageReductionModeNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4903,7 +4903,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetShaderModuleIdentifierEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetShaderModuleIdentifierEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetShaderModuleIdentifierEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4918,7 +4918,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetShaderModuleCreateInfoIde
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetShaderModuleCreateInfoIdentifierEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetShaderModuleCreateInfoIdentifierEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -4933,7 +4933,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyOpticalFlowSessionNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyOpticalFlowSessionNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyOpticalFlowSessionNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4948,7 +4948,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdOpticalFlowExecuteNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdOpticalFlowExecuteNV_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdOpticalFlowExecuteNV_PreCall(call_info, args...);
         }
     }
 };
@@ -4963,7 +4963,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDestroyAccelerationStructure
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyAccelerationStructureKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.DestroyAccelerationStructureKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -4978,7 +4978,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructur
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBuildAccelerationStructuresKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBuildAccelerationStructuresKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -4993,7 +4993,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructur
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBuildAccelerationStructuresIndirectKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdBuildAccelerationStructuresIndirectKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5008,7 +5008,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructure
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyAccelerationStructureKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyAccelerationStructureKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5023,7 +5023,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructure
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyAccelerationStructureToMemoryKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyAccelerationStructureToMemoryKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5038,7 +5038,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdCopyMemoryToAccelerationS
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyMemoryToAccelerationStructureKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdCopyMemoryToAccelerationStructureKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5053,7 +5053,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdWriteAccelerationStructur
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteAccelerationStructuresPropertiesKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdWriteAccelerationStructuresPropertiesKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5068,7 +5068,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceAccelerationStructu
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceAccelerationStructureCompatibilityKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceAccelerationStructureCompatibilityKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5083,7 +5083,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureBuil
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetAccelerationStructureBuildSizesKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetAccelerationStructureBuildSizesKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5098,7 +5098,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdTraceRaysKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdTraceRaysKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5113,7 +5113,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysIndirectKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdTraceRaysIndirectKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdTraceRaysIndirectKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5128,7 +5128,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetRayTracingPipelineStac
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetRayTracingPipelineStackSizeKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdSetRayTracingPipelineStackSizeKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5143,7 +5143,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMeshTasksEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawMeshTasksEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -5158,7 +5158,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMeshTasksIndirectEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawMeshTasksIndirectEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -5173,7 +5173,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectCoun
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMeshTasksIndirectCountEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.CmdDrawMeshTasksIndirectCountEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -5188,7 +5188,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferOpaqueCaptureAddres
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferOpaqueCaptureAddress_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetBufferOpaqueCaptureAddress_PreCall(call_info, args...);
         }
     }
 };
@@ -5203,7 +5203,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryOpaqueCapture
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceMemoryOpaqueCaptureAddress_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceMemoryOpaqueCaptureAddress_PreCall(call_info, args...);
         }
     }
 };
@@ -5218,7 +5218,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceXlibPresent
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceXlibPresentationSupportKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceXlibPresentationSupportKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5233,7 +5233,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceXcbPresenta
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceXcbPresentationSupportKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceXcbPresentationSupportKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5248,7 +5248,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceWaylandPres
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceWaylandPresentationSupportKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceWaylandPresentationSupportKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5263,7 +5263,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceWin32Presen
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceWin32PresentationSupportKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceWin32PresentationSupportKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5278,7 +5278,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddressKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferDeviceAddressKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetBufferDeviceAddressKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5293,7 +5293,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferOpaqueCaptureAddres
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferOpaqueCaptureAddressKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetBufferOpaqueCaptureAddressKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5308,7 +5308,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryOpaqueCapture
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceMemoryOpaqueCaptureAddressKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeviceMemoryOpaqueCaptureAddressKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5323,7 +5323,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeferredOperationMaxConcu
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeferredOperationMaxConcurrencyKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetDeferredOperationMaxConcurrencyKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5338,7 +5338,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageViewHandleNVX>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageViewHandleNVX_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetImageViewHandleNVX_PreCall(call_info, args...);
         }
     }
 };
@@ -5353,7 +5353,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddressEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferDeviceAddressEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetBufferDeviceAddressEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -5368,7 +5368,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDirectFBPre
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceDirectFBPresentationSupportEXT_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceDirectFBPresentationSupportEXT_PreCall(call_info, args...);
         }
     }
 };
@@ -5383,7 +5383,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceScreenPrese
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceScreenPresentationSupportQNX_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetPhysicalDeviceScreenPresentationSupportQNX_PreCall(call_info, args...);
         }
     }
 };
@@ -5398,7 +5398,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureDevi
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetAccelerationStructureDeviceAddressKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetAccelerationStructureDeviceAddressKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5413,7 +5413,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupStac
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetRayTracingShaderGroupStackSizeKHR_PreCall(consumer, call_info, args...);
+            plugin.func_table_pre.GetRayTracingShaderGroupStackSizeKHR_PreCall(call_info, args...);
         }
     }
 };
@@ -5428,7 +5428,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateInstance>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateInstance_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateInstance_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5443,7 +5443,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDevices>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.EnumeratePhysicalDevices_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.EnumeratePhysicalDevices_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5458,7 +5458,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageFormat
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5473,7 +5473,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDevice>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDevice_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateDevice_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5488,7 +5488,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueSubmit_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.QueueSubmit_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5503,7 +5503,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueWaitIdle>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueWaitIdle_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.QueueWaitIdle_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5518,7 +5518,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDeviceWaitIdle>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DeviceWaitIdle_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.DeviceWaitIdle_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5533,7 +5533,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAllocateMemory>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.AllocateMemory_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.AllocateMemory_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5548,7 +5548,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkMapMemory>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.MapMemory_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.MapMemory_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5563,7 +5563,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkFlushMappedMemoryRanges>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.FlushMappedMemoryRanges_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.FlushMappedMemoryRanges_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5578,7 +5578,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkInvalidateMappedMemoryRanges
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.InvalidateMappedMemoryRanges_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.InvalidateMappedMemoryRanges_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5593,7 +5593,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.BindBufferMemory_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.BindBufferMemory_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5608,7 +5608,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindImageMemory>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.BindImageMemory_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.BindImageMemory_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5623,7 +5623,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueBindSparse>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueBindSparse_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.QueueBindSparse_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5638,7 +5638,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateFence>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateFence_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateFence_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5653,7 +5653,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetFences>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ResetFences_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.ResetFences_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5668,7 +5668,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetFenceStatus>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetFenceStatus_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetFenceStatus_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5683,7 +5683,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWaitForFences>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.WaitForFences_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.WaitForFences_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5698,7 +5698,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSemaphore>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateSemaphore_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateSemaphore_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5713,7 +5713,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateEvent>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateEvent_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateEvent_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5728,7 +5728,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetEventStatus>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetEventStatus_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetEventStatus_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5743,7 +5743,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetEvent>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.SetEvent_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.SetEvent_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5758,7 +5758,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetEvent>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ResetEvent_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.ResetEvent_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5773,7 +5773,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateQueryPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateQueryPool_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateQueryPool_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5788,7 +5788,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetQueryPoolResults>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetQueryPoolResults_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetQueryPoolResults_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5803,7 +5803,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateBuffer_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateBuffer_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5818,7 +5818,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateBufferView>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateBufferView_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateBufferView_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5833,7 +5833,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateImage_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateImage_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5848,7 +5848,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateImageView>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateImageView_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateImageView_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5863,7 +5863,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateShaderModule>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateShaderModule_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateShaderModule_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5878,7 +5878,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreatePipelineCache>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreatePipelineCache_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreatePipelineCache_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5893,7 +5893,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPipelineCacheData>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPipelineCacheData_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPipelineCacheData_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5908,7 +5908,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkMergePipelineCaches>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.MergePipelineCaches_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.MergePipelineCaches_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5923,7 +5923,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateGraphicsPipelines>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateGraphicsPipelines_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateGraphicsPipelines_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5938,7 +5938,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateComputePipelines>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateComputePipelines_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateComputePipelines_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5953,7 +5953,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreatePipelineLayout>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreatePipelineLayout_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreatePipelineLayout_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5968,7 +5968,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSampler>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateSampler_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateSampler_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5983,7 +5983,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDescriptorSetLayout>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDescriptorSetLayout_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateDescriptorSetLayout_PreCall(call_info, result, args...);
         }
     }
 };
@@ -5998,7 +5998,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDescriptorPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDescriptorPool_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateDescriptorPool_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6013,7 +6013,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetDescriptorPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ResetDescriptorPool_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.ResetDescriptorPool_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6028,7 +6028,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAllocateDescriptorSets>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.AllocateDescriptorSets_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.AllocateDescriptorSets_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6043,7 +6043,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkFreeDescriptorSets>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.FreeDescriptorSets_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.FreeDescriptorSets_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6058,7 +6058,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateFramebuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateFramebuffer_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateFramebuffer_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6073,7 +6073,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRenderPass>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateRenderPass_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateRenderPass_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6088,7 +6088,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateCommandPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateCommandPool_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateCommandPool_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6103,7 +6103,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetCommandPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ResetCommandPool_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.ResetCommandPool_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6118,7 +6118,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAllocateCommandBuffers>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.AllocateCommandBuffers_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.AllocateCommandBuffers_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6133,7 +6133,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBeginCommandBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.BeginCommandBuffer_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.BeginCommandBuffer_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6148,7 +6148,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEndCommandBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.EndCommandBuffer_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.EndCommandBuffer_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6163,7 +6163,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkResetCommandBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ResetCommandBuffer_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.ResetCommandBuffer_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6178,7 +6178,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.BindBufferMemory2_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.BindBufferMemory2_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6193,7 +6193,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindImageMemory2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.BindImageMemory2_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.BindImageMemory2_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6208,7 +6208,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceGroup
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.EnumeratePhysicalDeviceGroups_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.EnumeratePhysicalDeviceGroups_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6223,7 +6223,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageFormat
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties2_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties2_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6238,7 +6238,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSamplerYcbcrConversion
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateSamplerYcbcrConversion_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateSamplerYcbcrConversion_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6253,7 +6253,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRenderPass2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateRenderPass2_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateRenderPass2_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6268,7 +6268,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreCounterValue>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSemaphoreCounterValue_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetSemaphoreCounterValue_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6283,7 +6283,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWaitSemaphores>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.WaitSemaphores_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.WaitSemaphores_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6298,7 +6298,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSignalSemaphore>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.SignalSemaphore_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.SignalSemaphore_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6313,7 +6313,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceToolPropert
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceToolProperties_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceToolProperties_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6328,7 +6328,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreatePrivateDataSlot>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreatePrivateDataSlot_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreatePrivateDataSlot_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6343,7 +6343,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetPrivateData>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.SetPrivateData_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.SetPrivateData_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6358,7 +6358,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueSubmit2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueSubmit2_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.QueueSubmit2_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6373,7 +6373,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceSupp
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceSupportKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceSupportKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6388,7 +6388,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCapa
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilitiesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilitiesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6403,7 +6403,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceForm
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceFormatsKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceFormatsKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6418,7 +6418,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfacePres
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfacePresentModesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfacePresentModesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6433,7 +6433,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSwapchainKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateSwapchainKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateSwapchainKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6448,7 +6448,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSwapchainImagesKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSwapchainImagesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetSwapchainImagesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6463,7 +6463,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireNextImageKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquireNextImageKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.AcquireNextImageKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6478,7 +6478,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.QueuePresentKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.QueuePresentKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6493,7 +6493,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPresentCapabil
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceGroupPresentCapabilitiesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetDeviceGroupPresentCapabilitiesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6508,7 +6508,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupSurfacePresent
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceGroupSurfacePresentModesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetDeviceGroupSurfacePresentModesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6523,7 +6523,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDevicePresentRect
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDevicePresentRectanglesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDevicePresentRectanglesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6538,7 +6538,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireNextImage2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquireNextImage2KHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.AcquireNextImage2KHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6553,7 +6553,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayProp
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceDisplayPropertiesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceDisplayPropertiesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6568,7 +6568,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPlan
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceDisplayPlanePropertiesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceDisplayPlanePropertiesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6583,7 +6583,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneSupportedDisp
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDisplayPlaneSupportedDisplaysKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetDisplayPlaneSupportedDisplaysKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6598,7 +6598,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayModePropertiesKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDisplayModePropertiesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetDisplayModePropertiesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6613,7 +6613,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDisplayModeKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDisplayModeKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateDisplayModeKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6628,7 +6628,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneCapabilitiesK
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDisplayPlaneCapabilitiesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetDisplayPlaneCapabilitiesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6643,7 +6643,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDisplayPlaneSurfaceKHR
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDisplayPlaneSurfaceKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateDisplayPlaneSurfaceKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6658,7 +6658,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSharedSwapchainsKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateSharedSwapchainsKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateSharedSwapchainsKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6673,7 +6673,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateXlibSurfaceKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateXlibSurfaceKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateXlibSurfaceKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6688,7 +6688,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateXcbSurfaceKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateXcbSurfaceKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateXcbSurfaceKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6703,7 +6703,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateWaylandSurfaceKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateWaylandSurfaceKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateWaylandSurfaceKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6718,7 +6718,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateAndroidSurfaceKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateAndroidSurfaceKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateAndroidSurfaceKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6733,7 +6733,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateWin32SurfaceKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateWin32SurfaceKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateWin32SurfaceKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6748,7 +6748,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceVideoCapabi
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceVideoCapabilitiesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceVideoCapabilitiesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6763,7 +6763,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceVideoFormat
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceVideoFormatPropertiesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceVideoFormatPropertiesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6778,7 +6778,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateVideoSessionKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateVideoSessionKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateVideoSessionKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6793,7 +6793,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetVideoSessionMemoryRequire
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetVideoSessionMemoryRequirementsKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetVideoSessionMemoryRequirementsKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6808,7 +6808,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindVideoSessionMemoryKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.BindVideoSessionMemoryKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.BindVideoSessionMemoryKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6823,7 +6823,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateVideoSessionParameters
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateVideoSessionParametersKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateVideoSessionParametersKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6838,7 +6838,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkUpdateVideoSessionParameters
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.UpdateVideoSessionParametersKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.UpdateVideoSessionParametersKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6853,7 +6853,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageFormat
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties2KHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties2KHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6868,7 +6868,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceGroup
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.EnumeratePhysicalDeviceGroupsKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.EnumeratePhysicalDeviceGroupsKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6883,7 +6883,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandleKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryWin32HandleKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetMemoryWin32HandleKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6898,7 +6898,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandleProperti
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryWin32HandlePropertiesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetMemoryWin32HandlePropertiesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6913,7 +6913,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryFdKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryFdKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetMemoryFdKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6928,7 +6928,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryFdPropertiesKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryFdPropertiesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetMemoryFdPropertiesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6943,7 +6943,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreWin32HandleKH
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ImportSemaphoreWin32HandleKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.ImportSemaphoreWin32HandleKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6958,7 +6958,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreWin32HandleKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSemaphoreWin32HandleKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetSemaphoreWin32HandleKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6973,7 +6973,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreFdKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ImportSemaphoreFdKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.ImportSemaphoreFdKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -6988,7 +6988,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreFdKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSemaphoreFdKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetSemaphoreFdKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7003,7 +7003,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDescriptorUpdateTempla
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDescriptorUpdateTemplateKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateDescriptorUpdateTemplateKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7018,7 +7018,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRenderPass2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateRenderPass2KHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateRenderPass2KHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7033,7 +7033,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSwapchainStatusKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSwapchainStatusKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetSwapchainStatusKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7048,7 +7048,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportFenceWin32HandleKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ImportFenceWin32HandleKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.ImportFenceWin32HandleKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7063,7 +7063,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetFenceWin32HandleKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetFenceWin32HandleKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetFenceWin32HandleKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7078,7 +7078,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportFenceFdKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ImportFenceFdKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.ImportFenceFdKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7093,7 +7093,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetFenceFdKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetFenceFdKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetFenceFdKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7108,7 +7108,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceQueue
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7123,7 +7123,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireProfilingLockKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquireProfilingLockKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.AcquireProfilingLockKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7138,7 +7138,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCapa
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilities2KHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilities2KHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7153,7 +7153,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceForm
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceFormats2KHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceFormats2KHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7168,7 +7168,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayProp
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceDisplayProperties2KHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceDisplayProperties2KHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7183,7 +7183,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPlan
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceDisplayPlaneProperties2KHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceDisplayPlaneProperties2KHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7198,7 +7198,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayModeProperties2KHR
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDisplayModeProperties2KHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetDisplayModeProperties2KHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7213,7 +7213,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneCapabilities2
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDisplayPlaneCapabilities2KHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetDisplayPlaneCapabilities2KHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7228,7 +7228,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateSamplerYcbcrConversion
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateSamplerYcbcrConversionKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateSamplerYcbcrConversionKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7243,7 +7243,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.BindBufferMemory2KHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.BindBufferMemory2KHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7258,7 +7258,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindImageMemory2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.BindImageMemory2KHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.BindImageMemory2KHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7273,7 +7273,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreCounterValueKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSemaphoreCounterValueKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetSemaphoreCounterValueKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7288,7 +7288,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWaitSemaphoresKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.WaitSemaphoresKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.WaitSemaphoresKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7303,7 +7303,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSignalSemaphoreKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.SignalSemaphoreKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.SignalSemaphoreKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7318,7 +7318,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFragmentSha
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceFragmentShadingRatesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceFragmentShadingRatesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7333,7 +7333,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWaitForPresentKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.WaitForPresentKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.WaitForPresentKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7348,7 +7348,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDeferredOperationKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDeferredOperationKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateDeferredOperationKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7363,7 +7363,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeferredOperationResultKH
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeferredOperationResultKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetDeferredOperationResultKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7378,7 +7378,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDeferredOperationJoinKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DeferredOperationJoinKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.DeferredOperationJoinKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7393,7 +7393,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPipelineExecutablePropert
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPipelineExecutablePropertiesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPipelineExecutablePropertiesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7408,7 +7408,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPipelineExecutableStatist
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPipelineExecutableStatisticsKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPipelineExecutableStatisticsKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7423,7 +7423,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPipelineExecutableInterna
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPipelineExecutableInternalRepresentationsKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPipelineExecutableInternalRepresentationsKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7438,7 +7438,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueSubmit2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueSubmit2KHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.QueueSubmit2KHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7453,7 +7453,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDebugReportCallbackEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDebugReportCallbackEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateDebugReportCallbackEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7468,7 +7468,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDebugMarkerSetObjectTagEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DebugMarkerSetObjectTagEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.DebugMarkerSetObjectTagEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7483,7 +7483,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDebugMarkerSetObjectNameEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DebugMarkerSetObjectNameEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.DebugMarkerSetObjectNameEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7498,7 +7498,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageViewAddressNVX>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageViewAddressNVX_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetImageViewAddressNVX_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7513,7 +7513,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetShaderInfoAMD>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetShaderInfoAMD_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetShaderInfoAMD_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7528,7 +7528,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateStreamDescriptorSurfac
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateStreamDescriptorSurfaceGGP_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateStreamDescriptorSurfaceGGP_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7543,7 +7543,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalIma
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceExternalImageFormatPropertiesNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceExternalImageFormatPropertiesNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7558,7 +7558,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandleNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryWin32HandleNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetMemoryWin32HandleNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7573,7 +7573,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateViSurfaceNN>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateViSurfaceNN_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateViSurfaceNN_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7588,7 +7588,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleaseDisplayEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ReleaseDisplayEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.ReleaseDisplayEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7603,7 +7603,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireXlibDisplayEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquireXlibDisplayEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.AcquireXlibDisplayEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7618,7 +7618,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRandROutputDisplayEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetRandROutputDisplayEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetRandROutputDisplayEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7633,7 +7633,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCapa
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilities2EXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilities2EXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7648,7 +7648,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkDisplayPowerControlEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.DisplayPowerControlEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.DisplayPowerControlEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7663,7 +7663,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkRegisterDeviceEventEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.RegisterDeviceEventEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.RegisterDeviceEventEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7678,7 +7678,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkRegisterDisplayEventEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.RegisterDisplayEventEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.RegisterDisplayEventEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7693,7 +7693,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSwapchainCounterEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSwapchainCounterEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetSwapchainCounterEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7708,7 +7708,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRefreshCycleDurationGOOGL
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetRefreshCycleDurationGOOGLE_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetRefreshCycleDurationGOOGLE_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7723,7 +7723,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPastPresentationTimingGOO
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPastPresentationTimingGOOGLE_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPastPresentationTimingGOOGLE_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7738,7 +7738,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateIOSSurfaceMVK>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateIOSSurfaceMVK_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateIOSSurfaceMVK_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7753,7 +7753,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateMacOSSurfaceMVK>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateMacOSSurfaceMVK_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateMacOSSurfaceMVK_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7768,7 +7768,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetDebugUtilsObjectNameEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.SetDebugUtilsObjectNameEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.SetDebugUtilsObjectNameEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7783,7 +7783,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetDebugUtilsObjectTagEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.SetDebugUtilsObjectTagEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.SetDebugUtilsObjectTagEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7798,7 +7798,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDebugUtilsMessengerEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDebugUtilsMessengerEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateDebugUtilsMessengerEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7813,7 +7813,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAndroidHardwareBufferProp
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetAndroidHardwareBufferPropertiesANDROID_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetAndroidHardwareBufferPropertiesANDROID_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7828,7 +7828,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryAndroidHardwareBuff
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryAndroidHardwareBufferANDROID_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetMemoryAndroidHardwareBufferANDROID_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7843,7 +7843,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetImageDrmFormatModifierPro
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageDrmFormatModifierPropertiesEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetImageDrmFormatModifierPropertiesEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7858,7 +7858,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateValidationCacheEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateValidationCacheEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateValidationCacheEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7873,7 +7873,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkMergeValidationCachesEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.MergeValidationCachesEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.MergeValidationCachesEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7888,7 +7888,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetValidationCacheDataEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetValidationCacheDataEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetValidationCacheDataEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7903,7 +7903,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateAccelerationStructureN
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateAccelerationStructureNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateAccelerationStructureNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7918,7 +7918,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindAccelerationStructureMem
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.BindAccelerationStructureMemoryNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.BindAccelerationStructureMemoryNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7933,7 +7933,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRayTracingPipelinesNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateRayTracingPipelinesNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateRayTracingPipelinesNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7948,7 +7948,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupHand
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetRayTracingShaderGroupHandlesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetRayTracingShaderGroupHandlesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7963,7 +7963,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupHand
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetRayTracingShaderGroupHandlesNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetRayTracingShaderGroupHandlesNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7978,7 +7978,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureHand
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetAccelerationStructureHandleNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetAccelerationStructureHandleNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -7993,7 +7993,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCompileDeferredNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CompileDeferredNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CompileDeferredNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8008,7 +8008,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryHostPointerProperti
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryHostPointerPropertiesEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetMemoryHostPointerPropertiesEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8023,7 +8023,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceCalibrateab
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceCalibrateableTimeDomainsEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceCalibrateableTimeDomainsEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8038,7 +8038,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetCalibratedTimestampsEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetCalibratedTimestampsEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetCalibratedTimestampsEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8053,7 +8053,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkInitializePerformanceApiINTE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.InitializePerformanceApiINTEL_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.InitializePerformanceApiINTEL_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8068,7 +8068,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceMarkerINTEL
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPerformanceMarkerINTEL_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CmdSetPerformanceMarkerINTEL_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8083,7 +8083,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceStreamMarke
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPerformanceStreamMarkerINTEL_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CmdSetPerformanceStreamMarkerINTEL_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8098,7 +8098,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceOverrideINT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPerformanceOverrideINTEL_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CmdSetPerformanceOverrideINTEL_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8113,7 +8113,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquirePerformanceConfigurat
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquirePerformanceConfigurationINTEL_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.AcquirePerformanceConfigurationINTEL_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8128,7 +8128,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleasePerformanceConfigurat
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ReleasePerformanceConfigurationINTEL_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.ReleasePerformanceConfigurationINTEL_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8143,7 +8143,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkQueueSetPerformanceConfigura
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueSetPerformanceConfigurationINTEL_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.QueueSetPerformanceConfigurationINTEL_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8158,7 +8158,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPerformanceParameterINTEL
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPerformanceParameterINTEL_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPerformanceParameterINTEL_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8173,7 +8173,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateImagePipeSurfaceFUCHSI
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateImagePipeSurfaceFUCHSIA_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateImagePipeSurfaceFUCHSIA_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8188,7 +8188,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateMetalSurfaceEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateMetalSurfaceEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateMetalSurfaceEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8203,7 +8203,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceToolPropert
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceToolPropertiesEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceToolPropertiesEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8218,7 +8218,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceCooperative
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceCooperativeMatrixPropertiesNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceCooperativeMatrixPropertiesNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8233,7 +8233,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSupportedFr
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8248,7 +8248,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfacePres
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfacePresentModes2EXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfacePresentModes2EXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8263,7 +8263,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireFullScreenExclusiveMo
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquireFullScreenExclusiveModeEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.AcquireFullScreenExclusiveModeEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8278,7 +8278,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleaseFullScreenExclusiveMo
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ReleaseFullScreenExclusiveModeEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.ReleaseFullScreenExclusiveModeEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8293,7 +8293,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupSurfacePresent
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceGroupSurfacePresentModes2EXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetDeviceGroupSurfacePresentModes2EXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8308,7 +8308,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateHeadlessSurfaceEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateHeadlessSurfaceEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateHeadlessSurfaceEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8323,7 +8323,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkReleaseSwapchainImagesEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ReleaseSwapchainImagesEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.ReleaseSwapchainImagesEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8338,7 +8338,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateIndirectCommandsLayout
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateIndirectCommandsLayoutNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateIndirectCommandsLayoutNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8353,7 +8353,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireDrmDisplayEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquireDrmDisplayEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.AcquireDrmDisplayEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8368,7 +8368,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDrmDisplayEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDrmDisplayEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetDrmDisplayEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8383,7 +8383,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreatePrivateDataSlotEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreatePrivateDataSlotEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreatePrivateDataSlotEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8398,7 +8398,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkSetPrivateDataEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.SetPrivateDataEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.SetPrivateDataEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8413,7 +8413,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDeviceFaultInfoEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceFaultInfoEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetDeviceFaultInfoEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8428,7 +8428,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkAcquireWinrtDisplayNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquireWinrtDisplayNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.AcquireWinrtDisplayNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8443,7 +8443,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetWinrtDisplayNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetWinrtDisplayNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetWinrtDisplayNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8458,7 +8458,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateDirectFBSurfaceEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDirectFBSurfaceEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateDirectFBSurfaceEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8473,7 +8473,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryZirconHandleFUCHSIA
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryZirconHandleFUCHSIA_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetMemoryZirconHandleFUCHSIA_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8488,7 +8488,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryZirconHandlePropert
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryZirconHandlePropertiesFUCHSIA_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetMemoryZirconHandlePropertiesFUCHSIA_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8503,7 +8503,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreZirconHandleF
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.ImportSemaphoreZirconHandleFUCHSIA_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.ImportSemaphoreZirconHandleFUCHSIA_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8518,7 +8518,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreZirconHandleFUCH
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSemaphoreZirconHandleFUCHSIA_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetSemaphoreZirconHandleFUCHSIA_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8533,7 +8533,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetMemoryRemoteAddressNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryRemoteAddressNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetMemoryRemoteAddressNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8548,7 +8548,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateScreenSurfaceQNX>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateScreenSurfaceQNX_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateScreenSurfaceQNX_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8563,7 +8563,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateMicromapEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateMicromapEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateMicromapEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8578,7 +8578,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBuildMicromapsEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.BuildMicromapsEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.BuildMicromapsEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8593,7 +8593,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyMicromapEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CopyMicromapEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CopyMicromapEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8608,7 +8608,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyMicromapToMemoryEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CopyMicromapToMemoryEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CopyMicromapToMemoryEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8623,7 +8623,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyMemoryToMicromapEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CopyMemoryToMicromapEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CopyMemoryToMicromapEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8638,7 +8638,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWriteMicromapsPropertiesEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.WriteMicromapsPropertiesEXT_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.WriteMicromapsPropertiesEXT_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8653,7 +8653,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceOpticalFlow
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceOpticalFlowImageFormatsNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetPhysicalDeviceOpticalFlowImageFormatsNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8668,7 +8668,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateOpticalFlowSessionNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateOpticalFlowSessionNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateOpticalFlowSessionNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8683,7 +8683,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkBindOpticalFlowSessionImageN
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.BindOpticalFlowSessionImageNV_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.BindOpticalFlowSessionImageNV_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8698,7 +8698,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetFramebufferTileProperties
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetFramebufferTilePropertiesQCOM_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetFramebufferTilePropertiesQCOM_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8713,7 +8713,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetDynamicRenderingTilePrope
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDynamicRenderingTilePropertiesQCOM_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetDynamicRenderingTilePropertiesQCOM_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8728,7 +8728,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateAccelerationStructureK
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateAccelerationStructureKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateAccelerationStructureKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8743,7 +8743,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyAccelerationStructureToM
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CopyAccelerationStructureToMemoryKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CopyAccelerationStructureToMemoryKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8758,7 +8758,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCopyMemoryToAccelerationStru
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CopyMemoryToAccelerationStructureKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CopyMemoryToAccelerationStructureKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8773,7 +8773,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkWriteAccelerationStructuresP
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.WriteAccelerationStructuresPropertiesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.WriteAccelerationStructuresPropertiesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8788,7 +8788,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkCreateRayTracingPipelinesKHR
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateRayTracingPipelinesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.CreateRayTracingPipelinesKHR_PreCall(call_info, result, args...);
         }
     }
 };
@@ -8803,7 +8803,7 @@ struct ConsumerPreCall<format::ApiCallId::ApiCall_vkGetRayTracingCaptureReplaySh
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_pre.GetRayTracingCaptureReplayShaderGroupHandlesKHR_PreCall(consumer, call_info, result, args...);
+            plugin.func_table_pre.GetRayTracingCaptureReplayShaderGroupHandlesKHR_PreCall(call_info, result, args...);
         }
     }
 };

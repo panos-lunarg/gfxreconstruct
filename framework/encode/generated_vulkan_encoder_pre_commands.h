@@ -30,10 +30,11 @@
 #define GFXRECON_ENCODE_GENERATED_VULKAN_ENCODER_PRE_COMMANDS_H
 
 #include "encode/custom_vulkan_encoder_commands.h"
-
 #include "encode/vulkan_capture_manager.h"
+#include "generated/generated_vulkan_struct_handle_wrappers.h"
 #include "format/api_call_id.h"
 #include "util/defines.h"
+#include "vulkan/vulkan.h"
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(encode)
@@ -49,26 +50,68 @@ struct EncoderPreCall
 template<>
 struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateInstance>
 {
-    template <typename... Args>
-    static void Dispatch(VulkanCaptureManager* manager, Args... args)
+    static void Dispatch(VulkanCaptureManager* manager, const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance)
     {
-        CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCreateInstance>::Dispatch(manager, args...);
+        CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCreateInstance>::Dispatch(manager, pCreateInfo, pAllocator, pInstance);
+
+        // for (auto &plugin : manager->loaded_plugins_)
+        // {
+        //     plugin.func_table_pre.CreateInstance_PreCall(manager->GetBlockIndex(), pCreateInfo, pAllocator, pInstance);
+        // }
     }
 };
 
 template<>
 struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyInstance>
 {
-    template <typename... Args>
-    static void Dispatch(VulkanCaptureManager* manager, Args... args)
+    static void Dispatch(VulkanCaptureManager* manager, VkInstance instance, const VkAllocationCallbacks* pAllocator)
     {
         assert(manager);
-
-        CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyInstance>::Dispatch(manager, args...);
+        CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroyInstance>::Dispatch(manager, instance, pAllocator);
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyInstance_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyInstance_PreCall(manager->GetBlockIndex(), instance, pAllocator);
+        }
+    }
+};
+
+template<>
+struct EncoderPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>
+{
+    static void Dispatch(VulkanCaptureManager* manager, VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence)
+    {
+        assert(manager);
+        CustomEncoderPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>::Dispatch(manager, queue, submitCount, pSubmits, fence);
+
+        for (auto &plugin : manager->loaded_plugins_)
+        {
+            auto handle_unwrap_memory = VulkanCaptureManager::Get()->GetHandleUnwrapMemory();
+            VkQueue queue_unwrapped = GetWrappedHandle<VkQueue>(queue);
+            const VkSubmitInfo* pSubmits_unwrapped = UnwrapStructArrayHandles(pSubmits, submitCount, handle_unwrap_memory);
+            VkFence fence_unwrapped = GetWrappedHandle<VkFence>(fence);
+
+            plugin.func_table_pre.QueueSubmit_PreCall(manager->GetBlockIndex(), queue_unwrapped, submitCount, pSubmits_unwrapped, fence_unwrapped);
+        }
+    }
+};
+
+template<>
+struct EncoderPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>
+{
+    static void Dispatch(VulkanCaptureManager* manager, VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
+    {
+        assert(manager);
+
+        CustomEncoderPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>::Dispatch(manager, queue, pPresentInfo);
+
+        for (auto &plugin : manager->loaded_plugins_)
+        {
+            auto handle_unwrap_memory = VulkanCaptureManager::Get()->GetHandleUnwrapMemory();
+            VkQueue queue_unwrapped = GetWrappedHandle<VkQueue>(queue);
+            const VkPresentInfoKHR* pPresentInfo_unwrapped = UnwrapStructPtrHandles(pPresentInfo, handle_unwrap_memory);
+
+            plugin.func_table_pre.QueuePresentKHR_PreCall(manager->GetBlockIndex(), queue_unwrapped, pPresentInfo_unwrapped);
         }
     }
 };
@@ -85,7 +128,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDevices>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.EnumeratePhysicalDevices_PreCall(manager, args...);
+            plugin.func_table_pre.EnumeratePhysicalDevices_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -102,7 +145,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceFeatures_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceFeatures_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -119,7 +162,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatProper
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceFormatProperties_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceFormatProperties_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -136,7 +179,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageFormatP
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -153,7 +196,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceProperties_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceProperties_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -170,7 +213,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamilyP
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyProperties_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyProperties_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -187,7 +230,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryProper
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceMemoryProperties_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceMemoryProperties_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -204,7 +247,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateDevice>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDevice_PreCall(manager, args...);
+            plugin.func_table_pre.CreateDevice_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -221,7 +264,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDevice>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDevice_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyDevice_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -238,24 +281,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceQueue>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceQueue_PreCall(manager, args...);
-        }
-    }
-};
-
-template<>
-struct EncoderPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanCaptureManager* manager, Args... args)
-    {
-        assert(manager);
-
-        CustomEncoderPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>::Dispatch(manager, args...);
-
-        for (auto &plugin : manager->loaded_plugins_)
-        {
-            plugin.func_table_pre.QueueSubmit_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceQueue_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -272,7 +298,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkQueueWaitIdle>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueWaitIdle_PreCall(manager, args...);
+            plugin.func_table_pre.QueueWaitIdle_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -289,7 +315,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDeviceWaitIdle>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DeviceWaitIdle_PreCall(manager, args...);
+            plugin.func_table_pre.DeviceWaitIdle_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -306,7 +332,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkAllocateMemory>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.AllocateMemory_PreCall(manager, args...);
+            plugin.func_table_pre.AllocateMemory_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -323,7 +349,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkFreeMemory>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.FreeMemory_PreCall(manager, args...);
+            plugin.func_table_pre.FreeMemory_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -340,7 +366,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkMapMemory>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.MapMemory_PreCall(manager, args...);
+            plugin.func_table_pre.MapMemory_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -357,7 +383,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkUnmapMemory>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.UnmapMemory_PreCall(manager, args...);
+            plugin.func_table_pre.UnmapMemory_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -374,7 +400,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkFlushMappedMemoryRanges>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.FlushMappedMemoryRanges_PreCall(manager, args...);
+            plugin.func_table_pre.FlushMappedMemoryRanges_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -391,7 +417,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkInvalidateMappedMemoryRanges>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.InvalidateMappedMemoryRanges_PreCall(manager, args...);
+            plugin.func_table_pre.InvalidateMappedMemoryRanges_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -408,7 +434,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryCommitment>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceMemoryCommitment_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceMemoryCommitment_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -425,7 +451,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.BindBufferMemory_PreCall(manager, args...);
+            plugin.func_table_pre.BindBufferMemory_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -442,7 +468,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkBindImageMemory>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.BindImageMemory_PreCall(manager, args...);
+            plugin.func_table_pre.BindImageMemory_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -459,7 +485,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferMemoryRequirements_PreCall(manager, args...);
+            plugin.func_table_pre.GetBufferMemoryRequirements_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -476,7 +502,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageMemoryRequirements_PreCall(manager, args...);
+            plugin.func_table_pre.GetImageMemoryRequirements_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -493,7 +519,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequireme
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageSparseMemoryRequirements_PreCall(manager, args...);
+            plugin.func_table_pre.GetImageSparseMemoryRequirements_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -510,7 +536,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImageF
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSparseImageFormatProperties_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSparseImageFormatProperties_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -527,7 +553,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkQueueBindSparse>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueBindSparse_PreCall(manager, args...);
+            plugin.func_table_pre.QueueBindSparse_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -544,7 +570,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateFence>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateFence_PreCall(manager, args...);
+            plugin.func_table_pre.CreateFence_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -561,7 +587,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyFence>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyFence_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyFence_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -578,7 +604,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkResetFences>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ResetFences_PreCall(manager, args...);
+            plugin.func_table_pre.ResetFences_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -595,7 +621,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetFenceStatus>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetFenceStatus_PreCall(manager, args...);
+            plugin.func_table_pre.GetFenceStatus_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -612,7 +638,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkWaitForFences>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.WaitForFences_PreCall(manager, args...);
+            plugin.func_table_pre.WaitForFences_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -629,7 +655,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateSemaphore>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateSemaphore_PreCall(manager, args...);
+            plugin.func_table_pre.CreateSemaphore_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -646,7 +672,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroySemaphore>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroySemaphore_PreCall(manager, args...);
+            plugin.func_table_pre.DestroySemaphore_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -663,7 +689,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateEvent>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateEvent_PreCall(manager, args...);
+            plugin.func_table_pre.CreateEvent_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -680,7 +706,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyEvent>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyEvent_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyEvent_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -697,7 +723,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetEventStatus>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetEventStatus_PreCall(manager, args...);
+            plugin.func_table_pre.GetEventStatus_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -714,7 +740,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkSetEvent>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.SetEvent_PreCall(manager, args...);
+            plugin.func_table_pre.SetEvent_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -731,7 +757,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkResetEvent>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ResetEvent_PreCall(manager, args...);
+            plugin.func_table_pre.ResetEvent_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -748,7 +774,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateQueryPool>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateQueryPool_PreCall(manager, args...);
+            plugin.func_table_pre.CreateQueryPool_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -765,7 +791,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyQueryPool>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyQueryPool_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyQueryPool_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -782,7 +808,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetQueryPoolResults>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetQueryPoolResults_PreCall(manager, args...);
+            plugin.func_table_pre.GetQueryPoolResults_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -799,7 +825,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateBuffer>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateBuffer_PreCall(manager, args...);
+            plugin.func_table_pre.CreateBuffer_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -816,7 +842,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyBuffer>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyBuffer_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyBuffer_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -833,7 +859,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateBufferView>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateBufferView_PreCall(manager, args...);
+            plugin.func_table_pre.CreateBufferView_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -850,7 +876,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyBufferView>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyBufferView_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyBufferView_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -867,7 +893,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateImage>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateImage_PreCall(manager, args...);
+            plugin.func_table_pre.CreateImage_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -884,7 +910,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyImage>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyImage_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyImage_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -901,7 +927,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetImageSubresourceLayout>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageSubresourceLayout_PreCall(manager, args...);
+            plugin.func_table_pre.GetImageSubresourceLayout_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -918,7 +944,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateImageView>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateImageView_PreCall(manager, args...);
+            plugin.func_table_pre.CreateImageView_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -935,7 +961,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyImageView>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyImageView_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyImageView_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -952,7 +978,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateShaderModule>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateShaderModule_PreCall(manager, args...);
+            plugin.func_table_pre.CreateShaderModule_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -969,7 +995,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyShaderModule>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyShaderModule_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyShaderModule_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -986,7 +1012,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreatePipelineCache>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreatePipelineCache_PreCall(manager, args...);
+            plugin.func_table_pre.CreatePipelineCache_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1003,7 +1029,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyPipelineCache>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyPipelineCache_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyPipelineCache_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1020,7 +1046,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPipelineCacheData>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPipelineCacheData_PreCall(manager, args...);
+            plugin.func_table_pre.GetPipelineCacheData_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1037,7 +1063,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkMergePipelineCaches>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.MergePipelineCaches_PreCall(manager, args...);
+            plugin.func_table_pre.MergePipelineCaches_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1054,7 +1080,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateGraphicsPipelines>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateGraphicsPipelines_PreCall(manager, args...);
+            plugin.func_table_pre.CreateGraphicsPipelines_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1071,7 +1097,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateComputePipelines>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateComputePipelines_PreCall(manager, args...);
+            plugin.func_table_pre.CreateComputePipelines_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1088,7 +1114,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyPipeline>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyPipeline_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyPipeline_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1105,7 +1131,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreatePipelineLayout>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreatePipelineLayout_PreCall(manager, args...);
+            plugin.func_table_pre.CreatePipelineLayout_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1122,7 +1148,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyPipelineLayout>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyPipelineLayout_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyPipelineLayout_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1139,7 +1165,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateSampler>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateSampler_PreCall(manager, args...);
+            plugin.func_table_pre.CreateSampler_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1156,7 +1182,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroySampler>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroySampler_PreCall(manager, args...);
+            plugin.func_table_pre.DestroySampler_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1173,7 +1199,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateDescriptorSetLayout>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDescriptorSetLayout_PreCall(manager, args...);
+            plugin.func_table_pre.CreateDescriptorSetLayout_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1190,7 +1216,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorSetLayout>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDescriptorSetLayout_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyDescriptorSetLayout_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1207,7 +1233,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateDescriptorPool>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDescriptorPool_PreCall(manager, args...);
+            plugin.func_table_pre.CreateDescriptorPool_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1224,7 +1250,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorPool>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDescriptorPool_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyDescriptorPool_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1241,7 +1267,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkResetDescriptorPool>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ResetDescriptorPool_PreCall(manager, args...);
+            plugin.func_table_pre.ResetDescriptorPool_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1258,7 +1284,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkAllocateDescriptorSets>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.AllocateDescriptorSets_PreCall(manager, args...);
+            plugin.func_table_pre.AllocateDescriptorSets_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1275,7 +1301,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkFreeDescriptorSets>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.FreeDescriptorSets_PreCall(manager, args...);
+            plugin.func_table_pre.FreeDescriptorSets_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1292,7 +1318,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkUpdateDescriptorSets>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.UpdateDescriptorSets_PreCall(manager, args...);
+            plugin.func_table_pre.UpdateDescriptorSets_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1309,7 +1335,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateFramebuffer>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateFramebuffer_PreCall(manager, args...);
+            plugin.func_table_pre.CreateFramebuffer_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1326,7 +1352,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyFramebuffer>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyFramebuffer_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyFramebuffer_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1343,7 +1369,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateRenderPass>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateRenderPass_PreCall(manager, args...);
+            plugin.func_table_pre.CreateRenderPass_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1360,7 +1386,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyRenderPass>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyRenderPass_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyRenderPass_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1377,7 +1403,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetRenderAreaGranularity>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetRenderAreaGranularity_PreCall(manager, args...);
+            plugin.func_table_pre.GetRenderAreaGranularity_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1394,7 +1420,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateCommandPool>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateCommandPool_PreCall(manager, args...);
+            plugin.func_table_pre.CreateCommandPool_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1411,7 +1437,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyCommandPool>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyCommandPool_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyCommandPool_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1428,7 +1454,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkResetCommandPool>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ResetCommandPool_PreCall(manager, args...);
+            plugin.func_table_pre.ResetCommandPool_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1445,7 +1471,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkAllocateCommandBuffers>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.AllocateCommandBuffers_PreCall(manager, args...);
+            plugin.func_table_pre.AllocateCommandBuffers_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1462,7 +1488,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkFreeCommandBuffers>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.FreeCommandBuffers_PreCall(manager, args...);
+            plugin.func_table_pre.FreeCommandBuffers_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1479,7 +1505,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkBeginCommandBuffer>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.BeginCommandBuffer_PreCall(manager, args...);
+            plugin.func_table_pre.BeginCommandBuffer_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1496,7 +1522,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkEndCommandBuffer>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.EndCommandBuffer_PreCall(manager, args...);
+            plugin.func_table_pre.EndCommandBuffer_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1513,7 +1539,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkResetCommandBuffer>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ResetCommandBuffer_PreCall(manager, args...);
+            plugin.func_table_pre.ResetCommandBuffer_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1530,7 +1556,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindPipeline>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindPipeline_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBindPipeline_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1547,7 +1573,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetViewport>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetViewport_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetViewport_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1564,7 +1590,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetScissor>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetScissor_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetScissor_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1581,7 +1607,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetLineWidth>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetLineWidth_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetLineWidth_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1598,7 +1624,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBias>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthBias_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthBias_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1615,7 +1641,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetBlendConstants>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetBlendConstants_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetBlendConstants_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1632,7 +1658,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBounds>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthBounds_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthBounds_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1649,7 +1675,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilCompareMask>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetStencilCompareMask_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetStencilCompareMask_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1666,7 +1692,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilWriteMask>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetStencilWriteMask_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetStencilWriteMask_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1683,7 +1709,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilReference>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetStencilReference_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetStencilReference_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1700,7 +1726,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindDescriptorSets>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindDescriptorSets_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBindDescriptorSets_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1717,7 +1743,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindIndexBuffer>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindIndexBuffer_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBindIndexBuffer_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1734,7 +1760,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindVertexBuffers_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBindVertexBuffers_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1751,7 +1777,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDraw>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDraw_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDraw_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1768,7 +1794,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexed>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndexed_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawIndexed_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1785,7 +1811,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirect>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndirect_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawIndirect_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1802,7 +1828,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirect>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndexedIndirect_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawIndexedIndirect_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1819,7 +1845,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDispatch>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDispatch_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDispatch_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1836,7 +1862,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDispatchIndirect>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDispatchIndirect_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDispatchIndirect_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1853,7 +1879,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyBuffer_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyBuffer_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1870,7 +1896,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyImage_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyImage_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1887,7 +1913,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBlitImage_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBlitImage_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1904,7 +1930,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyBufferToImage_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyBufferToImage_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1921,7 +1947,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyImageToBuffer_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyImageToBuffer_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1938,7 +1964,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdUpdateBuffer>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdUpdateBuffer_PreCall(manager, args...);
+            plugin.func_table_pre.CmdUpdateBuffer_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1955,7 +1981,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdFillBuffer>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdFillBuffer_PreCall(manager, args...);
+            plugin.func_table_pre.CmdFillBuffer_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1972,7 +1998,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdClearColorImage>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdClearColorImage_PreCall(manager, args...);
+            plugin.func_table_pre.CmdClearColorImage_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -1989,7 +2015,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdClearDepthStencilImage>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdClearDepthStencilImage_PreCall(manager, args...);
+            plugin.func_table_pre.CmdClearDepthStencilImage_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2006,7 +2032,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdClearAttachments>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdClearAttachments_PreCall(manager, args...);
+            plugin.func_table_pre.CmdClearAttachments_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2023,7 +2049,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdResolveImage_PreCall(manager, args...);
+            plugin.func_table_pre.CmdResolveImage_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2040,7 +2066,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetEvent_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetEvent_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2057,7 +2083,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdResetEvent_PreCall(manager, args...);
+            plugin.func_table_pre.CmdResetEvent_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2074,7 +2100,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWaitEvents_PreCall(manager, args...);
+            plugin.func_table_pre.CmdWaitEvents_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2091,7 +2117,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdPipelineBarrier_PreCall(manager, args...);
+            plugin.func_table_pre.CmdPipelineBarrier_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2108,7 +2134,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginQuery>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginQuery_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBeginQuery_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2125,7 +2151,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndQuery>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndQuery_PreCall(manager, args...);
+            plugin.func_table_pre.CmdEndQuery_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2142,7 +2168,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdResetQueryPool>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdResetQueryPool_PreCall(manager, args...);
+            plugin.func_table_pre.CmdResetQueryPool_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2159,7 +2185,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteTimestamp_PreCall(manager, args...);
+            plugin.func_table_pre.CmdWriteTimestamp_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2176,7 +2202,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyQueryPoolResults>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyQueryPoolResults_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyQueryPoolResults_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2193,7 +2219,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdPushConstants>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdPushConstants_PreCall(manager, args...);
+            plugin.func_table_pre.CmdPushConstants_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2210,7 +2236,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginRenderPass_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBeginRenderPass_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2227,7 +2253,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdNextSubpass_PreCall(manager, args...);
+            plugin.func_table_pre.CmdNextSubpass_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2244,7 +2270,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndRenderPass_PreCall(manager, args...);
+            plugin.func_table_pre.CmdEndRenderPass_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2261,7 +2287,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdExecuteCommands>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdExecuteCommands_PreCall(manager, args...);
+            plugin.func_table_pre.CmdExecuteCommands_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2278,7 +2304,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.BindBufferMemory2_PreCall(manager, args...);
+            plugin.func_table_pre.BindBufferMemory2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2295,7 +2321,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkBindImageMemory2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.BindImageMemory2_PreCall(manager, args...);
+            plugin.func_table_pre.BindImageMemory2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2312,7 +2338,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPeerMemoryFeatu
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceGroupPeerMemoryFeatures_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceGroupPeerMemoryFeatures_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2329,7 +2355,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDeviceMask>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDeviceMask_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDeviceMask_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2346,7 +2372,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDispatchBase>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDispatchBase_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDispatchBase_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2363,7 +2389,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceGroups
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.EnumeratePhysicalDeviceGroups_PreCall(manager, args...);
+            plugin.func_table_pre.EnumeratePhysicalDeviceGroups_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2380,7 +2406,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageMemoryRequirements2_PreCall(manager, args...);
+            plugin.func_table_pre.GetImageMemoryRequirements2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2397,7 +2423,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferMemoryRequirements2_PreCall(manager, args...);
+            plugin.func_table_pre.GetBufferMemoryRequirements2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2414,7 +2440,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequireme
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageSparseMemoryRequirements2_PreCall(manager, args...);
+            plugin.func_table_pre.GetImageSparseMemoryRequirements2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2431,7 +2457,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceFeatures2_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceFeatures2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2448,7 +2474,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceProperties2_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceProperties2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2465,7 +2491,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatProper
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceFormatProperties2_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceFormatProperties2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2482,7 +2508,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageFormatP
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties2_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2499,7 +2525,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamilyP
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyProperties2_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyProperties2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2516,7 +2542,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryProper
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceMemoryProperties2_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceMemoryProperties2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2533,7 +2559,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImageF
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSparseImageFormatProperties2_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSparseImageFormatProperties2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2550,7 +2576,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkTrimCommandPool>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.TrimCommandPool_PreCall(manager, args...);
+            plugin.func_table_pre.TrimCommandPool_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2567,7 +2593,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceQueue2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceQueue2_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceQueue2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2584,7 +2610,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateSamplerYcbcrConversion>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateSamplerYcbcrConversion_PreCall(manager, args...);
+            plugin.func_table_pre.CreateSamplerYcbcrConversion_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2601,7 +2627,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroySamplerYcbcrConversion
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroySamplerYcbcrConversion_PreCall(manager, args...);
+            plugin.func_table_pre.DestroySamplerYcbcrConversion_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2618,7 +2644,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateDescriptorUpdateTemplat
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDescriptorUpdateTemplate_PreCall(manager, args...);
+            plugin.func_table_pre.CreateDescriptorUpdateTemplate_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2635,7 +2661,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorUpdateTempla
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDescriptorUpdateTemplate_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyDescriptorUpdateTemplate_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2652,7 +2678,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalBuff
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceExternalBufferProperties_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceExternalBufferProperties_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2669,7 +2695,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalFenc
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceExternalFenceProperties_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceExternalFenceProperties_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2686,7 +2712,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalSema
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceExternalSemaphoreProperties_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceExternalSemaphoreProperties_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2703,7 +2729,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutSupport
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDescriptorSetLayoutSupport_PreCall(manager, args...);
+            plugin.func_table_pre.GetDescriptorSetLayoutSupport_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2720,7 +2746,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCount>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndirectCount_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawIndirectCount_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2737,7 +2763,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCount>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndexedIndirectCount_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawIndexedIndirectCount_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2754,7 +2780,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateRenderPass2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateRenderPass2_PreCall(manager, args...);
+            plugin.func_table_pre.CreateRenderPass2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2771,7 +2797,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginRenderPass2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBeginRenderPass2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2788,7 +2814,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdNextSubpass2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdNextSubpass2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2805,7 +2831,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndRenderPass2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdEndRenderPass2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2822,7 +2848,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkResetQueryPool>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ResetQueryPool_PreCall(manager, args...);
+            plugin.func_table_pre.ResetQueryPool_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2839,7 +2865,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreCounterValue>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSemaphoreCounterValue_PreCall(manager, args...);
+            plugin.func_table_pre.GetSemaphoreCounterValue_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2856,7 +2882,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkWaitSemaphores>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.WaitSemaphores_PreCall(manager, args...);
+            plugin.func_table_pre.WaitSemaphores_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2873,7 +2899,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkSignalSemaphore>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.SignalSemaphore_PreCall(manager, args...);
+            plugin.func_table_pre.SignalSemaphore_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2890,7 +2916,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddress>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferDeviceAddress_PreCall(manager, args...);
+            plugin.func_table_pre.GetBufferDeviceAddress_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2907,7 +2933,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferOpaqueCaptureAddress
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferOpaqueCaptureAddress_PreCall(manager, args...);
+            plugin.func_table_pre.GetBufferOpaqueCaptureAddress_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2924,7 +2950,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryOpaqueCaptureA
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceMemoryOpaqueCaptureAddress_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceMemoryOpaqueCaptureAddress_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2941,7 +2967,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceToolProperti
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceToolProperties_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceToolProperties_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2958,7 +2984,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreatePrivateDataSlot>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreatePrivateDataSlot_PreCall(manager, args...);
+            plugin.func_table_pre.CreatePrivateDataSlot_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2975,7 +3001,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyPrivateDataSlot>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyPrivateDataSlot_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyPrivateDataSlot_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -2992,7 +3018,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkSetPrivateData>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.SetPrivateData_PreCall(manager, args...);
+            plugin.func_table_pre.SetPrivateData_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3009,7 +3035,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPrivateData>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPrivateData_PreCall(manager, args...);
+            plugin.func_table_pre.GetPrivateData_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3026,7 +3052,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetEvent2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetEvent2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3043,7 +3069,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdResetEvent2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdResetEvent2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3060,7 +3086,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWaitEvents2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdWaitEvents2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3077,7 +3103,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdPipelineBarrier2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdPipelineBarrier2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3094,7 +3120,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteTimestamp2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdWriteTimestamp2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3111,7 +3137,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkQueueSubmit2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueSubmit2_PreCall(manager, args...);
+            plugin.func_table_pre.QueueSubmit2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3128,7 +3154,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyBuffer2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyBuffer2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3145,7 +3171,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyImage2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyImage2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3162,7 +3188,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyBufferToImage2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyBufferToImage2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3179,7 +3205,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyImageToBuffer2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyImageToBuffer2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3196,7 +3222,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBlitImage2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBlitImage2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3213,7 +3239,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdResolveImage2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdResolveImage2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3230,7 +3256,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginRendering>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginRendering_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBeginRendering_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3247,7 +3273,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndRendering>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndRendering_PreCall(manager, args...);
+            plugin.func_table_pre.CmdEndRendering_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3264,7 +3290,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetCullMode>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCullMode_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetCullMode_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3281,7 +3307,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetFrontFace>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetFrontFace_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetFrontFace_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3298,7 +3324,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveTopology>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPrimitiveTopology_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetPrimitiveTopology_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3315,7 +3341,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWithCount>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetViewportWithCount_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetViewportWithCount_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3332,7 +3358,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetScissorWithCount>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetScissorWithCount_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetScissorWithCount_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3349,7 +3375,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers2>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindVertexBuffers2_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBindVertexBuffers2_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3366,7 +3392,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthTestEnable>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthTestEnable_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthTestEnable_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3383,7 +3409,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthWriteEnable>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthWriteEnable_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthWriteEnable_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3400,7 +3426,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthCompareOp>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthCompareOp_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthCompareOp_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3417,7 +3443,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBoundsTestEnable>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthBoundsTestEnable_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthBoundsTestEnable_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3434,7 +3460,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilTestEnable>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetStencilTestEnable_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetStencilTestEnable_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3451,7 +3477,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilOp>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetStencilOp_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetStencilOp_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3468,7 +3494,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizerDiscardEnable
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetRasterizerDiscardEnable_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetRasterizerDiscardEnable_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3485,7 +3511,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBiasEnable>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthBiasEnable_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthBiasEnable_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3502,7 +3528,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveRestartEnable>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPrimitiveRestartEnable_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetPrimitiveRestartEnable_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3519,7 +3545,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceBufferMemoryRequirem
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceBufferMemoryRequirements_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceBufferMemoryRequirements_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3536,7 +3562,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageMemoryRequireme
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceImageMemoryRequirements_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceImageMemoryRequirements_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3553,7 +3579,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageSparseMemoryReq
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceImageSparseMemoryRequirements_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceImageSparseMemoryRequirements_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3570,7 +3596,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroySurfaceKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroySurfaceKHR_PreCall(manager, args...);
+            plugin.func_table_pre.DestroySurfaceKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3587,7 +3613,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceSuppo
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceSupportKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceSupportKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3604,7 +3630,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCapab
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilitiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilitiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3621,7 +3647,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceForma
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceFormatsKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceFormatsKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3638,7 +3664,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfacePrese
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfacePresentModesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfacePresentModesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3655,7 +3681,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateSwapchainKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateSwapchainKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateSwapchainKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3672,7 +3698,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroySwapchainKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroySwapchainKHR_PreCall(manager, args...);
+            plugin.func_table_pre.DestroySwapchainKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3689,7 +3715,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetSwapchainImagesKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSwapchainImagesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetSwapchainImagesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3706,24 +3732,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkAcquireNextImageKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquireNextImageKHR_PreCall(manager, args...);
-        }
-    }
-};
-
-template<>
-struct EncoderPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>
-{
-    template <typename... Args>
-    static void Dispatch(VulkanCaptureManager* manager, Args... args)
-    {
-        assert(manager);
-
-        CustomEncoderPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>::Dispatch(manager, args...);
-
-        for (auto &plugin : manager->loaded_plugins_)
-        {
-            plugin.func_table_pre.QueuePresentKHR_PreCall(manager, args...);
+            plugin.func_table_pre.AcquireNextImageKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3740,7 +3749,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPresentCapabili
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceGroupPresentCapabilitiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceGroupPresentCapabilitiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3757,7 +3766,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupSurfacePresentM
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceGroupSurfacePresentModesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceGroupSurfacePresentModesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3774,7 +3783,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDevicePresentRecta
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDevicePresentRectanglesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDevicePresentRectanglesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3791,7 +3800,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkAcquireNextImage2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquireNextImage2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.AcquireNextImage2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3808,7 +3817,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPrope
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceDisplayPropertiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceDisplayPropertiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3825,7 +3834,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPlane
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceDisplayPlanePropertiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceDisplayPlanePropertiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3842,7 +3851,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneSupportedDispl
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDisplayPlaneSupportedDisplaysKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDisplayPlaneSupportedDisplaysKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3859,7 +3868,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDisplayModePropertiesKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDisplayModePropertiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDisplayModePropertiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3876,7 +3885,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateDisplayModeKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDisplayModeKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateDisplayModeKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3893,7 +3902,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneCapabilitiesKH
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDisplayPlaneCapabilitiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDisplayPlaneCapabilitiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3910,7 +3919,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateDisplayPlaneSurfaceKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDisplayPlaneSurfaceKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateDisplayPlaneSurfaceKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3927,7 +3936,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateSharedSwapchainsKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateSharedSwapchainsKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateSharedSwapchainsKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3944,7 +3953,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateXlibSurfaceKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateXlibSurfaceKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateXlibSurfaceKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3961,7 +3970,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceXlibPresenta
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceXlibPresentationSupportKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceXlibPresentationSupportKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3978,7 +3987,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateXcbSurfaceKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateXcbSurfaceKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateXcbSurfaceKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -3995,7 +4004,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceXcbPresentat
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceXcbPresentationSupportKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceXcbPresentationSupportKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4012,7 +4021,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateWaylandSurfaceKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateWaylandSurfaceKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateWaylandSurfaceKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4029,7 +4038,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceWaylandPrese
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceWaylandPresentationSupportKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceWaylandPresentationSupportKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4046,7 +4055,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateAndroidSurfaceKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateAndroidSurfaceKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateAndroidSurfaceKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4063,7 +4072,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateWin32SurfaceKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateWin32SurfaceKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateWin32SurfaceKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4080,7 +4089,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceWin32Present
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceWin32PresentationSupportKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceWin32PresentationSupportKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4097,7 +4106,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceVideoCapabil
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceVideoCapabilitiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceVideoCapabilitiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4114,7 +4123,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceVideoFormatP
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceVideoFormatPropertiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceVideoFormatPropertiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4131,7 +4140,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateVideoSessionKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateVideoSessionKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateVideoSessionKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4148,7 +4157,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyVideoSessionKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyVideoSessionKHR_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyVideoSessionKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4165,7 +4174,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetVideoSessionMemoryRequirem
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetVideoSessionMemoryRequirementsKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetVideoSessionMemoryRequirementsKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4182,7 +4191,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkBindVideoSessionMemoryKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.BindVideoSessionMemoryKHR_PreCall(manager, args...);
+            plugin.func_table_pre.BindVideoSessionMemoryKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4199,7 +4208,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateVideoSessionParametersK
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateVideoSessionParametersKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateVideoSessionParametersKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4216,7 +4225,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkUpdateVideoSessionParametersK
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.UpdateVideoSessionParametersKHR_PreCall(manager, args...);
+            plugin.func_table_pre.UpdateVideoSessionParametersKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4233,7 +4242,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyVideoSessionParameters
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyVideoSessionParametersKHR_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyVideoSessionParametersKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4250,7 +4259,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginVideoCodingKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginVideoCodingKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBeginVideoCodingKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4267,7 +4276,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndVideoCodingKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndVideoCodingKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdEndVideoCodingKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4284,7 +4293,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdControlVideoCodingKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdControlVideoCodingKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdControlVideoCodingKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4301,7 +4310,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDecodeVideoKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDecodeVideoKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDecodeVideoKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4318,7 +4327,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderingKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginRenderingKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBeginRenderingKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4335,7 +4344,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderingKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndRenderingKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdEndRenderingKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4352,7 +4361,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures2KHR
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceFeatures2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceFeatures2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4369,7 +4378,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties2K
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceProperties2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceProperties2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4386,7 +4395,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatProper
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceFormatProperties2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceFormatProperties2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4403,7 +4412,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageFormatP
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceImageFormatProperties2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4420,7 +4429,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamilyP
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyProperties2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyProperties2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4437,7 +4446,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryProper
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceMemoryProperties2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceMemoryProperties2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4454,7 +4463,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImageF
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSparseImageFormatProperties2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSparseImageFormatProperties2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4471,7 +4480,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPeerMemoryFeatu
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceGroupPeerMemoryFeaturesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceGroupPeerMemoryFeaturesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4488,7 +4497,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDeviceMaskKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDeviceMaskKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDeviceMaskKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4505,7 +4514,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDispatchBaseKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDispatchBaseKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDispatchBaseKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4522,7 +4531,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkTrimCommandPoolKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.TrimCommandPoolKHR_PreCall(manager, args...);
+            plugin.func_table_pre.TrimCommandPoolKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4539,7 +4548,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceGroups
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.EnumeratePhysicalDeviceGroupsKHR_PreCall(manager, args...);
+            plugin.func_table_pre.EnumeratePhysicalDeviceGroupsKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4556,7 +4565,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalBuff
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceExternalBufferPropertiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceExternalBufferPropertiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4573,7 +4582,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandleKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryWin32HandleKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetMemoryWin32HandleKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4590,7 +4599,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandlePropertie
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryWin32HandlePropertiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetMemoryWin32HandlePropertiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4607,7 +4616,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetMemoryFdKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryFdKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetMemoryFdKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4624,7 +4633,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetMemoryFdPropertiesKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryFdPropertiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetMemoryFdPropertiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4641,7 +4650,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalSema
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceExternalSemaphorePropertiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceExternalSemaphorePropertiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4658,7 +4667,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreWin32HandleKHR
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ImportSemaphoreWin32HandleKHR_PreCall(manager, args...);
+            plugin.func_table_pre.ImportSemaphoreWin32HandleKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4675,7 +4684,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreWin32HandleKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSemaphoreWin32HandleKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetSemaphoreWin32HandleKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4692,7 +4701,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreFdKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ImportSemaphoreFdKHR_PreCall(manager, args...);
+            plugin.func_table_pre.ImportSemaphoreFdKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4709,7 +4718,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreFdKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSemaphoreFdKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetSemaphoreFdKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4726,7 +4735,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdPushDescriptorSetKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdPushDescriptorSetKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdPushDescriptorSetKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4743,7 +4752,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateDescriptorUpdateTemplat
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDescriptorUpdateTemplateKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateDescriptorUpdateTemplateKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4760,7 +4769,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDescriptorUpdateTempla
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDescriptorUpdateTemplateKHR_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyDescriptorUpdateTemplateKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4777,7 +4786,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateRenderPass2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateRenderPass2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateRenderPass2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4794,7 +4803,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginRenderPass2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBeginRenderPass2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4811,7 +4820,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdNextSubpass2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdNextSubpass2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdNextSubpass2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4828,7 +4837,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndRenderPass2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdEndRenderPass2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4845,7 +4854,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetSwapchainStatusKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSwapchainStatusKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetSwapchainStatusKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4862,7 +4871,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalFenc
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceExternalFencePropertiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceExternalFencePropertiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4879,7 +4888,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkImportFenceWin32HandleKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ImportFenceWin32HandleKHR_PreCall(manager, args...);
+            plugin.func_table_pre.ImportFenceWin32HandleKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4896,7 +4905,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetFenceWin32HandleKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetFenceWin32HandleKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetFenceWin32HandleKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4913,7 +4922,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkImportFenceFdKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ImportFenceFdKHR_PreCall(manager, args...);
+            plugin.func_table_pre.ImportFenceFdKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4930,7 +4939,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetFenceFdKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetFenceFdKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetFenceFdKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4947,7 +4956,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceQueueF
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR_PreCall(manager, args...);
+            plugin.func_table_pre.EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4964,7 +4973,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamilyP
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4981,7 +4990,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkAcquireProfilingLockKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquireProfilingLockKHR_PreCall(manager, args...);
+            plugin.func_table_pre.AcquireProfilingLockKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -4998,7 +5007,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkReleaseProfilingLockKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ReleaseProfilingLockKHR_PreCall(manager, args...);
+            plugin.func_table_pre.ReleaseProfilingLockKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5015,7 +5024,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCapab
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilities2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilities2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5032,7 +5041,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceForma
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceFormats2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceFormats2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5049,7 +5058,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPrope
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceDisplayProperties2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceDisplayProperties2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5066,7 +5075,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPlane
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceDisplayPlaneProperties2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceDisplayPlaneProperties2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5083,7 +5092,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDisplayModeProperties2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDisplayModeProperties2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDisplayModeProperties2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5100,7 +5109,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneCapabilities2K
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDisplayPlaneCapabilities2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDisplayPlaneCapabilities2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5117,7 +5126,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements2KH
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageMemoryRequirements2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetImageMemoryRequirements2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5134,7 +5143,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements2K
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferMemoryRequirements2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetBufferMemoryRequirements2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5151,7 +5160,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequireme
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageSparseMemoryRequirements2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetImageSparseMemoryRequirements2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5168,7 +5177,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateSamplerYcbcrConversionK
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateSamplerYcbcrConversionKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateSamplerYcbcrConversionKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5185,7 +5194,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroySamplerYcbcrConversion
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroySamplerYcbcrConversionKHR_PreCall(manager, args...);
+            plugin.func_table_pre.DestroySamplerYcbcrConversionKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5202,7 +5211,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkBindBufferMemory2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.BindBufferMemory2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.BindBufferMemory2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5219,7 +5228,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkBindImageMemory2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.BindImageMemory2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.BindImageMemory2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5236,7 +5245,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutSupport
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDescriptorSetLayoutSupportKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDescriptorSetLayoutSupportKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5253,7 +5262,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCountKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndirectCountKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawIndirectCountKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5270,7 +5279,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCountKH
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndexedIndirectCountKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawIndexedIndirectCountKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5287,7 +5296,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreCounterValueKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSemaphoreCounterValueKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetSemaphoreCounterValueKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5304,7 +5313,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkWaitSemaphoresKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.WaitSemaphoresKHR_PreCall(manager, args...);
+            plugin.func_table_pre.WaitSemaphoresKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5321,7 +5330,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkSignalSemaphoreKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.SignalSemaphoreKHR_PreCall(manager, args...);
+            plugin.func_table_pre.SignalSemaphoreKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5338,7 +5347,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFragmentShad
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceFragmentShadingRatesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceFragmentShadingRatesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5355,7 +5364,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetFragmentShadingRateKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetFragmentShadingRateKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetFragmentShadingRateKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5372,7 +5381,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkWaitForPresentKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.WaitForPresentKHR_PreCall(manager, args...);
+            plugin.func_table_pre.WaitForPresentKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5389,7 +5398,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddressKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferDeviceAddressKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetBufferDeviceAddressKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5406,7 +5415,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferOpaqueCaptureAddress
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferOpaqueCaptureAddressKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetBufferOpaqueCaptureAddressKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5423,7 +5432,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryOpaqueCaptureA
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceMemoryOpaqueCaptureAddressKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceMemoryOpaqueCaptureAddressKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5440,7 +5449,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateDeferredOperationKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDeferredOperationKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateDeferredOperationKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5457,7 +5466,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDeferredOperationKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDeferredOperationKHR_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyDeferredOperationKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5474,7 +5483,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeferredOperationMaxConcur
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeferredOperationMaxConcurrencyKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeferredOperationMaxConcurrencyKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5491,7 +5500,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeferredOperationResultKHR
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeferredOperationResultKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeferredOperationResultKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5508,7 +5517,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDeferredOperationJoinKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DeferredOperationJoinKHR_PreCall(manager, args...);
+            plugin.func_table_pre.DeferredOperationJoinKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5525,7 +5534,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPipelineExecutableProperti
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPipelineExecutablePropertiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPipelineExecutablePropertiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5542,7 +5551,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPipelineExecutableStatisti
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPipelineExecutableStatisticsKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPipelineExecutableStatisticsKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5559,7 +5568,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPipelineExecutableInternal
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPipelineExecutableInternalRepresentationsKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPipelineExecutableInternalRepresentationsKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5576,7 +5585,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdEncodeVideoKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEncodeVideoKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdEncodeVideoKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5593,7 +5602,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetEvent2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetEvent2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetEvent2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5610,7 +5619,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdResetEvent2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdResetEvent2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdResetEvent2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5627,7 +5636,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdWaitEvents2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWaitEvents2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdWaitEvents2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5644,7 +5653,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdPipelineBarrier2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdPipelineBarrier2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5661,7 +5670,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteTimestamp2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdWriteTimestamp2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5678,7 +5687,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkQueueSubmit2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueSubmit2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.QueueSubmit2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5695,7 +5704,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteBufferMarker2AMD>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteBufferMarker2AMD_PreCall(manager, args...);
+            plugin.func_table_pre.CmdWriteBufferMarker2AMD_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5712,7 +5721,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetQueueCheckpointData2NV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetQueueCheckpointData2NV_PreCall(manager, args...);
+            plugin.func_table_pre.GetQueueCheckpointData2NV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5729,7 +5738,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyBuffer2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyBuffer2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5746,7 +5755,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyImage2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyImage2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyImage2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5763,7 +5772,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyBufferToImage2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyBufferToImage2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5780,7 +5789,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyImageToBuffer2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyImageToBuffer2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5797,7 +5806,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBlitImage2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBlitImage2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBlitImage2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5814,7 +5823,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdResolveImage2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdResolveImage2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdResolveImage2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5831,7 +5840,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysIndirect2KHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdTraceRaysIndirect2KHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdTraceRaysIndirect2KHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5848,7 +5857,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceBufferMemoryRequirem
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceBufferMemoryRequirementsKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceBufferMemoryRequirementsKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5865,7 +5874,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageMemoryRequireme
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceImageMemoryRequirementsKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceImageMemoryRequirementsKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5882,7 +5891,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceImageSparseMemoryReq
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceImageSparseMemoryRequirementsKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceImageSparseMemoryRequirementsKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5899,7 +5908,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateDebugReportCallbackEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDebugReportCallbackEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CreateDebugReportCallbackEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5916,7 +5925,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDebugReportCallbackEXT
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDebugReportCallbackEXT_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyDebugReportCallbackEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5933,7 +5942,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDebugReportMessageEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DebugReportMessageEXT_PreCall(manager, args...);
+            plugin.func_table_pre.DebugReportMessageEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5950,7 +5959,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDebugMarkerSetObjectTagEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DebugMarkerSetObjectTagEXT_PreCall(manager, args...);
+            plugin.func_table_pre.DebugMarkerSetObjectTagEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5967,7 +5976,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDebugMarkerSetObjectNameEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DebugMarkerSetObjectNameEXT_PreCall(manager, args...);
+            plugin.func_table_pre.DebugMarkerSetObjectNameEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -5984,7 +5993,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerBeginEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDebugMarkerBeginEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDebugMarkerBeginEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6001,7 +6010,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerEndEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDebugMarkerEndEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDebugMarkerEndEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6018,7 +6027,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerInsertEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDebugMarkerInsertEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDebugMarkerInsertEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6035,7 +6044,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindTransformFeedbackBuffe
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindTransformFeedbackBuffersEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBindTransformFeedbackBuffersEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6052,7 +6061,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginTransformFeedbackEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginTransformFeedbackEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBeginTransformFeedbackEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6069,7 +6078,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndTransformFeedbackEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndTransformFeedbackEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdEndTransformFeedbackEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6086,7 +6095,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginQueryIndexedEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginQueryIndexedEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBeginQueryIndexedEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6103,7 +6112,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndQueryIndexedEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndQueryIndexedEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdEndQueryIndexedEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6120,7 +6129,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectByteCountEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndirectByteCountEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawIndirectByteCountEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6137,7 +6146,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetImageViewHandleNVX>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageViewHandleNVX_PreCall(manager, args...);
+            plugin.func_table_pre.GetImageViewHandleNVX_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6154,7 +6163,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetImageViewAddressNVX>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageViewAddressNVX_PreCall(manager, args...);
+            plugin.func_table_pre.GetImageViewAddressNVX_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6171,7 +6180,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCountAMD>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndirectCountAMD_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawIndirectCountAMD_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6188,7 +6197,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCountAM
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawIndexedIndirectCountAMD_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawIndexedIndirectCountAMD_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6205,7 +6214,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetShaderInfoAMD>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetShaderInfoAMD_PreCall(manager, args...);
+            plugin.func_table_pre.GetShaderInfoAMD_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6222,7 +6231,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateStreamDescriptorSurface
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateStreamDescriptorSurfaceGGP_PreCall(manager, args...);
+            plugin.func_table_pre.CreateStreamDescriptorSurfaceGGP_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6239,7 +6248,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalImag
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceExternalImageFormatPropertiesNV_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceExternalImageFormatPropertiesNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6256,7 +6265,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandleNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryWin32HandleNV_PreCall(manager, args...);
+            plugin.func_table_pre.GetMemoryWin32HandleNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6273,7 +6282,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateViSurfaceNN>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateViSurfaceNN_PreCall(manager, args...);
+            plugin.func_table_pre.CreateViSurfaceNN_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6290,7 +6299,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginConditionalRenderingE
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginConditionalRenderingEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBeginConditionalRenderingEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6307,7 +6316,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndConditionalRenderingEXT
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndConditionalRenderingEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdEndConditionalRenderingEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6324,7 +6333,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWScalingNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetViewportWScalingNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetViewportWScalingNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6341,7 +6350,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkReleaseDisplayEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ReleaseDisplayEXT_PreCall(manager, args...);
+            plugin.func_table_pre.ReleaseDisplayEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6358,7 +6367,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkAcquireXlibDisplayEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquireXlibDisplayEXT_PreCall(manager, args...);
+            plugin.func_table_pre.AcquireXlibDisplayEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6375,7 +6384,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetRandROutputDisplayEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetRandROutputDisplayEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetRandROutputDisplayEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6392,7 +6401,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCapab
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilities2EXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfaceCapabilities2EXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6409,7 +6418,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDisplayPowerControlEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DisplayPowerControlEXT_PreCall(manager, args...);
+            plugin.func_table_pre.DisplayPowerControlEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6426,7 +6435,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkRegisterDeviceEventEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.RegisterDeviceEventEXT_PreCall(manager, args...);
+            plugin.func_table_pre.RegisterDeviceEventEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6443,7 +6452,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkRegisterDisplayEventEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.RegisterDisplayEventEXT_PreCall(manager, args...);
+            plugin.func_table_pre.RegisterDisplayEventEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6460,7 +6469,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetSwapchainCounterEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSwapchainCounterEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetSwapchainCounterEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6477,7 +6486,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetRefreshCycleDurationGOOGLE
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetRefreshCycleDurationGOOGLE_PreCall(manager, args...);
+            plugin.func_table_pre.GetRefreshCycleDurationGOOGLE_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6494,7 +6503,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPastPresentationTimingGOOG
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPastPresentationTimingGOOGLE_PreCall(manager, args...);
+            plugin.func_table_pre.GetPastPresentationTimingGOOGLE_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6511,7 +6520,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDiscardRectangleEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDiscardRectangleEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6528,7 +6537,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleEnableE
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDiscardRectangleEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDiscardRectangleEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6545,7 +6554,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleModeEXT
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDiscardRectangleModeEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDiscardRectangleModeEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6562,7 +6571,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkSetHdrMetadataEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.SetHdrMetadataEXT_PreCall(manager, args...);
+            plugin.func_table_pre.SetHdrMetadataEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6579,7 +6588,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateIOSSurfaceMVK>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateIOSSurfaceMVK_PreCall(manager, args...);
+            plugin.func_table_pre.CreateIOSSurfaceMVK_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6596,7 +6605,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateMacOSSurfaceMVK>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateMacOSSurfaceMVK_PreCall(manager, args...);
+            plugin.func_table_pre.CreateMacOSSurfaceMVK_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6613,7 +6622,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkSetDebugUtilsObjectNameEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.SetDebugUtilsObjectNameEXT_PreCall(manager, args...);
+            plugin.func_table_pre.SetDebugUtilsObjectNameEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6630,7 +6639,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkSetDebugUtilsObjectTagEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.SetDebugUtilsObjectTagEXT_PreCall(manager, args...);
+            plugin.func_table_pre.SetDebugUtilsObjectTagEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6647,7 +6656,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkQueueBeginDebugUtilsLabelEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueBeginDebugUtilsLabelEXT_PreCall(manager, args...);
+            plugin.func_table_pre.QueueBeginDebugUtilsLabelEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6664,7 +6673,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkQueueEndDebugUtilsLabelEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueEndDebugUtilsLabelEXT_PreCall(manager, args...);
+            plugin.func_table_pre.QueueEndDebugUtilsLabelEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6681,7 +6690,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkQueueInsertDebugUtilsLabelEXT
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueInsertDebugUtilsLabelEXT_PreCall(manager, args...);
+            plugin.func_table_pre.QueueInsertDebugUtilsLabelEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6698,7 +6707,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBeginDebugUtilsLabelEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBeginDebugUtilsLabelEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBeginDebugUtilsLabelEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6715,7 +6724,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdEndDebugUtilsLabelEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdEndDebugUtilsLabelEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdEndDebugUtilsLabelEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6732,7 +6741,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdInsertDebugUtilsLabelEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdInsertDebugUtilsLabelEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdInsertDebugUtilsLabelEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6749,7 +6758,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateDebugUtilsMessengerEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDebugUtilsMessengerEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CreateDebugUtilsMessengerEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6766,7 +6775,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyDebugUtilsMessengerEXT
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyDebugUtilsMessengerEXT_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyDebugUtilsMessengerEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6783,7 +6792,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkSubmitDebugUtilsMessageEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.SubmitDebugUtilsMessageEXT_PreCall(manager, args...);
+            plugin.func_table_pre.SubmitDebugUtilsMessageEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6800,7 +6809,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetAndroidHardwareBufferPrope
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetAndroidHardwareBufferPropertiesANDROID_PreCall(manager, args...);
+            plugin.func_table_pre.GetAndroidHardwareBufferPropertiesANDROID_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6817,7 +6826,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetMemoryAndroidHardwareBuffe
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryAndroidHardwareBufferANDROID_PreCall(manager, args...);
+            plugin.func_table_pre.GetMemoryAndroidHardwareBufferANDROID_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6834,7 +6843,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetSampleLocationsEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetSampleLocationsEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetSampleLocationsEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6851,7 +6860,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMultisampleP
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceMultisamplePropertiesEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceMultisamplePropertiesEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6868,7 +6877,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetImageDrmFormatModifierProp
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageDrmFormatModifierPropertiesEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetImageDrmFormatModifierPropertiesEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6885,7 +6894,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateValidationCacheEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateValidationCacheEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CreateValidationCacheEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6902,7 +6911,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyValidationCacheEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyValidationCacheEXT_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyValidationCacheEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6919,7 +6928,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkMergeValidationCachesEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.MergeValidationCachesEXT_PreCall(manager, args...);
+            plugin.func_table_pre.MergeValidationCachesEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6936,7 +6945,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetValidationCacheDataEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetValidationCacheDataEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetValidationCacheDataEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6953,7 +6962,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindShadingRateImageNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindShadingRateImageNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBindShadingRateImageNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6970,7 +6979,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportShadingRatePale
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetViewportShadingRatePaletteNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetViewportShadingRatePaletteNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -6987,7 +6996,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetCoarseSampleOrderNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCoarseSampleOrderNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetCoarseSampleOrderNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7004,7 +7013,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateAccelerationStructureNV
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateAccelerationStructureNV_PreCall(manager, args...);
+            plugin.func_table_pre.CreateAccelerationStructureNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7021,7 +7030,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyAccelerationStructureN
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyAccelerationStructureNV_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyAccelerationStructureNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7038,7 +7047,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureMemor
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetAccelerationStructureMemoryRequirementsNV_PreCall(manager, args...);
+            plugin.func_table_pre.GetAccelerationStructureMemoryRequirementsNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7055,7 +7064,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkBindAccelerationStructureMemo
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.BindAccelerationStructureMemoryNV_PreCall(manager, args...);
+            plugin.func_table_pre.BindAccelerationStructureMemoryNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7072,7 +7081,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructure
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBuildAccelerationStructureNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBuildAccelerationStructureNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7089,7 +7098,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructureN
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyAccelerationStructureNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyAccelerationStructureNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7106,7 +7115,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdTraceRaysNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdTraceRaysNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7123,7 +7132,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateRayTracingPipelinesNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateRayTracingPipelinesNV_PreCall(manager, args...);
+            plugin.func_table_pre.CreateRayTracingPipelinesNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7140,7 +7149,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupHandl
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetRayTracingShaderGroupHandlesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetRayTracingShaderGroupHandlesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7157,7 +7166,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupHandl
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetRayTracingShaderGroupHandlesNV_PreCall(manager, args...);
+            plugin.func_table_pre.GetRayTracingShaderGroupHandlesNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7174,7 +7183,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureHandl
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetAccelerationStructureHandleNV_PreCall(manager, args...);
+            plugin.func_table_pre.GetAccelerationStructureHandleNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7191,7 +7200,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteAccelerationStructure
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteAccelerationStructuresPropertiesNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdWriteAccelerationStructuresPropertiesNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7208,7 +7217,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCompileDeferredNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CompileDeferredNV_PreCall(manager, args...);
+            plugin.func_table_pre.CompileDeferredNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7225,7 +7234,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetMemoryHostPointerPropertie
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryHostPointerPropertiesEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetMemoryHostPointerPropertiesEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7242,7 +7251,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteBufferMarkerAMD>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteBufferMarkerAMD_PreCall(manager, args...);
+            plugin.func_table_pre.CmdWriteBufferMarkerAMD_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7259,7 +7268,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceCalibrateabl
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceCalibrateableTimeDomainsEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceCalibrateableTimeDomainsEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7276,7 +7285,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetCalibratedTimestampsEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetCalibratedTimestampsEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetCalibratedTimestampsEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7293,7 +7302,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMeshTasksNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawMeshTasksNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7310,7 +7319,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMeshTasksIndirectNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawMeshTasksIndirectNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7327,7 +7336,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectCount
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMeshTasksIndirectCountNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawMeshTasksIndirectCountNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7344,7 +7353,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetExclusiveScissorEnableN
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetExclusiveScissorEnableNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetExclusiveScissorEnableNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7361,7 +7370,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetExclusiveScissorNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetExclusiveScissorNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetExclusiveScissorNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7378,7 +7387,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetCheckpointNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCheckpointNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetCheckpointNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7395,7 +7404,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetQueueCheckpointDataNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetQueueCheckpointDataNV_PreCall(manager, args...);
+            plugin.func_table_pre.GetQueueCheckpointDataNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7412,7 +7421,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkInitializePerformanceApiINTEL
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.InitializePerformanceApiINTEL_PreCall(manager, args...);
+            plugin.func_table_pre.InitializePerformanceApiINTEL_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7429,7 +7438,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkUninitializePerformanceApiINT
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.UninitializePerformanceApiINTEL_PreCall(manager, args...);
+            plugin.func_table_pre.UninitializePerformanceApiINTEL_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7446,7 +7455,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceMarkerINTEL>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPerformanceMarkerINTEL_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetPerformanceMarkerINTEL_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7463,7 +7472,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceStreamMarker
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPerformanceStreamMarkerINTEL_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetPerformanceStreamMarkerINTEL_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7480,7 +7489,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceOverrideINTE
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPerformanceOverrideINTEL_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetPerformanceOverrideINTEL_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7497,7 +7506,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkAcquirePerformanceConfigurati
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquirePerformanceConfigurationINTEL_PreCall(manager, args...);
+            plugin.func_table_pre.AcquirePerformanceConfigurationINTEL_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7514,7 +7523,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkReleasePerformanceConfigurati
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ReleasePerformanceConfigurationINTEL_PreCall(manager, args...);
+            plugin.func_table_pre.ReleasePerformanceConfigurationINTEL_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7531,7 +7540,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkQueueSetPerformanceConfigurat
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.QueueSetPerformanceConfigurationINTEL_PreCall(manager, args...);
+            plugin.func_table_pre.QueueSetPerformanceConfigurationINTEL_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7548,7 +7557,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPerformanceParameterINTEL>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPerformanceParameterINTEL_PreCall(manager, args...);
+            plugin.func_table_pre.GetPerformanceParameterINTEL_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7565,7 +7574,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkSetLocalDimmingAMD>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.SetLocalDimmingAMD_PreCall(manager, args...);
+            plugin.func_table_pre.SetLocalDimmingAMD_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7582,7 +7591,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateImagePipeSurfaceFUCHSIA
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateImagePipeSurfaceFUCHSIA_PreCall(manager, args...);
+            plugin.func_table_pre.CreateImagePipeSurfaceFUCHSIA_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7599,7 +7608,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateMetalSurfaceEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateMetalSurfaceEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CreateMetalSurfaceEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7616,7 +7625,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddressEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetBufferDeviceAddressEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetBufferDeviceAddressEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7633,7 +7642,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceToolProperti
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceToolPropertiesEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceToolPropertiesEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7650,7 +7659,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceCooperativeM
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceCooperativeMatrixPropertiesNV_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceCooperativeMatrixPropertiesNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7667,7 +7676,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSupportedFra
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7684,7 +7693,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfacePrese
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceSurfacePresentModes2EXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceSurfacePresentModes2EXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7701,7 +7710,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkAcquireFullScreenExclusiveMod
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquireFullScreenExclusiveModeEXT_PreCall(manager, args...);
+            plugin.func_table_pre.AcquireFullScreenExclusiveModeEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7718,7 +7727,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkReleaseFullScreenExclusiveMod
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ReleaseFullScreenExclusiveModeEXT_PreCall(manager, args...);
+            plugin.func_table_pre.ReleaseFullScreenExclusiveModeEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7735,7 +7744,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceGroupSurfacePresentM
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceGroupSurfacePresentModes2EXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceGroupSurfacePresentModes2EXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7752,7 +7761,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateHeadlessSurfaceEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateHeadlessSurfaceEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CreateHeadlessSurfaceEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7769,7 +7778,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetLineStippleEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetLineStippleEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetLineStippleEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7786,7 +7795,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkResetQueryPoolEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ResetQueryPoolEXT_PreCall(manager, args...);
+            plugin.func_table_pre.ResetQueryPoolEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7803,7 +7812,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetCullModeEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCullModeEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetCullModeEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7820,7 +7829,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetFrontFaceEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetFrontFaceEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetFrontFaceEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7837,7 +7846,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveTopologyEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPrimitiveTopologyEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetPrimitiveTopologyEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7854,7 +7863,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWithCountEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetViewportWithCountEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetViewportWithCountEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7871,7 +7880,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetScissorWithCountEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetScissorWithCountEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetScissorWithCountEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7888,7 +7897,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers2EXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindVertexBuffers2EXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBindVertexBuffers2EXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7905,7 +7914,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthTestEnableEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthTestEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthTestEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7922,7 +7931,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthWriteEnableEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthWriteEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthWriteEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7939,7 +7948,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthCompareOpEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthCompareOpEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthCompareOpEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7956,7 +7965,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBoundsTestEnableEX
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthBoundsTestEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthBoundsTestEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7973,7 +7982,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilTestEnableEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetStencilTestEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetStencilTestEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -7990,7 +7999,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetStencilOpEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetStencilOpEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetStencilOpEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8007,7 +8016,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkReleaseSwapchainImagesEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ReleaseSwapchainImagesEXT_PreCall(manager, args...);
+            plugin.func_table_pre.ReleaseSwapchainImagesEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8024,7 +8033,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetGeneratedCommandsMemoryReq
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetGeneratedCommandsMemoryRequirementsNV_PreCall(manager, args...);
+            plugin.func_table_pre.GetGeneratedCommandsMemoryRequirementsNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8041,7 +8050,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdPreprocessGeneratedCommand
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdPreprocessGeneratedCommandsNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdPreprocessGeneratedCommandsNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8058,7 +8067,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdExecuteGeneratedCommandsNV
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdExecuteGeneratedCommandsNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdExecuteGeneratedCommandsNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8075,7 +8084,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindPipelineShaderGroupNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindPipelineShaderGroupNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBindPipelineShaderGroupNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8092,7 +8101,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateIndirectCommandsLayoutN
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateIndirectCommandsLayoutNV_PreCall(manager, args...);
+            plugin.func_table_pre.CreateIndirectCommandsLayoutNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8109,7 +8118,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyIndirectCommandsLayout
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyIndirectCommandsLayoutNV_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyIndirectCommandsLayoutNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8126,7 +8135,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkAcquireDrmDisplayEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquireDrmDisplayEXT_PreCall(manager, args...);
+            plugin.func_table_pre.AcquireDrmDisplayEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8143,7 +8152,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDrmDisplayEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDrmDisplayEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetDrmDisplayEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8160,7 +8169,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreatePrivateDataSlotEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreatePrivateDataSlotEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CreatePrivateDataSlotEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8177,7 +8186,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyPrivateDataSlotEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyPrivateDataSlotEXT_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyPrivateDataSlotEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8194,7 +8203,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkSetPrivateDataEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.SetPrivateDataEXT_PreCall(manager, args...);
+            plugin.func_table_pre.SetPrivateDataEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8211,7 +8220,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPrivateDataEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPrivateDataEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetPrivateDataEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8228,7 +8237,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetFragmentShadingRateEnum
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetFragmentShadingRateEnumNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetFragmentShadingRateEnumNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8245,7 +8254,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetImageSubresourceLayout2EXT
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetImageSubresourceLayout2EXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetImageSubresourceLayout2EXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8262,7 +8271,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceFaultInfoEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceFaultInfoEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceFaultInfoEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8279,7 +8288,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkAcquireWinrtDisplayNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.AcquireWinrtDisplayNV_PreCall(manager, args...);
+            plugin.func_table_pre.AcquireWinrtDisplayNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8296,7 +8305,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetWinrtDisplayNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetWinrtDisplayNV_PreCall(manager, args...);
+            plugin.func_table_pre.GetWinrtDisplayNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8313,7 +8322,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateDirectFBSurfaceEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateDirectFBSurfaceEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CreateDirectFBSurfaceEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8330,7 +8339,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDirectFBPres
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceDirectFBPresentationSupportEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceDirectFBPresentationSupportEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8347,7 +8356,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetVertexInputEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetVertexInputEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetVertexInputEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8364,7 +8373,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetMemoryZirconHandleFUCHSIA>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryZirconHandleFUCHSIA_PreCall(manager, args...);
+            plugin.func_table_pre.GetMemoryZirconHandleFUCHSIA_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8381,7 +8390,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetMemoryZirconHandleProperti
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryZirconHandlePropertiesFUCHSIA_PreCall(manager, args...);
+            plugin.func_table_pre.GetMemoryZirconHandlePropertiesFUCHSIA_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8398,7 +8407,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkImportSemaphoreZirconHandleFU
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.ImportSemaphoreZirconHandleFUCHSIA_PreCall(manager, args...);
+            plugin.func_table_pre.ImportSemaphoreZirconHandleFUCHSIA_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8415,7 +8424,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetSemaphoreZirconHandleFUCHS
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetSemaphoreZirconHandleFUCHSIA_PreCall(manager, args...);
+            plugin.func_table_pre.GetSemaphoreZirconHandleFUCHSIA_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8432,7 +8441,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBindInvocationMaskHUAWEI>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBindInvocationMaskHUAWEI_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBindInvocationMaskHUAWEI_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8449,7 +8458,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetMemoryRemoteAddressNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMemoryRemoteAddressNV_PreCall(manager, args...);
+            plugin.func_table_pre.GetMemoryRemoteAddressNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8466,7 +8475,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPatchControlPointsEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPatchControlPointsEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetPatchControlPointsEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8483,7 +8492,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizerDiscardEnable
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetRasterizerDiscardEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetRasterizerDiscardEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8500,7 +8509,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthBiasEnableEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthBiasEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthBiasEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8517,7 +8526,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetLogicOpEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetLogicOpEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetLogicOpEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8534,7 +8543,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveRestartEnableE
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPrimitiveRestartEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetPrimitiveRestartEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8551,7 +8560,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateScreenSurfaceQNX>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateScreenSurfaceQNX_PreCall(manager, args...);
+            plugin.func_table_pre.CreateScreenSurfaceQNX_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8568,7 +8577,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceScreenPresen
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceScreenPresentationSupportQNX_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceScreenPresentationSupportQNX_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8585,7 +8594,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetColorWriteEnableEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetColorWriteEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetColorWriteEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8602,7 +8611,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawMultiEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMultiEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawMultiEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8619,7 +8628,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawMultiIndexedEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMultiIndexedEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawMultiIndexedEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8636,7 +8645,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateMicromapEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateMicromapEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CreateMicromapEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8653,7 +8662,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyMicromapEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyMicromapEXT_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyMicromapEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8670,7 +8679,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBuildMicromapsEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBuildMicromapsEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBuildMicromapsEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8687,7 +8696,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkBuildMicromapsEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.BuildMicromapsEXT_PreCall(manager, args...);
+            plugin.func_table_pre.BuildMicromapsEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8704,7 +8713,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCopyMicromapEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CopyMicromapEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CopyMicromapEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8721,7 +8730,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCopyMicromapToMemoryEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CopyMicromapToMemoryEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CopyMicromapToMemoryEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8738,7 +8747,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCopyMemoryToMicromapEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CopyMemoryToMicromapEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CopyMemoryToMicromapEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8755,7 +8764,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkWriteMicromapsPropertiesEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.WriteMicromapsPropertiesEXT_PreCall(manager, args...);
+            plugin.func_table_pre.WriteMicromapsPropertiesEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8772,7 +8781,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyMicromapEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyMicromapEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyMicromapEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8789,7 +8798,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyMicromapToMemoryEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyMicromapToMemoryEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyMicromapToMemoryEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8806,7 +8815,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyMemoryToMicromapEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyMemoryToMicromapEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyMemoryToMicromapEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8823,7 +8832,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteMicromapsPropertiesEX
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteMicromapsPropertiesEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdWriteMicromapsPropertiesEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8840,7 +8849,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceMicromapCompatibilit
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceMicromapCompatibilityEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceMicromapCompatibilityEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8857,7 +8866,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetMicromapBuildSizesEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetMicromapBuildSizesEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetMicromapBuildSizesEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8874,7 +8883,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawClusterHUAWEI>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawClusterHUAWEI_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawClusterHUAWEI_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8891,7 +8900,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawClusterIndirectHUAWEI>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawClusterIndirectHUAWEI_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawClusterIndirectHUAWEI_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8908,7 +8917,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkSetDeviceMemoryPriorityEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.SetDeviceMemoryPriorityEXT_PreCall(manager, args...);
+            plugin.func_table_pre.SetDeviceMemoryPriorityEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8925,7 +8934,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutHostMap
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDescriptorSetLayoutHostMappingInfoVALVE_PreCall(manager, args...);
+            plugin.func_table_pre.GetDescriptorSetLayoutHostMappingInfoVALVE_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8942,7 +8951,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDescriptorSetHostMappingVA
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDescriptorSetHostMappingVALVE_PreCall(manager, args...);
+            plugin.func_table_pre.GetDescriptorSetHostMappingVALVE_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8959,7 +8968,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetTessellationDomainOrigi
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetTessellationDomainOriginEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetTessellationDomainOriginEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8976,7 +8985,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthClampEnableEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthClampEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthClampEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -8993,7 +9002,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetPolygonModeEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetPolygonModeEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetPolygonModeEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9010,7 +9019,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizationSamplesEXT
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetRasterizationSamplesEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetRasterizationSamplesEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9027,7 +9036,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetSampleMaskEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetSampleMaskEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetSampleMaskEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9044,7 +9053,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetAlphaToCoverageEnableEX
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetAlphaToCoverageEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetAlphaToCoverageEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9061,7 +9070,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetAlphaToOneEnableEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetAlphaToOneEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetAlphaToOneEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9078,7 +9087,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetLogicOpEnableEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetLogicOpEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetLogicOpEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9095,7 +9104,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendEnableEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetColorBlendEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetColorBlendEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9112,7 +9121,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendEquationEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetColorBlendEquationEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetColorBlendEquationEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9129,7 +9138,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetColorWriteMaskEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetColorWriteMaskEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetColorWriteMaskEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9146,7 +9155,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetRasterizationStreamEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetRasterizationStreamEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetRasterizationStreamEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9163,7 +9172,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetConservativeRasterizati
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetConservativeRasterizationModeEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetConservativeRasterizationModeEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9180,7 +9189,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetExtraPrimitiveOverestim
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetExtraPrimitiveOverestimationSizeEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetExtraPrimitiveOverestimationSizeEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9197,7 +9206,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthClipEnableEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthClipEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthClipEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9214,7 +9223,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetSampleLocationsEnableEX
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetSampleLocationsEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetSampleLocationsEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9231,7 +9240,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendAdvancedEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetColorBlendAdvancedEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetColorBlendAdvancedEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9248,7 +9257,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetProvokingVertexModeEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetProvokingVertexModeEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetProvokingVertexModeEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9265,7 +9274,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetLineRasterizationModeEX
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetLineRasterizationModeEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetLineRasterizationModeEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9282,7 +9291,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetLineStippleEnableEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetLineStippleEnableEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetLineStippleEnableEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9299,7 +9308,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetDepthClipNegativeOneToO
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetDepthClipNegativeOneToOneEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetDepthClipNegativeOneToOneEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9316,7 +9325,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportWScalingEnableN
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetViewportWScalingEnableNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetViewportWScalingEnableNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9333,7 +9342,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetViewportSwizzleNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetViewportSwizzleNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetViewportSwizzleNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9350,7 +9359,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageToColorEnableNV
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCoverageToColorEnableNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetCoverageToColorEnableNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9367,7 +9376,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageToColorLocation
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCoverageToColorLocationNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetCoverageToColorLocationNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9384,7 +9393,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationModeN
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCoverageModulationModeNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetCoverageModulationModeNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9401,7 +9410,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationTable
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCoverageModulationTableEnableNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetCoverageModulationTableEnableNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9418,7 +9427,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationTable
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCoverageModulationTableNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetCoverageModulationTableNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9435,7 +9444,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetShadingRateImageEnableN
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetShadingRateImageEnableNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetShadingRateImageEnableNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9452,7 +9461,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetRepresentativeFragmentT
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetRepresentativeFragmentTestEnableNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetRepresentativeFragmentTestEnableNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9469,7 +9478,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetCoverageReductionModeNV
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetCoverageReductionModeNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetCoverageReductionModeNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9486,7 +9495,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetShaderModuleIdentifierEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetShaderModuleIdentifierEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetShaderModuleIdentifierEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9503,7 +9512,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetShaderModuleCreateInfoIden
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetShaderModuleCreateInfoIdentifierEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetShaderModuleCreateInfoIdentifierEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9520,7 +9529,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceOpticalFlowI
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceOpticalFlowImageFormatsNV_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceOpticalFlowImageFormatsNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9537,7 +9546,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateOpticalFlowSessionNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateOpticalFlowSessionNV_PreCall(manager, args...);
+            plugin.func_table_pre.CreateOpticalFlowSessionNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9554,7 +9563,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyOpticalFlowSessionNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyOpticalFlowSessionNV_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyOpticalFlowSessionNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9571,7 +9580,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkBindOpticalFlowSessionImageNV
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.BindOpticalFlowSessionImageNV_PreCall(manager, args...);
+            plugin.func_table_pre.BindOpticalFlowSessionImageNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9588,7 +9597,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdOpticalFlowExecuteNV>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdOpticalFlowExecuteNV_PreCall(manager, args...);
+            plugin.func_table_pre.CmdOpticalFlowExecuteNV_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9605,7 +9614,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetFramebufferTilePropertiesQ
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetFramebufferTilePropertiesQCOM_PreCall(manager, args...);
+            plugin.func_table_pre.GetFramebufferTilePropertiesQCOM_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9622,7 +9631,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDynamicRenderingTileProper
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDynamicRenderingTilePropertiesQCOM_PreCall(manager, args...);
+            plugin.func_table_pre.GetDynamicRenderingTilePropertiesQCOM_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9639,7 +9648,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateAccelerationStructureKH
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateAccelerationStructureKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateAccelerationStructureKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9656,7 +9665,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyAccelerationStructureK
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyAccelerationStructureKHR_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyAccelerationStructureKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9673,7 +9682,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructure
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBuildAccelerationStructuresKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBuildAccelerationStructuresKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9690,7 +9699,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructure
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdBuildAccelerationStructuresIndirectKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdBuildAccelerationStructuresIndirectKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9707,7 +9716,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCopyAccelerationStructureToMe
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CopyAccelerationStructureToMemoryKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CopyAccelerationStructureToMemoryKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9724,7 +9733,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCopyMemoryToAccelerationStruc
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CopyMemoryToAccelerationStructureKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CopyMemoryToAccelerationStructureKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9741,7 +9750,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkWriteAccelerationStructuresPr
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.WriteAccelerationStructuresPropertiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.WriteAccelerationStructuresPropertiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9758,7 +9767,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructureK
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyAccelerationStructureKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyAccelerationStructureKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9775,7 +9784,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructureT
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyAccelerationStructureToMemoryKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyAccelerationStructureToMemoryKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9792,7 +9801,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdCopyMemoryToAccelerationSt
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdCopyMemoryToAccelerationStructureKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdCopyMemoryToAccelerationStructureKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9809,7 +9818,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureDevic
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetAccelerationStructureDeviceAddressKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetAccelerationStructureDeviceAddressKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9826,7 +9835,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdWriteAccelerationStructure
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdWriteAccelerationStructuresPropertiesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdWriteAccelerationStructuresPropertiesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9843,7 +9852,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceAccelerationStructur
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceAccelerationStructureCompatibilityKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceAccelerationStructureCompatibilityKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9860,7 +9869,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureBuild
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetAccelerationStructureBuildSizesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetAccelerationStructureBuildSizesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9877,7 +9886,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdTraceRaysKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdTraceRaysKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9894,7 +9903,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateRayTracingPipelinesKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateRayTracingPipelinesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateRayTracingPipelinesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9911,7 +9920,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetRayTracingCaptureReplaySha
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetRayTracingCaptureReplayShaderGroupHandlesKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetRayTracingCaptureReplayShaderGroupHandlesKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9928,7 +9937,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdTraceRaysIndirectKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdTraceRaysIndirectKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdTraceRaysIndirectKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9945,7 +9954,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupStack
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetRayTracingShaderGroupStackSizeKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetRayTracingShaderGroupStackSizeKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9962,7 +9971,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdSetRayTracingPipelineStack
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdSetRayTracingPipelineStackSizeKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdSetRayTracingPipelineStackSizeKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9979,7 +9988,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMeshTasksEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawMeshTasksEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -9996,7 +10005,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMeshTasksIndirectEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawMeshTasksIndirectEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10013,7 +10022,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectCount
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdDrawMeshTasksIndirectCountEXT_PreCall(manager, args...);
+            plugin.func_table_pre.CmdDrawMeshTasksIndirectCountEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10030,7 +10039,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetInstanceProcAddr>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetInstanceProcAddr_PreCall(manager, args...);
+            plugin.func_table_pre.GetInstanceProcAddr_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10047,7 +10056,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetDeviceProcAddr>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetDeviceProcAddr_PreCall(manager, args...);
+            plugin.func_table_pre.GetDeviceProcAddr_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10064,7 +10073,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkEnumerateInstanceExtensionPro
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.EnumerateInstanceExtensionProperties_PreCall(manager, args...);
+            plugin.func_table_pre.EnumerateInstanceExtensionProperties_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10081,7 +10090,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkEnumerateDeviceExtensionPrope
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.EnumerateDeviceExtensionProperties_PreCall(manager, args...);
+            plugin.func_table_pre.EnumerateDeviceExtensionProperties_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10098,7 +10107,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkEnumerateInstanceLayerPropert
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.EnumerateInstanceLayerProperties_PreCall(manager, args...);
+            plugin.func_table_pre.EnumerateInstanceLayerProperties_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10115,7 +10124,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkEnumerateDeviceLayerPropertie
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.EnumerateDeviceLayerProperties_PreCall(manager, args...);
+            plugin.func_table_pre.EnumerateDeviceLayerProperties_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10132,7 +10141,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkEnumerateInstanceVersion>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.EnumerateInstanceVersion_PreCall(manager, args...);
+            plugin.func_table_pre.EnumerateInstanceVersion_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10149,7 +10158,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkUpdateDescriptorSetWithTempla
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.UpdateDescriptorSetWithTemplate_PreCall(manager, args...);
+            plugin.func_table_pre.UpdateDescriptorSetWithTemplate_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10166,7 +10175,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdPushDescriptorSetWithTempl
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdPushDescriptorSetWithTemplateKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CmdPushDescriptorSetWithTemplateKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10183,7 +10192,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkUpdateDescriptorSetWithTempla
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.UpdateDescriptorSetWithTemplateKHR_PreCall(manager, args...);
+            plugin.func_table_pre.UpdateDescriptorSetWithTemplateKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10200,7 +10209,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkBuildAccelerationStructuresKH
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.BuildAccelerationStructuresKHR_PreCall(manager, args...);
+            plugin.func_table_pre.BuildAccelerationStructuresKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10217,7 +10226,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCopyAccelerationStructureKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CopyAccelerationStructureKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CopyAccelerationStructureKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10234,7 +10243,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateMirSurfaceKHR>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateMirSurfaceKHR_PreCall(manager, args...);
+            plugin.func_table_pre.CreateMirSurfaceKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10251,7 +10260,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMirPresentat
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceMirPresentationSupportKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceMirPresentationSupportKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10268,7 +10277,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdProcessCommandsNVX>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdProcessCommandsNVX_PreCall(manager, args...);
+            plugin.func_table_pre.CmdProcessCommandsNVX_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10285,7 +10294,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCmdReserveSpaceForCommandsNVX
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CmdReserveSpaceForCommandsNVX_PreCall(manager, args...);
+            plugin.func_table_pre.CmdReserveSpaceForCommandsNVX_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10302,7 +10311,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateIndirectCommandsLayoutN
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateIndirectCommandsLayoutNVX_PreCall(manager, args...);
+            plugin.func_table_pre.CreateIndirectCommandsLayoutNVX_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10319,7 +10328,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyIndirectCommandsLayout
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyIndirectCommandsLayoutNVX_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyIndirectCommandsLayoutNVX_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10336,7 +10345,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkCreateObjectTableNVX>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.CreateObjectTableNVX_PreCall(manager, args...);
+            plugin.func_table_pre.CreateObjectTableNVX_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10353,7 +10362,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkDestroyObjectTableNVX>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.DestroyObjectTableNVX_PreCall(manager, args...);
+            plugin.func_table_pre.DestroyObjectTableNVX_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10370,7 +10379,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkRegisterObjectsNVX>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.RegisterObjectsNVX_PreCall(manager, args...);
+            plugin.func_table_pre.RegisterObjectsNVX_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10387,7 +10396,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkUnregisterObjectsNVX>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.UnregisterObjectsNVX_PreCall(manager, args...);
+            plugin.func_table_pre.UnregisterObjectsNVX_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10404,7 +10413,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceGeneratedCom
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPhysicalDeviceGeneratedCommandsPropertiesNVX_PreCall(manager, args...);
+            plugin.func_table_pre.GetPhysicalDeviceGeneratedCommandsPropertiesNVX_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10421,7 +10430,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureMemor
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetAccelerationStructureMemoryRequirementsKHR_PreCall(manager, args...);
+            plugin.func_table_pre.GetAccelerationStructureMemoryRequirementsKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10438,7 +10447,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkBindAccelerationStructureMemo
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.BindAccelerationStructureMemoryKHR_PreCall(manager, args...);
+            plugin.func_table_pre.BindAccelerationStructureMemoryKHR_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };
@@ -10455,7 +10464,7 @@ struct EncoderPreCall<format::ApiCallId::ApiCall_vkGetPipelinePropertiesEXT>
 
         for (auto &plugin : manager->loaded_plugins_)
         {
-            plugin.func_table_pre.GetPipelinePropertiesEXT_PreCall(manager, args...);
+            plugin.func_table_pre.GetPipelinePropertiesEXT_PreCall(manager->GetBlockIndex(), args...);
         }
     }
 };

@@ -475,11 +475,12 @@ void FileProcessor::HandleBlockReadError(Error error_code, const char* error_mes
 
 bool FileProcessor::ProcessFunctionCall(const format::BlockHeader& block_header, format::ApiCallId call_id)
 {
-    size_t      parameter_buffer_size = static_cast<size_t>(block_header.size) - sizeof(call_id);
-    uint64_t    uncompressed_size     = 0;
-    ApiCallInfo call_info             = {};
-    call_info.index                   = block_index_;
-    bool success                      = ReadBytes(&call_info.thread_id, sizeof(call_info.thread_id));
+    size_t   parameter_buffer_size = static_cast<size_t>(block_header.size) - sizeof(call_id);
+    uint64_t uncompressed_size     = 0;
+
+    ApiCallInfo call_info;
+    call_info.index = block_index_;
+    bool success    = ReadBytes(&call_info.thread_id, sizeof(call_info.thread_id));
 
     if (success)
     {

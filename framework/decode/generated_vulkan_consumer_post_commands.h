@@ -58,7 +58,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyInstance>
 
         // for (auto &plugin : consumer->loaded_plugins_)
         // {
-        //     plugin.func_table_post.DestroyInstance_PostCall(consumer, call_info, args...);
+        //     plugin.func_table_post.DestroyInstance_PostCall(call_info, args...);
         // }
     }
 };
@@ -73,7 +73,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceFeatures_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceFeatures_PostCall(call_info, args...);
         }
     }
 };
@@ -88,7 +88,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatProp
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceFormatProperties_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceFormatProperties_PostCall(call_info, args...);
         }
     }
 };
@@ -103,7 +103,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceProperties_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceProperties_PostCall(call_info, args...);
         }
     }
 };
@@ -118,7 +118,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamil
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceQueueFamilyProperties_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceQueueFamilyProperties_PostCall(call_info, args...);
         }
     }
 };
@@ -133,7 +133,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryProp
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceMemoryProperties_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceMemoryProperties_PostCall(call_info, args...);
         }
     }
 };
@@ -148,7 +148,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyDevice>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyDevice_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyDevice_PostCall(call_info, args...);
         }
     }
 };
@@ -163,7 +163,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceQueue>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceQueue_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceQueue_PostCall(call_info, args...);
         }
     }
 };
@@ -178,7 +178,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkFreeMemory>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.FreeMemory_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.FreeMemory_PostCall(call_info, args...);
         }
     }
 };
@@ -193,7 +193,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkUnmapMemory>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.UnmapMemory_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.UnmapMemory_PostCall(call_info, args...);
         }
     }
 };
@@ -208,7 +208,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryCommitment>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceMemoryCommitment_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceMemoryCommitment_PostCall(call_info, args...);
         }
     }
 };
@@ -223,7 +223,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetBufferMemoryRequirements_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetBufferMemoryRequirements_PostCall(call_info, args...);
         }
     }
 };
@@ -238,7 +238,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetImageMemoryRequirements_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetImageMemoryRequirements_PostCall(call_info, args...);
         }
     }
 };
@@ -253,7 +253,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequire
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetImageSparseMemoryRequirements_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetImageSparseMemoryRequirements_PostCall(call_info, args...);
         }
     }
 };
@@ -268,7 +268,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImag
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceSparseImageFormatProperties_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceSparseImageFormatProperties_PostCall(call_info, args...);
         }
     }
 };
@@ -283,7 +283,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyFence>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyFence_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyFence_PostCall(call_info, args...);
         }
     }
 };
@@ -298,7 +298,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroySemaphore>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroySemaphore_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroySemaphore_PostCall(call_info, args...);
         }
     }
 };
@@ -313,7 +313,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyEvent>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyEvent_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyEvent_PostCall(call_info, args...);
         }
     }
 };
@@ -328,7 +328,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyQueryPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyQueryPool_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyQueryPool_PostCall(call_info, args...);
         }
     }
 };
@@ -343,7 +343,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyBuffer_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyBuffer_PostCall(call_info, args...);
         }
     }
 };
@@ -358,7 +358,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyBufferView>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyBufferView_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyBufferView_PostCall(call_info, args...);
         }
     }
 };
@@ -373,7 +373,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyImage_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyImage_PostCall(call_info, args...);
         }
     }
 };
@@ -388,7 +388,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetImageSubresourceLayout>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetImageSubresourceLayout_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetImageSubresourceLayout_PostCall(call_info, args...);
         }
     }
 };
@@ -403,7 +403,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyImageView>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyImageView_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyImageView_PostCall(call_info, args...);
         }
     }
 };
@@ -418,7 +418,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyShaderModule>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyShaderModule_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyShaderModule_PostCall(call_info, args...);
         }
     }
 };
@@ -433,7 +433,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyPipelineCache>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyPipelineCache_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyPipelineCache_PostCall(call_info, args...);
         }
     }
 };
@@ -448,7 +448,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyPipeline>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyPipeline_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyPipeline_PostCall(call_info, args...);
         }
     }
 };
@@ -463,7 +463,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyPipelineLayout>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyPipelineLayout_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyPipelineLayout_PostCall(call_info, args...);
         }
     }
 };
@@ -478,7 +478,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroySampler>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroySampler_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroySampler_PostCall(call_info, args...);
         }
     }
 };
@@ -493,7 +493,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyDescriptorSetLayout>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyDescriptorSetLayout_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyDescriptorSetLayout_PostCall(call_info, args...);
         }
     }
 };
@@ -508,7 +508,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyDescriptorPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyDescriptorPool_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyDescriptorPool_PostCall(call_info, args...);
         }
     }
 };
@@ -523,7 +523,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkUpdateDescriptorSets>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.UpdateDescriptorSets_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.UpdateDescriptorSets_PostCall(call_info, args...);
         }
     }
 };
@@ -538,7 +538,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyFramebuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyFramebuffer_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyFramebuffer_PostCall(call_info, args...);
         }
     }
 };
@@ -553,7 +553,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyRenderPass>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyRenderPass_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyRenderPass_PostCall(call_info, args...);
         }
     }
 };
@@ -568,7 +568,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetRenderAreaGranularity>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetRenderAreaGranularity_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetRenderAreaGranularity_PostCall(call_info, args...);
         }
     }
 };
@@ -583,7 +583,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyCommandPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyCommandPool_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyCommandPool_PostCall(call_info, args...);
         }
     }
 };
@@ -598,7 +598,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkFreeCommandBuffers>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.FreeCommandBuffers_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.FreeCommandBuffers_PostCall(call_info, args...);
         }
     }
 };
@@ -613,7 +613,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBindPipeline>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBindPipeline_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBindPipeline_PostCall(call_info, args...);
         }
     }
 };
@@ -628,7 +628,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetViewport>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetViewport_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetViewport_PostCall(call_info, args...);
         }
     }
 };
@@ -643,7 +643,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetScissor>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetScissor_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetScissor_PostCall(call_info, args...);
         }
     }
 };
@@ -658,7 +658,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetLineWidth>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetLineWidth_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetLineWidth_PostCall(call_info, args...);
         }
     }
 };
@@ -673,7 +673,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthBias>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthBias_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthBias_PostCall(call_info, args...);
         }
     }
 };
@@ -688,7 +688,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetBlendConstants>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetBlendConstants_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetBlendConstants_PostCall(call_info, args...);
         }
     }
 };
@@ -703,7 +703,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthBounds>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthBounds_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthBounds_PostCall(call_info, args...);
         }
     }
 };
@@ -718,7 +718,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetStencilCompareMask>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetStencilCompareMask_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetStencilCompareMask_PostCall(call_info, args...);
         }
     }
 };
@@ -733,7 +733,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetStencilWriteMask>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetStencilWriteMask_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetStencilWriteMask_PostCall(call_info, args...);
         }
     }
 };
@@ -748,7 +748,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetStencilReference>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetStencilReference_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetStencilReference_PostCall(call_info, args...);
         }
     }
 };
@@ -763,7 +763,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBindDescriptorSets>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBindDescriptorSets_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBindDescriptorSets_PostCall(call_info, args...);
         }
     }
 };
@@ -778,7 +778,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBindIndexBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBindIndexBuffer_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBindIndexBuffer_PostCall(call_info, args...);
         }
     }
 };
@@ -793,7 +793,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBindVertexBuffers_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBindVertexBuffers_PostCall(call_info, args...);
         }
     }
 };
@@ -808,7 +808,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDraw>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDraw_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDraw_PostCall(call_info, args...);
         }
     }
 };
@@ -823,7 +823,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawIndexed>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawIndexed_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawIndexed_PostCall(call_info, args...);
         }
     }
 };
@@ -838,7 +838,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawIndirect>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawIndirect_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawIndirect_PostCall(call_info, args...);
         }
     }
 };
@@ -853,7 +853,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirect>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawIndexedIndirect_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawIndexedIndirect_PostCall(call_info, args...);
         }
     }
 };
@@ -868,7 +868,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDispatch>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDispatch_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDispatch_PostCall(call_info, args...);
         }
     }
 };
@@ -883,7 +883,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDispatchIndirect>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDispatchIndirect_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDispatchIndirect_PostCall(call_info, args...);
         }
     }
 };
@@ -898,7 +898,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyBuffer_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyBuffer_PostCall(call_info, args...);
         }
     }
 };
@@ -913,7 +913,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyImage_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyImage_PostCall(call_info, args...);
         }
     }
 };
@@ -928,7 +928,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBlitImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBlitImage_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBlitImage_PostCall(call_info, args...);
         }
     }
 };
@@ -943,7 +943,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyBufferToImage_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyBufferToImage_PostCall(call_info, args...);
         }
     }
 };
@@ -958,7 +958,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyImageToBuffer_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyImageToBuffer_PostCall(call_info, args...);
         }
     }
 };
@@ -973,7 +973,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdUpdateBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdUpdateBuffer_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdUpdateBuffer_PostCall(call_info, args...);
         }
     }
 };
@@ -988,7 +988,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdFillBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdFillBuffer_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdFillBuffer_PostCall(call_info, args...);
         }
     }
 };
@@ -1003,7 +1003,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdClearColorImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdClearColorImage_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdClearColorImage_PostCall(call_info, args...);
         }
     }
 };
@@ -1018,7 +1018,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdClearDepthStencilImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdClearDepthStencilImage_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdClearDepthStencilImage_PostCall(call_info, args...);
         }
     }
 };
@@ -1033,7 +1033,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdClearAttachments>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdClearAttachments_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdClearAttachments_PostCall(call_info, args...);
         }
     }
 };
@@ -1048,7 +1048,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdResolveImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdResolveImage_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdResolveImage_PostCall(call_info, args...);
         }
     }
 };
@@ -1063,7 +1063,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetEvent>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetEvent_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetEvent_PostCall(call_info, args...);
         }
     }
 };
@@ -1078,7 +1078,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdResetEvent>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdResetEvent_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdResetEvent_PostCall(call_info, args...);
         }
     }
 };
@@ -1093,7 +1093,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdWaitEvents>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdWaitEvents_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdWaitEvents_PostCall(call_info, args...);
         }
     }
 };
@@ -1108,7 +1108,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdPipelineBarrier_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdPipelineBarrier_PostCall(call_info, args...);
         }
     }
 };
@@ -1123,7 +1123,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBeginQuery>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBeginQuery_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBeginQuery_PostCall(call_info, args...);
         }
     }
 };
@@ -1138,7 +1138,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdEndQuery>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdEndQuery_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdEndQuery_PostCall(call_info, args...);
         }
     }
 };
@@ -1153,7 +1153,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdResetQueryPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdResetQueryPool_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdResetQueryPool_PostCall(call_info, args...);
         }
     }
 };
@@ -1168,7 +1168,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdWriteTimestamp_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdWriteTimestamp_PostCall(call_info, args...);
         }
     }
 };
@@ -1183,7 +1183,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyQueryPoolResults>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyQueryPoolResults_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyQueryPoolResults_PostCall(call_info, args...);
         }
     }
 };
@@ -1198,7 +1198,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdPushConstants>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdPushConstants_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdPushConstants_PostCall(call_info, args...);
         }
     }
 };
@@ -1213,7 +1213,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBeginRenderPass_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBeginRenderPass_PostCall(call_info, args...);
         }
     }
 };
@@ -1228,7 +1228,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdNextSubpass>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdNextSubpass_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdNextSubpass_PostCall(call_info, args...);
         }
     }
 };
@@ -1243,7 +1243,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdEndRenderPass_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdEndRenderPass_PostCall(call_info, args...);
         }
     }
 };
@@ -1258,7 +1258,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdExecuteCommands>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdExecuteCommands_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdExecuteCommands_PostCall(call_info, args...);
         }
     }
 };
@@ -1273,7 +1273,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPeerMemoryFea
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceGroupPeerMemoryFeatures_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceGroupPeerMemoryFeatures_PostCall(call_info, args...);
         }
     }
 };
@@ -1288,7 +1288,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDeviceMask>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDeviceMask_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDeviceMask_PostCall(call_info, args...);
         }
     }
 };
@@ -1303,7 +1303,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDispatchBase>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDispatchBase_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDispatchBase_PostCall(call_info, args...);
         }
     }
 };
@@ -1318,7 +1318,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements2
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetImageMemoryRequirements2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetImageMemoryRequirements2_PostCall(call_info, args...);
         }
     }
 };
@@ -1333,7 +1333,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetBufferMemoryRequirements2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetBufferMemoryRequirements2_PostCall(call_info, args...);
         }
     }
 };
@@ -1348,7 +1348,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequire
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetImageSparseMemoryRequirements2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetImageSparseMemoryRequirements2_PostCall(call_info, args...);
         }
     }
 };
@@ -1363,7 +1363,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceFeatures2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceFeatures2_PostCall(call_info, args...);
         }
     }
 };
@@ -1378,7 +1378,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceProperties2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceProperties2_PostCall(call_info, args...);
         }
     }
 };
@@ -1393,7 +1393,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatProp
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceFormatProperties2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceFormatProperties2_PostCall(call_info, args...);
         }
     }
 };
@@ -1408,7 +1408,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamil
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceQueueFamilyProperties2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceQueueFamilyProperties2_PostCall(call_info, args...);
         }
     }
 };
@@ -1423,7 +1423,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryProp
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceMemoryProperties2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceMemoryProperties2_PostCall(call_info, args...);
         }
     }
 };
@@ -1438,7 +1438,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImag
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceSparseImageFormatProperties2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceSparseImageFormatProperties2_PostCall(call_info, args...);
         }
     }
 };
@@ -1453,7 +1453,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkTrimCommandPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.TrimCommandPool_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.TrimCommandPool_PostCall(call_info, args...);
         }
     }
 };
@@ -1468,7 +1468,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceQueue2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceQueue2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceQueue2_PostCall(call_info, args...);
         }
     }
 };
@@ -1483,7 +1483,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroySamplerYcbcrConversi
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroySamplerYcbcrConversion_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroySamplerYcbcrConversion_PostCall(call_info, args...);
         }
     }
 };
@@ -1498,7 +1498,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyDescriptorUpdateTemp
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyDescriptorUpdateTemplate_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyDescriptorUpdateTemplate_PostCall(call_info, args...);
         }
     }
 };
@@ -1513,7 +1513,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalBu
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceExternalBufferProperties_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceExternalBufferProperties_PostCall(call_info, args...);
         }
     }
 };
@@ -1528,7 +1528,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalFe
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceExternalFenceProperties_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceExternalFenceProperties_PostCall(call_info, args...);
         }
     }
 };
@@ -1543,7 +1543,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalSe
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceExternalSemaphoreProperties_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceExternalSemaphoreProperties_PostCall(call_info, args...);
         }
     }
 };
@@ -1558,7 +1558,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutSuppo
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDescriptorSetLayoutSupport_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDescriptorSetLayoutSupport_PostCall(call_info, args...);
         }
     }
 };
@@ -1573,7 +1573,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCount>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawIndirectCount_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawIndirectCount_PostCall(call_info, args...);
         }
     }
 };
@@ -1588,7 +1588,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCount
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawIndexedIndirectCount_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawIndexedIndirectCount_PostCall(call_info, args...);
         }
     }
 };
@@ -1603,7 +1603,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBeginRenderPass2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBeginRenderPass2_PostCall(call_info, args...);
         }
     }
 };
@@ -1618,7 +1618,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdNextSubpass2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdNextSubpass2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdNextSubpass2_PostCall(call_info, args...);
         }
     }
 };
@@ -1633,7 +1633,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdEndRenderPass2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdEndRenderPass2_PostCall(call_info, args...);
         }
     }
 };
@@ -1648,7 +1648,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkResetQueryPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ResetQueryPool_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.ResetQueryPool_PostCall(call_info, args...);
         }
     }
 };
@@ -1663,7 +1663,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyPrivateDataSlot>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyPrivateDataSlot_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyPrivateDataSlot_PostCall(call_info, args...);
         }
     }
 };
@@ -1678,7 +1678,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPrivateData>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPrivateData_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPrivateData_PostCall(call_info, args...);
         }
     }
 };
@@ -1693,7 +1693,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetEvent2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetEvent2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetEvent2_PostCall(call_info, args...);
         }
     }
 };
@@ -1708,7 +1708,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdResetEvent2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdResetEvent2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdResetEvent2_PostCall(call_info, args...);
         }
     }
 };
@@ -1723,7 +1723,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdWaitEvents2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdWaitEvents2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdWaitEvents2_PostCall(call_info, args...);
         }
     }
 };
@@ -1738,7 +1738,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdPipelineBarrier2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdPipelineBarrier2_PostCall(call_info, args...);
         }
     }
 };
@@ -1753,7 +1753,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdWriteTimestamp2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdWriteTimestamp2_PostCall(call_info, args...);
         }
     }
 };
@@ -1768,7 +1768,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyBuffer2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyBuffer2_PostCall(call_info, args...);
         }
     }
 };
@@ -1783,7 +1783,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyImage2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyImage2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyImage2_PostCall(call_info, args...);
         }
     }
 };
@@ -1798,7 +1798,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyBufferToImage2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyBufferToImage2_PostCall(call_info, args...);
         }
     }
 };
@@ -1813,7 +1813,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyImageToBuffer2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyImageToBuffer2_PostCall(call_info, args...);
         }
     }
 };
@@ -1828,7 +1828,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBlitImage2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBlitImage2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBlitImage2_PostCall(call_info, args...);
         }
     }
 };
@@ -1843,7 +1843,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdResolveImage2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdResolveImage2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdResolveImage2_PostCall(call_info, args...);
         }
     }
 };
@@ -1858,7 +1858,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBeginRendering>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBeginRendering_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBeginRendering_PostCall(call_info, args...);
         }
     }
 };
@@ -1873,7 +1873,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdEndRendering>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdEndRendering_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdEndRendering_PostCall(call_info, args...);
         }
     }
 };
@@ -1888,7 +1888,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetCullMode>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetCullMode_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetCullMode_PostCall(call_info, args...);
         }
     }
 };
@@ -1903,7 +1903,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetFrontFace>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetFrontFace_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetFrontFace_PostCall(call_info, args...);
         }
     }
 };
@@ -1918,7 +1918,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveTopology>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetPrimitiveTopology_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetPrimitiveTopology_PostCall(call_info, args...);
         }
     }
 };
@@ -1933,7 +1933,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetViewportWithCount>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetViewportWithCount_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetViewportWithCount_PostCall(call_info, args...);
         }
     }
 };
@@ -1948,7 +1948,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetScissorWithCount>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetScissorWithCount_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetScissorWithCount_PostCall(call_info, args...);
         }
     }
 };
@@ -1963,7 +1963,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBindVertexBuffers2_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBindVertexBuffers2_PostCall(call_info, args...);
         }
     }
 };
@@ -1978,7 +1978,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthTestEnable>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthTestEnable_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthTestEnable_PostCall(call_info, args...);
         }
     }
 };
@@ -1993,7 +1993,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthWriteEnable>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthWriteEnable_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthWriteEnable_PostCall(call_info, args...);
         }
     }
 };
@@ -2008,7 +2008,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthCompareOp>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthCompareOp_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthCompareOp_PostCall(call_info, args...);
         }
     }
 };
@@ -2023,7 +2023,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthBoundsTestEnable
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthBoundsTestEnable_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthBoundsTestEnable_PostCall(call_info, args...);
         }
     }
 };
@@ -2038,7 +2038,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetStencilTestEnable>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetStencilTestEnable_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetStencilTestEnable_PostCall(call_info, args...);
         }
     }
 };
@@ -2053,7 +2053,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetStencilOp>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetStencilOp_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetStencilOp_PostCall(call_info, args...);
         }
     }
 };
@@ -2068,7 +2068,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetRasterizerDiscardEnab
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetRasterizerDiscardEnable_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetRasterizerDiscardEnable_PostCall(call_info, args...);
         }
     }
 };
@@ -2083,7 +2083,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthBiasEnable>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthBiasEnable_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthBiasEnable_PostCall(call_info, args...);
         }
     }
 };
@@ -2098,7 +2098,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveRestartEnabl
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetPrimitiveRestartEnable_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetPrimitiveRestartEnable_PostCall(call_info, args...);
         }
     }
 };
@@ -2113,7 +2113,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceBufferMemoryRequir
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceBufferMemoryRequirements_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceBufferMemoryRequirements_PostCall(call_info, args...);
         }
     }
 };
@@ -2128,7 +2128,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceImageMemoryRequire
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceImageMemoryRequirements_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceImageMemoryRequirements_PostCall(call_info, args...);
         }
     }
 };
@@ -2143,7 +2143,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceImageSparseMemoryR
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceImageSparseMemoryRequirements_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceImageSparseMemoryRequirements_PostCall(call_info, args...);
         }
     }
 };
@@ -2158,7 +2158,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroySurfaceKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroySurfaceKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroySurfaceKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2173,7 +2173,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroySwapchainKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroySwapchainKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroySwapchainKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2188,7 +2188,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyVideoSessionKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyVideoSessionKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyVideoSessionKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2203,7 +2203,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyVideoSessionParamete
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyVideoSessionParametersKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyVideoSessionParametersKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2218,7 +2218,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBeginVideoCodingKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBeginVideoCodingKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBeginVideoCodingKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2233,7 +2233,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdEndVideoCodingKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdEndVideoCodingKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdEndVideoCodingKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2248,7 +2248,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdControlVideoCodingKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdControlVideoCodingKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdControlVideoCodingKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2263,7 +2263,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDecodeVideoKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDecodeVideoKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDecodeVideoKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2278,7 +2278,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBeginRenderingKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBeginRenderingKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBeginRenderingKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2293,7 +2293,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdEndRenderingKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdEndRenderingKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdEndRenderingKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2308,7 +2308,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFeatures2K
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceFeatures2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceFeatures2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2323,7 +2323,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceProperties
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceProperties2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceProperties2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2338,7 +2338,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFormatProp
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceFormatProperties2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceFormatProperties2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2353,7 +2353,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamil
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceQueueFamilyProperties2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceQueueFamilyProperties2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2368,7 +2368,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMemoryProp
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceMemoryProperties2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceMemoryProperties2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2383,7 +2383,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSparseImag
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceSparseImageFormatProperties2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceSparseImageFormatProperties2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2398,7 +2398,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPeerMemoryFea
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceGroupPeerMemoryFeaturesKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceGroupPeerMemoryFeaturesKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2413,7 +2413,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDeviceMaskKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDeviceMaskKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDeviceMaskKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2428,7 +2428,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDispatchBaseKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDispatchBaseKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDispatchBaseKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2443,7 +2443,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkTrimCommandPoolKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.TrimCommandPoolKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.TrimCommandPoolKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2458,7 +2458,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalBu
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceExternalBufferPropertiesKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceExternalBufferPropertiesKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2473,7 +2473,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalSe
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceExternalSemaphorePropertiesKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceExternalSemaphorePropertiesKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2488,7 +2488,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdPushDescriptorSetKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdPushDescriptorSetKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdPushDescriptorSetKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2503,7 +2503,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyDescriptorUpdateTemp
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyDescriptorUpdateTemplateKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyDescriptorUpdateTemplateKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2518,7 +2518,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBeginRenderPass2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBeginRenderPass2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBeginRenderPass2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2533,7 +2533,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdNextSubpass2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdNextSubpass2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdNextSubpass2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2548,7 +2548,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdEndRenderPass2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdEndRenderPass2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdEndRenderPass2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2563,7 +2563,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalFe
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceExternalFencePropertiesKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceExternalFencePropertiesKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2578,7 +2578,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceQueueFamil
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2593,7 +2593,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkReleaseProfilingLockKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ReleaseProfilingLockKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.ReleaseProfilingLockKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2608,7 +2608,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetImageMemoryRequirements2
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetImageMemoryRequirements2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetImageMemoryRequirements2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2623,7 +2623,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetBufferMemoryRequirements
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetBufferMemoryRequirements2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetBufferMemoryRequirements2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2638,7 +2638,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetImageSparseMemoryRequire
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetImageSparseMemoryRequirements2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetImageSparseMemoryRequirements2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2653,7 +2653,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroySamplerYcbcrConversi
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroySamplerYcbcrConversionKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroySamplerYcbcrConversionKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2668,7 +2668,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutSuppo
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDescriptorSetLayoutSupportKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDescriptorSetLayoutSupportKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2683,7 +2683,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCountKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawIndirectCountKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawIndirectCountKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2698,7 +2698,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCount
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawIndexedIndirectCountKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawIndexedIndirectCountKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2713,7 +2713,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetFragmentShadingRateKH
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetFragmentShadingRateKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetFragmentShadingRateKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2728,7 +2728,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyDeferredOperationKHR
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyDeferredOperationKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyDeferredOperationKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2743,7 +2743,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdEncodeVideoKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdEncodeVideoKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdEncodeVideoKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2758,7 +2758,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetEvent2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetEvent2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetEvent2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2773,7 +2773,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdResetEvent2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdResetEvent2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdResetEvent2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2788,7 +2788,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdWaitEvents2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdWaitEvents2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdWaitEvents2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2803,7 +2803,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdPipelineBarrier2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdPipelineBarrier2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdPipelineBarrier2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2818,7 +2818,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdWriteTimestamp2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdWriteTimestamp2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdWriteTimestamp2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2833,7 +2833,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdWriteBufferMarker2AMD>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdWriteBufferMarker2AMD_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdWriteBufferMarker2AMD_PostCall(call_info, args...);
         }
     }
 };
@@ -2848,7 +2848,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetQueueCheckpointData2NV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetQueueCheckpointData2NV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetQueueCheckpointData2NV_PostCall(call_info, args...);
         }
     }
 };
@@ -2863,7 +2863,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyBuffer2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyBuffer2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2878,7 +2878,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyImage2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyImage2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyImage2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2893,7 +2893,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyBufferToImage2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyBufferToImage2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyBufferToImage2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2908,7 +2908,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyImageToBuffer2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyImageToBuffer2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyImageToBuffer2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2923,7 +2923,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBlitImage2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBlitImage2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBlitImage2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2938,7 +2938,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdResolveImage2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdResolveImage2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdResolveImage2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2953,7 +2953,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdTraceRaysIndirect2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdTraceRaysIndirect2KHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdTraceRaysIndirect2KHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2968,7 +2968,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceBufferMemoryRequir
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceBufferMemoryRequirementsKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceBufferMemoryRequirementsKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2983,7 +2983,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceImageMemoryRequire
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceImageMemoryRequirementsKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceImageMemoryRequirementsKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -2998,7 +2998,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceImageSparseMemoryR
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceImageSparseMemoryRequirementsKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceImageSparseMemoryRequirementsKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -3013,7 +3013,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyDebugReportCallbackE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyDebugReportCallbackEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyDebugReportCallbackEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3028,7 +3028,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDebugReportMessageEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DebugReportMessageEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DebugReportMessageEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3043,7 +3043,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerBeginEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDebugMarkerBeginEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDebugMarkerBeginEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3058,7 +3058,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerEndEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDebugMarkerEndEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDebugMarkerEndEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3073,7 +3073,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDebugMarkerInsertEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDebugMarkerInsertEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDebugMarkerInsertEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3088,7 +3088,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBindTransformFeedbackBuf
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBindTransformFeedbackBuffersEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBindTransformFeedbackBuffersEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3103,7 +3103,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBeginTransformFeedbackEX
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBeginTransformFeedbackEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBeginTransformFeedbackEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3118,7 +3118,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdEndTransformFeedbackEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdEndTransformFeedbackEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdEndTransformFeedbackEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3133,7 +3133,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBeginQueryIndexedEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBeginQueryIndexedEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBeginQueryIndexedEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3148,7 +3148,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdEndQueryIndexedEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdEndQueryIndexedEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdEndQueryIndexedEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3163,7 +3163,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectByteCountEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawIndirectByteCountEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawIndirectByteCountEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3178,7 +3178,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawIndirectCountAMD>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawIndirectCountAMD_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawIndirectCountAMD_PostCall(call_info, args...);
         }
     }
 };
@@ -3193,7 +3193,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirectCount
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawIndexedIndirectCountAMD_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawIndexedIndirectCountAMD_PostCall(call_info, args...);
         }
     }
 };
@@ -3208,7 +3208,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBeginConditionalRenderin
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBeginConditionalRenderingEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBeginConditionalRenderingEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3223,7 +3223,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdEndConditionalRenderingE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdEndConditionalRenderingEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdEndConditionalRenderingEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3238,7 +3238,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetViewportWScalingNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetViewportWScalingNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetViewportWScalingNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3253,7 +3253,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDiscardRectangleEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDiscardRectangleEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3268,7 +3268,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleEnabl
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDiscardRectangleEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDiscardRectangleEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3283,7 +3283,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDiscardRectangleModeE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDiscardRectangleModeEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDiscardRectangleModeEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3298,7 +3298,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkSetHdrMetadataEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.SetHdrMetadataEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.SetHdrMetadataEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3313,7 +3313,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkQueueBeginDebugUtilsLabelEX
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.QueueBeginDebugUtilsLabelEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.QueueBeginDebugUtilsLabelEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3328,7 +3328,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkQueueEndDebugUtilsLabelEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.QueueEndDebugUtilsLabelEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.QueueEndDebugUtilsLabelEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3343,7 +3343,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkQueueInsertDebugUtilsLabelE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.QueueInsertDebugUtilsLabelEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.QueueInsertDebugUtilsLabelEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3358,7 +3358,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBeginDebugUtilsLabelEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBeginDebugUtilsLabelEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBeginDebugUtilsLabelEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3373,7 +3373,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdEndDebugUtilsLabelEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdEndDebugUtilsLabelEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdEndDebugUtilsLabelEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3388,7 +3388,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdInsertDebugUtilsLabelEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdInsertDebugUtilsLabelEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdInsertDebugUtilsLabelEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3403,7 +3403,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyDebugUtilsMessengerE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyDebugUtilsMessengerEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyDebugUtilsMessengerEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3418,7 +3418,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkSubmitDebugUtilsMessageEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.SubmitDebugUtilsMessageEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.SubmitDebugUtilsMessageEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3433,7 +3433,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetSampleLocationsEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetSampleLocationsEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetSampleLocationsEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3448,7 +3448,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceMultisampl
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceMultisamplePropertiesEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceMultisamplePropertiesEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3463,7 +3463,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyValidationCacheEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyValidationCacheEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyValidationCacheEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3478,7 +3478,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBindShadingRateImageNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBindShadingRateImageNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBindShadingRateImageNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3493,7 +3493,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetViewportShadingRatePa
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetViewportShadingRatePaletteNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetViewportShadingRatePaletteNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3508,7 +3508,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetCoarseSampleOrderNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetCoarseSampleOrderNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetCoarseSampleOrderNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3523,7 +3523,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyAccelerationStructur
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyAccelerationStructureNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyAccelerationStructureNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3538,7 +3538,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureMem
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetAccelerationStructureMemoryRequirementsNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetAccelerationStructureMemoryRequirementsNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3553,7 +3553,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructu
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBuildAccelerationStructureNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBuildAccelerationStructureNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3568,7 +3568,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructur
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyAccelerationStructureNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyAccelerationStructureNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3583,7 +3583,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdTraceRaysNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdTraceRaysNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdTraceRaysNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3598,7 +3598,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdWriteAccelerationStructu
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdWriteAccelerationStructuresPropertiesNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdWriteAccelerationStructuresPropertiesNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3613,7 +3613,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdWriteBufferMarkerAMD>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdWriteBufferMarkerAMD_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdWriteBufferMarkerAMD_PostCall(call_info, args...);
         }
     }
 };
@@ -3628,7 +3628,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawMeshTasksNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawMeshTasksNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3643,7 +3643,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawMeshTasksIndirectNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawMeshTasksIndirectNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3658,7 +3658,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectCou
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawMeshTasksIndirectCountNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawMeshTasksIndirectCountNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3673,7 +3673,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetExclusiveScissorEnabl
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetExclusiveScissorEnableNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetExclusiveScissorEnableNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3688,7 +3688,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetExclusiveScissorNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetExclusiveScissorNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetExclusiveScissorNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3703,7 +3703,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetCheckpointNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetCheckpointNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetCheckpointNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3718,7 +3718,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetQueueCheckpointDataNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetQueueCheckpointDataNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetQueueCheckpointDataNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3733,7 +3733,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkUninitializePerformanceApiI
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.UninitializePerformanceApiINTEL_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.UninitializePerformanceApiINTEL_PostCall(call_info, args...);
         }
     }
 };
@@ -3748,7 +3748,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkSetLocalDimmingAMD>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.SetLocalDimmingAMD_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.SetLocalDimmingAMD_PostCall(call_info, args...);
         }
     }
 };
@@ -3763,7 +3763,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetLineStippleEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetLineStippleEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetLineStippleEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3778,7 +3778,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkResetQueryPoolEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ResetQueryPoolEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.ResetQueryPoolEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3793,7 +3793,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetCullModeEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetCullModeEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetCullModeEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3808,7 +3808,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetFrontFaceEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetFrontFaceEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetFrontFaceEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3823,7 +3823,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveTopologyEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetPrimitiveTopologyEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetPrimitiveTopologyEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3838,7 +3838,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetViewportWithCountEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetViewportWithCountEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetViewportWithCountEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3853,7 +3853,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetScissorWithCountEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetScissorWithCountEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetScissorWithCountEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3868,7 +3868,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers2EXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBindVertexBuffers2EXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBindVertexBuffers2EXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3883,7 +3883,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthTestEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthTestEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthTestEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3898,7 +3898,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthWriteEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthWriteEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthWriteEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3913,7 +3913,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthCompareOpEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthCompareOpEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthCompareOpEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3928,7 +3928,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthBoundsTestEnable
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthBoundsTestEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthBoundsTestEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3943,7 +3943,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetStencilTestEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetStencilTestEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetStencilTestEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3958,7 +3958,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetStencilOpEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetStencilOpEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetStencilOpEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -3973,7 +3973,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetGeneratedCommandsMemoryR
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetGeneratedCommandsMemoryRequirementsNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetGeneratedCommandsMemoryRequirementsNV_PostCall(call_info, args...);
         }
     }
 };
@@ -3988,7 +3988,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdExecuteGeneratedCommands
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdExecuteGeneratedCommandsNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdExecuteGeneratedCommandsNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4003,7 +4003,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBindPipelineShaderGroupN
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBindPipelineShaderGroupNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBindPipelineShaderGroupNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4018,7 +4018,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyIndirectCommandsLayo
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyIndirectCommandsLayoutNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyIndirectCommandsLayoutNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4033,7 +4033,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyPrivateDataSlotEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyPrivateDataSlotEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyPrivateDataSlotEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4048,7 +4048,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPrivateDataEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPrivateDataEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPrivateDataEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4063,7 +4063,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetFragmentShadingRateEn
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetFragmentShadingRateEnumNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetFragmentShadingRateEnumNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4078,7 +4078,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetImageSubresourceLayout2E
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetImageSubresourceLayout2EXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetImageSubresourceLayout2EXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4093,7 +4093,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetVertexInputEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetVertexInputEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetVertexInputEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4108,7 +4108,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBindInvocationMaskHUAWEI
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBindInvocationMaskHUAWEI_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBindInvocationMaskHUAWEI_PostCall(call_info, args...);
         }
     }
 };
@@ -4123,7 +4123,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetPatchControlPointsEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetPatchControlPointsEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetPatchControlPointsEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4138,7 +4138,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetRasterizerDiscardEnab
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetRasterizerDiscardEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetRasterizerDiscardEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4153,7 +4153,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthBiasEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthBiasEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthBiasEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4168,7 +4168,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetLogicOpEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetLogicOpEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetLogicOpEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4183,7 +4183,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetPrimitiveRestartEnabl
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetPrimitiveRestartEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetPrimitiveRestartEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4198,7 +4198,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetColorWriteEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetColorWriteEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetColorWriteEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4213,7 +4213,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawMultiEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawMultiEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawMultiEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4228,7 +4228,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawMultiIndexedEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawMultiIndexedEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawMultiIndexedEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4243,7 +4243,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyMicromapEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyMicromapEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyMicromapEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4258,7 +4258,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBuildMicromapsEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBuildMicromapsEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBuildMicromapsEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4273,7 +4273,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyMicromapEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyMicromapEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyMicromapEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4288,7 +4288,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyMicromapToMemoryEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyMicromapToMemoryEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyMicromapToMemoryEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4303,7 +4303,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyMemoryToMicromapEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyMemoryToMicromapEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyMemoryToMicromapEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4318,7 +4318,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdWriteMicromapsProperties
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdWriteMicromapsPropertiesEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdWriteMicromapsPropertiesEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4333,7 +4333,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceMicromapCompatibil
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceMicromapCompatibilityEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceMicromapCompatibilityEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4348,7 +4348,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetMicromapBuildSizesEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetMicromapBuildSizesEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetMicromapBuildSizesEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4363,7 +4363,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawClusterHUAWEI>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawClusterHUAWEI_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawClusterHUAWEI_PostCall(call_info, args...);
         }
     }
 };
@@ -4378,7 +4378,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawClusterIndirectHUAWE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawClusterIndirectHUAWEI_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawClusterIndirectHUAWEI_PostCall(call_info, args...);
         }
     }
 };
@@ -4393,7 +4393,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkSetDeviceMemoryPriorityEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.SetDeviceMemoryPriorityEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.SetDeviceMemoryPriorityEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4408,7 +4408,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDescriptorSetLayoutHostM
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDescriptorSetLayoutHostMappingInfoVALVE_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDescriptorSetLayoutHostMappingInfoVALVE_PostCall(call_info, args...);
         }
     }
 };
@@ -4423,7 +4423,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDescriptorSetHostMapping
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDescriptorSetHostMappingVALVE_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDescriptorSetHostMappingVALVE_PostCall(call_info, args...);
         }
     }
 };
@@ -4438,7 +4438,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetTessellationDomainOri
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetTessellationDomainOriginEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetTessellationDomainOriginEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4453,7 +4453,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthClampEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthClampEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthClampEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4468,7 +4468,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetPolygonModeEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetPolygonModeEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetPolygonModeEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4483,7 +4483,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetRasterizationSamplesE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetRasterizationSamplesEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetRasterizationSamplesEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4498,7 +4498,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetSampleMaskEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetSampleMaskEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetSampleMaskEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4513,7 +4513,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetAlphaToCoverageEnable
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetAlphaToCoverageEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetAlphaToCoverageEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4528,7 +4528,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetAlphaToOneEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetAlphaToOneEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetAlphaToOneEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4543,7 +4543,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetLogicOpEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetLogicOpEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetLogicOpEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4558,7 +4558,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetColorBlendEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetColorBlendEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4573,7 +4573,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendEquationEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetColorBlendEquationEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetColorBlendEquationEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4588,7 +4588,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetColorWriteMaskEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetColorWriteMaskEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetColorWriteMaskEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4603,7 +4603,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetRasterizationStreamEX
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetRasterizationStreamEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetRasterizationStreamEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4618,7 +4618,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetConservativeRasteriza
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetConservativeRasterizationModeEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetConservativeRasterizationModeEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4633,7 +4633,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetExtraPrimitiveOverest
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetExtraPrimitiveOverestimationSizeEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetExtraPrimitiveOverestimationSizeEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4648,7 +4648,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthClipEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthClipEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthClipEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4663,7 +4663,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetSampleLocationsEnable
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetSampleLocationsEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetSampleLocationsEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4678,7 +4678,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetColorBlendAdvancedEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetColorBlendAdvancedEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetColorBlendAdvancedEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4693,7 +4693,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetProvokingVertexModeEX
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetProvokingVertexModeEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetProvokingVertexModeEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4708,7 +4708,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetLineRasterizationMode
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetLineRasterizationModeEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetLineRasterizationModeEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4723,7 +4723,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetLineStippleEnableEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetLineStippleEnableEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetLineStippleEnableEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4738,7 +4738,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetDepthClipNegativeOneT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetDepthClipNegativeOneToOneEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetDepthClipNegativeOneToOneEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4753,7 +4753,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetViewportWScalingEnabl
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetViewportWScalingEnableNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetViewportWScalingEnableNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4768,7 +4768,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetViewportSwizzleNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetViewportSwizzleNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetViewportSwizzleNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4783,7 +4783,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetCoverageToColorEnable
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetCoverageToColorEnableNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetCoverageToColorEnableNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4798,7 +4798,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetCoverageToColorLocati
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetCoverageToColorLocationNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetCoverageToColorLocationNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4813,7 +4813,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationMod
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetCoverageModulationModeNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetCoverageModulationModeNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4828,7 +4828,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationTab
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetCoverageModulationTableEnableNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetCoverageModulationTableEnableNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4843,7 +4843,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetCoverageModulationTab
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetCoverageModulationTableNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetCoverageModulationTableNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4858,7 +4858,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetShadingRateImageEnabl
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetShadingRateImageEnableNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetShadingRateImageEnableNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4873,7 +4873,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetRepresentativeFragmen
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetRepresentativeFragmentTestEnableNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetRepresentativeFragmentTestEnableNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4888,7 +4888,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetCoverageReductionMode
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetCoverageReductionModeNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetCoverageReductionModeNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4903,7 +4903,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetShaderModuleIdentifierEX
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetShaderModuleIdentifierEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetShaderModuleIdentifierEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4918,7 +4918,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetShaderModuleCreateInfoId
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetShaderModuleCreateInfoIdentifierEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetShaderModuleCreateInfoIdentifierEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -4933,7 +4933,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyOpticalFlowSessionNV
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyOpticalFlowSessionNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyOpticalFlowSessionNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4948,7 +4948,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdOpticalFlowExecuteNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdOpticalFlowExecuteNV_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdOpticalFlowExecuteNV_PostCall(call_info, args...);
         }
     }
 };
@@ -4963,7 +4963,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDestroyAccelerationStructur
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DestroyAccelerationStructureKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.DestroyAccelerationStructureKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -4978,7 +4978,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructu
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBuildAccelerationStructuresKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBuildAccelerationStructuresKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -4993,7 +4993,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdBuildAccelerationStructu
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdBuildAccelerationStructuresIndirectKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdBuildAccelerationStructuresIndirectKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5008,7 +5008,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructur
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyAccelerationStructureKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyAccelerationStructureKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5023,7 +5023,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyAccelerationStructur
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyAccelerationStructureToMemoryKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyAccelerationStructureToMemoryKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5038,7 +5038,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdCopyMemoryToAcceleration
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdCopyMemoryToAccelerationStructureKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdCopyMemoryToAccelerationStructureKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5053,7 +5053,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdWriteAccelerationStructu
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdWriteAccelerationStructuresPropertiesKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdWriteAccelerationStructuresPropertiesKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5068,7 +5068,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceAccelerationStruct
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceAccelerationStructureCompatibilityKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceAccelerationStructureCompatibilityKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5083,7 +5083,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureBui
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetAccelerationStructureBuildSizesKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetAccelerationStructureBuildSizesKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5098,7 +5098,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdTraceRaysKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdTraceRaysKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdTraceRaysKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5113,7 +5113,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdTraceRaysIndirectKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdTraceRaysIndirectKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdTraceRaysIndirectKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5128,7 +5128,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetRayTracingPipelineSta
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetRayTracingPipelineStackSizeKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdSetRayTracingPipelineStackSizeKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5143,7 +5143,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawMeshTasksEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawMeshTasksEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -5158,7 +5158,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawMeshTasksIndirectEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawMeshTasksIndirectEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -5173,7 +5173,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndirectCou
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdDrawMeshTasksIndirectCountEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.CmdDrawMeshTasksIndirectCountEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -5188,7 +5188,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetBufferOpaqueCaptureAddre
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetBufferOpaqueCaptureAddress_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetBufferOpaqueCaptureAddress_PostCall(call_info, args...);
         }
     }
 };
@@ -5203,7 +5203,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryOpaqueCaptur
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceMemoryOpaqueCaptureAddress_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceMemoryOpaqueCaptureAddress_PostCall(call_info, args...);
         }
     }
 };
@@ -5218,7 +5218,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceXlibPresen
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceXlibPresentationSupportKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceXlibPresentationSupportKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5233,7 +5233,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceXcbPresent
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceXcbPresentationSupportKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceXcbPresentationSupportKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5248,7 +5248,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceWaylandPre
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceWaylandPresentationSupportKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceWaylandPresentationSupportKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5263,7 +5263,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceWin32Prese
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceWin32PresentationSupportKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceWin32PresentationSupportKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5278,7 +5278,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddressKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetBufferDeviceAddressKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetBufferDeviceAddressKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5293,7 +5293,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetBufferOpaqueCaptureAddre
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetBufferOpaqueCaptureAddressKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetBufferOpaqueCaptureAddressKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5308,7 +5308,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceMemoryOpaqueCaptur
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceMemoryOpaqueCaptureAddressKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeviceMemoryOpaqueCaptureAddressKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5323,7 +5323,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeferredOperationMaxConc
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeferredOperationMaxConcurrencyKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetDeferredOperationMaxConcurrencyKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5338,7 +5338,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetImageViewHandleNVX>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetImageViewHandleNVX_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetImageViewHandleNVX_PostCall(call_info, args...);
         }
     }
 };
@@ -5353,7 +5353,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetBufferDeviceAddressEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetBufferDeviceAddressEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetBufferDeviceAddressEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -5368,7 +5368,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDirectFBPr
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceDirectFBPresentationSupportEXT_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceDirectFBPresentationSupportEXT_PostCall(call_info, args...);
         }
     }
 };
@@ -5383,7 +5383,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceScreenPres
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceScreenPresentationSupportQNX_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetPhysicalDeviceScreenPresentationSupportQNX_PostCall(call_info, args...);
         }
     }
 };
@@ -5398,7 +5398,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureDev
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetAccelerationStructureDeviceAddressKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetAccelerationStructureDeviceAddressKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5413,7 +5413,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupSta
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetRayTracingShaderGroupStackSizeKHR_PostCall(consumer, call_info, args...);
+            plugin.func_table_post.GetRayTracingShaderGroupStackSizeKHR_PostCall(call_info, args...);
         }
     }
 };
@@ -5428,7 +5428,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateInstance>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateInstance_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateInstance_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5443,7 +5443,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDevices>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.EnumeratePhysicalDevices_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.EnumeratePhysicalDevices_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5458,7 +5458,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageForma
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceImageFormatProperties_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceImageFormatProperties_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5473,7 +5473,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateDevice>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateDevice_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateDevice_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5488,7 +5488,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkQueueSubmit>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.QueueSubmit_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.QueueSubmit_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5503,7 +5503,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkQueueWaitIdle>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.QueueWaitIdle_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.QueueWaitIdle_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5518,7 +5518,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDeviceWaitIdle>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DeviceWaitIdle_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.DeviceWaitIdle_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5533,7 +5533,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkAllocateMemory>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.AllocateMemory_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.AllocateMemory_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5548,7 +5548,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkMapMemory>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.MapMemory_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.MapMemory_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5563,7 +5563,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkFlushMappedMemoryRanges>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.FlushMappedMemoryRanges_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.FlushMappedMemoryRanges_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5578,7 +5578,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkInvalidateMappedMemoryRange
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.InvalidateMappedMemoryRanges_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.InvalidateMappedMemoryRanges_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5593,7 +5593,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkBindBufferMemory>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.BindBufferMemory_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.BindBufferMemory_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5608,7 +5608,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkBindImageMemory>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.BindImageMemory_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.BindImageMemory_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5623,7 +5623,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkQueueBindSparse>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.QueueBindSparse_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.QueueBindSparse_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5638,7 +5638,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateFence>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateFence_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateFence_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5653,7 +5653,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkResetFences>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ResetFences_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.ResetFences_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5668,7 +5668,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetFenceStatus>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetFenceStatus_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetFenceStatus_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5683,7 +5683,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkWaitForFences>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.WaitForFences_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.WaitForFences_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5698,7 +5698,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateSemaphore>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateSemaphore_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateSemaphore_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5713,7 +5713,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateEvent>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateEvent_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateEvent_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5728,7 +5728,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetEventStatus>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetEventStatus_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetEventStatus_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5743,7 +5743,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkSetEvent>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.SetEvent_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.SetEvent_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5758,7 +5758,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkResetEvent>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ResetEvent_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.ResetEvent_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5773,7 +5773,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateQueryPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateQueryPool_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateQueryPool_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5788,7 +5788,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetQueryPoolResults>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetQueryPoolResults_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetQueryPoolResults_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5803,7 +5803,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateBuffer_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateBuffer_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5818,7 +5818,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateBufferView>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateBufferView_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateBufferView_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5833,7 +5833,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateImage>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateImage_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateImage_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5848,7 +5848,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateImageView>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateImageView_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateImageView_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5863,7 +5863,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateShaderModule>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateShaderModule_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateShaderModule_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5878,7 +5878,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreatePipelineCache>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreatePipelineCache_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreatePipelineCache_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5893,7 +5893,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPipelineCacheData>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPipelineCacheData_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPipelineCacheData_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5908,7 +5908,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkMergePipelineCaches>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.MergePipelineCaches_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.MergePipelineCaches_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5923,7 +5923,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateGraphicsPipelines>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateGraphicsPipelines_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateGraphicsPipelines_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5938,7 +5938,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateComputePipelines>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateComputePipelines_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateComputePipelines_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5953,7 +5953,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreatePipelineLayout>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreatePipelineLayout_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreatePipelineLayout_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5968,7 +5968,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateSampler>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateSampler_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateSampler_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5983,7 +5983,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateDescriptorSetLayout>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateDescriptorSetLayout_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateDescriptorSetLayout_PostCall(call_info, result, args...);
         }
     }
 };
@@ -5998,7 +5998,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateDescriptorPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateDescriptorPool_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateDescriptorPool_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6013,7 +6013,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkResetDescriptorPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ResetDescriptorPool_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.ResetDescriptorPool_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6028,7 +6028,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkAllocateDescriptorSets>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.AllocateDescriptorSets_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.AllocateDescriptorSets_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6043,7 +6043,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkFreeDescriptorSets>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.FreeDescriptorSets_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.FreeDescriptorSets_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6058,7 +6058,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateFramebuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateFramebuffer_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateFramebuffer_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6073,7 +6073,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateRenderPass>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateRenderPass_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateRenderPass_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6088,7 +6088,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateCommandPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateCommandPool_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateCommandPool_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6103,7 +6103,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkResetCommandPool>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ResetCommandPool_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.ResetCommandPool_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6118,7 +6118,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkAllocateCommandBuffers>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.AllocateCommandBuffers_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.AllocateCommandBuffers_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6133,7 +6133,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkBeginCommandBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.BeginCommandBuffer_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.BeginCommandBuffer_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6148,7 +6148,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkEndCommandBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.EndCommandBuffer_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.EndCommandBuffer_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6163,7 +6163,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkResetCommandBuffer>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ResetCommandBuffer_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.ResetCommandBuffer_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6178,7 +6178,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkBindBufferMemory2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.BindBufferMemory2_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.BindBufferMemory2_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6193,7 +6193,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkBindImageMemory2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.BindImageMemory2_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.BindImageMemory2_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6208,7 +6208,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceGrou
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.EnumeratePhysicalDeviceGroups_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.EnumeratePhysicalDeviceGroups_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6223,7 +6223,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageForma
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceImageFormatProperties2_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceImageFormatProperties2_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6238,7 +6238,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateSamplerYcbcrConversio
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateSamplerYcbcrConversion_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateSamplerYcbcrConversion_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6253,7 +6253,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateRenderPass2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateRenderPass2_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateRenderPass2_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6268,7 +6268,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetSemaphoreCounterValue>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetSemaphoreCounterValue_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetSemaphoreCounterValue_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6283,7 +6283,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkWaitSemaphores>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.WaitSemaphores_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.WaitSemaphores_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6298,7 +6298,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkSignalSemaphore>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.SignalSemaphore_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.SignalSemaphore_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6313,7 +6313,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceToolProper
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceToolProperties_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceToolProperties_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6328,7 +6328,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreatePrivateDataSlot>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreatePrivateDataSlot_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreatePrivateDataSlot_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6343,7 +6343,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkSetPrivateData>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.SetPrivateData_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.SetPrivateData_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6358,7 +6358,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkQueueSubmit2>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.QueueSubmit2_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.QueueSubmit2_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6373,7 +6373,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceSup
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceSurfaceSupportKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceSurfaceSupportKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6388,7 +6388,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCap
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceSurfaceCapabilitiesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceSurfaceCapabilitiesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6403,7 +6403,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceFor
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceSurfaceFormatsKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceSurfaceFormatsKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6418,7 +6418,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfacePre
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceSurfacePresentModesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceSurfacePresentModesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6433,7 +6433,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateSwapchainKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateSwapchainKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateSwapchainKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6448,7 +6448,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetSwapchainImagesKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetSwapchainImagesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetSwapchainImagesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6463,7 +6463,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkAcquireNextImageKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.AcquireNextImageKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.AcquireNextImageKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6478,7 +6478,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.QueuePresentKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.QueuePresentKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6493,7 +6493,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceGroupPresentCapabi
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceGroupPresentCapabilitiesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetDeviceGroupPresentCapabilitiesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6508,7 +6508,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceGroupSurfacePresen
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceGroupSurfacePresentModesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetDeviceGroupSurfacePresentModesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6523,7 +6523,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDevicePresentRec
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDevicePresentRectanglesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDevicePresentRectanglesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6538,7 +6538,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkAcquireNextImage2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.AcquireNextImage2KHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.AcquireNextImage2KHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6553,7 +6553,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPro
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceDisplayPropertiesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceDisplayPropertiesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6568,7 +6568,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPla
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceDisplayPlanePropertiesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceDisplayPlanePropertiesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6583,7 +6583,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneSupportedDis
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDisplayPlaneSupportedDisplaysKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetDisplayPlaneSupportedDisplaysKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6598,7 +6598,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDisplayModePropertiesKHR
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDisplayModePropertiesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetDisplayModePropertiesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6613,7 +6613,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateDisplayModeKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateDisplayModeKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateDisplayModeKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6628,7 +6628,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneCapabilities
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDisplayPlaneCapabilitiesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetDisplayPlaneCapabilitiesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6643,7 +6643,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateDisplayPlaneSurfaceKH
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateDisplayPlaneSurfaceKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateDisplayPlaneSurfaceKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6658,7 +6658,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateSharedSwapchainsKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateSharedSwapchainsKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateSharedSwapchainsKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6673,7 +6673,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateXlibSurfaceKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateXlibSurfaceKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateXlibSurfaceKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6688,7 +6688,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateXcbSurfaceKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateXcbSurfaceKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateXcbSurfaceKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6703,7 +6703,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateWaylandSurfaceKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateWaylandSurfaceKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateWaylandSurfaceKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6718,7 +6718,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateAndroidSurfaceKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateAndroidSurfaceKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateAndroidSurfaceKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6733,7 +6733,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateWin32SurfaceKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateWin32SurfaceKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateWin32SurfaceKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6748,7 +6748,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceVideoCapab
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceVideoCapabilitiesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceVideoCapabilitiesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6763,7 +6763,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceVideoForma
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceVideoFormatPropertiesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceVideoFormatPropertiesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6778,7 +6778,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateVideoSessionKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateVideoSessionKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateVideoSessionKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6793,7 +6793,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetVideoSessionMemoryRequir
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetVideoSessionMemoryRequirementsKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetVideoSessionMemoryRequirementsKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6808,7 +6808,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkBindVideoSessionMemoryKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.BindVideoSessionMemoryKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.BindVideoSessionMemoryKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6823,7 +6823,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateVideoSessionParameter
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateVideoSessionParametersKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateVideoSessionParametersKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6838,7 +6838,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkUpdateVideoSessionParameter
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.UpdateVideoSessionParametersKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.UpdateVideoSessionParametersKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6853,7 +6853,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceImageForma
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceImageFormatProperties2KHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceImageFormatProperties2KHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6868,7 +6868,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceGrou
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.EnumeratePhysicalDeviceGroupsKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.EnumeratePhysicalDeviceGroupsKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6883,7 +6883,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandleKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetMemoryWin32HandleKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetMemoryWin32HandleKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6898,7 +6898,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandlePropert
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetMemoryWin32HandlePropertiesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetMemoryWin32HandlePropertiesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6913,7 +6913,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetMemoryFdKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetMemoryFdKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetMemoryFdKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6928,7 +6928,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetMemoryFdPropertiesKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetMemoryFdPropertiesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetMemoryFdPropertiesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6943,7 +6943,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkImportSemaphoreWin32HandleK
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ImportSemaphoreWin32HandleKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.ImportSemaphoreWin32HandleKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6958,7 +6958,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetSemaphoreWin32HandleKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetSemaphoreWin32HandleKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetSemaphoreWin32HandleKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6973,7 +6973,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkImportSemaphoreFdKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ImportSemaphoreFdKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.ImportSemaphoreFdKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -6988,7 +6988,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetSemaphoreFdKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetSemaphoreFdKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetSemaphoreFdKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7003,7 +7003,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateDescriptorUpdateTempl
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateDescriptorUpdateTemplateKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateDescriptorUpdateTemplateKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7018,7 +7018,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateRenderPass2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateRenderPass2KHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateRenderPass2KHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7033,7 +7033,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetSwapchainStatusKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetSwapchainStatusKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetSwapchainStatusKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7048,7 +7048,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkImportFenceWin32HandleKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ImportFenceWin32HandleKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.ImportFenceWin32HandleKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7063,7 +7063,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetFenceWin32HandleKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetFenceWin32HandleKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetFenceWin32HandleKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7078,7 +7078,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkImportFenceFdKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ImportFenceFdKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.ImportFenceFdKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7093,7 +7093,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetFenceFdKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetFenceFdKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetFenceFdKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7108,7 +7108,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkEnumeratePhysicalDeviceQueu
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7123,7 +7123,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkAcquireProfilingLockKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.AcquireProfilingLockKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.AcquireProfilingLockKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7138,7 +7138,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCap
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceSurfaceCapabilities2KHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceSurfaceCapabilities2KHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7153,7 +7153,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceFor
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceSurfaceFormats2KHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceSurfaceFormats2KHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7168,7 +7168,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPro
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceDisplayProperties2KHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceDisplayProperties2KHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7183,7 +7183,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceDisplayPla
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceDisplayPlaneProperties2KHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceDisplayPlaneProperties2KHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7198,7 +7198,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDisplayModeProperties2KH
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDisplayModeProperties2KHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetDisplayModeProperties2KHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7213,7 +7213,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDisplayPlaneCapabilities
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDisplayPlaneCapabilities2KHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetDisplayPlaneCapabilities2KHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7228,7 +7228,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateSamplerYcbcrConversio
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateSamplerYcbcrConversionKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateSamplerYcbcrConversionKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7243,7 +7243,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkBindBufferMemory2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.BindBufferMemory2KHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.BindBufferMemory2KHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7258,7 +7258,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkBindImageMemory2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.BindImageMemory2KHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.BindImageMemory2KHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7273,7 +7273,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetSemaphoreCounterValueKHR
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetSemaphoreCounterValueKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetSemaphoreCounterValueKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7288,7 +7288,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkWaitSemaphoresKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.WaitSemaphoresKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.WaitSemaphoresKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7303,7 +7303,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkSignalSemaphoreKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.SignalSemaphoreKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.SignalSemaphoreKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7318,7 +7318,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceFragmentSh
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceFragmentShadingRatesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceFragmentShadingRatesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7333,7 +7333,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkWaitForPresentKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.WaitForPresentKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.WaitForPresentKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7348,7 +7348,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateDeferredOperationKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateDeferredOperationKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateDeferredOperationKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7363,7 +7363,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeferredOperationResultK
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeferredOperationResultKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetDeferredOperationResultKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7378,7 +7378,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDeferredOperationJoinKHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DeferredOperationJoinKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.DeferredOperationJoinKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7393,7 +7393,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPipelineExecutableProper
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPipelineExecutablePropertiesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPipelineExecutablePropertiesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7408,7 +7408,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPipelineExecutableStatis
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPipelineExecutableStatisticsKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPipelineExecutableStatisticsKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7423,7 +7423,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPipelineExecutableIntern
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPipelineExecutableInternalRepresentationsKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPipelineExecutableInternalRepresentationsKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7438,7 +7438,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkQueueSubmit2KHR>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.QueueSubmit2KHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.QueueSubmit2KHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7453,7 +7453,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateDebugReportCallbackEX
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateDebugReportCallbackEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateDebugReportCallbackEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7468,7 +7468,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDebugMarkerSetObjectTagEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DebugMarkerSetObjectTagEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.DebugMarkerSetObjectTagEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7483,7 +7483,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDebugMarkerSetObjectNameEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DebugMarkerSetObjectNameEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.DebugMarkerSetObjectNameEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7498,7 +7498,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetImageViewAddressNVX>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetImageViewAddressNVX_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetImageViewAddressNVX_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7513,7 +7513,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetShaderInfoAMD>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetShaderInfoAMD_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetShaderInfoAMD_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7528,7 +7528,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateStreamDescriptorSurfa
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateStreamDescriptorSurfaceGGP_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateStreamDescriptorSurfaceGGP_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7543,7 +7543,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceExternalIm
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceExternalImageFormatPropertiesNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceExternalImageFormatPropertiesNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7558,7 +7558,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetMemoryWin32HandleNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetMemoryWin32HandleNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetMemoryWin32HandleNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7573,7 +7573,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateViSurfaceNN>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateViSurfaceNN_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateViSurfaceNN_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7588,7 +7588,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkReleaseDisplayEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ReleaseDisplayEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.ReleaseDisplayEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7603,7 +7603,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkAcquireXlibDisplayEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.AcquireXlibDisplayEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.AcquireXlibDisplayEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7618,7 +7618,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetRandROutputDisplayEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetRandROutputDisplayEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetRandROutputDisplayEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7633,7 +7633,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfaceCap
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceSurfaceCapabilities2EXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceSurfaceCapabilities2EXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7648,7 +7648,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkDisplayPowerControlEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.DisplayPowerControlEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.DisplayPowerControlEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7663,7 +7663,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkRegisterDeviceEventEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.RegisterDeviceEventEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.RegisterDeviceEventEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7678,7 +7678,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkRegisterDisplayEventEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.RegisterDisplayEventEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.RegisterDisplayEventEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7693,7 +7693,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetSwapchainCounterEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetSwapchainCounterEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetSwapchainCounterEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7708,7 +7708,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetRefreshCycleDurationGOOG
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetRefreshCycleDurationGOOGLE_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetRefreshCycleDurationGOOGLE_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7723,7 +7723,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPastPresentationTimingGO
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPastPresentationTimingGOOGLE_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPastPresentationTimingGOOGLE_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7738,7 +7738,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateIOSSurfaceMVK>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateIOSSurfaceMVK_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateIOSSurfaceMVK_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7753,7 +7753,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateMacOSSurfaceMVK>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateMacOSSurfaceMVK_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateMacOSSurfaceMVK_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7768,7 +7768,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkSetDebugUtilsObjectNameEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.SetDebugUtilsObjectNameEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.SetDebugUtilsObjectNameEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7783,7 +7783,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkSetDebugUtilsObjectTagEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.SetDebugUtilsObjectTagEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.SetDebugUtilsObjectTagEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7798,7 +7798,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateDebugUtilsMessengerEX
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateDebugUtilsMessengerEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateDebugUtilsMessengerEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7813,7 +7813,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetAndroidHardwareBufferPro
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetAndroidHardwareBufferPropertiesANDROID_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetAndroidHardwareBufferPropertiesANDROID_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7828,7 +7828,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetMemoryAndroidHardwareBuf
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetMemoryAndroidHardwareBufferANDROID_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetMemoryAndroidHardwareBufferANDROID_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7843,7 +7843,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetImageDrmFormatModifierPr
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetImageDrmFormatModifierPropertiesEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetImageDrmFormatModifierPropertiesEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7858,7 +7858,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateValidationCacheEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateValidationCacheEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateValidationCacheEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7873,7 +7873,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkMergeValidationCachesEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.MergeValidationCachesEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.MergeValidationCachesEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7888,7 +7888,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetValidationCacheDataEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetValidationCacheDataEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetValidationCacheDataEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7903,7 +7903,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateAccelerationStructure
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateAccelerationStructureNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateAccelerationStructureNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7918,7 +7918,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkBindAccelerationStructureMe
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.BindAccelerationStructureMemoryNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.BindAccelerationStructureMemoryNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7933,7 +7933,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateRayTracingPipelinesNV
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateRayTracingPipelinesNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateRayTracingPipelinesNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7948,7 +7948,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupHan
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetRayTracingShaderGroupHandlesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetRayTracingShaderGroupHandlesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7963,7 +7963,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetRayTracingShaderGroupHan
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetRayTracingShaderGroupHandlesNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetRayTracingShaderGroupHandlesNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7978,7 +7978,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetAccelerationStructureHan
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetAccelerationStructureHandleNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetAccelerationStructureHandleNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -7993,7 +7993,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCompileDeferredNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CompileDeferredNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CompileDeferredNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8008,7 +8008,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetMemoryHostPointerPropert
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetMemoryHostPointerPropertiesEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetMemoryHostPointerPropertiesEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8023,7 +8023,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceCalibratea
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceCalibrateableTimeDomainsEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceCalibrateableTimeDomainsEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8038,7 +8038,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetCalibratedTimestampsEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetCalibratedTimestampsEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetCalibratedTimestampsEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8053,7 +8053,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkInitializePerformanceApiINT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.InitializePerformanceApiINTEL_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.InitializePerformanceApiINTEL_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8068,7 +8068,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceMarkerINTE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetPerformanceMarkerINTEL_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CmdSetPerformanceMarkerINTEL_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8083,7 +8083,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceStreamMark
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetPerformanceStreamMarkerINTEL_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CmdSetPerformanceStreamMarkerINTEL_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8098,7 +8098,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCmdSetPerformanceOverrideIN
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CmdSetPerformanceOverrideINTEL_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CmdSetPerformanceOverrideINTEL_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8113,7 +8113,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkAcquirePerformanceConfigura
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.AcquirePerformanceConfigurationINTEL_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.AcquirePerformanceConfigurationINTEL_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8128,7 +8128,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkReleasePerformanceConfigura
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ReleasePerformanceConfigurationINTEL_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.ReleasePerformanceConfigurationINTEL_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8143,7 +8143,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkQueueSetPerformanceConfigur
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.QueueSetPerformanceConfigurationINTEL_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.QueueSetPerformanceConfigurationINTEL_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8158,7 +8158,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPerformanceParameterINTE
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPerformanceParameterINTEL_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPerformanceParameterINTEL_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8173,7 +8173,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateImagePipeSurfaceFUCHS
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateImagePipeSurfaceFUCHSIA_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateImagePipeSurfaceFUCHSIA_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8188,7 +8188,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateMetalSurfaceEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateMetalSurfaceEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateMetalSurfaceEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8203,7 +8203,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceToolProper
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceToolPropertiesEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceToolPropertiesEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8218,7 +8218,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceCooperativ
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceCooperativeMatrixPropertiesNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceCooperativeMatrixPropertiesNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8233,7 +8233,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSupportedF
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8248,7 +8248,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceSurfacePre
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceSurfacePresentModes2EXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceSurfacePresentModes2EXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8263,7 +8263,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkAcquireFullScreenExclusiveM
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.AcquireFullScreenExclusiveModeEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.AcquireFullScreenExclusiveModeEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8278,7 +8278,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkReleaseFullScreenExclusiveM
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ReleaseFullScreenExclusiveModeEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.ReleaseFullScreenExclusiveModeEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8293,7 +8293,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceGroupSurfacePresen
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceGroupSurfacePresentModes2EXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetDeviceGroupSurfacePresentModes2EXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8308,7 +8308,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateHeadlessSurfaceEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateHeadlessSurfaceEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateHeadlessSurfaceEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8323,7 +8323,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkReleaseSwapchainImagesEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ReleaseSwapchainImagesEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.ReleaseSwapchainImagesEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8338,7 +8338,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateIndirectCommandsLayou
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateIndirectCommandsLayoutNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateIndirectCommandsLayoutNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8353,7 +8353,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkAcquireDrmDisplayEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.AcquireDrmDisplayEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.AcquireDrmDisplayEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8368,7 +8368,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDrmDisplayEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDrmDisplayEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetDrmDisplayEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8383,7 +8383,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreatePrivateDataSlotEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreatePrivateDataSlotEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreatePrivateDataSlotEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8398,7 +8398,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkSetPrivateDataEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.SetPrivateDataEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.SetPrivateDataEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8413,7 +8413,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDeviceFaultInfoEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDeviceFaultInfoEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetDeviceFaultInfoEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8428,7 +8428,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkAcquireWinrtDisplayNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.AcquireWinrtDisplayNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.AcquireWinrtDisplayNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8443,7 +8443,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetWinrtDisplayNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetWinrtDisplayNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetWinrtDisplayNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8458,7 +8458,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateDirectFBSurfaceEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateDirectFBSurfaceEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateDirectFBSurfaceEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8473,7 +8473,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetMemoryZirconHandleFUCHSI
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetMemoryZirconHandleFUCHSIA_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetMemoryZirconHandleFUCHSIA_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8488,7 +8488,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetMemoryZirconHandleProper
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetMemoryZirconHandlePropertiesFUCHSIA_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetMemoryZirconHandlePropertiesFUCHSIA_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8503,7 +8503,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkImportSemaphoreZirconHandle
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.ImportSemaphoreZirconHandleFUCHSIA_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.ImportSemaphoreZirconHandleFUCHSIA_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8518,7 +8518,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetSemaphoreZirconHandleFUC
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetSemaphoreZirconHandleFUCHSIA_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetSemaphoreZirconHandleFUCHSIA_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8533,7 +8533,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetMemoryRemoteAddressNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetMemoryRemoteAddressNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetMemoryRemoteAddressNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8548,7 +8548,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateScreenSurfaceQNX>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateScreenSurfaceQNX_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateScreenSurfaceQNX_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8563,7 +8563,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateMicromapEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateMicromapEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateMicromapEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8578,7 +8578,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkBuildMicromapsEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.BuildMicromapsEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.BuildMicromapsEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8593,7 +8593,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCopyMicromapEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CopyMicromapEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CopyMicromapEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8608,7 +8608,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCopyMicromapToMemoryEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CopyMicromapToMemoryEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CopyMicromapToMemoryEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8623,7 +8623,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCopyMemoryToMicromapEXT>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CopyMemoryToMicromapEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CopyMemoryToMicromapEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8638,7 +8638,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkWriteMicromapsPropertiesEXT
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.WriteMicromapsPropertiesEXT_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.WriteMicromapsPropertiesEXT_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8653,7 +8653,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetPhysicalDeviceOpticalFlo
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetPhysicalDeviceOpticalFlowImageFormatsNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetPhysicalDeviceOpticalFlowImageFormatsNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8668,7 +8668,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateOpticalFlowSessionNV>
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateOpticalFlowSessionNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateOpticalFlowSessionNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8683,7 +8683,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkBindOpticalFlowSessionImage
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.BindOpticalFlowSessionImageNV_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.BindOpticalFlowSessionImageNV_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8698,7 +8698,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetFramebufferTilePropertie
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetFramebufferTilePropertiesQCOM_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetFramebufferTilePropertiesQCOM_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8713,7 +8713,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetDynamicRenderingTileProp
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetDynamicRenderingTilePropertiesQCOM_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetDynamicRenderingTilePropertiesQCOM_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8728,7 +8728,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateAccelerationStructure
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateAccelerationStructureKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateAccelerationStructureKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8743,7 +8743,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCopyAccelerationStructureTo
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CopyAccelerationStructureToMemoryKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CopyAccelerationStructureToMemoryKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8758,7 +8758,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCopyMemoryToAccelerationStr
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CopyMemoryToAccelerationStructureKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CopyMemoryToAccelerationStructureKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8773,7 +8773,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkWriteAccelerationStructures
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.WriteAccelerationStructuresPropertiesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.WriteAccelerationStructuresPropertiesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8788,7 +8788,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkCreateRayTracingPipelinesKH
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.CreateRayTracingPipelinesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.CreateRayTracingPipelinesKHR_PostCall(call_info, result, args...);
         }
     }
 };
@@ -8803,7 +8803,7 @@ struct ConsumerPostCall<format::ApiCallId::ApiCall_vkGetRayTracingCaptureReplayS
 
         for (auto &plugin : consumer->loaded_plugins_)
         {
-            plugin.func_table_post.GetRayTracingCaptureReplayShaderGroupHandlesKHR_PostCall(consumer, call_info, result, args...);
+            plugin.func_table_post.GetRayTracingCaptureReplayShaderGroupHandlesKHR_PostCall(call_info, result, args...);
         }
     }
 };

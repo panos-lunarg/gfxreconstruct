@@ -21,12 +21,12 @@
 ** DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef GFXRECON_PLUGINS_CUSTOM_PERFETTO_VULKAN_ENCODER_COMMANDS_H
-#define GFXRECON_PLUGINS_CUSTOM_PERFETTO_VULKAN_ENCODER_COMMANDS_H
+#ifndef GFXRECON_PLUGINS_PERFETTO_VULKAN_ENCODER_COMMANDS_H
+#define GFXRECON_PLUGINS_PERFETTO_VULKAN_ENCODER_COMMANDS_H
 
-#include "encode/vulkan_capture_manager.h"
 #include "format/api_call_id.h"
 #include "util/defines.h"
+#include "vulkan/vulkan.h"
 
 #include <iostream>
 
@@ -35,13 +35,11 @@ GFXRECON_BEGIN_NAMESPACE(plugins)
 GFXRECON_BEGIN_NAMESPACE(capture)
 GFXRECON_BEGIN_NAMESPACE(plugin_perfetto)
 
-using namespace encode;
-
 template <format::ApiCallId Id>
 struct PerfettoEncoderPreCall
 {
     template <typename... Args>
-    static void Dispatch(VulkanCaptureManager*, Args...)
+    static void Dispatch(uint64_t, Args...)
     {}
 };
 
@@ -49,26 +47,24 @@ template <format::ApiCallId Id>
 struct PerfettoEncoderPostCall
 {
     template <typename... Args>
-    static void Dispatch(VulkanCaptureManager*, Args...)
+    static void Dispatch(uint64_t, Args...)
     {}
 
     template <typename... Args>
-    static void Dispatch(VulkanCaptureManager*, VkResult, Args...)
+    static void Dispatch(uint64_t, VkResult, Args...)
     {}
 };
 
-#if !defined(WIN32)
-
 void InitializePerfetto();
-void Process_QueueSubmit(
-    VulkanCaptureManager* manager, VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence);
-void Process_QueuePresent(VulkanCaptureManager* manager, VkQueue queue, const VkPresentInfoKHR* pPresentInfo);
+void PreProcess_QueueSubmit(
+    uint64_t block_index, VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence);
+void PreProcess_QueuePresent(uint64_t block_index, VkQueue queue, const VkPresentInfoKHR* pPresentInfo);
 
 template <>
 struct PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkCreateInstance>
 {
     template <typename... Args>
-    static void Dispatch(VulkanCaptureManager* manager, Args... args)
+    static void Dispatch(uint64_t block_index, Args... args)
     {
         InitializePerfetto();
     }
@@ -78,7 +74,7 @@ template <>
 struct PerfettoEncoderPostCall<format::ApiCallId::ApiCall_vkCreateInstance>
 {
     template <typename... Args>
-    static void Dispatch(VulkanCaptureManager* manager, VkResult result, Args... args)
+    static void Dispatch(uint64_t block_index, VkResult result, Args... args)
     {
         InitializePerfetto();
     }
@@ -88,9 +84,9 @@ template <>
 struct PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>
 {
     template <typename... Args>
-    static void Dispatch(VulkanCaptureManager* manager, Args... args)
+    static void Dispatch(uint64_t block_index, Args... args)
     {
-        Process_QueuePresent(manager, args...);
+        PreProcess_QueuePresent(block_index, args...);
     }
 };
 
@@ -98,19 +94,17 @@ template <>
 struct PerfettoEncoderPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>
 {
     template <typename... Args>
-    static void Dispatch(VulkanCaptureManager* manager, Args... args)
+    static void Dispatch(uint64_t block_index, Args... args)
     {
-        assert(manager);
+        assert(block_index);
 
-        Process_QueueSubmit(manager, args...);
+        PreProcess_QueueSubmit(block_index, args...);
     }
 };
-
-#endif // !defined(WIN32)
 
 GFXRECON_END_NAMESPACE(plugin_perfetto)
 GFXRECON_END_NAMESPACE(capture)
 GFXRECON_END_NAMESPACE(plugins)
 GFXRECON_END_NAMESPACE(gfxrecon)
 
-#endif // GFXRECON_PLUGINS_CUSTOM_PERFETTO_VULKAN_ENCODER_COMMANDS_H
+#endif // GFXRECON_PLUGINS_PERFETTO_VULKAN_ENCODER_COMMANDS_H

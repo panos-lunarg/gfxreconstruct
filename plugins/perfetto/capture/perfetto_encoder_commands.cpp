@@ -23,20 +23,12 @@
 
 #include "perfetto_encoder_commands.h"
 #include "../perfetto_tracing_categories.h"
-#include "encode/vulkan_capture_manager.h"
-#include "generated/generated_vulkan_struct_handle_wrappers.h"
 #include "util/defines.h"
-
-#include <sstream>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(plugins)
 GFXRECON_BEGIN_NAMESPACE(capture)
 GFXRECON_BEGIN_NAMESPACE(plugin_perfetto)
-
-using namespace encode;
-
-#if !defined(WIN32)
 
 void InitializePerfetto()
 {
@@ -55,34 +47,25 @@ void InitializePerfetto()
     }
 }
 
-void Process_QueueSubmit(
-    VulkanCaptureManager* manager, VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence)
+void PreProcess_QueueSubmit(
+    uint64_t block_index, VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence)
 {
     TRACE_EVENT_INSTANT("GFXR", "vkQueueSubmit", [&](perfetto::EventContext ctx) {
-        ctx.AddDebugAnnotation(perfetto::DynamicString{ "vkQueueSubmit:" }, manager->GetBlockIndex());
+        ctx.AddDebugAnnotation(perfetto::DynamicString{ "vkQueueSubmit:" }, block_index);
 
-        auto                handle_unwrap_memory = manager->GetHandleUnwrapMemory();
-        const VkSubmitInfo* pSubmits_unwrapped = UnwrapStructArrayHandles(pSubmits, submitCount, handle_unwrap_memory);
-
-        for (uint32_t i = 0; i < pSubmits_unwrapped->commandBufferCount; ++i)
+        for (uint32_t i = 0; i < pSubmits->commandBufferCount; ++i)
         {
             ctx.AddDebugAnnotation<perfetto::DynamicString, void*>(
-                perfetto::DynamicString{ "vkCommandBuffer: " + std::to_string(i) },
-                pSubmits_unwrapped->pCommandBuffers[i]);
+                perfetto::DynamicString{ "vkCommandBuffer: " + std::to_string(i) }, pSubmits->pCommandBuffers[i]);
         }
     });
 }
 
-void Process_QueuePresent(VulkanCaptureManager* manager, VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
+void PreProcess_QueuePresent(uint64_t block_index, VkQueue queue, const VkPresentInfoKHR* pPresentInfo)
 {
-    assert(manager);
-
-    const uint64_t    command_index = manager->GetBlockIndex();
-    const std::string submit_name   = "QueuePresent: " + std::to_string(command_index);
-    TRACE_EVENT_INSTANT("GFXR", perfetto::DynamicString{ submit_name.c_str() }, "Command ID:", command_index);
+    const std::string submit_name = "QueuePresent: " + std::to_string(block_index);
+    TRACE_EVENT_INSTANT("GFXR", perfetto::DynamicString{ submit_name.c_str() }, "Command ID:", block_index);
 }
-
-#endif // !defined(WIN32)
 
 GFXRECON_END_NAMESPACE(plugin_perfetto)
 GFXRECON_END_NAMESPACE(capture)

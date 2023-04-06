@@ -21,27 +21,30 @@
 ** DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef GFXRECON_PLUGINS_PERFETTO_
-#define GFXRECON_PLUGINS_PERFETTO_
+#ifndef GFXRECON_PLUGINS_PERFETTO_VULKAN_REPLAY_COMMANDS_H
+#define GFXRECON_PLUGINS_PERFETTO_VULKAN_REPLAY_COMMANDS_H
 
-#include "decode/vulkan_replay_consumer_base.h"
+#include "format/api_call_id.h"
+#include "vulkan/vulkan.h"
+#include "decode/api_decoder.h"
 #include "decode/struct_pointer_decoder.h"
 #include "decode/handle_pointer_decoder.h"
 #include "generated/generated_vulkan_struct_decoders.h"
-#include "format/api_call_id.h"
-#include "util/defines.h"
 #include "generated/generated_vulkan_struct_handle_wrappers.h"
+#include "util/defines.h"
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(plugins)
 GFXRECON_BEGIN_NAMESPACE(replay)
 GFXRECON_BEGIN_NAMESPACE(plugin_perfetto)
 
+using namespace decode;
+
 template <format::ApiCallId Id>
 struct PerfettoReplayPreCall
 {
     template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase*, const ApiCallInfo&, VkResult, Args...)
+    static void Dispatch(const ApiCallInfo&, VkResult, Args...)
     {}
 };
 
@@ -49,41 +52,37 @@ template <format::ApiCallId Id>
 struct PerfettoEncoderPostCall
 {
     template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase*, const ApiCallInfo&, VkResult, Args...)
+    static void Dispatch(const ApiCallInfo&, VkResult, Args...)
     {}
 };
 
 #if !defined(WIN32)
 
-void Process_CreateInstance_Pre(VulkanReplayConsumerBase*                            consumer,
-                                const ApiCallInfo&                                   call_info,
-                                VkResult                                             returnValue,
-                                StructPointerDecoder<Decoded_VkInstanceCreateInfo>*  pCreateInfo,
-                                StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
-                                HandlePointerDecoder<VkInstance>*                    pInstance);
+void PreProcess_CreateInstance(const ApiCallInfo&                                   call_info,
+                               VkResult                                             returnValue,
+                               StructPointerDecoder<Decoded_VkInstanceCreateInfo>*  pCreateInfo,
+                               StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator,
+                               HandlePointerDecoder<VkInstance>*                    pInstance);
 
-void Process_QueueSubmit(VulkanReplayConsumerBase*                   consumer,
-                         const ApiCallInfo&                          call_info,
-                         VkResult                                    returnValue,
-                         format::HandleId                            queue,
-                         uint32_t                                    submitCount,
-                         StructPointerDecoder<Decoded_VkSubmitInfo>* pSubmits,
-                         format::HandleId                            fence);
+void PreProcess_QueueSubmit(const ApiCallInfo&                          call_info,
+                            VkResult                                    returnValue,
+                            format::HandleId                            queue,
+                            uint32_t                                    submitCount,
+                            StructPointerDecoder<Decoded_VkSubmitInfo>* pSubmits,
+                            format::HandleId                            fence);
 
-void Process_QueuePresent(VulkanReplayConsumerBase*                       consumer,
-                          const ApiCallInfo&                              call_info,
-                          VkResult                                        returnValue,
-                          format::HandleId                                queue,
-                          StructPointerDecoder<Decoded_VkPresentInfoKHR>* pPresentInfo);
+void PreProcess_QueuePresent(const ApiCallInfo&                              call_info,
+                             VkResult                                        returnValue,
+                             format::HandleId                                queue,
+                             StructPointerDecoder<Decoded_VkPresentInfoKHR>* pPresentInfo);
 
 template <>
 struct PerfettoReplayPreCall<format::ApiCallId::ApiCall_vkCreateInstance>
 {
     template <typename... Args>
-    static void
-    Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, VkResult result, Args... args)
+    static void Dispatch(const ApiCallInfo& call_info, VkResult result, Args... args)
     {
-        Process_CreateInstance_Pre(consumer, call_info, result, args...);
+        PreProcess_CreateInstance(call_info, result, args...);
     }
 };
 
@@ -91,9 +90,9 @@ template <>
 struct PerfettoReplayPreCall<format::ApiCallId::ApiCall_vkQueuePresentKHR>
 {
     template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    static void Dispatch(const ApiCallInfo& call_info, Args... args)
     {
-        Process_QueuePresent(consumer, call_info, args...);
+        PreProcess_QueuePresent(call_info, args...);
     }
 };
 
@@ -101,11 +100,9 @@ template <>
 struct PerfettoReplayPreCall<format::ApiCallId::ApiCall_vkQueueSubmit>
 {
     template <typename... Args>
-    static void Dispatch(VulkanReplayConsumerBase* consumer, const ApiCallInfo& call_info, Args... args)
+    static void Dispatch(const ApiCallInfo& call_info, Args... args)
     {
-        assert(consumer);
-
-        Process_QueueSubmit(consumer, call_info, args...);
+        PreProcess_QueueSubmit(call_info, args...);
     }
 };
 
