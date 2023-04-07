@@ -533,7 +533,8 @@ void D3D12CaptureManager::PrePresent(IDXGISwapChain_Wrapper* swapchain_wrapper)
                                                      swapchain_info->command_queue,
                                                      swapchain,
                                                      global_frame_count_ + 1,
-                                                     screenshot_prefix_);
+                                                     screenshot_prefix_,
+                                                     screenshot_format_);
         }
         else
         {

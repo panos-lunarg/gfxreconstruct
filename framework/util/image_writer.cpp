@@ -34,9 +34,9 @@
 // zlib compress2 function resulted in a 40+% reduction versus the original image.
 uint8_t* gfxr_zlib_compress2(uint8_t* data, int32_t data_len, int32_t* out_len, int32_t quality)
 {
-    uint8_t* target  = reinterpret_cast<uint8_t*>(malloc(data_len));
+    uint8_t*      target  = reinterpret_cast<uint8_t*>(malloc(data_len));
     unsigned long ret_len = data_len;
-    int32_t  error   = compress2(target, &ret_len, data, data_len, quality);
+    int32_t       error   = compress2(target, &ret_len, data, data_len, quality);
     if (Z_OK == error)
     {
         *out_len = ret_len;
@@ -49,6 +49,10 @@ uint8_t* gfxr_zlib_compress2(uint8_t* data, int32_t data_len, int32_t* out_len, 
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_STATIC
+
+#if defined(WIN32)
+#define __STDC_LIB_EXT1__
+#endif
 
 #include <stb_image_write.h>
 #endif // ENABLE_ZLIB_COMPRESSION && ENABLE_PNG_SCREENSHOT

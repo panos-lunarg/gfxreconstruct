@@ -201,7 +201,6 @@ endif() # WIN32
 
 find_package(LZ4)
 find_package(ZSTD)
-find_package(PNG)
 
 if(UNIX)
     option(BUILD_WSI_XCB_SUPPORT "Build XCB WSI support" ON)

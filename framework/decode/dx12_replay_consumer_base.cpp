@@ -2775,7 +2775,7 @@ void Dx12ReplayConsumerBase::InitializeScreenshotHandler()
         screenshot_file_prefix_ = kDefaultScreenshotFilePrefix;
     }
 
-    screenshot_format_ = options.screenshot_format;
+    screenshot_format_ = options_.screenshot_format;
 
     if (!options_.screenshot_dir.empty())
     {

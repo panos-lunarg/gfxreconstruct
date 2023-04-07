@@ -37,7 +37,7 @@ void TakeScreenshot(std::unique_ptr<graphics::DX12ImageRenderer>& image_renderer
                     IDXGISwapChain*                               swapchain,
                     uint32_t                                      frame_num,
                     const std::string&                            filename_prefix,
-                    util::ScreenshotFormat                        screenshot_format)
+                    gfxrecon::util::ScreenshotFormat              screenshot_format)
 {
     if (queue != nullptr && swapchain != nullptr)
     {
@@ -112,7 +112,7 @@ void TakeScreenshot(std::unique_ptr<graphics::DX12ImageRenderer>& image_renderer
                                     GFXRECON_LOG_ERROR(
                                         "Screenshot format invalid!  Expected BMP or PNG, falling back to BMP.");
                                     // Intentional fall-through
-                                case util::ScreenshotFormat::kBmp:
+                                case gfxrecon::util::ScreenshotFormat::kBmp:
                                     filename += ".bmp";
                                     if (!util::imagewriter::WriteBmpImage(filename,
                                                                           static_cast<unsigned int>(fb_desc.Width),
@@ -126,14 +126,15 @@ void TakeScreenshot(std::unique_ptr<graphics::DX12ImageRenderer>& image_renderer
                                             filename.c_str());
                                     }
                                     break;
-                                case util::ScreenshotFormat::kPng:
+                                case gfxrecon::util::ScreenshotFormat::kPng:
                                     // For PNG format, we have to force the alpha channel to opaque, otherwise we get
                                     // image artifacts on most image viewers from the transparency for anything that was
                                     // rendered last to the image using transparency (think tree leaves).
-                                    for (uint32_t y = 0; y < height; ++y)
+                                    for (uint32_t y = 0; y < fb_desc.Height; ++y)
                                     {
-                                        uint32_t* working_data = reinterpret_cast<uint32_t*>(data) + y * pitch;
-                                        for (uint32_t x = 0; x < width; ++x)
+                                        uint32_t* working_data =
+                                            reinterpret_cast<uint32_t*>(std::data(captured_image.data)) + y * pitch;
+                                        for (uint32_t x = 0; x < fb_desc.Width; ++x)
                                         {
                                             working_data[x] |= 0xFF000000;
                                         }
