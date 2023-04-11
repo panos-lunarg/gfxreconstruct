@@ -26,6 +26,7 @@
 #include "util/logging.h"
 #include "util/platform.h"
 
+#include <condition_variable>
 #include <limits>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
@@ -97,22 +98,27 @@ struct ScreenshotImageThreadData
 };
 std::atomic_bool                              g_exiting;
 static std::vector<ScreenshotImageThreadData> g_screenshot_thread_info;
+std::mutex                                    g_screenshot_pending_mutex;
 std::mutex                                    g_screenshot_write_mutex;
+std::condition_variable                       g_screenshot_write_check;
 
 static void WriteImageThread(int32_t index)
 {
     while (!g_exiting)
     {
-        bool valid = false;
         {
-            std::unique_lock<std::mutex> lock(g_screenshot_write_mutex);
-            valid = g_screenshot_thread_info[index].valid;
-        }
-        // Do it this way so we're not sleeping while holding onto the lock
-        if (!valid)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            continue;
+            {
+                std::unique_lock<std::mutex> lock(g_screenshot_write_mutex);
+                g_screenshot_write_check.wait(lock);
+            }
+            if (!g_screenshot_thread_info[index].valid)
+            {
+                g_screenshot_write_check.notify_one();
+
+                // Sleep so we don't immediately grab it again
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
         }
         OutputImage(g_screenshot_thread_info[index].filename,
                     g_screenshot_thread_info[index].file_format,
@@ -141,11 +147,15 @@ void ScreenshotHandler::StartThreads()
 
 void ScreenshotHandler::StopThreads()
 {
-    g_exiting = true;
+    // Wait for all pending screenshots to find threads
     while (pending_screenshot_)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
+
+    // Now begin the exit process
+    g_exiting = true;
+    g_screenshot_write_check.notify_all();
     for (uint32_t ii = 0; ii < screenshot_write_threads_.size(); ++ii)
     {
         screenshot_write_threads_[ii].join();
@@ -461,9 +471,9 @@ void ScreenshotHandler::WriteImage(const std::string&                      filen
                         bool image_waiting_to_write = true;
                         while (image_waiting_to_write)
                         {
-                            std::unique_lock<std::mutex> lock(g_screenshot_write_mutex);
                             for (auto& thread_info : g_screenshot_thread_info)
                             {
+                                std::unique_lock<std::mutex> lock(g_screenshot_write_mutex);
                                 if (!thread_info.valid)
                                 {
                                     thread_info.data.resize(copy_resource.buffer_size);
@@ -475,8 +485,14 @@ void ScreenshotHandler::WriteImage(const std::string&                      filen
                                     thread_info.size        = copy_resource.buffer_size;
                                     thread_info.valid       = true;
                                     image_waiting_to_write  = false;
+                                    g_screenshot_write_check.notify_one();
                                     break;
                                 }
+                            }
+                            if (image_waiting_to_write)
+                            {
+                                // Sleep so we don't immediately try it again
+                                std::this_thread::sleep_for(std::chrono::milliseconds(10));
                             }
                         }
                         pending_screenshot_ = false;
