@@ -88,48 +88,86 @@ inline void OutputImage(const std::string&     filename,
 #if defined(MAX_SCREENSHOT_THREADS) && MAX_SCREENSHOT_THREADS > 1
 struct ScreenshotImageThreadData
 {
-    bool                   valid = false;
+    ScreenshotImageThreadData() = default;
+
+    ScreenshotImageThreadData& operator=(const ScreenshotImageThreadData& other)
+    {
+        filename    = other.filename;
+        file_format = other.file_format;
+        data        = std::move(other.data);
+        width       = other.width;
+        height      = other.height;
+        size        = other.size;
+
+        return *this;
+    }
+
     std::string            filename;
     util::ScreenshotFormat file_format;
     std::vector<uint8_t>   data;
-    uint32_t               width  = 0;
-    uint32_t               height = 0;
-    size_t                 size   = 0;
+    uint32_t               width;
+    uint32_t               height;
+    size_t                 size;
 };
-std::atomic_bool                              g_exiting;
-static std::vector<ScreenshotImageThreadData> g_screenshot_thread_info;
-std::mutex                                    g_screenshot_pending_mutex;
-std::mutex                                    g_screenshot_write_mutex;
-std::condition_variable                       g_screenshot_write_check;
 
-static void WriteImageThread(int32_t index)
+static std::array<ScreenshotImageThreadData, MAX_SCREENSHOT_THREADS> g_screenshot_thread_info;
+static uint32_t                                                      g_ring_head = 0, g_ring_tail = 0;
+static bool                                                          g_is_full = false;
+std::atomic_bool                                                     g_exiting;
+
+std::condition_variable g_screenshot_full, g_screenshot_empty;
+std::mutex              g_screenshot_mutex;
+
+static size_t get_size()
+{
+    if (!g_is_full)
+    {
+        if (g_ring_head >= g_ring_tail)
+            return g_ring_head - g_ring_tail;
+        else
+            return MAX_SCREENSHOT_THREADS + g_ring_head - g_ring_tail;
+    }
+    else
+    {
+        return MAX_SCREENSHOT_THREADS;
+    }
+}
+
+static constexpr uint32_t increment_index(uint32_t index)
+{
+    return (index + 1) % MAX_SCREENSHOT_THREADS;
+}
+
+static void WriteImageThread()
 {
     while (!g_exiting)
     {
+        uint32_t                  index;
+        ScreenshotImageThreadData screenshot_data;
         {
+            std::unique_lock<std::mutex> lock(g_screenshot_mutex);
+            while (!get_size())
             {
-                std::unique_lock<std::mutex> lock(g_screenshot_write_mutex);
-                g_screenshot_write_check.wait(lock);
+                g_screenshot_empty.wait(lock);
             }
-            if (!g_screenshot_thread_info[index].valid)
-            {
-                g_screenshot_write_check.notify_one();
 
-                // Sleep so we don't immediately grab it again
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                continue;
+            if (g_exiting)
+            {
+                break;
             }
+
+            screenshot_data = g_screenshot_thread_info[g_ring_tail];
+            g_ring_tail = increment_index(g_ring_tail);
+            g_is_full = false;
+            g_screenshot_full.notify_one();
         }
-        OutputImage(g_screenshot_thread_info[index].filename,
-                    g_screenshot_thread_info[index].file_format,
-                    g_screenshot_thread_info[index].width,
-                    g_screenshot_thread_info[index].height,
-                    g_screenshot_thread_info[index].size,
-                    g_screenshot_thread_info[index].data.data());
-        {
-            std::unique_lock<std::mutex> lock(g_screenshot_write_mutex);
-            g_screenshot_thread_info[index].valid = false;
-        }
+
+        OutputImage(screenshot_data.filename,
+                    screenshot_data.file_format,
+                    screenshot_data.width,
+                    screenshot_data.height,
+                    screenshot_data.size,
+                    screenshot_data.data.data());
     }
 }
 
@@ -137,10 +175,9 @@ void ScreenshotHandler::StartThreads()
 {
     pending_screenshot_ = false;
     g_exiting           = false;
-    g_screenshot_thread_info.resize(MAX_SCREENSHOT_THREADS);
     for (uint32_t ii = 0; ii < MAX_SCREENSHOT_THREADS; ++ii)
     {
-        std::thread th(WriteImageThread, ii);
+        std::thread th(WriteImageThread);
         screenshot_write_threads_.push_back(std::move(th));
     }
 }
@@ -155,7 +192,7 @@ void ScreenshotHandler::StopThreads()
 
     // Now begin the exit process
     g_exiting = true;
-    g_screenshot_write_check.notify_all();
+    g_screenshot_empty.notify_all();
     for (uint32_t ii = 0; ii < screenshot_write_threads_.size(); ++ii)
     {
         screenshot_write_threads_[ii].join();
@@ -467,35 +504,24 @@ void ScreenshotHandler::WriteImage(const std::string&                      filen
                         }
 
 #if defined(MAX_SCREENSHOT_THREADS) && MAX_SCREENSHOT_THREADS > 1
-                        pending_screenshot_         = true;
-                        bool image_waiting_to_write = true;
-                        while (image_waiting_to_write)
+                        std::unique_lock<std::mutex> lock(g_screenshot_mutex);
+                        while ((MAX_SCREENSHOT_THREADS - get_size()) < 1)
                         {
-                            for (auto& thread_info : g_screenshot_thread_info)
-                            {
-                                std::unique_lock<std::mutex> lock(g_screenshot_write_mutex);
-                                if (!thread_info.valid)
-                                {
-                                    thread_info.data.resize(copy_resource.buffer_size);
-                                    memcpy(thread_info.data.data(), data, copy_resource.buffer_size);
-                                    thread_info.filename    = filename_prefix;
-                                    thread_info.file_format = screenshot_format_;
-                                    thread_info.width       = width;
-                                    thread_info.height      = height;
-                                    thread_info.size        = copy_resource.buffer_size;
-                                    thread_info.valid       = true;
-                                    image_waiting_to_write  = false;
-                                    g_screenshot_write_check.notify_one();
-                                    break;
-                                }
-                            }
-                            if (image_waiting_to_write)
-                            {
-                                // Sleep so we don't immediately try it again
-                                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                            }
+                            g_screenshot_full.wait(lock);
                         }
-                        pending_screenshot_ = false;
+
+                        g_screenshot_thread_info[g_ring_head].data.resize(copy_resource.buffer_size);
+                        memcpy(g_screenshot_thread_info[g_ring_head].data.data(), data, copy_resource.buffer_size);
+                        g_screenshot_thread_info[g_ring_head].filename    = filename_prefix;
+                        g_screenshot_thread_info[g_ring_head].file_format = screenshot_format_;
+                        g_screenshot_thread_info[g_ring_head].width       = width;
+                        g_screenshot_thread_info[g_ring_head].height      = height;
+                        g_screenshot_thread_info[g_ring_head].size        = copy_resource.buffer_size;
+
+                        g_ring_head = increment_index(g_ring_head);
+                        g_is_full = g_ring_head == g_ring_tail;
+                        g_screenshot_empty.notify_one();
+                        lock.unlock();
 #else
                         OutputImage(
                             filename_prefix, screenshot_format_, width, height, copy_resource.buffer_size, data);
