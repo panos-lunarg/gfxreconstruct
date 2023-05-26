@@ -216,16 +216,6 @@ class PageGuardManager
                               size_t                    end_index,
                               const ModifiedMemoryFunc& handle_modified);
 
-    size_t GetOffsetFromPageStart(void* address) const
-    {
-        return reinterpret_cast<uintptr_t>(address) & (system_page_size_ - 1);
-    }
-
-    void* AlignToPageStart(void* address) const
-    {
-        return static_cast<uint8_t*>(address) - GetOffsetFromPageStart(address);
-    }
-
   private:
     static PageGuardManager* instance_;
     MemoryInfoMap            memory_info_;

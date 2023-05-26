@@ -396,13 +396,6 @@ void* PageGuardManager::AllocateMemory(size_t aligned_size, bool use_write_watch
 
     if (aligned_size > 0)
     {
-#ifndef WIN32
-        if (use_write_watch)
-        {
-            GFXRECON_LOG_ERROR("PageGuardManager::AllocateMemory() ignored use_write_watch=true due to lack of support "
-                               "from the current platform.");
-        }
-#endif
         void* memory = util::platform::AllocateRawMemory(aligned_size, use_write_watch);
 
         if (memory == nullptr)
@@ -802,6 +795,7 @@ void PageGuardManager::ProcessActiveRange(uint64_t                  memory_id,
     }
     else
     {
+#ifdef WIN32
         if (!memory_info->use_write_watch)
         {
             void* guard_address = static_cast<uint8_t*>(memory_info->aligned_address) + page_offset;
@@ -809,6 +803,14 @@ void PageGuardManager::ProcessActiveRange(uint64_t                  memory_id,
             // Reset page guard to detect only write accesses when not using shadow memory.
             SetMemoryProtection(guard_address, page_range, kGuardReadOnlyProtect);
         }
+#else
+        // On Linux/Android both shadow memory and write watch are tracked by memory protection,
+        // so memory permissions need to be reset
+        void* guard_address = static_cast<uint8_t*>(memory_info->aligned_address) + page_offset;
+
+        // Reset page guard to detect only write accesses when not using shadow memory.
+        SetMemoryProtection(guard_address, page_range, kGuardReadOnlyProtect);
+#endif
 
         // Copy directly from the mapped memory.
         if (start_index == 0)
@@ -906,25 +908,19 @@ void* PageGuardManager::AddTrackedMemory(uint64_t  memory_id,
             shadow_memory = static_cast<uint8_t*>(shadow_memory_info->memory) + mapped_offset;
             shadow_size   = mapped_range;
 
-            aligned_address = AlignToPageStart(shadow_memory);
-            aligned_offset  = GetOffsetFromPageStart(shadow_memory);
+            aligned_address = util::platform::AlignAddress(shadow_memory, system_page_size_);
+            aligned_offset  = util::platform::GetOffsetFromAlignment(shadow_memory, system_page_size_);
         }
     }
     else
     {
-#if !defined(WIN32)
-        if (use_write_watch)
-        {
-            // Only supported on Windows.
-            use_write_watch = false;
-            GFXRECON_LOG_WARNING("PageGuardManager::AddTrackedMemory() disabled write watch for mapped memory tracking "
-                                 "due to lack of support from the current platform")
-        }
-#endif
-
         // Align the mapped memory pointer to the start of its page.
-        aligned_address = AlignToPageStart(mapped_memory);
-        aligned_offset  = GetOffsetFromPageStart(mapped_memory);
+        aligned_address = util::platform::AlignAddress(mapped_memory, system_page_size_);
+        aligned_offset  = util::platform::GetOffsetFromAlignment(mapped_memory, system_page_size_);
+
+        GFXRECON_WRITE_CONSOLE("mapped_memory: %p\n", mapped_memory);
+        GFXRECON_WRITE_CONSOLE("aligned_address: %p\n", aligned_address);
+        GFXRECON_WRITE_CONSOLE("aligned_offset: %zu\n", aligned_offset);
     }
 
     if (aligned_address != nullptr)
@@ -941,6 +937,10 @@ void* PageGuardManager::AddTrackedMemory(uint64_t  memory_id,
         {
             last_segment_size = system_page_size_;
         }
+
+        GFXRECON_WRITE_CONSOLE("guard_range: %zu\n", guard_range);
+        GFXRECON_WRITE_CONSOLE("total_pages: %zu\n", total_pages);
+        GFXRECON_WRITE_CONSOLE("last_segment_size: %zu\n", last_segment_size);
 
         // When using persistent shadow allocations, copy the mapped range from the driver memory to shadow memory on
         // the first map.  Copied pages are marked dirty, and are not copied if mapped again.
@@ -992,6 +992,7 @@ void* PageGuardManager::AddTrackedMemory(uint64_t  memory_id,
 
         std::lock_guard<std::mutex> lock(tracked_memory_lock_);
 
+#if defined(WIN32)
         if (!use_write_watch)
         {
             AddExceptionHandler();
@@ -1008,6 +1009,24 @@ void* PageGuardManager::AddTrackedMemory(uint64_t  memory_id,
                 success = SetMemoryProtection(aligned_address, guard_range, kGuardReadOnlyProtect);
             }
         }
+#else
+        if (use_write_watch || use_shadow_memory)
+        {
+            AddExceptionHandler();
+
+            // When using shadow memory, enable page guard for read and write operations so that shadow memory can be
+            // synchronized with the mapped memory on both read and write access.  When not using shadow memory, only
+            // detect write access.
+            if (use_shadow_memory)
+            {
+                success = SetMemoryProtection(aligned_address, guard_range, kGuardReadWriteProtect);
+            }
+            else
+            {
+                success = SetMemoryProtection(aligned_address, guard_range, kGuardReadOnlyProtect);
+            }
+        }
+#endif
 
         if (success)
         {
@@ -1031,11 +1050,19 @@ void* PageGuardManager::AddTrackedMemory(uint64_t  memory_id,
 
             if (!entry.second)
             {
+#if defined(WIN32)
                 if (!use_write_watch)
                 {
                     RemoveExceptionHandler();
                     SetMemoryProtection(aligned_address, guard_range, kGuardNoProtect);
                 }
+#else
+                if (use_write_watch || use_shadow_memory)
+                {
+                    RemoveExceptionHandler();
+                    SetMemoryProtection(aligned_address, guard_range, kGuardNoProtect);
+                }
+#endif
 
                 if (shadow_memory != nullptr)
                 {
@@ -1065,12 +1092,21 @@ void PageGuardManager::RemoveTrackedMemory(uint64_t memory_id)
     {
         const MemoryInfo& memory_info = entry->second;
 
+#if defined(WIN32)
         if (!memory_info.use_write_watch)
         {
             RemoveExceptionHandler();
             SetMemoryProtection(
                 memory_info.aligned_address, memory_info.mapped_range + memory_info.aligned_offset, kGuardNoProtect);
         }
+#else
+        if (memory_info.use_write_watch || memory_info.shadow_memory)
+        {
+            RemoveExceptionHandler();
+            SetMemoryProtection(
+                memory_info.aligned_address, memory_info.mapped_range + memory_info.aligned_offset, kGuardNoProtect);
+        }
+#endif
 
         if ((memory_info.shadow_memory != nullptr) && memory_info.own_shadow_memory)
         {

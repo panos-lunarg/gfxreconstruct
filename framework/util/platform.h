@@ -546,6 +546,16 @@ inline size_t GetAlignedSize(size_t size, size_t align_to)
     return size;
 }
 
+inline size_t GetOffsetFromAlignment(void* address, size_t alignment)
+{
+    return reinterpret_cast<uintptr_t>(address) & (alignment - 1);
+}
+
+inline void* AlignAddress(void* address, size_t alignment)
+{
+    return static_cast<uint8_t*>(address) - GetOffsetFromAlignment(address, alignment);
+}
+
 inline LibraryHandle OpenLibrary(const std::vector<std::string>& name_list)
 {
     for (const auto& name : name_list)

@@ -614,6 +614,42 @@ VkResult VulkanCaptureManager::OverrideCreateInstance(const VkInstanceCreateInfo
     return result;
 }
 
+static VkResult GetDeviceExtensions(VkPhysicalDevice                         physical_device,
+                                    PFN_vkEnumerateDeviceExtensionProperties device_extension_proc,
+                                    std::vector<VkExtensionProperties>&      properties)
+{
+    VkResult result = VK_ERROR_INITIALIZATION_FAILED;
+
+    if ((physical_device != VK_NULL_HANDLE) && (device_extension_proc != nullptr))
+    {
+        uint32_t count = 0;
+        result         = device_extension_proc(physical_device, nullptr, &count, nullptr);
+
+        if ((result == VK_SUCCESS) && (count > 0))
+        {
+            properties.resize(count);
+            result = device_extension_proc(physical_device, nullptr, &count, properties.data());
+        }
+    }
+
+    return result;
+}
+
+static bool IsSupportedExtension(const std::vector<VkExtensionProperties>& properties, const char* extension)
+{
+    assert(extension != nullptr);
+
+    for (const auto& property : properties)
+    {
+        if (util::platform::StringCompare(property.extensionName, extension) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 VkResult VulkanCaptureManager::OverrideCreateDevice(VkPhysicalDevice             physicalDevice,
                                                     const VkDeviceCreateInfo*    pCreateInfo,
                                                     const VkAllocationCallbacks* pAllocator,
@@ -631,23 +667,39 @@ VkResult VulkanCaptureManager::OverrideCreateDevice(VkPhysicalDevice            
     graphics::VulkanDeviceUtil                device_util;
     graphics::VulkanDevicePropertyFeatureInfo property_feature_info = device_util.EnableRequiredPhysicalDeviceFeatures(
         physical_device_wrapper->instance_api_version, instance_table, physicalDevice, pCreateInfo_unwrapped);
-
-    // TODO: Only enable KHR_external_memory_capabilities for 1.0 API version.
-    size_t                   extension_count = pCreateInfo_unwrapped->enabledExtensionCount;
-    const char* const*       extensions      = pCreateInfo_unwrapped->ppEnabledExtensionNames;
     std::vector<const char*> modified_extensions;
 
-    bool has_ext_mem      = false;
-    bool has_ext_mem_host = false;
-
-    for (size_t i = 0; i < extension_count; ++i)
+    if (GetPageGuardMemoryMode() == kMemoryModeExternal)
     {
-        auto entry = pCreateInfo_unwrapped->ppEnabledExtensionNames[i];
-
-        modified_extensions.push_back(entry);
-
-        if (GetPageGuardMemoryMode() == kMemoryModeExternal)
+        std::vector<VkExtensionProperties> available_device_extensions;
+        if (GetDeviceExtensions(physicalDevice,
+                                encode::GetInstanceTable(physicalDevice)->EnumerateDeviceExtensionProperties,
+                                available_device_extensions) == VK_SUCCESS)
         {
+            if (!IsSupportedExtension(available_device_extensions, VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME) ||
+                !IsSupportedExtension(available_device_extensions, VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME))
+            {
+                GFXRECON_LOG_ERROR("GFXRECON_PAGE_GUARD_EXTERNAL_MEMORY has been requested but the device does not "
+                                   "support the required extensions");
+
+                return VK_ERROR_EXTENSION_NOT_PRESENT;
+            }
+        }
+        else
+        {
+            return VK_ERROR_EXTENSION_NOT_PRESENT;
+        }
+
+        size_t extension_count  = pCreateInfo_unwrapped->enabledExtensionCount;
+        bool   has_ext_mem      = false;
+        bool   has_ext_mem_host = false;
+
+        for (size_t i = 0; i < extension_count; ++i)
+        {
+            auto entry = pCreateInfo_unwrapped->ppEnabledExtensionNames[i];
+
+            modified_extensions.push_back(entry);
+
             if (util::platform::StringCompare(entry, VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME) == 0)
             {
                 has_ext_mem = true;
@@ -657,10 +709,7 @@ VkResult VulkanCaptureManager::OverrideCreateDevice(VkPhysicalDevice            
                 has_ext_mem_host = true;
             }
         }
-    }
 
-    if (GetPageGuardMemoryMode() == kMemoryModeExternal)
-    {
         if (!has_ext_mem)
         {
             modified_extensions.push_back(VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME);
@@ -670,10 +719,10 @@ VkResult VulkanCaptureManager::OverrideCreateDevice(VkPhysicalDevice            
         {
             modified_extensions.push_back(VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME);
         }
-    }
 
-    pCreateInfo_unwrapped->enabledExtensionCount   = static_cast<uint32_t>(modified_extensions.size());
-    pCreateInfo_unwrapped->ppEnabledExtensionNames = modified_extensions.data();
+        pCreateInfo_unwrapped->enabledExtensionCount   = static_cast<uint32_t>(modified_extensions.size());
+        pCreateInfo_unwrapped->ppEnabledExtensionNames = modified_extensions.data();
+    }
 
     VkResult result = layer_table_.CreateDevice(physicalDevice, pCreateInfo_unwrapped, pAllocator, pDevice);
 
@@ -713,11 +762,11 @@ VkResult VulkanCaptureManager::OverrideCreateBuffer(VkDevice                    
                                                     const VkAllocationCallbacks* pAllocator,
                                                     VkBuffer*                    pBuffer)
 {
-    VkResult                  result                = VK_SUCCESS;
-    auto                      device_wrapper        = GetWrapper<DeviceWrapper>(device);
-    VkDevice                  device_unwrapped      = device_wrapper->handle;
-    auto                      device_table          = GetDeviceTable(device);
-    auto                      handle_unwrap_memory  = VulkanCaptureManager::Get()->GetHandleUnwrapMemory();
+    VkResult result               = VK_SUCCESS;
+    auto     device_wrapper       = GetWrapper<DeviceWrapper>(device);
+    VkDevice device_unwrapped     = device_wrapper->handle;
+    auto     device_table         = GetDeviceTable(device);
+    auto     handle_unwrap_memory = VulkanCaptureManager::Get()->GetHandleUnwrapMemory();
 
     VkBufferCreateInfo modified_create_info = (*pCreateInfo);
 
@@ -882,6 +931,27 @@ VulkanCaptureManager::OverrideCreateAccelerationStructureKHR(VkDevice           
     return result;
 }
 
+static size_t get_external_memory_host_alignment(DeviceWrapper* device_wrapper)
+{
+    VkPhysicalDeviceExternalMemoryHostPropertiesEXT host_props = {
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_HOST_PROPERTIES_EXT, nullptr, 0
+    };
+
+    VkPhysicalDeviceProperties2 dev_props = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, &host_props, {} };
+
+    assert(device_wrapper);
+    assert(device_wrapper->physical_device);
+    assert(device_wrapper->physical_device->layer_table_ref);
+
+    device_wrapper->physical_device->layer_table_ref->GetPhysicalDeviceProperties2(
+        device_wrapper->physical_device->handle, &dev_props);
+
+    GFXRECON_WRITE_CONSOLE("host_props.minImportedHostPointerAlignment: %zu\n",
+                           host_props.minImportedHostPointerAlignment);
+
+    return host_props.minImportedHostPointerAlignment;
+}
+
 VkResult VulkanCaptureManager::OverrideAllocateMemory(VkDevice                     device,
                                                       const VkMemoryAllocateInfo*  pAllocateInfo,
                                                       const VkAllocationCallbacks* pAllocator,
@@ -942,12 +1012,16 @@ VkResult VulkanCaptureManager::OverrideAllocateMemory(VkDevice                  
 
             GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, pAllocateInfo_unwrapped->allocationSize);
 
-            // TODO: This should be aligned to minImportedHostPointerAlignment, but there is a currently a loader bug
-            // that prevents the layer from querying for that value when a 1.0 application does not explicitly enable
-            // physical_device_properties2.  For now we align to system page size.
-            size_t external_memory_size =
-                manager->GetAlignedSize(static_cast<size_t>(pAllocateInfo_unwrapped->allocationSize));
+            const size_t host_mem_alignment = get_external_memory_host_alignment(device_wrapper);
+            const size_t external_memory_size =
+                util::platform::GetAlignedSize(pAllocateInfo_unwrapped->allocationSize, host_mem_alignment);
             external_memory = manager->AllocateMemory(external_memory_size, true);
+            external_memory = util::platform::AlignAddress(external_memory, host_mem_alignment);
+
+            assert(GFXRECON_IS_ALIGNED(external_memory, host_mem_alignment));
+
+            GFXRECON_WRITE_CONSOLE("external_memory: %p\n", external_memory);
+            GFXRECON_WRITE_CONSOLE("external_memory_size: %zu\n", external_memory_size);
 
             if (external_memory != nullptr)
             {

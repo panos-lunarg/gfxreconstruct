@@ -259,15 +259,6 @@ bool CaptureManager::Initialize(std::string base_filename, const CaptureSettings
 
         bool use_external_memory = trace_settings.page_guard_external_memory;
 
-#if !defined(WIN32)
-        if (use_external_memory)
-        {
-            use_external_memory = false;
-            GFXRECON_LOG_WARNING("Ignoring page guard external memory option on unsupported platform (Only Windows is "
-                                 "currently supported)")
-        }
-#endif
-
         // External memory takes precedence over shadow memory modes.
         if (use_external_memory)
         {

@@ -51,13 +51,15 @@
 #define GFXRECON_CHECK_CONVERSION_DATA_LOSS(DstType, Value) assert(std::numeric_limits<DstType>::max() >= Value);
 
 // Safely release a dynamic allocation.
-#define GFXRECON_SAFE_DELETE(p)    \
-    {                     \
-        if (p != nullptr) \
-        {                 \
-            delete p;     \
-            p = nullptr;  \
-        }                 \
+#define GFXRECON_SAFE_DELETE(p) \
+    {                           \
+        if (p != nullptr)       \
+        {                       \
+            delete p;           \
+            p = nullptr;        \
+        }                       \
     }
+
+#define GFXRECON_IS_ALIGNED(POINTER, BYTE_COUNT) (((uintptr_t)(const void*)(POINTER)) % (BYTE_COUNT) == 0)
 
 #endif // GFXRECON_UTIL_DEFINES_H
