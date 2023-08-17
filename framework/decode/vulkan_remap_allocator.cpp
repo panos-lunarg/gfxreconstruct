@@ -110,7 +110,7 @@ VkResult VulkanRemapAllocator::AllocateMemory(const VkMemoryAllocateInfo*  alloc
         replay_allocate_info.memoryTypeIndex = index_map_[allocate_info->memoryTypeIndex];
 
         GFXRECON_WRITE_CONSOLE(
-            "VulkanRemapAllocator::%s() memoryTypeIndex: ", __func__, replay_allocate_info.memoryTypeIndex);
+            "VulkanRemapAllocator::%s() memoryTypeIndex: %u", __func__, replay_allocate_info.memoryTypeIndex);
 
         result = Allocate(&replay_allocate_info, allocation_callbacks, capture_id, memory, allocator_data);
     }
