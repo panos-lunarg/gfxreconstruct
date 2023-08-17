@@ -29,6 +29,7 @@
 
 #include <cassert>
 #include <cinttypes>
+#include <sys/time.h>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(util)
@@ -892,7 +893,20 @@ void* PageGuardManager::AddTrackedMemory(uint64_t  memory_id,
 
                 if (enable_copy_on_map_)
                 {
+                    struct timeval tim;
+                    gettimeofday(&tim, NULL);
+                    double t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
+                    GFXRECON_WRITE_CONSOLE("%s() shadow_memory: %p mapped_memory: %p mapped_range: %zu",
+                                           __func__,
+                                           shadow_memory,
+                                           mapped_memory,
+                                           mapped_range);
+
                     MemoryCopy(shadow_memory, mapped_memory, mapped_range);
+                    gettimeofday(&tim, NULL);
+                    double t1 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+                    GFXRECON_WRITE_CONSOLE("done in %f seconds", t1 - t0);
                 }
             }
         }
