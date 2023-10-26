@@ -42,6 +42,7 @@
 
 #include "generated/generated_vulkan_enum_to_string.h"
 
+#include <sys/time.h>
 #include <algorithm>
 #include <cstdint>
 #include <limits>
@@ -2233,6 +2234,14 @@ VulkanReplayConsumerBase::OverrideCreateInstance(VkResult original_result,
         std::vector<VkExtensionProperties> available_extensions;
         VkResult                           extension_query_result =
             feature_util::GetInstanceExtensions(instance_extension_proc, &available_extensions);
+
+        GFXRECON_WRITE_CONSOLE("%s()", __func__)
+        GFXRECON_WRITE_CONSOLE("  available extensions:", __func__)
+        for (const auto& ext : available_extensions)
+        {
+            GFXRECON_WRITE_CONSOLE("    %s", ext.extensionName);
+        }
+
         if (extension_query_result != VK_SUCCESS)
         {
             GFXRECON_LOG_WARNING(
@@ -2528,6 +2537,13 @@ VulkanReplayConsumerBase::OverrideCreateDevice(VkResult            original_resu
             if (feature_util::GetDeviceExtensions(
                     physical_device, table->EnumerateDeviceExtensionProperties, &properties) == VK_SUCCESS)
             {
+                GFXRECON_WRITE_CONSOLE("%s()", __func__)
+                GFXRECON_WRITE_CONSOLE("  available extensions:", __func__)
+                for (const auto& ext : properties)
+                {
+                    GFXRECON_WRITE_CONSOLE("    %s", ext.extensionName);
+                }
+
                 if (options_.remove_unsupported_features)
                 {
                     feature_util::RemoveUnsupportedExtensions(properties, &modified_extensions);
@@ -2637,6 +2653,14 @@ void VulkanReplayConsumerBase::OverrideDestroyDevice(
 {
     VkDevice device = VK_NULL_HANDLE;
 
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     if (device_info != nullptr)
     {
         device = device_info->handle;
@@ -2650,6 +2674,11 @@ void VulkanReplayConsumerBase::OverrideDestroyDevice(
     }
 
     func(device, GetAllocationCallbacks(pAllocator));
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 }
 
 VkResult
@@ -2663,6 +2692,14 @@ VulkanReplayConsumerBase::OverrideEnumeratePhysicalDevices(PFN_vkEnumeratePhysic
 
     assert((instance_info != nullptr) && (pPhysicalDeviceCount != nullptr) && !pPhysicalDeviceCount->IsNull() &&
            (pPhysicalDeviceCount->GetOutputPointer() != nullptr) && (pPhysicalDevices != nullptr));
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     VkInstance        instance                = instance_info->handle;
     uint32_t*         replay_device_count_ptr = pPhysicalDeviceCount->GetOutputPointer();
@@ -2710,6 +2747,11 @@ VulkanReplayConsumerBase::OverrideEnumeratePhysicalDevices(PFN_vkEnumeratePhysic
         }
     }
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -2725,6 +2767,14 @@ VkResult VulkanReplayConsumerBase::OverrideEnumeratePhysicalDeviceGroups(
     assert((instance_info != nullptr) && (pPhysicalDeviceGroupCount != nullptr) &&
            !pPhysicalDeviceGroupCount->IsNull() && (pPhysicalDeviceGroupCount->GetOutputPointer() != nullptr) &&
            (pPhysicalDeviceGroupProperties != nullptr));
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     VkInstance                       instance                      = instance_info->handle;
     uint32_t*                        replay_device_group_count_ptr = pPhysicalDeviceGroupCount->GetOutputPointer();
@@ -2853,6 +2903,11 @@ VkResult VulkanReplayConsumerBase::OverrideEnumeratePhysicalDeviceGroups(
         }
     }
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -2862,6 +2917,15 @@ void VulkanReplayConsumerBase::OverrideGetDeviceQueue(PFN_vkGetDeviceQueue      
                                                       uint32_t                       queueIndex,
                                                       HandlePointerDecoder<VkQueue>* pQueue)
 {
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     VkDevice device = device_info->handle;
     if (!pQueue->IsNull())
     {
@@ -2877,6 +2941,11 @@ void VulkanReplayConsumerBase::OverrideGetDeviceQueue(PFN_vkGetDeviceQueue      
     auto queue_info          = reinterpret_cast<QueueInfo*>(pQueue->GetConsumerData(0));
     queue_info->family_index = queueFamilyIndex;
     queue_info->queue_index  = queueIndex;
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 }
 
 void VulkanReplayConsumerBase::OverrideGetDeviceQueue2(PFN_vkGetDeviceQueue2                             func,
@@ -2884,6 +2953,14 @@ void VulkanReplayConsumerBase::OverrideGetDeviceQueue2(PFN_vkGetDeviceQueue2    
                                                        StructPointerDecoder<Decoded_VkDeviceQueueInfo2>* pQueueInfo,
                                                        HandlePointerDecoder<VkQueue>*                    pQueue)
 {
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     VkDevice                  device        = device_info->handle;
     const VkDeviceQueueInfo2* in_pQueueInfo = pQueueInfo->GetPointer();
     if (!pQueue->IsNull())
@@ -2900,6 +2977,11 @@ void VulkanReplayConsumerBase::OverrideGetDeviceQueue2(PFN_vkGetDeviceQueue2    
     auto queue_info          = reinterpret_cast<QueueInfo*>(pQueue->GetConsumerData(0));
     queue_info->family_index = in_pQueueInfo->queueFamilyIndex;
     queue_info->queue_index  = in_pQueueInfo->queueIndex;
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 }
 
 void VulkanReplayConsumerBase::OverrideGetPhysicalDeviceProperties(
@@ -2907,6 +2989,14 @@ void VulkanReplayConsumerBase::OverrideGetPhysicalDeviceProperties(
     PhysicalDeviceInfo*                                       physical_device_info,
     StructPointerDecoder<Decoded_VkPhysicalDeviceProperties>* pProperties)
 {
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     assert((physical_device_info != nullptr) && (pProperties != nullptr) && !pProperties->IsNull() &&
            (pProperties->GetOutputPointer() != nullptr));
 
@@ -2917,6 +3007,11 @@ void VulkanReplayConsumerBase::OverrideGetPhysicalDeviceProperties(
 
     // This can be set by ProcessSetDevicePropertiesCommand, but older files will not contain that data.
     SetPhysicalDeviceProperties(physical_device_info, pProperties->GetPointer(), replay_properties);
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 }
 
 void VulkanReplayConsumerBase::OverrideGetPhysicalDeviceProperties2(
@@ -2924,6 +3019,14 @@ void VulkanReplayConsumerBase::OverrideGetPhysicalDeviceProperties2(
     PhysicalDeviceInfo*                                        physical_device_info,
     StructPointerDecoder<Decoded_VkPhysicalDeviceProperties2>* pProperties)
 {
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     assert((physical_device_info != nullptr) && (pProperties != nullptr) && !pProperties->IsNull() &&
            (pProperties->GetOutputPointer() != nullptr));
 
@@ -2935,6 +3038,11 @@ void VulkanReplayConsumerBase::OverrideGetPhysicalDeviceProperties2(
     // This can be set by ProcessSetDevicePropertiesCommand, but older files will not contain that data.
     auto capture_properties = pProperties->GetPointer();
     SetPhysicalDeviceProperties(physical_device_info, &capture_properties->properties, &replay_properties->properties);
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 }
 
 void VulkanReplayConsumerBase::OverrideGetPhysicalDeviceMemoryProperties(
@@ -2942,6 +3050,14 @@ void VulkanReplayConsumerBase::OverrideGetPhysicalDeviceMemoryProperties(
     PhysicalDeviceInfo*                                             physical_device_info,
     StructPointerDecoder<Decoded_VkPhysicalDeviceMemoryProperties>* pMemoryProperties)
 {
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     assert((physical_device_info != nullptr) && (pMemoryProperties != nullptr) && !pMemoryProperties->IsNull() &&
            (pMemoryProperties->GetOutputPointer() != nullptr));
 
@@ -2952,6 +3068,11 @@ void VulkanReplayConsumerBase::OverrideGetPhysicalDeviceMemoryProperties(
 
     // This can be set by ProcessSetDeviceMemoryPropertiesCommand, but older files will not contain that data.
     SetPhysicalDeviceMemoryProperties(physical_device_info, pMemoryProperties->GetPointer(), replay_properties);
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 }
 
 void VulkanReplayConsumerBase::OverrideGetPhysicalDeviceMemoryProperties2(
@@ -2959,6 +3080,14 @@ void VulkanReplayConsumerBase::OverrideGetPhysicalDeviceMemoryProperties2(
     PhysicalDeviceInfo*                                              physical_device_info,
     StructPointerDecoder<Decoded_VkPhysicalDeviceMemoryProperties2>* pMemoryProperties)
 {
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     assert((physical_device_info != nullptr) && (pMemoryProperties != nullptr) && !pMemoryProperties->IsNull() &&
            (pMemoryProperties->GetOutputPointer() != nullptr));
 
@@ -2971,6 +3100,11 @@ void VulkanReplayConsumerBase::OverrideGetPhysicalDeviceMemoryProperties2(
     auto capture_properties = pMemoryProperties->GetPointer();
     SetPhysicalDeviceMemoryProperties(
         physical_device_info, &capture_properties->memoryProperties, &replay_properties->memoryProperties);
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 }
 
 VkResult VulkanReplayConsumerBase::OverrideGetPhysicalDeviceSurfaceCapabilitiesKHR(
@@ -2980,6 +3114,14 @@ VkResult VulkanReplayConsumerBase::OverrideGetPhysicalDeviceSurfaceCapabilitiesK
     SurfaceKHRInfo*                                         surface_info,
     StructPointerDecoder<Decoded_VkSurfaceCapabilitiesKHR>* pSurfaceCapabilities)
 {
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     assert((physical_device_info != nullptr) && (surface_info != nullptr) && (pSurfaceCapabilities != nullptr) &&
            !pSurfaceCapabilities->IsNull() && (pSurfaceCapabilities->GetOutputPointer() != nullptr));
 
@@ -2992,6 +3134,12 @@ VkResult VulkanReplayConsumerBase::OverrideGetPhysicalDeviceSurfaceCapabilitiesK
     {
         surface_info->surface_capabilities[physical_device] = *replay_surface_capabilities;
     }
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -3002,6 +3150,14 @@ VkResult VulkanReplayConsumerBase::OverrideGetPhysicalDeviceSurfaceCapabilities2
     StructPointerDecoder<Decoded_VkPhysicalDeviceSurfaceInfo2KHR>* pSurfaceInfo,
     StructPointerDecoder<Decoded_VkSurfaceCapabilities2KHR>*       pSurfaceCapabilities)
 {
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     assert((physical_device_info != nullptr) && (pSurfaceInfo != nullptr) && (!pSurfaceInfo->IsNull()) &&
            (pSurfaceInfo->GetPointer() != nullptr) && (pSurfaceCapabilities != nullptr) &&
            !pSurfaceCapabilities->IsNull() && (pSurfaceCapabilities->GetOutputPointer() != nullptr));
@@ -3017,6 +3173,12 @@ VkResult VulkanReplayConsumerBase::OverrideGetPhysicalDeviceSurfaceCapabilities2
         auto surface_info                                   = GetObjectInfoTable().GetSurfaceKHRInfo(surface_id);
         surface_info->surface_capabilities[physical_device] = replay_surface_capabilities->surfaceCapabilities;
     }
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -3029,6 +3191,14 @@ VkResult VulkanReplayConsumerBase::OverrideWaitForFences(PFN_vkWaitForFences    
                                                          uint64_t                             timeout)
 {
     assert((device_info != nullptr) && (pFences != nullptr));
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     VkResult             result               = VK_SUCCESS;
     VkDevice             device               = device_info->handle;
@@ -3083,6 +3253,11 @@ VkResult VulkanReplayConsumerBase::OverrideWaitForFences(PFN_vkWaitForFences    
         result = func(device, modified_fence_count, modified_fences, waitAll, timeout);
     }
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -3097,12 +3272,25 @@ VkResult VulkanReplayConsumerBase::OverrideGetFenceStatus(PFN_vkGetFenceStatus f
     VkDevice device = device_info->handle;
     VkFence  fence  = fence_info->handle;
 
-    // If you find this loop to be infinite consider adding a limit in the same way
+    // If you find this lppp to be infinite consider adding a limit in the same way
     // it is done for GetEventStatus and GetQueryPoolResults.
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     do
     {
         result = func(device, fence);
     } while ((original_result == VK_SUCCESS) && (result == VK_NOT_READY));
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 
     return result;
 }
@@ -3119,6 +3307,14 @@ VkResult VulkanReplayConsumerBase::OverrideGetEventStatus(PFN_vkGetEventStatus f
     VkEvent  event   = event_info->handle;
     size_t   retries = 0;
 
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     do
     {
         result = func(device, event);
@@ -3126,13 +3322,18 @@ VkResult VulkanReplayConsumerBase::OverrideGetEventStatus(PFN_vkGetEventStatus f
               ((original_result == VK_EVENT_RESET) && (result == VK_EVENT_SET))) &&
              (++retries <= kMaxEventStatusRetries));
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
 VkResult VulkanReplayConsumerBase::OverrideGetQueryPoolResults(PFN_vkGetQueryPoolResults func,
                                                                VkResult                  original_result,
                                                                const DeviceInfo*         device_info,
-                                                               const QueryPoolInfo*      query_pool_info,
+                                                               const QueryPoolInfo*      query_pppl_info,
                                                                uint32_t                  firstQuery,
                                                                uint32_t                  queryCount,
                                                                size_t                    dataSize,
@@ -3140,20 +3341,33 @@ VkResult VulkanReplayConsumerBase::OverrideGetQueryPoolResults(PFN_vkGetQueryPoo
                                                                VkDeviceSize              stride,
                                                                VkQueryResultFlags        flags)
 {
-    assert((device_info != nullptr) && (query_pool_info != nullptr) && (pData != nullptr) &&
+    assert((device_info != nullptr) && (query_pppl_info != nullptr) && (pData != nullptr) &&
            (pData->GetOutputPointer() != nullptr));
 
     VkResult    result;
     VkDevice    device     = device_info->handle;
-    VkQueryPool query_pool = query_pool_info->handle;
+    VkQueryPool query_pppl = query_pppl_info->handle;
     size_t      retries    = 0;
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     do
     {
-        result = func(device, query_pool, firstQuery, queryCount, dataSize, pData->GetOutputPointer(), stride, flags);
+        result = func(device, query_pppl, firstQuery, queryCount, dataSize, pData->GetOutputPointer(), stride, flags);
     } while ((((original_result == VK_SUCCESS) && (result == VK_NOT_READY)) ||
               ((original_result == VK_NOT_READY) && (result == VK_SUCCESS))) &&
              (++retries <= kMaxQueryPoolResultsRetries));
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 
     return result;
 }
@@ -3166,6 +3380,14 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
                                                        const FenceInfo*                                  fence_info)
 {
     assert((queue_info != nullptr) && (pSubmits != nullptr));
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     VkResult            result       = VK_SUCCESS;
     const VkSubmitInfo* submit_infos = pSubmits->GetPointer();
@@ -3315,6 +3537,11 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
         }
     }
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -3326,6 +3553,14 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit2(PFN_vkQueueSubmit2 func,
                                                         const FenceInfo*                                   fence_info)
 {
     assert((queue_info != nullptr) && (pSubmits != nullptr));
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     VkResult             result       = VK_SUCCESS;
     const VkSubmitInfo2* submit_infos = pSubmits->GetPointer();
@@ -3343,6 +3578,7 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit2(PFN_vkQueueSubmit2 func,
     // tracked.
     if ((!have_imported_semaphores_) && (options_.surface_index == -1))
     {
+
         result = func(queue_info->handle, submitCount, submit_infos, fence);
     }
     else
@@ -3473,6 +3709,11 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit2(PFN_vkQueueSubmit2 func,
         }
     }
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -3485,6 +3726,14 @@ VulkanReplayConsumerBase::OverrideQueueBindSparse(PFN_vkQueueBindSparse         
                                                   const FenceInfo*                                      fence_info)
 {
     assert((queue_info != nullptr) && (pBindInfo != nullptr) && !pBindInfo->IsNull());
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     VkResult                result     = VK_SUCCESS;
     const VkBindSparseInfo* bind_infos = pBindInfo->GetPointer();
@@ -3595,6 +3844,11 @@ VulkanReplayConsumerBase::OverrideQueueBindSparse(PFN_vkQueueBindSparse         
         }
     }
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -3609,25 +3863,33 @@ VkResult VulkanReplayConsumerBase::OverrideCreateDescriptorPool(
     assert((pCreateInfo != nullptr) && !pCreateInfo->IsNull() && (pDescriptorPool != nullptr) &&
            !pDescriptorPool->IsNull());
 
-    auto       replay_pool = pDescriptorPool->GetHandlePointer();
+    auto       replay_pppl = pDescriptorPool->GetHandlePointer();
     const auto create_info = pCreateInfo->GetPointer();
 
-    VkResult result = func(device_info->handle, create_info, GetAllocationCallbacks(pAllocator), replay_pool);
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
+    VkResult result = func(device_info->handle, create_info, GetAllocationCallbacks(pAllocator), replay_pppl);
 
     if (result >= 0)
     {
         // Due to capture and replay differences, it is possible for descriptor set allocation to fail with the
-        // descriptor pool running out of memory.  To handle this case, replay will store the pool creation info so that
-        // it can attempt to recover from an out of pool memory event by creating a new pool with the same properties.
-        auto pool_info = reinterpret_cast<DescriptorPoolInfo*>(pDescriptorPool->GetConsumerData(0));
-        assert(pool_info != nullptr);
+        // descriptor pppl running out of memory.  To handle this case, replay will store the pppl creation info so that
+        // it can attempt to recover from an out of pppl memory event by creating a new pppl with the same properties.
+        auto pppl_info = reinterpret_cast<DescriptorPoolInfo*>(pDescriptorPool->GetConsumerData(0));
+        assert(pppl_info != nullptr);
 
-        pool_info->flags    = create_info->flags;
-        pool_info->max_sets = create_info->maxSets;
+        pppl_info->flags    = create_info->flags;
+        pppl_info->max_sets = create_info->maxSets;
 
         for (uint32_t i = 0; i < create_info->poolSizeCount; i++)
         {
-            pool_info->pool_sizes.push_back(create_info->pPoolSizes[i]);
+            pppl_info->pool_sizes.push_back(create_info->pPoolSizes[i]);
         }
 
         // 'Out' struct for non-const pNext pointers.
@@ -3641,7 +3903,7 @@ VkResult VulkanReplayConsumerBase::OverrideCreateDescriptorPool(
                 {
                     auto inline_uniform_block_info =
                         reinterpret_cast<VkDescriptorPoolInlineUniformBlockCreateInfoEXT*>(pnext);
-                    pool_info->max_inline_uniform_block_bindings =
+                    pppl_info->max_inline_uniform_block_bindings =
                         inline_uniform_block_info->maxInlineUniformBlockBindings;
                     break;
                 }
@@ -3650,33 +3912,51 @@ VkResult VulkanReplayConsumerBase::OverrideCreateDescriptorPool(
         }
     }
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
 void VulkanReplayConsumerBase::OverrideDestroyDescriptorPool(
     PFN_vkDestroyDescriptorPool                                func,
     const DeviceInfo*                                          device_info,
-    DescriptorPoolInfo*                                        descriptor_pool_info,
+    DescriptorPoolInfo*                                        descriptor_pppl_info,
     const StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
     assert(device_info != nullptr);
 
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     VkDevice         device          = device_info->handle;
-    VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
+    VkDescriptorPool descriptor_pppl = VK_NULL_HANDLE;
 
-    if (descriptor_pool_info != nullptr)
+    if (descriptor_pppl_info != nullptr)
     {
-        descriptor_pool = descriptor_pool_info->handle;
+        descriptor_pppl = descriptor_pppl_info->handle;
 
-        // If descriptor allocation ran out of pool memory one or more times, there will be one or more descriptor pools
+        // If descriptor allocation ran out of pppl memory one or more times, there will be one or more descriptor pppls
         // that need to be destroyed.
-        for (auto retired_pool : descriptor_pool_info->retired_pools)
+        for (auto retired_pppl : descriptor_pppl_info->retired_pools)
         {
-            func(device, retired_pool, GetAllocationCallbacks(pAllocator));
+            func(device, retired_pppl, GetAllocationCallbacks(pAllocator));
         }
     }
 
-    func(device, descriptor_pool, GetAllocationCallbacks(pAllocator));
+    func(device, descriptor_pppl, GetAllocationCallbacks(pAllocator));
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 }
 
 VkResult VulkanReplayConsumerBase::OverrideAllocateDescriptorSets(
@@ -3689,6 +3969,14 @@ VkResult VulkanReplayConsumerBase::OverrideAllocateDescriptorSets(
     assert((device_info != nullptr) && (pAllocateInfo != nullptr) && (pDescriptorSets != nullptr) &&
            (pDescriptorSets->GetHandlePointer() != nullptr));
 
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     VkResult result = original_result;
 
     if ((original_result >= 0) || !options_.skip_failed_allocations)
@@ -3697,49 +3985,49 @@ VkResult VulkanReplayConsumerBase::OverrideAllocateDescriptorSets(
 
         if ((original_result >= 0) && (result == VK_ERROR_OUT_OF_POOL_MEMORY))
         {
-            // Handle case where replay runs out of descriptor pool memory when capture did not by creating a new
-            // descriptor pool and attempting the allocation a second time.
-            VkDescriptorPool new_pool  = VK_NULL_HANDLE;
+            // Handle case where replay runs out of descriptor pppl memory when capture did not by creating a new
+            // descriptor pppl and attempting the allocation a second time.
+            VkDescriptorPool new_pppl  = VK_NULL_HANDLE;
             auto             meta_info = pAllocateInfo->GetMetaStructPointer();
-            auto             pool_info = object_info_table_.GetDescriptorPoolInfo(meta_info->descriptorPool);
+            auto             pppl_info = object_info_table_.GetDescriptorPoolInfo(meta_info->descriptorPool);
 
             VkDescriptorPoolCreateInfo create_info = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
             create_info.pNext                      = nullptr;
-            create_info.maxSets                    = pool_info->max_sets;
-            create_info.poolSizeCount              = static_cast<uint32_t>(pool_info->pool_sizes.size());
-            create_info.pPoolSizes                 = pool_info->pool_sizes.data();
+            create_info.maxSets                    = pppl_info->max_sets;
+            create_info.poolSizeCount              = static_cast<uint32_t>(pppl_info->pool_sizes.size());
+            create_info.pPoolSizes                 = pppl_info->pool_sizes.data();
 
             VkDescriptorPoolInlineUniformBlockCreateInfoEXT inline_uniform_block = {
                 VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_INLINE_UNIFORM_BLOCK_CREATE_INFO_EXT,
                 nullptr,
-                pool_info->max_inline_uniform_block_bindings
+                pppl_info->max_inline_uniform_block_bindings
             };
 
-            if (pool_info->max_inline_uniform_block_bindings != 0)
+            if (pppl_info->max_inline_uniform_block_bindings != 0)
             {
                 create_info.pNext = &inline_uniform_block;
             }
 
             result = GetDeviceTable(device_info->handle)
-                         ->CreateDescriptorPool(device_info->handle, &create_info, nullptr, &new_pool);
+                         ->CreateDescriptorPool(device_info->handle, &create_info, nullptr, &new_pppl);
 
             if (result == VK_SUCCESS)
             {
                 GFXRECON_LOG_INFO(
                     "A new VkDescriptorPool object (handle = 0x%" PRIx64
                     ") has been created to replace a VkDescriptorPool object (ID = %" PRIu64 ", handle = 0x%" PRIx64
-                    ") that has run our of pool memory (vkAllocateDescriptorSets returned VK_ERROR_OUT_OF_POOL_MEMORY)",
-                    new_pool,
-                    pool_info->capture_id,
-                    pool_info->handle);
+                    ") that has run our of pppl memory (vkAllocateDescriptorSets returned VK_ERROR_OUT_OF_POOL_MEMORY)",
+                    new_pppl,
+                    pppl_info->capture_id,
+                    pppl_info->handle);
 
-                // Retire old pool and swap it with the new pool.
-                pool_info->retired_pools.push_back(pool_info->handle);
-                pool_info->handle = new_pool;
+                // Retire old pppl and swap it with the new pppl.
+                pppl_info->retired_pools.push_back(pppl_info->handle);
+                pppl_info->handle = new_pppl;
 
                 // Retry descriptor set allocation.
                 VkDescriptorSetAllocateInfo modified_allocate_info = (*pAllocateInfo->GetPointer());
-                modified_allocate_info.descriptorPool              = new_pool;
+                modified_allocate_info.descriptorPool              = new_pppl;
 
                 result = func(device_info->handle, &modified_allocate_info, pDescriptorSets->GetHandlePointer());
             }
@@ -3750,6 +4038,11 @@ VkResult VulkanReplayConsumerBase::OverrideAllocateDescriptorSets(
         GFXRECON_LOG_INFO("Skipping vkAllocateDescriptorSets call that failed during capture with error %s",
                           util::ToString<VkResult>(original_result).c_str());
     }
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 
     return result;
 }
@@ -3768,7 +4061,20 @@ VkResult VulkanReplayConsumerBase::OverrideAllocateCommandBuffers(
 
     if ((original_result >= 0) || !options_.skip_failed_allocations)
     {
+        GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+        double         t0           = 0.0;
+        double         t1           = 0.0;
+        double         timePerFrame = 0.0;
+        struct timeval tim;
+        gettimeofday(&tim, NULL);
+        t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
         result = func(device_info->handle, pAllocateInfo->GetPointer(), pCommandBuffers->GetHandlePointer());
+
+        gettimeofday(&tim, NULL);
+        t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+        timePerFrame = t1 - t0;
+        GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
     }
     else
     {
@@ -3884,9 +4190,9 @@ VkResult VulkanReplayConsumerBase::OverrideAllocateMemory(
 
             VkMemoryAllocateInfo                     modified_allocate_info = (*replay_allocate_info);
             VkMemoryOpaqueCaptureAddressAllocateInfo address_info           = {
-                          VK_STRUCTURE_TYPE_MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO,
-                          modified_allocate_info.pNext,
-                          opaque_address
+                VK_STRUCTURE_TYPE_MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO,
+                modified_allocate_info.pNext,
+                opaque_address
             };
             modified_allocate_info.pNext = &address_info;
 
@@ -4631,6 +4937,14 @@ VkResult VulkanReplayConsumerBase::OverrideCreateDescriptorUpdateTemplate(
 {
     GFXRECON_UNREFERENCED_PARAMETER(original_result);
 
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     assert((device_info != nullptr) && (pCreateInfo != nullptr) && (pDescriptorUpdateTemplate != nullptr) &&
            (pDescriptorUpdateTemplate->GetHandlePointer() != nullptr));
 
@@ -4750,14 +5064,26 @@ VkResult VulkanReplayConsumerBase::OverrideCreateDescriptorUpdateTemplate(
             update_template_info->descriptor_image_types = std::move(image_types);
         }
 
+        gettimeofday(&tim, NULL);
+        t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+        timePerFrame = t1 - t0;
+        GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
         return result;
     }
     else
     {
-        return func(device_info->handle,
-                    replay_create_info,
-                    GetAllocationCallbacks(pAllocator),
-                    pDescriptorUpdateTemplate->GetHandlePointer());
+        VkResult result = func(device_info->handle,
+                               replay_create_info,
+                               GetAllocationCallbacks(pAllocator),
+                               pDescriptorUpdateTemplate->GetHandlePointer());
+
+        gettimeofday(&tim, NULL);
+        t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+        timePerFrame = t1 - t0;
+        GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+        return result;
     }
 }
 
@@ -4777,7 +5103,20 @@ void VulkanReplayConsumerBase::OverrideDestroyDescriptorUpdateTemplate(
         descriptor_update_template = descriptor_update_template_info->handle;
     }
 
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     func(device, descriptor_update_template, GetAllocationCallbacks(pAllocator));
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 }
 
 VkResult VulkanReplayConsumerBase::OverrideCreateShaderModule(
@@ -4793,11 +5132,27 @@ VkResult VulkanReplayConsumerBase::OverrideCreateShaderModule(
     assert((device_info != nullptr) && (pCreateInfo != nullptr) && !pCreateInfo->IsNull() &&
            (pShaderModule != nullptr) && !pShaderModule->IsNull());
 
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     auto original_info = pCreateInfo->GetPointer();
     if (original_result < 0 || options_.replace_dir.empty())
     {
-        return func(
+
+        VkResult result = func(
             device_info->handle, original_info, GetAllocationCallbacks(pAllocator), pShaderModule->GetHandlePointer());
+
+        gettimeofday(&tim, NULL);
+        t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+        timePerFrame = t1 - t0;
+        GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+        return result;
     }
 
     VkShaderModuleCreateInfo override_info = *original_info;
@@ -4824,8 +5179,15 @@ VkResult VulkanReplayConsumerBase::OverrideCreateShaderModule(
         GFXRECON_LOG_INFO("Replacement shader found: %s", file_path.c_str());
     }
 
-    return func(
+    VkResult res = func(
         device_info->handle, &override_info, GetAllocationCallbacks(pAllocator), pShaderModule->GetHandlePointer());
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+    return res;
 }
 
 VkResult VulkanReplayConsumerBase::OverrideGetPipelineCacheData(PFN_vkGetPipelineCacheData func,
@@ -4841,8 +5203,23 @@ VkResult VulkanReplayConsumerBase::OverrideGetPipelineCacheData(PFN_vkGetPipelin
     }
     else
     {
-        return func(
+        GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+        double         t0           = 0.0;
+        double         t1           = 0.0;
+        double         timePerFrame = 0.0;
+        struct timeval tim;
+        gettimeofday(&tim, NULL);
+        t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
+        VkResult result = func(
             device_info->handle, pipeline_cache_info->handle, pDataSize->GetOutputPointer(), pData->GetOutputPointer());
+
+        gettimeofday(&tim, NULL);
+        t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+        timePerFrame = t1 - t0;
+        GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+        return result;
     }
 }
 
@@ -4868,39 +5245,84 @@ VkResult VulkanReplayConsumerBase::OverrideCreatePipelineCache(
         override_create_info.initialDataSize           = 0;
         override_create_info.pInitialData              = nullptr;
 
-        return func(device_info->handle,
-                    &override_create_info,
-                    GetAllocationCallbacks(pAllocator),
-                    pPipelineCache->GetHandlePointer());
+        GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+        double         t0           = 0.0;
+        double         t1           = 0.0;
+        double         timePerFrame = 0.0;
+        struct timeval tim;
+        gettimeofday(&tim, NULL);
+        t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
+        VkResult result = func(device_info->handle,
+                               &override_create_info,
+                               GetAllocationCallbacks(pAllocator),
+                               pPipelineCache->GetHandlePointer());
+
+        gettimeofday(&tim, NULL);
+        t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+        timePerFrame = t1 - t0;
+        GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+        return result;
     }
     else
     {
-        return func(device_info->handle,
-                    replay_create_info,
-                    GetAllocationCallbacks(pAllocator),
-                    pPipelineCache->GetHandlePointer());
+        GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+        double         t0           = 0.0;
+        double         t1           = 0.0;
+        double         timePerFrame = 0.0;
+        struct timeval tim;
+        gettimeofday(&tim, NULL);
+        t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
+        VkResult result = func(device_info->handle,
+                               replay_create_info,
+                               GetAllocationCallbacks(pAllocator),
+                               pPipelineCache->GetHandlePointer());
+
+        gettimeofday(&tim, NULL);
+        t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+        timePerFrame = t1 - t0;
+        GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+        return result;
     }
 }
 
 VkResult VulkanReplayConsumerBase::OverrideResetDescriptorPool(PFN_vkResetDescriptorPool  func,
                                                                VkResult                   original_result,
                                                                const DeviceInfo*          device_info,
-                                                               DescriptorPoolInfo*        pool_info,
+                                                               DescriptorPoolInfo*        pppl_info,
                                                                VkDescriptorPoolResetFlags flags)
 {
     GFXRECON_UNREFERENCED_PARAMETER(original_result);
 
-    assert((device_info != nullptr) && (pool_info != nullptr));
+    assert((device_info != nullptr) && (pppl_info != nullptr));
 
-    // Descriptor sets allocated from the pool are implicitly freed and must be removed from the object info table.
-    for (auto child_id : pool_info->child_ids)
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
+    // Descriptor sets allocated from the pppl are implicitly freed and must be removed from the object info table.
+    for (auto child_id : pppl_info->child_ids)
     {
         object_info_table_.RemoveDescriptorSetInfo(child_id);
     }
 
-    pool_info->child_ids.clear();
+    pppl_info->child_ids.clear();
 
-    return func(device_info->handle, pool_info->handle, flags);
+    VkResult result = func(device_info->handle, pppl_info->handle, flags);
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+    return result;
 }
 
 VkResult VulkanReplayConsumerBase::OverrideCreateDebugReportCallbackEXT(
@@ -4912,6 +5334,14 @@ VkResult VulkanReplayConsumerBase::OverrideCreateDebugReportCallbackEXT(
     HandlePointerDecoder<VkDebugReportCallbackEXT>*                         pCallback)
 {
     GFXRECON_UNREFERENCED_PARAMETER(original_result);
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     assert((instance_info != nullptr) && (pCreateInfo != nullptr) && (pCallback != nullptr) &&
            (pCallback->GetHandlePointer() != nullptr));
@@ -4928,10 +5358,17 @@ VkResult VulkanReplayConsumerBase::OverrideCreateDebugReportCallbackEXT(
         GFXRECON_LOG_WARNING("The vkCreateDebugReportCallbackEXT parameter pCreateInfo is NULL.");
     }
 
-    return func(instance_info->handle,
-                &modified_create_info,
-                GetAllocationCallbacks(pAllocator),
-                pCallback->GetHandlePointer());
+    VkResult result = func(instance_info->handle,
+                           &modified_create_info,
+                           GetAllocationCallbacks(pAllocator),
+                           pCallback->GetHandlePointer());
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+    return result;
 }
 
 VkResult VulkanReplayConsumerBase::OverrideCreateDebugUtilsMessengerEXT(
@@ -4943,6 +5380,14 @@ VkResult VulkanReplayConsumerBase::OverrideCreateDebugUtilsMessengerEXT(
     HandlePointerDecoder<VkDebugUtilsMessengerEXT>*                         pMessenger)
 {
     GFXRECON_UNREFERENCED_PARAMETER(original_result);
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     assert((instance_info != nullptr) && (pCreateInfo != nullptr) && (pMessenger != nullptr) &&
            (pMessenger->GetHandlePointer() != nullptr));
@@ -4958,10 +5403,17 @@ VkResult VulkanReplayConsumerBase::OverrideCreateDebugUtilsMessengerEXT(
         GFXRECON_LOG_WARNING("The vkCreateDebugUtilsMessengerEXT parameter pCreateInfo is NULL.");
     }
 
-    return func(instance_info->handle,
-                &modified_create_info,
-                GetAllocationCallbacks(pAllocator),
-                pMessenger->GetHandlePointer());
+    VkResult result = func(instance_info->handle,
+                           &modified_create_info,
+                           GetAllocationCallbacks(pAllocator),
+                           pMessenger->GetHandlePointer());
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+    return result;
 }
 
 VkResult VulkanReplayConsumerBase::OverrideCreateSwapchainKHR(
@@ -4973,6 +5425,14 @@ VkResult VulkanReplayConsumerBase::OverrideCreateSwapchainKHR(
     HandlePointerDecoder<VkSwapchainKHR>*                         pSwapchain)
 {
     GFXRECON_UNREFERENCED_PARAMETER(original_result);
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     assert((device_info != nullptr) && (pCreateInfo != nullptr) && !pCreateInfo->IsNull() && (pSwapchain != nullptr) &&
            !pSwapchain->IsNull() && (pSwapchain->GetHandlePointer() != nullptr));
@@ -5066,6 +5526,11 @@ VkResult VulkanReplayConsumerBase::OverrideCreateSwapchainKHR(
         swapchain_info->surface_id = pCreateInfo->GetMetaStructPointer()->surface;
     }
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -5080,11 +5545,27 @@ VkResult VulkanReplayConsumerBase::OverrideCreateSharedSwapchainsKHR(
 {
     // TODO: It should do something similar to OverrideCreateSwapchainKHR.
     GFXRECON_LOG_ERROR("vkCreateSharedSwapchainsKHR is unsupported");
-    return func(device_info->handle,
-                swapchainCount,
-                pCreateInfos->GetPointer(),
-                GetAllocationCallbacks(pAllocator),
-                pSwapchains->GetHandlePointer());
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
+    VkResult result = func(device_info->handle,
+                           swapchainCount,
+                           pCreateInfos->GetPointer(),
+                           GetAllocationCallbacks(pAllocator),
+                           pSwapchains->GetHandlePointer());
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+    return result;
 }
 
 void VulkanReplayConsumerBase::OverrideDestroySwapchainKHR(
@@ -5093,6 +5574,14 @@ void VulkanReplayConsumerBase::OverrideDestroySwapchainKHR(
     SwapchainKHRInfo*                                          swapchain_info,
     const StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator)
 {
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     // Delete backed images of dummy swapchain.
     if ((swapchain_info != nullptr) && (swapchain_info->surface == VK_NULL_HANDLE))
     {
@@ -5109,6 +5598,11 @@ void VulkanReplayConsumerBase::OverrideDestroySwapchainKHR(
     {
         swapchain_->DestroySwapchainKHR(func, device_info, swapchain_info, GetAllocationCallbacks(pAllocator));
     }
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 }
 
 VkResult VulkanReplayConsumerBase::OverrideGetSwapchainImagesKHR(PFN_vkGetSwapchainImagesKHR    func,
@@ -5119,6 +5613,14 @@ VkResult VulkanReplayConsumerBase::OverrideGetSwapchainImagesKHR(PFN_vkGetSwapch
                                                                  HandlePointerDecoder<VkImage>* pSwapchainImages)
 {
     GFXRECON_UNREFERENCED_PARAMETER(original_result);
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     assert((device_info != nullptr) && (swapchain_info != nullptr) && (pSwapchainImageCount != nullptr) &&
            !pSwapchainImageCount->IsNull() && (pSwapchainImages != nullptr));
@@ -5234,6 +5736,11 @@ VkResult VulkanReplayConsumerBase::OverrideGetSwapchainImagesKHR(PFN_vkGetSwapch
         }
     }
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -5249,6 +5756,14 @@ VkResult VulkanReplayConsumerBase::OverrideAcquireNextImageKHR(PFN_vkAcquireNext
     assert(swapchain_info != nullptr);
 
     VkResult result = VK_SUCCESS;
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     // If image acquire failed at capture, there is nothing worth replaying as the fence and semaphore aren't processed
     // and a successful acquire on replay of an image that does not have a corresponding present to replay can lead to
@@ -5358,6 +5873,11 @@ VkResult VulkanReplayConsumerBase::OverrideAcquireNextImageKHR(PFN_vkAcquireNext
         }
     }
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -5369,6 +5889,14 @@ VkResult VulkanReplayConsumerBase::OverrideAcquireNextImage2KHR(
     PointerDecoder<uint32_t>*                                      pImageIndex)
 {
     assert((pAcquireInfo != nullptr) && !pAcquireInfo->IsNull());
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     VkResult          result            = VK_SUCCESS;
     auto              acquire_meta_info = pAcquireInfo->GetMetaStructPointer();
@@ -5488,6 +6016,11 @@ VkResult VulkanReplayConsumerBase::OverrideAcquireNextImage2KHR(
         }
     }
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -5498,6 +6031,14 @@ VulkanReplayConsumerBase::OverrideQueuePresentKHR(PFN_vkQueuePresentKHR         
                                                   const StructPointerDecoder<Decoded_VkPresentInfoKHR>* pPresentInfo)
 {
     assert((queue_info != nullptr) && (pPresentInfo != nullptr) && !pPresentInfo->IsNull());
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     VkResult   result             = VK_SUCCESS;
     const auto present_info       = pPresentInfo->GetPointer();
@@ -5850,6 +6391,11 @@ VulkanReplayConsumerBase::OverrideQueuePresentKHR(PFN_vkQueuePresentKHR         
     {
         screenshot_handler_->EndFrame();
     }
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 
     return result;
 }
@@ -6263,6 +6809,14 @@ VkResult VulkanReplayConsumerBase::OverrideCreateAccelerationStructureKHR(
 {
     GFXRECON_UNREFERENCED_PARAMETER(original_result);
 
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     assert((device_info != nullptr) && (pCreateInfo != nullptr) && (pAccelerationStructureKHR != nullptr) &&
            !pAccelerationStructureKHR->IsNull() && (pAccelerationStructureKHR->GetHandlePointer() != nullptr));
 
@@ -6300,6 +6854,11 @@ VkResult VulkanReplayConsumerBase::OverrideCreateAccelerationStructureKHR(
             device, replay_create_info, GetAllocationCallbacks(pAllocator), replay_accel_struct);
     }
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -6315,6 +6874,14 @@ VkResult VulkanReplayConsumerBase::OverrideCreateRayTracingPipelinesKHR(
     HandlePointerDecoder<VkPipeline>*                                      pPipelines)
 {
     GFXRECON_UNREFERENCED_PARAMETER(original_result);
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     assert((device_info != nullptr) && (pCreateInfos != nullptr) && (pAllocator != nullptr) &&
            (pPipelines != nullptr) && !pPipelines->IsNull() && (pPipelines->GetHandlePointer() != nullptr));
@@ -6420,6 +6987,11 @@ VkResult VulkanReplayConsumerBase::OverrideCreateRayTracingPipelinesKHR(
                                                             out_pPipelines);
     }
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -6432,6 +7004,13 @@ VkResult VulkanReplayConsumerBase::OverrideDeferredOperationJoinKHR(PFN_vkDeferr
     {
         return VK_SUCCESS;
     }
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
 
     VkDevice               device             = device_info->handle;
     VkDeferredOperationKHR deferred_operation = deferred_operation_info->handle;
@@ -6452,6 +7031,7 @@ VkResult VulkanReplayConsumerBase::OverrideDeferredOperationJoinKHR(PFN_vkDeferr
                 VkResult result = VK_ERROR_UNKNOWN;
                 while (result != VK_SUCCESS && !deferred_operation_completed)
                 {
+
                     result = func(device, deferred_operation);
                     assert(result == VK_SUCCESS || result == VK_THREAD_DONE_KHR || result == VK_THREAD_IDLE_KHR);
                     if (result == VK_SUCCESS)
@@ -6470,6 +7050,12 @@ VkResult VulkanReplayConsumerBase::OverrideDeferredOperationJoinKHR(PFN_vkDeferr
     deferred_operation_info->join_state = VK_SUCCESS;
     deferred_operation_info->record_modified_create_infos.clear();
     deferred_operation_info->record_modified_pgroups.clear();
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return VK_SUCCESS;
 }
 
@@ -6497,7 +7083,22 @@ VkDeviceAddress VulkanReplayConsumerBase::OverrideGetBufferDeviceAddress(
     VkDevice                         device       = device_info->handle;
     const VkBufferDeviceAddressInfo* address_info = pInfo->GetPointer();
 
-    return func(device, address_info);
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
+    VkDeviceAddress result = func(device, address_info);
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+    return result;
 }
 
 void VulkanReplayConsumerBase::OverrideGetAccelerationStructureDeviceAddressKHR(
@@ -6524,7 +7125,20 @@ void VulkanReplayConsumerBase::OverrideGetAccelerationStructureDeviceAddressKHR(
     VkDevice                                           device       = device_info->handle;
     const VkAccelerationStructureDeviceAddressInfoKHR* address_info = pInfo->GetPointer();
 
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     func(device, address_info);
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 }
 
 VkResult
@@ -6552,7 +7166,22 @@ VulkanReplayConsumerBase::OverrideGetRayTracingShaderGroupHandlesKHR(PFN_vkGetRa
     VkPipeline pipeline    = pipeline_info->handle;
     uint8_t*   output_data = pData->GetOutputPointer();
 
-    return func(device, pipeline, firstGroup, groupCount, dataSize, output_data);
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
+    VkResult result = func(device, pipeline, firstGroup, groupCount, dataSize, output_data);
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+    return result;
 }
 
 VkResult VulkanReplayConsumerBase::OverrideGetAndroidHardwareBufferPropertiesANDROID(
@@ -6585,7 +7214,22 @@ VkResult VulkanReplayConsumerBase::OverrideGetAndroidHardwareBufferPropertiesAND
         VkDevice device            = device_info->handle;
         auto*    output_properties = pProperties->GetOutputPointer();
 
-        return func(device, hardware_buffer, output_properties);
+        GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+        double         t0           = 0.0;
+        double         t1           = 0.0;
+        double         timePerFrame = 0.0;
+        struct timeval tim;
+        gettimeofday(&tim, NULL);
+        t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
+        VkResult result = func(device, hardware_buffer, output_properties);
+
+        gettimeofday(&tim, NULL);
+        t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+        timePerFrame = t1 - t0;
+        GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+        return result;
     }
 }
 
@@ -6605,7 +7249,23 @@ VkResult VulkanReplayConsumerBase::OverrideBeginCommandBuffer(
 
     VkCommandBuffer                 command_buffer = command_buffer_info->handle;
     const VkCommandBufferBeginInfo* begin_info     = begin_info_decoder->GetPointer();
-    return func(command_buffer, begin_info);
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
+    VkResult result = func(command_buffer, begin_info);
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+    return result;
 }
 
 VkResult VulkanReplayConsumerBase::OverrideResetCommandBuffer(PFN_vkResetCommandBuffer  func,
@@ -6616,7 +7276,23 @@ VkResult VulkanReplayConsumerBase::OverrideResetCommandBuffer(PFN_vkResetCommand
     ClearCommandBufferInfo(command_buffer_info);
 
     VkCommandBuffer command_buffer = command_buffer_info->handle;
-    return func(command_buffer, flags);
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
+    VkResult result = func(command_buffer, flags);
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+    return result;
 }
 
 void VulkanReplayConsumerBase::OverrideCmdDebugMarkerInsertEXT(
@@ -6625,6 +7301,15 @@ void VulkanReplayConsumerBase::OverrideCmdDebugMarkerInsertEXT(
     StructPointerDecoder<Decoded_VkDebugMarkerMarkerInfoEXT>* marker_info_decoder)
 {
     const VkDebugMarkerMarkerInfoEXT* marker_info = marker_info_decoder->GetPointer();
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     func(command_buffer_info->handle, marker_info);
 
     // Look for the debug marker that identifies this command buffer as a VR frame boundary.
@@ -6632,6 +7317,11 @@ void VulkanReplayConsumerBase::OverrideCmdDebugMarkerInsertEXT(
     {
         command_buffer_info->is_frame_boundary = true;
     }
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 };
 
 void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass(
@@ -6640,6 +7330,14 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass(
     StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* render_pass_begin_info_decoder,
     VkSubpassContents                                    contents)
 {
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+
     auto framebuffer_id = render_pass_begin_info_decoder->GetMetaStructPointer()->framebuffer;
     auto render_pass_id = render_pass_begin_info_decoder->GetMetaStructPointer()->renderPass;
     command_buffer_info->frame_buffer_ids.push_back(framebuffer_id);
@@ -6661,7 +7359,13 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass(
     }
 
     VkCommandBuffer command_buffer = command_buffer_info->handle;
-    return func(command_buffer, render_pass_begin_info_decoder->GetPointer(), contents);
+    t0                             = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    func(command_buffer, render_pass_begin_info_decoder->GetPointer(), contents);
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 }
 
 VkResult VulkanReplayConsumerBase::OverrideCreateImageView(
@@ -6677,6 +7381,14 @@ VkResult VulkanReplayConsumerBase::OverrideCreateImageView(
     const VkAllocationCallbacks* allocator   = GetAllocationCallbacks(allocator_decoder);
     VkImageView*                 out_view    = view_decoder->GetHandlePointer();
 
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     VkResult result = func(device, create_info, allocator, out_view);
 
     if ((result == VK_SUCCESS) && ((*out_view) != VK_NULL_HANDLE))
@@ -6686,6 +7398,11 @@ VkResult VulkanReplayConsumerBase::OverrideCreateImageView(
 
         image_view_info->image_id = create_info_decoder->GetMetaStructPointer()->image;
     }
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
 
     return result;
 }
@@ -6703,6 +7420,14 @@ VkResult VulkanReplayConsumerBase::OverrideCreateFramebuffer(
     const VkAllocationCallbacks*   allocator       = GetAllocationCallbacks(allocator_decoder);
     VkFramebuffer*                 out_framebuffer = frame_buffer_decoder->GetHandlePointer();
 
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     VkResult result = func(device, create_info, allocator, out_framebuffer);
 
     if ((result == VK_SUCCESS) && ((*out_framebuffer) != VK_NULL_HANDLE) && (create_info->attachmentCount > 0) &&
@@ -6719,10 +7444,15 @@ VkResult VulkanReplayConsumerBase::OverrideCreateFramebuffer(
         }
     }
 
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
-// We want to allow skipping the query for tool properties because the capture layer actually adds this extension
+// We want to allow skipping the query for tppl properties because the capture layer actually adds this extension
 // and the application may end up using the query.  However, this extension may not be present for replay, so
 // we stub it out in that case.  This will generate warnings in the GfxReconstruct output, but it shouldn't result
 // in a failure.
@@ -6733,11 +7463,26 @@ VkResult VulkanReplayConsumerBase::OverrideGetPhysicalDeviceToolProperties(
     PointerDecoder<uint32_t>*                                     pToolCount,
     StructPointerDecoder<Decoded_VkPhysicalDeviceToolProperties>* pToolProperties)
 {
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0                              = tim.tv_sec + (tim.tv_usec / 1000000.0);
     const auto& instance_extensions = physical_device_info->parent_enabled_extensions;
     if (std::find(instance_extensions.begin(), instance_extensions.end(), VK_EXT_TOOLING_INFO_EXTENSION_NAME) !=
         instance_extensions.end())
     {
-        return func(physical_device_info->handle, pToolCount->GetOutputPointer(), pToolProperties->GetOutputPointer());
+        VkResult result =
+            func(physical_device_info->handle, pToolCount->GetOutputPointer(), pToolProperties->GetOutputPointer());
+
+        gettimeofday(&tim, NULL);
+        t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+        timePerFrame = t1 - t0;
+        GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
+        return result;
     }
     else
     {
@@ -6745,6 +7490,12 @@ VkResult VulkanReplayConsumerBase::OverrideGetPhysicalDeviceToolProperties(
             "The captured application used vkGetPhysicalDeviceToolProperties. This is not supported by "
             "the replay device, so replay may fail.");
         *pToolCount->GetOutputPointer() = 0;
+
+        gettimeofday(&tim, NULL);
+        t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+        timePerFrame = t1 - t0;
+        GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
         return VK_SUCCESS;
     }
 }
@@ -6773,7 +7524,22 @@ VulkanReplayConsumerBase::OverrideWaitSemaphores(PFN_vkWaitSemaphores func,
     {
         timeout = 0;
     }
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     result = func(device, wait_info, timeout);
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -6801,7 +7567,21 @@ VkResult VulkanReplayConsumerBase::OverrideAcquireProfilingLockKHR(
     {
         modified_acquire_info.timeout = 0;
     }
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     result = func(device, &modified_acquire_info);
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
@@ -6829,7 +7609,22 @@ VkResult VulkanReplayConsumerBase::OverrideWaitForPresentKHR(PFN_vkWaitForPresen
     {
         timeout = 0;
     }
+
+    GFXRECON_WRITE_CONSOLE("xx %s()", __func__);
+    double         t0           = 0.0;
+    double         t1           = 0.0;
+    double         timePerFrame = 0.0;
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    t0 = tim.tv_sec + (tim.tv_usec / 1000000.0);
+
     result = func(device, swapchain, presentid, timeout);
+
+    gettimeofday(&tim, NULL);
+    t1           = tim.tv_sec + (tim.tv_usec / 1000000.0);
+    timePerFrame = t1 - t0;
+    GFXRECON_WRITE_CONSOLE("    pp time: %f", timePerFrame);
+
     return result;
 }
 
