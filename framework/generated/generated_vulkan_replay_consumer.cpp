@@ -1418,7 +1418,8 @@ void VulkanReplayConsumer::Process_vkCmdBindPipeline(
     VkPipeline in_pipeline = MapHandle<PipelineInfo>(pipeline, &VulkanObjectInfoTable::GetPipelineInfo);
     GetDeviceTable(in_commandBuffer)->CmdBindPipeline(in_commandBuffer, pipelineBindPoint, in_pipeline);
     {
-        TrackDRCmdBindPipelineHandles(in_commandBuffer, in_pipeline);    }
+        TrackDRCmdBindPipelineHandles(in_commandBuffer, in_pipeline);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdSetViewport(
@@ -1542,7 +1543,8 @@ void VulkanReplayConsumer::Process_vkCmdBindDescriptorSets(
     const uint32_t* in_pDynamicOffsets = pDynamicOffsets->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdBindDescriptorSets(in_commandBuffer, pipelineBindPoint, in_layout, firstSet, descriptorSetCount, in_pDescriptorSets, dynamicOffsetCount, in_pDynamicOffsets);
     {
-        TrackDRCmdBindDescriptorSetsHandles(in_commandBuffer, in_layout, descriptorSetCount, in_pDescriptorSets);    }
+        TrackDRCmdBindDescriptorSetsHandles(in_commandBuffer, in_layout, descriptorSetCount, in_pDescriptorSets);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdBindIndexBuffer(
@@ -1557,7 +1559,8 @@ void VulkanReplayConsumer::Process_vkCmdBindIndexBuffer(
     VkBuffer in_buffer = MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdBindIndexBuffer(in_commandBuffer, in_buffer, offset, indexType);
     {
-        TrackDRCmdBindIndexBufferHandles(in_commandBuffer, in_buffer);    }
+        TrackDRCmdBindIndexBufferHandles(in_commandBuffer, in_buffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdBindVertexBuffers(
@@ -1574,7 +1577,8 @@ void VulkanReplayConsumer::Process_vkCmdBindVertexBuffers(
     const VkDeviceSize* in_pOffsets = pOffsets->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdBindVertexBuffers(in_commandBuffer, firstBinding, bindingCount, in_pBuffers, in_pOffsets);
     {
-        TrackDRCmdBindVertexBuffersHandles(in_commandBuffer, bindingCount, in_pBuffers);    }
+        TrackDRCmdBindVertexBuffersHandles(in_commandBuffer, bindingCount, in_pBuffers);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdDraw(
@@ -1617,7 +1621,8 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirect(
     VkBuffer in_buffer = MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDrawIndirect(in_commandBuffer, in_buffer, offset, drawCount, stride);
     {
-        TrackDRCmdDrawIndirectHandles(in_commandBuffer, in_buffer);    }
+        TrackDRCmdDrawIndirectHandles(in_commandBuffer, in_buffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirect(
@@ -1633,7 +1638,8 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirect(
     VkBuffer in_buffer = MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDrawIndexedIndirect(in_commandBuffer, in_buffer, offset, drawCount, stride);
     {
-        TrackDRCmdDrawIndexedIndirectHandles(in_commandBuffer, in_buffer);    }
+        TrackDRCmdDrawIndexedIndirectHandles(in_commandBuffer, in_buffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdDispatch(
@@ -1659,7 +1665,8 @@ void VulkanReplayConsumer::Process_vkCmdDispatchIndirect(
     VkBuffer in_buffer = MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDispatchIndirect(in_commandBuffer, in_buffer, offset);
     {
-        TrackDRCmdDispatchIndirectHandles(in_commandBuffer, in_buffer);    }
+        TrackDRCmdDispatchIndirectHandles(in_commandBuffer, in_buffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyBuffer(
@@ -1677,7 +1684,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyBuffer(
     const VkBufferCopy* in_pRegions = pRegions->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdCopyBuffer(in_commandBuffer, in_srcBuffer, in_dstBuffer, regionCount, in_pRegions);
     {
-        TrackDRCmdCopyBufferHandles(in_commandBuffer, in_srcBuffer, in_dstBuffer);    }
+        TrackDRCmdCopyBufferHandles(in_commandBuffer, in_srcBuffer, in_dstBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyImage(
@@ -1697,7 +1705,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyImage(
     const VkImageCopy* in_pRegions = pRegions->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdCopyImage(in_commandBuffer, in_srcImage, srcImageLayout, in_dstImage, dstImageLayout, regionCount, in_pRegions);
     {
-        TrackDRCmdCopyImageHandles(in_commandBuffer, in_srcImage, in_dstImage);    }
+        TrackDRCmdCopyImageHandles(in_commandBuffer, in_srcImage, in_dstImage);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdBlitImage(
@@ -1718,7 +1727,8 @@ void VulkanReplayConsumer::Process_vkCmdBlitImage(
     const VkImageBlit* in_pRegions = pRegions->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdBlitImage(in_commandBuffer, in_srcImage, srcImageLayout, in_dstImage, dstImageLayout, regionCount, in_pRegions, filter);
     {
-        TrackDRCmdBlitImageHandles(in_commandBuffer, in_srcImage, in_dstImage);    }
+        TrackDRCmdBlitImageHandles(in_commandBuffer, in_srcImage, in_dstImage);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage(
@@ -1737,7 +1747,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage(
     const VkBufferImageCopy* in_pRegions = pRegions->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdCopyBufferToImage(in_commandBuffer, in_srcBuffer, in_dstImage, dstImageLayout, regionCount, in_pRegions);
     {
-        TrackDRCmdCopyBufferToImageHandles(in_commandBuffer, in_srcBuffer, in_dstImage);    }
+        TrackDRCmdCopyBufferToImageHandles(in_commandBuffer, in_srcBuffer, in_dstImage);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer(
@@ -1756,7 +1767,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer(
     const VkBufferImageCopy* in_pRegions = pRegions->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdCopyImageToBuffer(in_commandBuffer, in_srcImage, srcImageLayout, in_dstBuffer, regionCount, in_pRegions);
     {
-        TrackDRCmdCopyImageToBufferHandles(in_commandBuffer, in_srcImage, in_dstBuffer);    }
+        TrackDRCmdCopyImageToBufferHandles(in_commandBuffer, in_srcImage, in_dstBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdUpdateBuffer(
@@ -1773,7 +1785,8 @@ void VulkanReplayConsumer::Process_vkCmdUpdateBuffer(
     const void* in_pData = pData->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdUpdateBuffer(in_commandBuffer, in_dstBuffer, dstOffset, dataSize, in_pData);
     {
-        TrackDRCmdUpdateBufferHandles(in_commandBuffer, in_dstBuffer);    }
+        TrackDRCmdUpdateBufferHandles(in_commandBuffer, in_dstBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdFillBuffer(
@@ -1789,7 +1802,8 @@ void VulkanReplayConsumer::Process_vkCmdFillBuffer(
     VkBuffer in_dstBuffer = MapHandle<BufferInfo>(dstBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdFillBuffer(in_commandBuffer, in_dstBuffer, dstOffset, size, data);
     {
-        TrackDRCmdFillBufferHandles(in_commandBuffer, in_dstBuffer);    }
+        TrackDRCmdFillBufferHandles(in_commandBuffer, in_dstBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdClearColorImage(
@@ -1808,7 +1822,8 @@ void VulkanReplayConsumer::Process_vkCmdClearColorImage(
     const VkImageSubresourceRange* in_pRanges = pRanges->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdClearColorImage(in_commandBuffer, in_image, imageLayout, in_pColor, rangeCount, in_pRanges);
     {
-        TrackDRCmdClearColorImageHandles(in_commandBuffer, in_image);    }
+        TrackDRCmdClearColorImageHandles(in_commandBuffer, in_image);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdClearDepthStencilImage(
@@ -1827,7 +1842,8 @@ void VulkanReplayConsumer::Process_vkCmdClearDepthStencilImage(
     const VkImageSubresourceRange* in_pRanges = pRanges->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdClearDepthStencilImage(in_commandBuffer, in_image, imageLayout, in_pDepthStencil, rangeCount, in_pRanges);
     {
-        TrackDRCmdClearDepthStencilImageHandles(in_commandBuffer, in_image);    }
+        TrackDRCmdClearDepthStencilImageHandles(in_commandBuffer, in_image);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdClearAttachments(
@@ -1862,7 +1878,8 @@ void VulkanReplayConsumer::Process_vkCmdResolveImage(
     const VkImageResolve* in_pRegions = pRegions->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdResolveImage(in_commandBuffer, in_srcImage, srcImageLayout, in_dstImage, dstImageLayout, regionCount, in_pRegions);
     {
-        TrackDRCmdResolveImageHandles(in_commandBuffer, in_srcImage, in_dstImage);    }
+        TrackDRCmdResolveImageHandles(in_commandBuffer, in_srcImage, in_dstImage);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdSetEvent(
@@ -1876,7 +1893,8 @@ void VulkanReplayConsumer::Process_vkCmdSetEvent(
     VkEvent in_event = MapHandle<EventInfo>(event, &VulkanObjectInfoTable::GetEventInfo);
     GetDeviceTable(in_commandBuffer)->CmdSetEvent(in_commandBuffer, in_event, stageMask);
     {
-        TrackDRCmdSetEventHandles(in_commandBuffer, in_event);    }
+        TrackDRCmdSetEventHandles(in_commandBuffer, in_event);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdResetEvent(
@@ -1890,7 +1908,8 @@ void VulkanReplayConsumer::Process_vkCmdResetEvent(
     VkEvent in_event = MapHandle<EventInfo>(event, &VulkanObjectInfoTable::GetEventInfo);
     GetDeviceTable(in_commandBuffer)->CmdResetEvent(in_commandBuffer, in_event, stageMask);
     {
-        TrackDRCmdResetEventHandles(in_commandBuffer, in_event);    }
+        TrackDRCmdResetEventHandles(in_commandBuffer, in_event);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdWaitEvents(
@@ -1917,7 +1936,8 @@ void VulkanReplayConsumer::Process_vkCmdWaitEvents(
     MapStructArrayHandles(pImageMemoryBarriers->GetMetaStructPointer(), pImageMemoryBarriers->GetLength(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdWaitEvents(in_commandBuffer, eventCount, in_pEvents, srcStageMask, dstStageMask, memoryBarrierCount, in_pMemoryBarriers, bufferMemoryBarrierCount, in_pBufferMemoryBarriers, imageMemoryBarrierCount, in_pImageMemoryBarriers);
     {
-        TrackDRCmdWaitEventsHandles(in_commandBuffer, eventCount, in_pEvents, bufferMemoryBarrierCount, in_pBufferMemoryBarriers, imageMemoryBarrierCount, in_pImageMemoryBarriers);    }
+        TrackDRCmdWaitEventsHandles(in_commandBuffer, eventCount, in_pEvents, bufferMemoryBarrierCount, in_pBufferMemoryBarriers, imageMemoryBarrierCount, in_pImageMemoryBarriers);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdPipelineBarrier(
@@ -1944,7 +1964,8 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier(
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
         const VkBufferMemoryBarrier* in_pBufferMemoryBarriers = pBufferMemoryBarriers->GetPointer();
         const VkImageMemoryBarrier* in_pImageMemoryBarriers = pImageMemoryBarriers->GetPointer();
-        TrackDRCmdPipelineBarrierHandles(in_commandBuffer, bufferMemoryBarrierCount, in_pBufferMemoryBarriers, imageMemoryBarrierCount, in_pImageMemoryBarriers);    }
+        TrackDRCmdPipelineBarrierHandles(in_commandBuffer, bufferMemoryBarrierCount, in_pBufferMemoryBarriers, imageMemoryBarrierCount, in_pImageMemoryBarriers);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdBeginQuery(
@@ -1959,7 +1980,8 @@ void VulkanReplayConsumer::Process_vkCmdBeginQuery(
     VkQueryPool in_queryPool = MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);
     GetDeviceTable(in_commandBuffer)->CmdBeginQuery(in_commandBuffer, in_queryPool, query, flags);
     {
-        TrackDRCmdBeginQueryHandles(in_commandBuffer, in_queryPool);    }
+        TrackDRCmdBeginQueryHandles(in_commandBuffer, in_queryPool);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdEndQuery(
@@ -1973,7 +1995,8 @@ void VulkanReplayConsumer::Process_vkCmdEndQuery(
     VkQueryPool in_queryPool = MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);
     GetDeviceTable(in_commandBuffer)->CmdEndQuery(in_commandBuffer, in_queryPool, query);
     {
-        TrackDRCmdEndQueryHandles(in_commandBuffer, in_queryPool);    }
+        TrackDRCmdEndQueryHandles(in_commandBuffer, in_queryPool);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdResetQueryPool(
@@ -1988,7 +2011,8 @@ void VulkanReplayConsumer::Process_vkCmdResetQueryPool(
     VkQueryPool in_queryPool = MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);
     GetDeviceTable(in_commandBuffer)->CmdResetQueryPool(in_commandBuffer, in_queryPool, firstQuery, queryCount);
     {
-        TrackDRCmdResetQueryPoolHandles(in_commandBuffer, in_queryPool);    }
+        TrackDRCmdResetQueryPoolHandles(in_commandBuffer, in_queryPool);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdWriteTimestamp(
@@ -2003,7 +2027,8 @@ void VulkanReplayConsumer::Process_vkCmdWriteTimestamp(
     VkQueryPool in_queryPool = MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);
     GetDeviceTable(in_commandBuffer)->CmdWriteTimestamp(in_commandBuffer, pipelineStage, in_queryPool, query);
     {
-        TrackDRCmdWriteTimestampHandles(in_commandBuffer, in_queryPool);    }
+        TrackDRCmdWriteTimestampHandles(in_commandBuffer, in_queryPool);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyQueryPoolResults(
@@ -2023,7 +2048,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyQueryPoolResults(
     VkBuffer in_dstBuffer = MapHandle<BufferInfo>(dstBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdCopyQueryPoolResults(in_commandBuffer, in_queryPool, firstQuery, queryCount, in_dstBuffer, dstOffset, stride, flags);
     {
-        TrackDRCmdCopyQueryPoolResultsHandles(in_commandBuffer, in_queryPool, in_dstBuffer);    }
+        TrackDRCmdCopyQueryPoolResultsHandles(in_commandBuffer, in_queryPool, in_dstBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdPushConstants(
@@ -2041,7 +2067,8 @@ void VulkanReplayConsumer::Process_vkCmdPushConstants(
     const void* in_pValues = pValues->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdPushConstants(in_commandBuffer, in_layout, stageFlags, offset, size, in_pValues);
     {
-        TrackDRCmdPushConstantsHandles(in_commandBuffer, in_layout);    }
+        TrackDRCmdPushConstantsHandles(in_commandBuffer, in_layout);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdBeginRenderPass(
@@ -2058,7 +2085,8 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass(
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
         const VkRenderPassBeginInfo* in_pRenderPassBegin = pRenderPassBegin->GetPointer();
-        TrackDRCmdBeginRenderPassHandles(in_commandBuffer, in_pRenderPassBegin);    }
+        TrackDRCmdBeginRenderPassHandles(in_commandBuffer, in_pRenderPassBegin);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdNextSubpass(
@@ -2091,7 +2119,8 @@ void VulkanReplayConsumer::Process_vkCmdExecuteCommands(
     const VkCommandBuffer* in_pCommandBuffers = MapHandles<CommandBufferInfo>(pCommandBuffers, commandBufferCount, &VulkanObjectInfoTable::GetCommandBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdExecuteCommands(in_commandBuffer, commandBufferCount, in_pCommandBuffers);
     {
-        TrackDRCmdExecuteCommandsHandles(in_commandBuffer, commandBufferCount, in_pCommandBuffers);    }
+        TrackDRCmdExecuteCommandsHandles(in_commandBuffer, commandBufferCount, in_pCommandBuffers);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkBindBufferMemory2(
@@ -2489,7 +2518,8 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCount(
     VkBuffer in_countBuffer = MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDrawIndirectCount(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);
     {
-        TrackDRCmdDrawIndirectCountHandles(in_commandBuffer, in_buffer, in_countBuffer);    }
+        TrackDRCmdDrawIndirectCountHandles(in_commandBuffer, in_buffer, in_countBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCount(
@@ -2508,7 +2538,8 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCount(
     VkBuffer in_countBuffer = MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDrawIndexedIndirectCount(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);
     {
-        TrackDRCmdDrawIndexedIndirectCountHandles(in_commandBuffer, in_buffer, in_countBuffer);    }
+        TrackDRCmdDrawIndexedIndirectCountHandles(in_commandBuffer, in_buffer, in_countBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCreateRenderPass2(
@@ -2542,7 +2573,8 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass2(
     const VkSubpassBeginInfo* in_pSubpassBeginInfo = pSubpassBeginInfo->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdBeginRenderPass2(in_commandBuffer, in_pRenderPassBegin, in_pSubpassBeginInfo);
     {
-        TrackDRCmdBeginRenderPass2Handles(in_commandBuffer, in_pRenderPassBegin);    }
+        TrackDRCmdBeginRenderPass2Handles(in_commandBuffer, in_pRenderPassBegin);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdNextSubpass2(
@@ -2760,7 +2792,8 @@ void VulkanReplayConsumer::Process_vkCmdSetEvent2(
     MapStructHandles(pDependencyInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdSetEvent2(in_commandBuffer, in_event, in_pDependencyInfo);
     {
-        TrackDRCmdSetEvent2Handles(in_commandBuffer, in_event, in_pDependencyInfo);    }
+        TrackDRCmdSetEvent2Handles(in_commandBuffer, in_event, in_pDependencyInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdResetEvent2(
@@ -2774,7 +2807,8 @@ void VulkanReplayConsumer::Process_vkCmdResetEvent2(
     VkEvent in_event = MapHandle<EventInfo>(event, &VulkanObjectInfoTable::GetEventInfo);
     GetDeviceTable(in_commandBuffer)->CmdResetEvent2(in_commandBuffer, in_event, stageMask);
     {
-        TrackDRCmdResetEvent2Handles(in_commandBuffer, in_event);    }
+        TrackDRCmdResetEvent2Handles(in_commandBuffer, in_event);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdWaitEvents2(
@@ -2791,7 +2825,8 @@ void VulkanReplayConsumer::Process_vkCmdWaitEvents2(
     MapStructArrayHandles(pDependencyInfos->GetMetaStructPointer(), pDependencyInfos->GetLength(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdWaitEvents2(in_commandBuffer, eventCount, in_pEvents, in_pDependencyInfos);
     {
-        TrackDRCmdWaitEvents2Handles(in_commandBuffer, eventCount, in_pEvents, in_pDependencyInfos);    }
+        TrackDRCmdWaitEvents2Handles(in_commandBuffer, eventCount, in_pEvents, in_pDependencyInfos);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdPipelineBarrier2(
@@ -2805,7 +2840,8 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier2(
     MapStructHandles(pDependencyInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdPipelineBarrier2(in_commandBuffer, in_pDependencyInfo);
     {
-        TrackDRCmdPipelineBarrier2Handles(in_commandBuffer, in_pDependencyInfo);    }
+        TrackDRCmdPipelineBarrier2Handles(in_commandBuffer, in_pDependencyInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdWriteTimestamp2(
@@ -2820,7 +2856,8 @@ void VulkanReplayConsumer::Process_vkCmdWriteTimestamp2(
     VkQueryPool in_queryPool = MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);
     GetDeviceTable(in_commandBuffer)->CmdWriteTimestamp2(in_commandBuffer, stage, in_queryPool, query);
     {
-        TrackDRCmdWriteTimestamp2Handles(in_commandBuffer, in_queryPool);    }
+        TrackDRCmdWriteTimestamp2Handles(in_commandBuffer, in_queryPool);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkQueueSubmit2(
@@ -2851,7 +2888,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyBuffer2(
     MapStructHandles(pCopyBufferInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdCopyBuffer2(in_commandBuffer, in_pCopyBufferInfo);
     {
-        TrackDRCmdCopyBuffer2Handles(in_commandBuffer, in_pCopyBufferInfo);    }
+        TrackDRCmdCopyBuffer2Handles(in_commandBuffer, in_pCopyBufferInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyImage2(
@@ -2865,7 +2903,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyImage2(
     MapStructHandles(pCopyImageInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdCopyImage2(in_commandBuffer, in_pCopyImageInfo);
     {
-        TrackDRCmdCopyImage2Handles(in_commandBuffer, in_pCopyImageInfo);    }
+        TrackDRCmdCopyImage2Handles(in_commandBuffer, in_pCopyImageInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage2(
@@ -2879,7 +2918,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage2(
     MapStructHandles(pCopyBufferToImageInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdCopyBufferToImage2(in_commandBuffer, in_pCopyBufferToImageInfo);
     {
-        TrackDRCmdCopyBufferToImage2Handles(in_commandBuffer, in_pCopyBufferToImageInfo);    }
+        TrackDRCmdCopyBufferToImage2Handles(in_commandBuffer, in_pCopyBufferToImageInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer2(
@@ -2893,7 +2933,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer2(
     MapStructHandles(pCopyImageToBufferInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdCopyImageToBuffer2(in_commandBuffer, in_pCopyImageToBufferInfo);
     {
-        TrackDRCmdCopyImageToBuffer2Handles(in_commandBuffer, in_pCopyImageToBufferInfo);    }
+        TrackDRCmdCopyImageToBuffer2Handles(in_commandBuffer, in_pCopyImageToBufferInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdBlitImage2(
@@ -2907,7 +2948,8 @@ void VulkanReplayConsumer::Process_vkCmdBlitImage2(
     MapStructHandles(pBlitImageInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdBlitImage2(in_commandBuffer, in_pBlitImageInfo);
     {
-        TrackDRCmdBlitImage2Handles(in_commandBuffer, in_pBlitImageInfo);    }
+        TrackDRCmdBlitImage2Handles(in_commandBuffer, in_pBlitImageInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdResolveImage2(
@@ -2921,7 +2963,8 @@ void VulkanReplayConsumer::Process_vkCmdResolveImage2(
     MapStructHandles(pResolveImageInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdResolveImage2(in_commandBuffer, in_pResolveImageInfo);
     {
-        TrackDRCmdResolveImage2Handles(in_commandBuffer, in_pResolveImageInfo);    }
+        TrackDRCmdResolveImage2Handles(in_commandBuffer, in_pResolveImageInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdBeginRendering(
@@ -2935,7 +2978,8 @@ void VulkanReplayConsumer::Process_vkCmdBeginRendering(
     MapStructHandles(pRenderingInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdBeginRendering(in_commandBuffer, in_pRenderingInfo);
     {
-        TrackDRCmdBeginRenderingHandles(in_commandBuffer, in_pRenderingInfo);    }
+        TrackDRCmdBeginRenderingHandles(in_commandBuffer, in_pRenderingInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdEndRendering(
@@ -3019,7 +3063,8 @@ void VulkanReplayConsumer::Process_vkCmdBindVertexBuffers2(
     const VkDeviceSize* in_pStrides = pStrides->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdBindVertexBuffers2(in_commandBuffer, firstBinding, bindingCount, in_pBuffers, in_pOffsets, in_pSizes, in_pStrides);
     {
-        TrackDRCmdBindVertexBuffers2Handles(in_commandBuffer, bindingCount, in_pBuffers);    }
+        TrackDRCmdBindVertexBuffers2Handles(in_commandBuffer, bindingCount, in_pBuffers);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdSetDepthTestEnable(
@@ -3889,7 +3934,8 @@ void VulkanReplayConsumer::Process_vkCmdBeginVideoCodingKHR(
     MapStructHandles(pBeginInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdBeginVideoCodingKHR(in_commandBuffer, in_pBeginInfo);
     {
-        TrackDRCmdBeginVideoCodingKHRHandles(in_commandBuffer, in_pBeginInfo);    }
+        TrackDRCmdBeginVideoCodingKHRHandles(in_commandBuffer, in_pBeginInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdEndVideoCodingKHR(
@@ -3925,7 +3971,8 @@ void VulkanReplayConsumer::Process_vkCmdDecodeVideoKHR(
     MapStructHandles(pDecodeInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdDecodeVideoKHR(in_commandBuffer, in_pDecodeInfo);
     {
-        TrackDRCmdDecodeVideoKHRHandles(in_commandBuffer, in_pDecodeInfo);    }
+        TrackDRCmdDecodeVideoKHRHandles(in_commandBuffer, in_pDecodeInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdBeginRenderingKHR(
@@ -3939,7 +3986,8 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderingKHR(
     MapStructHandles(pRenderingInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdBeginRenderingKHR(in_commandBuffer, in_pRenderingInfo);
     {
-        TrackDRCmdBeginRenderingKHRHandles(in_commandBuffer, in_pRenderingInfo);    }
+        TrackDRCmdBeginRenderingKHRHandles(in_commandBuffer, in_pRenderingInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdEndRenderingKHR(
@@ -4286,7 +4334,8 @@ void VulkanReplayConsumer::Process_vkCmdPushDescriptorSetKHR(
     MapStructArrayHandles(pDescriptorWrites->GetMetaStructPointer(), pDescriptorWrites->GetLength(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdPushDescriptorSetKHR(in_commandBuffer, pipelineBindPoint, in_layout, set, descriptorWriteCount, in_pDescriptorWrites);
     {
-        TrackDRCmdPushDescriptorSetKHRHandles(in_commandBuffer, in_layout, descriptorWriteCount, in_pDescriptorWrites);    }
+        TrackDRCmdPushDescriptorSetKHRHandles(in_commandBuffer, in_layout, descriptorWriteCount, in_pDescriptorWrites);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCreateDescriptorUpdateTemplateKHR(
@@ -4353,7 +4402,8 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass2KHR(
     const VkSubpassBeginInfo* in_pSubpassBeginInfo = pSubpassBeginInfo->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdBeginRenderPass2KHR(in_commandBuffer, in_pRenderPassBegin, in_pSubpassBeginInfo);
     {
-        TrackDRCmdBeginRenderPass2KHRHandles(in_commandBuffer, in_pRenderPassBegin);    }
+        TrackDRCmdBeginRenderPass2KHRHandles(in_commandBuffer, in_pRenderPassBegin);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdNextSubpass2KHR(
@@ -4791,7 +4841,8 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCountKHR(
     VkBuffer in_countBuffer = MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDrawIndirectCountKHR(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);
     {
-        TrackDRCmdDrawIndirectCountKHRHandles(in_commandBuffer, in_buffer, in_countBuffer);    }
+        TrackDRCmdDrawIndirectCountKHRHandles(in_commandBuffer, in_buffer, in_countBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCountKHR(
@@ -4810,7 +4861,8 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCountKHR(
     VkBuffer in_countBuffer = MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDrawIndexedIndirectCountKHR(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);
     {
-        TrackDRCmdDrawIndexedIndirectCountKHRHandles(in_commandBuffer, in_buffer, in_countBuffer);    }
+        TrackDRCmdDrawIndexedIndirectCountKHRHandles(in_commandBuffer, in_buffer, in_countBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkGetSemaphoreCounterValueKHR(
@@ -5173,7 +5225,8 @@ void VulkanReplayConsumer::Process_vkCmdEncodeVideoKHR(
     MapStructHandles(pEncodeInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdEncodeVideoKHR(in_commandBuffer, in_pEncodeInfo);
     {
-        TrackDRCmdEncodeVideoKHRHandles(in_commandBuffer, in_pEncodeInfo);    }
+        TrackDRCmdEncodeVideoKHRHandles(in_commandBuffer, in_pEncodeInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdSetEvent2KHR(
@@ -5189,7 +5242,8 @@ void VulkanReplayConsumer::Process_vkCmdSetEvent2KHR(
     MapStructHandles(pDependencyInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdSetEvent2KHR(in_commandBuffer, in_event, in_pDependencyInfo);
     {
-        TrackDRCmdSetEvent2KHRHandles(in_commandBuffer, in_event, in_pDependencyInfo);    }
+        TrackDRCmdSetEvent2KHRHandles(in_commandBuffer, in_event, in_pDependencyInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdResetEvent2KHR(
@@ -5203,7 +5257,8 @@ void VulkanReplayConsumer::Process_vkCmdResetEvent2KHR(
     VkEvent in_event = MapHandle<EventInfo>(event, &VulkanObjectInfoTable::GetEventInfo);
     GetDeviceTable(in_commandBuffer)->CmdResetEvent2KHR(in_commandBuffer, in_event, stageMask);
     {
-        TrackDRCmdResetEvent2KHRHandles(in_commandBuffer, in_event);    }
+        TrackDRCmdResetEvent2KHRHandles(in_commandBuffer, in_event);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdWaitEvents2KHR(
@@ -5220,7 +5275,8 @@ void VulkanReplayConsumer::Process_vkCmdWaitEvents2KHR(
     MapStructArrayHandles(pDependencyInfos->GetMetaStructPointer(), pDependencyInfos->GetLength(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdWaitEvents2KHR(in_commandBuffer, eventCount, in_pEvents, in_pDependencyInfos);
     {
-        TrackDRCmdWaitEvents2KHRHandles(in_commandBuffer, eventCount, in_pEvents, in_pDependencyInfos);    }
+        TrackDRCmdWaitEvents2KHRHandles(in_commandBuffer, eventCount, in_pEvents, in_pDependencyInfos);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdPipelineBarrier2KHR(
@@ -5234,7 +5290,8 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier2KHR(
     MapStructHandles(pDependencyInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdPipelineBarrier2KHR(in_commandBuffer, in_pDependencyInfo);
     {
-        TrackDRCmdPipelineBarrier2KHRHandles(in_commandBuffer, in_pDependencyInfo);    }
+        TrackDRCmdPipelineBarrier2KHRHandles(in_commandBuffer, in_pDependencyInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdWriteTimestamp2KHR(
@@ -5249,7 +5306,8 @@ void VulkanReplayConsumer::Process_vkCmdWriteTimestamp2KHR(
     VkQueryPool in_queryPool = MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);
     GetDeviceTable(in_commandBuffer)->CmdWriteTimestamp2KHR(in_commandBuffer, stage, in_queryPool, query);
     {
-        TrackDRCmdWriteTimestamp2KHRHandles(in_commandBuffer, in_queryPool);    }
+        TrackDRCmdWriteTimestamp2KHRHandles(in_commandBuffer, in_queryPool);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkQueueSubmit2KHR(
@@ -5282,7 +5340,8 @@ void VulkanReplayConsumer::Process_vkCmdWriteBufferMarker2AMD(
     VkBuffer in_dstBuffer = MapHandle<BufferInfo>(dstBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdWriteBufferMarker2AMD(in_commandBuffer, stage, in_dstBuffer, dstOffset, marker);
     {
-        TrackDRCmdWriteBufferMarker2AMDHandles(in_commandBuffer, in_dstBuffer);    }
+        TrackDRCmdWriteBufferMarker2AMDHandles(in_commandBuffer, in_dstBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkGetQueueCheckpointData2NV(
@@ -5310,7 +5369,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyBuffer2KHR(
     MapStructHandles(pCopyBufferInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdCopyBuffer2KHR(in_commandBuffer, in_pCopyBufferInfo);
     {
-        TrackDRCmdCopyBuffer2KHRHandles(in_commandBuffer, in_pCopyBufferInfo);    }
+        TrackDRCmdCopyBuffer2KHRHandles(in_commandBuffer, in_pCopyBufferInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyImage2KHR(
@@ -5324,7 +5384,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyImage2KHR(
     MapStructHandles(pCopyImageInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdCopyImage2KHR(in_commandBuffer, in_pCopyImageInfo);
     {
-        TrackDRCmdCopyImage2KHRHandles(in_commandBuffer, in_pCopyImageInfo);    }
+        TrackDRCmdCopyImage2KHRHandles(in_commandBuffer, in_pCopyImageInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage2KHR(
@@ -5338,7 +5399,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage2KHR(
     MapStructHandles(pCopyBufferToImageInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdCopyBufferToImage2KHR(in_commandBuffer, in_pCopyBufferToImageInfo);
     {
-        TrackDRCmdCopyBufferToImage2KHRHandles(in_commandBuffer, in_pCopyBufferToImageInfo);    }
+        TrackDRCmdCopyBufferToImage2KHRHandles(in_commandBuffer, in_pCopyBufferToImageInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer2KHR(
@@ -5352,7 +5414,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer2KHR(
     MapStructHandles(pCopyImageToBufferInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdCopyImageToBuffer2KHR(in_commandBuffer, in_pCopyImageToBufferInfo);
     {
-        TrackDRCmdCopyImageToBuffer2KHRHandles(in_commandBuffer, in_pCopyImageToBufferInfo);    }
+        TrackDRCmdCopyImageToBuffer2KHRHandles(in_commandBuffer, in_pCopyImageToBufferInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdBlitImage2KHR(
@@ -5366,7 +5429,8 @@ void VulkanReplayConsumer::Process_vkCmdBlitImage2KHR(
     MapStructHandles(pBlitImageInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdBlitImage2KHR(in_commandBuffer, in_pBlitImageInfo);
     {
-        TrackDRCmdBlitImage2KHRHandles(in_commandBuffer, in_pBlitImageInfo);    }
+        TrackDRCmdBlitImage2KHRHandles(in_commandBuffer, in_pBlitImageInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdResolveImage2KHR(
@@ -5380,7 +5444,8 @@ void VulkanReplayConsumer::Process_vkCmdResolveImage2KHR(
     MapStructHandles(pResolveImageInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdResolveImage2KHR(in_commandBuffer, in_pResolveImageInfo);
     {
-        TrackDRCmdResolveImage2KHRHandles(in_commandBuffer, in_pResolveImageInfo);    }
+        TrackDRCmdResolveImage2KHRHandles(in_commandBuffer, in_pResolveImageInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdTraceRaysIndirect2KHR(
@@ -5452,7 +5517,8 @@ void VulkanReplayConsumer::Process_vkCmdBindIndexBuffer2KHR(
     VkBuffer in_buffer = MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdBindIndexBuffer2KHR(in_commandBuffer, in_buffer, offset, size, indexType);
     {
-        TrackDRCmdBindIndexBuffer2KHRHandles(in_commandBuffer, in_buffer);    }
+        TrackDRCmdBindIndexBuffer2KHRHandles(in_commandBuffer, in_buffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkGetRenderingAreaGranularityKHR(
@@ -5771,7 +5837,8 @@ void VulkanReplayConsumer::Process_vkCmdBindTransformFeedbackBuffersEXT(
     const VkDeviceSize* in_pSizes = pSizes->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdBindTransformFeedbackBuffersEXT(in_commandBuffer, firstBinding, bindingCount, in_pBuffers, in_pOffsets, in_pSizes);
     {
-        TrackDRCmdBindTransformFeedbackBuffersEXTHandles(in_commandBuffer, bindingCount, in_pBuffers);    }
+        TrackDRCmdBindTransformFeedbackBuffersEXTHandles(in_commandBuffer, bindingCount, in_pBuffers);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdBeginTransformFeedbackEXT(
@@ -5788,7 +5855,8 @@ void VulkanReplayConsumer::Process_vkCmdBeginTransformFeedbackEXT(
     const VkDeviceSize* in_pCounterBufferOffsets = pCounterBufferOffsets->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdBeginTransformFeedbackEXT(in_commandBuffer, firstCounterBuffer, counterBufferCount, in_pCounterBuffers, in_pCounterBufferOffsets);
     {
-        TrackDRCmdBeginTransformFeedbackEXTHandles(in_commandBuffer, counterBufferCount, in_pCounterBuffers);    }
+        TrackDRCmdBeginTransformFeedbackEXTHandles(in_commandBuffer, counterBufferCount, in_pCounterBuffers);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdEndTransformFeedbackEXT(
@@ -5805,7 +5873,8 @@ void VulkanReplayConsumer::Process_vkCmdEndTransformFeedbackEXT(
     const VkDeviceSize* in_pCounterBufferOffsets = pCounterBufferOffsets->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdEndTransformFeedbackEXT(in_commandBuffer, firstCounterBuffer, counterBufferCount, in_pCounterBuffers, in_pCounterBufferOffsets);
     {
-        TrackDRCmdEndTransformFeedbackEXTHandles(in_commandBuffer, counterBufferCount, in_pCounterBuffers);    }
+        TrackDRCmdEndTransformFeedbackEXTHandles(in_commandBuffer, counterBufferCount, in_pCounterBuffers);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdBeginQueryIndexedEXT(
@@ -5821,7 +5890,8 @@ void VulkanReplayConsumer::Process_vkCmdBeginQueryIndexedEXT(
     VkQueryPool in_queryPool = MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);
     GetDeviceTable(in_commandBuffer)->CmdBeginQueryIndexedEXT(in_commandBuffer, in_queryPool, query, flags, index);
     {
-        TrackDRCmdBeginQueryIndexedEXTHandles(in_commandBuffer, in_queryPool);    }
+        TrackDRCmdBeginQueryIndexedEXTHandles(in_commandBuffer, in_queryPool);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdEndQueryIndexedEXT(
@@ -5836,7 +5906,8 @@ void VulkanReplayConsumer::Process_vkCmdEndQueryIndexedEXT(
     VkQueryPool in_queryPool = MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);
     GetDeviceTable(in_commandBuffer)->CmdEndQueryIndexedEXT(in_commandBuffer, in_queryPool, query, index);
     {
-        TrackDRCmdEndQueryIndexedEXTHandles(in_commandBuffer, in_queryPool);    }
+        TrackDRCmdEndQueryIndexedEXTHandles(in_commandBuffer, in_queryPool);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdDrawIndirectByteCountEXT(
@@ -5854,7 +5925,8 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectByteCountEXT(
     VkBuffer in_counterBuffer = MapHandle<BufferInfo>(counterBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDrawIndirectByteCountEXT(in_commandBuffer, instanceCount, firstInstance, in_counterBuffer, counterBufferOffset, counterOffset, vertexStride);
     {
-        TrackDRCmdDrawIndirectByteCountEXTHandles(in_commandBuffer, in_counterBuffer);    }
+        TrackDRCmdDrawIndirectByteCountEXTHandles(in_commandBuffer, in_counterBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkGetImageViewHandleNVX(
@@ -5902,7 +5974,8 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCountAMD(
     VkBuffer in_countBuffer = MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDrawIndirectCountAMD(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);
     {
-        TrackDRCmdDrawIndirectCountAMDHandles(in_commandBuffer, in_buffer, in_countBuffer);    }
+        TrackDRCmdDrawIndirectCountAMDHandles(in_commandBuffer, in_buffer, in_countBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCountAMD(
@@ -5921,7 +5994,8 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCountAMD(
     VkBuffer in_countBuffer = MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDrawIndexedIndirectCountAMD(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);
     {
-        TrackDRCmdDrawIndexedIndirectCountAMDHandles(in_commandBuffer, in_buffer, in_countBuffer);    }
+        TrackDRCmdDrawIndexedIndirectCountAMDHandles(in_commandBuffer, in_buffer, in_countBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkGetShaderInfoAMD(
@@ -6029,7 +6103,8 @@ void VulkanReplayConsumer::Process_vkCmdBeginConditionalRenderingEXT(
     MapStructHandles(pConditionalRenderingBegin->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdBeginConditionalRenderingEXT(in_commandBuffer, in_pConditionalRenderingBegin);
     {
-        TrackDRCmdBeginConditionalRenderingEXTHandles(in_commandBuffer, in_pConditionalRenderingBegin);    }
+        TrackDRCmdBeginConditionalRenderingEXTHandles(in_commandBuffer, in_pConditionalRenderingBegin);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdEndConditionalRenderingEXT(
@@ -6625,7 +6700,8 @@ void VulkanReplayConsumer::Process_vkCmdBindShadingRateImageNV(
     VkImageView in_imageView = MapHandle<ImageViewInfo>(imageView, &VulkanObjectInfoTable::GetImageViewInfo);
     GetDeviceTable(in_commandBuffer)->CmdBindShadingRateImageNV(in_commandBuffer, in_imageView, imageLayout);
     {
-        TrackDRCmdBindShadingRateImageNVHandles(in_commandBuffer, in_imageView);    }
+        TrackDRCmdBindShadingRateImageNVHandles(in_commandBuffer, in_imageView);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdSetViewportShadingRatePaletteNV(
@@ -6739,7 +6815,8 @@ void VulkanReplayConsumer::Process_vkCmdBuildAccelerationStructureNV(
     VkBuffer in_scratch = MapHandle<BufferInfo>(scratch, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdBuildAccelerationStructureNV(in_commandBuffer, in_pInfo, in_instanceData, instanceOffset, update, in_dst, in_src, in_scratch, scratchOffset);
     {
-        TrackDRCmdBuildAccelerationStructureNVHandles(in_commandBuffer, in_pInfo, in_instanceData, in_dst, in_src, in_scratch);    }
+        TrackDRCmdBuildAccelerationStructureNVHandles(in_commandBuffer, in_pInfo, in_instanceData, in_dst, in_src, in_scratch);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyAccelerationStructureNV(
@@ -6755,7 +6832,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyAccelerationStructureNV(
     VkAccelerationStructureNV in_src = MapHandle<AccelerationStructureNVInfo>(src, &VulkanObjectInfoTable::GetAccelerationStructureNVInfo);
     GetDeviceTable(in_commandBuffer)->CmdCopyAccelerationStructureNV(in_commandBuffer, in_dst, in_src, mode);
     {
-        TrackDRCmdCopyAccelerationStructureNVHandles(in_commandBuffer, in_dst, in_src);    }
+        TrackDRCmdCopyAccelerationStructureNVHandles(in_commandBuffer, in_dst, in_src);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdTraceRaysNV(
@@ -6784,7 +6862,8 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysNV(
     VkBuffer in_callableShaderBindingTableBuffer = MapHandle<BufferInfo>(callableShaderBindingTableBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdTraceRaysNV(in_commandBuffer, in_raygenShaderBindingTableBuffer, raygenShaderBindingOffset, in_missShaderBindingTableBuffer, missShaderBindingOffset, missShaderBindingStride, in_hitShaderBindingTableBuffer, hitShaderBindingOffset, hitShaderBindingStride, in_callableShaderBindingTableBuffer, callableShaderBindingOffset, callableShaderBindingStride, width, height, depth);
     {
-        TrackDRCmdTraceRaysNVHandles(in_commandBuffer, in_raygenShaderBindingTableBuffer, in_missShaderBindingTableBuffer, in_hitShaderBindingTableBuffer, in_callableShaderBindingTableBuffer);    }
+        TrackDRCmdTraceRaysNVHandles(in_commandBuffer, in_raygenShaderBindingTableBuffer, in_missShaderBindingTableBuffer, in_hitShaderBindingTableBuffer, in_callableShaderBindingTableBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCreateRayTracingPipelinesNV(
@@ -6878,7 +6957,8 @@ void VulkanReplayConsumer::Process_vkCmdWriteAccelerationStructuresPropertiesNV(
     VkQueryPool in_queryPool = MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);
     GetDeviceTable(in_commandBuffer)->CmdWriteAccelerationStructuresPropertiesNV(in_commandBuffer, accelerationStructureCount, in_pAccelerationStructures, queryType, in_queryPool, firstQuery);
     {
-        TrackDRCmdWriteAccelerationStructuresPropertiesNVHandles(in_commandBuffer, accelerationStructureCount, in_pAccelerationStructures, in_queryPool);    }
+        TrackDRCmdWriteAccelerationStructuresPropertiesNVHandles(in_commandBuffer, accelerationStructureCount, in_pAccelerationStructures, in_queryPool);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCompileDeferredNV(
@@ -6925,7 +7005,8 @@ void VulkanReplayConsumer::Process_vkCmdWriteBufferMarkerAMD(
     VkBuffer in_dstBuffer = MapHandle<BufferInfo>(dstBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdWriteBufferMarkerAMD(in_commandBuffer, pipelineStage, in_dstBuffer, dstOffset, marker);
     {
-        TrackDRCmdWriteBufferMarkerAMDHandles(in_commandBuffer, in_dstBuffer);    }
+        TrackDRCmdWriteBufferMarkerAMDHandles(in_commandBuffer, in_dstBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT(
@@ -6987,7 +7068,8 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectNV(
     VkBuffer in_buffer = MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksIndirectNV(in_commandBuffer, in_buffer, offset, drawCount, stride);
     {
-        TrackDRCmdDrawMeshTasksIndirectNVHandles(in_commandBuffer, in_buffer);    }
+        TrackDRCmdDrawMeshTasksIndirectNVHandles(in_commandBuffer, in_buffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectCountNV(
@@ -7006,7 +7088,8 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectCountNV(
     VkBuffer in_countBuffer = MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksIndirectCountNV(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);
     {
-        TrackDRCmdDrawMeshTasksIndirectCountNVHandles(in_commandBuffer, in_buffer, in_countBuffer);    }
+        TrackDRCmdDrawMeshTasksIndirectCountNVHandles(in_commandBuffer, in_buffer, in_countBuffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdSetExclusiveScissorEnableNV(
@@ -7496,7 +7579,8 @@ void VulkanReplayConsumer::Process_vkCmdBindVertexBuffers2EXT(
     const VkDeviceSize* in_pStrides = pStrides->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdBindVertexBuffers2EXT(in_commandBuffer, firstBinding, bindingCount, in_pBuffers, in_pOffsets, in_pSizes, in_pStrides);
     {
-        TrackDRCmdBindVertexBuffers2EXTHandles(in_commandBuffer, bindingCount, in_pBuffers);    }
+        TrackDRCmdBindVertexBuffers2EXTHandles(in_commandBuffer, bindingCount, in_pBuffers);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdSetDepthTestEnableEXT(
@@ -7681,7 +7765,8 @@ void VulkanReplayConsumer::Process_vkCmdPreprocessGeneratedCommandsNV(
     MapStructHandles(pGeneratedCommandsInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdPreprocessGeneratedCommandsNV(in_commandBuffer, in_pGeneratedCommandsInfo);
     {
-        TrackDRCmdPreprocessGeneratedCommandsNVHandles(in_commandBuffer, in_pGeneratedCommandsInfo);    }
+        TrackDRCmdPreprocessGeneratedCommandsNVHandles(in_commandBuffer, in_pGeneratedCommandsInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdExecuteGeneratedCommandsNV(
@@ -7696,7 +7781,8 @@ void VulkanReplayConsumer::Process_vkCmdExecuteGeneratedCommandsNV(
     MapStructHandles(pGeneratedCommandsInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdExecuteGeneratedCommandsNV(in_commandBuffer, isPreprocessed, in_pGeneratedCommandsInfo);
     {
-        TrackDRCmdExecuteGeneratedCommandsNVHandles(in_commandBuffer, in_pGeneratedCommandsInfo);    }
+        TrackDRCmdExecuteGeneratedCommandsNVHandles(in_commandBuffer, in_pGeneratedCommandsInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdBindPipelineShaderGroupNV(
@@ -7711,7 +7797,8 @@ void VulkanReplayConsumer::Process_vkCmdBindPipelineShaderGroupNV(
     VkPipeline in_pipeline = MapHandle<PipelineInfo>(pipeline, &VulkanObjectInfoTable::GetPipelineInfo);
     GetDeviceTable(in_commandBuffer)->CmdBindPipelineShaderGroupNV(in_commandBuffer, pipelineBindPoint, in_pipeline, groupIndex);
     {
-        TrackDRCmdBindPipelineShaderGroupNVHandles(in_commandBuffer, in_pipeline);    }
+        TrackDRCmdBindPipelineShaderGroupNVHandles(in_commandBuffer, in_pipeline);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCreateIndirectCommandsLayoutNV(
@@ -8034,7 +8121,8 @@ void VulkanReplayConsumer::Process_vkCmdBindInvocationMaskHUAWEI(
     VkImageView in_imageView = MapHandle<ImageViewInfo>(imageView, &VulkanObjectInfoTable::GetImageViewInfo);
     GetDeviceTable(in_commandBuffer)->CmdBindInvocationMaskHUAWEI(in_commandBuffer, in_imageView, imageLayout);
     {
-        TrackDRCmdBindInvocationMaskHUAWEIHandles(in_commandBuffer, in_imageView);    }
+        TrackDRCmdBindInvocationMaskHUAWEIHandles(in_commandBuffer, in_imageView);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkGetMemoryRemoteAddressNV(
@@ -8226,7 +8314,8 @@ void VulkanReplayConsumer::Process_vkCmdBuildMicromapsEXT(
     MapStructArrayHandles(pInfos->GetMetaStructPointer(), pInfos->GetLength(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdBuildMicromapsEXT(in_commandBuffer, infoCount, in_pInfos);
     {
-        TrackDRCmdBuildMicromapsEXTHandles(in_commandBuffer, infoCount, in_pInfos);    }
+        TrackDRCmdBuildMicromapsEXTHandles(in_commandBuffer, infoCount, in_pInfos);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkBuildMicromapsEXT(
@@ -8324,7 +8413,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyMicromapEXT(
     MapStructHandles(pInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdCopyMicromapEXT(in_commandBuffer, in_pInfo);
     {
-        TrackDRCmdCopyMicromapEXTHandles(in_commandBuffer, in_pInfo);    }
+        TrackDRCmdCopyMicromapEXTHandles(in_commandBuffer, in_pInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyMicromapToMemoryEXT(
@@ -8338,7 +8428,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyMicromapToMemoryEXT(
     MapStructHandles(pInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdCopyMicromapToMemoryEXT(in_commandBuffer, in_pInfo);
     {
-        TrackDRCmdCopyMicromapToMemoryEXTHandles(in_commandBuffer, in_pInfo);    }
+        TrackDRCmdCopyMicromapToMemoryEXTHandles(in_commandBuffer, in_pInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyMemoryToMicromapEXT(
@@ -8352,7 +8443,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyMemoryToMicromapEXT(
     MapStructHandles(pInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdCopyMemoryToMicromapEXT(in_commandBuffer, in_pInfo);
     {
-        TrackDRCmdCopyMemoryToMicromapEXTHandles(in_commandBuffer, in_pInfo);    }
+        TrackDRCmdCopyMemoryToMicromapEXTHandles(in_commandBuffer, in_pInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdWriteMicromapsPropertiesEXT(
@@ -8370,7 +8462,8 @@ void VulkanReplayConsumer::Process_vkCmdWriteMicromapsPropertiesEXT(
     VkQueryPool in_queryPool = MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);
     GetDeviceTable(in_commandBuffer)->CmdWriteMicromapsPropertiesEXT(in_commandBuffer, micromapCount, in_pMicromaps, queryType, in_queryPool, firstQuery);
     {
-        TrackDRCmdWriteMicromapsPropertiesEXTHandles(in_commandBuffer, micromapCount, in_pMicromaps, in_queryPool);    }
+        TrackDRCmdWriteMicromapsPropertiesEXTHandles(in_commandBuffer, micromapCount, in_pMicromaps, in_queryPool);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkGetDeviceMicromapCompatibilityEXT(
@@ -8425,7 +8518,8 @@ void VulkanReplayConsumer::Process_vkCmdDrawClusterIndirectHUAWEI(
     VkBuffer in_buffer = MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDrawClusterIndirectHUAWEI(in_commandBuffer, in_buffer, offset);
     {
-        TrackDRCmdDrawClusterIndirectHUAWEIHandles(in_commandBuffer, in_buffer);    }
+        TrackDRCmdDrawClusterIndirectHUAWEIHandles(in_commandBuffer, in_buffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkSetDeviceMemoryPriorityEXT(
@@ -8495,7 +8589,8 @@ void VulkanReplayConsumer::Process_vkCmdUpdatePipelineIndirectBufferNV(
     VkPipeline in_pipeline = MapHandle<PipelineInfo>(pipeline, &VulkanObjectInfoTable::GetPipelineInfo);
     GetDeviceTable(in_commandBuffer)->CmdUpdatePipelineIndirectBufferNV(in_commandBuffer, pipelineBindPoint, in_pipeline);
     {
-        TrackDRCmdUpdatePipelineIndirectBufferNVHandles(in_commandBuffer, in_pipeline);    }
+        TrackDRCmdUpdatePipelineIndirectBufferNVHandles(in_commandBuffer, in_pipeline);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkGetPipelineIndirectDeviceAddressNV(
@@ -8949,7 +9044,8 @@ void VulkanReplayConsumer::Process_vkCmdOpticalFlowExecuteNV(
     const VkOpticalFlowExecuteInfoNV* in_pExecuteInfo = pExecuteInfo->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdOpticalFlowExecuteNV(in_commandBuffer, in_session, in_pExecuteInfo);
     {
-        TrackDRCmdOpticalFlowExecuteNVHandles(in_commandBuffer, in_session);    }
+        TrackDRCmdOpticalFlowExecuteNVHandles(in_commandBuffer, in_session);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCreateShadersEXT(
@@ -9018,7 +9114,8 @@ void VulkanReplayConsumer::Process_vkCmdBindShadersEXT(
     const VkShaderEXT* in_pShaders = MapHandles<ShaderEXTInfo>(pShaders, stageCount, &VulkanObjectInfoTable::GetShaderEXTInfo);
     GetDeviceTable(in_commandBuffer)->CmdBindShadersEXT(in_commandBuffer, stageCount, in_pStages, in_pShaders);
     {
-        TrackDRCmdBindShadersEXTHandles(in_commandBuffer, stageCount, in_pShaders);    }
+        TrackDRCmdBindShadersEXTHandles(in_commandBuffer, stageCount, in_pShaders);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkGetFramebufferTilePropertiesQCOM(
@@ -9207,7 +9304,8 @@ void VulkanReplayConsumer::Process_vkCmdBuildAccelerationStructuresKHR(
     const VkAccelerationStructureBuildRangeInfoKHR* const* in_ppBuildRangeInfos = ppBuildRangeInfos->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdBuildAccelerationStructuresKHR(in_commandBuffer, infoCount, in_pInfos, in_ppBuildRangeInfos);
     {
-        TrackDRCmdBuildAccelerationStructuresKHRHandles(in_commandBuffer, infoCount, in_pInfos);    }
+        TrackDRCmdBuildAccelerationStructuresKHRHandles(in_commandBuffer, infoCount, in_pInfos);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdBuildAccelerationStructuresIndirectKHR(
@@ -9228,7 +9326,8 @@ void VulkanReplayConsumer::Process_vkCmdBuildAccelerationStructuresIndirectKHR(
     const uint32_t* const* in_ppMaxPrimitiveCounts = ppMaxPrimitiveCounts->GetPointer();
     GetDeviceTable(in_commandBuffer)->CmdBuildAccelerationStructuresIndirectKHR(in_commandBuffer, infoCount, in_pInfos, in_pIndirectDeviceAddresses, in_pIndirectStrides, in_ppMaxPrimitiveCounts);
     {
-        TrackDRCmdBuildAccelerationStructuresIndirectKHRHandles(in_commandBuffer, infoCount, in_pInfos);    }
+        TrackDRCmdBuildAccelerationStructuresIndirectKHRHandles(in_commandBuffer, infoCount, in_pInfos);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCopyAccelerationStructureToMemoryKHR(
@@ -9293,7 +9392,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyAccelerationStructureKHR(
     MapStructHandles(pInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdCopyAccelerationStructureKHR(in_commandBuffer, in_pInfo);
     {
-        TrackDRCmdCopyAccelerationStructureKHRHandles(in_commandBuffer, in_pInfo);    }
+        TrackDRCmdCopyAccelerationStructureKHRHandles(in_commandBuffer, in_pInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyAccelerationStructureToMemoryKHR(
@@ -9307,7 +9407,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyAccelerationStructureToMemoryKHR(
     MapStructHandles(pInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdCopyAccelerationStructureToMemoryKHR(in_commandBuffer, in_pInfo);
     {
-        TrackDRCmdCopyAccelerationStructureToMemoryKHRHandles(in_commandBuffer, in_pInfo);    }
+        TrackDRCmdCopyAccelerationStructureToMemoryKHRHandles(in_commandBuffer, in_pInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdCopyMemoryToAccelerationStructureKHR(
@@ -9321,7 +9422,8 @@ void VulkanReplayConsumer::Process_vkCmdCopyMemoryToAccelerationStructureKHR(
     MapStructHandles(pInfo->GetMetaStructPointer(), GetObjectInfoTable());
     GetDeviceTable(in_commandBuffer)->CmdCopyMemoryToAccelerationStructureKHR(in_commandBuffer, in_pInfo);
     {
-        TrackDRCmdCopyMemoryToAccelerationStructureKHRHandles(in_commandBuffer, in_pInfo);    }
+        TrackDRCmdCopyMemoryToAccelerationStructureKHRHandles(in_commandBuffer, in_pInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkGetAccelerationStructureDeviceAddressKHR(
@@ -9352,7 +9454,8 @@ void VulkanReplayConsumer::Process_vkCmdWriteAccelerationStructuresPropertiesKHR
     VkQueryPool in_queryPool = MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);
     GetDeviceTable(in_commandBuffer)->CmdWriteAccelerationStructuresPropertiesKHR(in_commandBuffer, accelerationStructureCount, in_pAccelerationStructures, queryType, in_queryPool, firstQuery);
     {
-        TrackDRCmdWriteAccelerationStructuresPropertiesKHRHandles(in_commandBuffer, accelerationStructureCount, in_pAccelerationStructures, in_queryPool);    }
+        TrackDRCmdWriteAccelerationStructuresPropertiesKHRHandles(in_commandBuffer, accelerationStructureCount, in_pAccelerationStructures, in_queryPool);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkGetDeviceAccelerationStructureCompatibilityKHR(
@@ -9491,7 +9594,8 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectEXT(
     VkBuffer in_buffer = MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksIndirectEXT(in_commandBuffer, in_buffer, offset, drawCount, stride);
     {
-        TrackDRCmdDrawMeshTasksIndirectEXTHandles(in_commandBuffer, in_buffer);    }
+        TrackDRCmdDrawMeshTasksIndirectEXTHandles(in_commandBuffer, in_buffer);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectCountEXT(
@@ -9510,7 +9614,8 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectCountEXT(
     VkBuffer in_countBuffer = MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksIndirectCountEXT(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);
     {
-        TrackDRCmdDrawMeshTasksIndirectCountEXTHandles(in_commandBuffer, in_buffer, in_countBuffer);    }
+        TrackDRCmdDrawMeshTasksIndirectCountEXTHandles(in_commandBuffer, in_buffer, in_countBuffer);
+    }
 }
 
 static void InitializeOutputStructPNextImpl(const VkBaseInStructure* in_pnext, VkBaseOutStructure* output_struct)
