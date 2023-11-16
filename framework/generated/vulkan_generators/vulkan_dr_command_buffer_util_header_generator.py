@@ -88,10 +88,10 @@ class VulkanDRCommandBufferUtilHeaderGenerator(BaseGenerator):
         self.newline()
         write('GFXRECON_BEGIN_NAMESPACE(gfxrecon)', file=self.outFile)
         write('GFXRECON_BEGIN_NAMESPACE(decode)', file=self.outFile)
+        self.newline()
 
     def endFile(self):
         """Method override."""
-        self.newline()
         write('GFXRECON_END_NAMESPACE(decode)', file=self.outFile)
         write('GFXRECON_END_NAMESPACE(gfxrecon)', file=self.outFile)
 
@@ -122,6 +122,28 @@ class VulkanDRCommandBufferUtilHeaderGenerator(BaseGenerator):
             if values and (values[0].base_type == 'VkCommandBuffer') and (cmd not in drFuncExcludeList):
                 handles = self.get_param_list_handles(values[1:])
 
+                #@@@Debug output for vkCmdSetBlendConstants
+                if cmd == 'vkCmdSetBlendConstants':
+                    write('//@@@Debug: cmd=',cmd, file=self.outFile)
+                    write('//@@@Debug: info[0]='+info[0], file=self.outFile)  ### THIS IS return type
+                    write('//@@@Debug: info[1]='+info[1], file=self.outFile)  ### This is proto  "<type> <entrypoint>"
+                    for i in (0,1):
+                        write('//@@@Debug: i='+str(i), file=self.outFile)
+                        write('//@@@Debug: info[2][i].name='+info[2][i].name, file=self.outFile)  ## This is name of first arg
+                        write('//@@@Debug: info[2][i].base_type='+info[2][i].base_type, file=self.outFile)
+                        write('//@@@Debug: info[2][i].full_type='+info[2][i].full_type, file=self.outFile)
+                        write('//@@@Debug: info[2][i].pointer_count='+str(info[2][i].pointer_count), file=self.outFile)
+                        write('//@@@Debug: info[2][i].array_length='+str(info[2][i].array_length), file=self.outFile)
+                        write('//@@@Debug: info[2][i].array_capacity='+str(info[2][i].array_capacity), file=self.outFile)
+                        write('//@@@Debug: info[2][i].array_dimension='+str(info[2][i].array_dimension), file=self.outFile)
+                        write('//@@@Debug: info[2][i].platform_base_type='+str(info[2][i].platform_base_type), file=self.outFile)
+                        write('//@@@Debug: info[2][i].is_pointer='+str(info[2][i].is_pointer), file=self.outFile)
+                        write('//@@@Debug: info[2][i].is_array='+str(info[2][i].is_array), file=self.outFile)
+                        write('//@@@Debug: info[2][i].is_dynamic='+str(info[2][i].is_dynamic), file=self.outFile)
+                        write('//@@@Debug: info[2][i].is_const='+str(info[2][i].is_const), file=self.outFile)
+                return_type = info[0]
+                write('//@@@Debug: return_type = '+return_type, file=self.outFile)
+                
                 if (handles):
                     # Generate a function to build a list of handle types and values.
                     cmddef = '\n'
@@ -130,15 +152,14 @@ class VulkanDRCommandBufferUtilHeaderGenerator(BaseGenerator):
                     )
                     write(cmddef, file=self.outFile)
 
+
     def get_param_list_handles(self, values):
         """Create list of parameters that have handle types or are structs that contain handles."""
         handles = []
         for value in values:
             if self.is_handle(value.base_type):
                 handles.append(value)
-            elif self.is_struct(
-                value.base_type
-            ) and (value.base_type in self.structs_with_handles):
+            elif self.is_struct(value.base_type) and (value.base_type in self.structs_with_handles):
                 handles.append(value)
         return handles
 
