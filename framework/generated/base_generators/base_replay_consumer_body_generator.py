@@ -42,10 +42,10 @@ class BaseReplayConsumerBodyGenerator():
             cmddef = '' if first else '\n'
             cmddef += self.make_consumer_func_decl(
                 return_type,
-                '{}ReplayConsumer::Process_'.format(platform_type) + cmd,
+                '/*@@@WET*/{}ReplayConsumer::Process_'.format(platform_type) + cmd,
                 values
             ) + '\n'
-            cmddef += '{\n'
+            cmddef += '{/*@@@GBN*/\n'
             cmddef += self.make_consumer_func_body(return_type, cmd, values)
             cmddef += '}'
 
