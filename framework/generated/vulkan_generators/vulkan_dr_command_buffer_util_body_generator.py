@@ -147,14 +147,13 @@ class VulkanDRCommandBufferUtilBodyGenerator(BaseGenerator):
                 if params and params[0].base_type == 'VkCommandBuffer':
                     # Check for parameters with handle types, ignoring the first VkCommandBuffer parameter.
                     handles = self.get_param_list_handles(params[1:])
-                    #handles = self.get_param_list_handles(params)   # ????  subscript with [1:] to exclude funs with cmdbuf as single arg????
 
-                    drFuncExcludeList=['vkBeginCommandBuffer','vkResetCommandBuffer']
+                    drFuncExcludeList=['vkBeginCommandBuffer','vkResetCommandBuffer']  #TODO: Can this be removed??
                     args = self.get_arg_list(handles)
                     if len(args) > 1 and (cmd not in drFuncExcludeList):
                         # Generate a function to build a list of handle types and values.
                         cmddef = '\n'
-                        cmddef += 'void TrackDR{}Handles(VkCommandBuffer commandBuffer, {})\n'.format(
+                        cmddef += 'void TrackDR{}Handles(VkCommandBuffer commandBuffer, {}) //@@@DLO\n'.format(
                             cmd[2:], self.get_arg_list(handles)
                         )
                         cmddef += '{\n'
