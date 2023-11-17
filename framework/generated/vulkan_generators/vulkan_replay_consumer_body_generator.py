@@ -220,6 +220,7 @@ class VulkanReplayConsumerBodyGenerator(
 
     def generate_feature(self):
         """Performs C++ code generation for the feature."""
+        write('//@@@-GFE\n', file=self.outFile)
         BaseReplayConsumerBodyGenerator.generate_feature(self)
 
     def use_instance_table(self, name, typename):
@@ -257,7 +258,6 @@ class VulkanReplayConsumerBodyGenerator(
                     handles.append(value)     #@@@ TODO: Fix this if/elif/else
             return handles
 
-    # NEEDED???
     def make_get_command_handles_expr(self, cmd, handle_params):
         """Generate an expression for a get command buffer handles utility function."""
         args = ["in_commandBuffer"]
@@ -340,8 +340,7 @@ class VulkanReplayConsumerBodyGenerator(
                 )
             else:
                 call_expr = '{}({}, {})/*@@@PKQ*/'.format(
-                    self.REPLAY_OVERRIDES[name], dispatchfunc, arglist
-                )
+                    self.REPLAY_OVERRIDES[name], dispatchfunc, arglist)
         else:
             call_expr = '{}({})/*@@@ABC*/'.format(dispatchfunc, arglist)
 
@@ -362,6 +361,19 @@ class VulkanReplayConsumerBodyGenerator(
                 ['    ' + val if val else val for val in postexpr]
             )
             body += '\n'
+
+        if values[0].full_type == 'VkCommandBuffer':
+            body += '    {\n'
+            body += '      //@@@ECH Log this command if we have reached the target vkBeginCmdBuffer\n'
+            body += '      //       reset clears the log\n'
+            body += '      //       Does begin clear the log?\n'
+            body += '      //       A draw command that is to trigger the resource dump needs to be handled here\n'
+            body += '      //       Note that only one cmdbuffer will need to be saved\n'
+            body += '      uint32_t i = format::ApiCall_'+name+';\n'
+            body += '      ' + name + '_DRSaveStruct s;\n'
+            body += '      s.commandBuffer = in_commandBuffer;\n'
+            body += '      printf("apicall: %d\\n", i);\n'
+            body += '    }\n'
 
         drFuncExcludeList=['vkBeginCommandBuffer','vkResetCommandBuffer']
         handle_params = self.get_param_list_handles(values)
