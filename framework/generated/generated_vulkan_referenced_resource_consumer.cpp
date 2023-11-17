@@ -37,7 +37,7 @@ void VulkanReferencedResourceConsumer::Process_vkBeginCommandBuffer(
     const ApiCallInfo&                          call_info,
     VkResult                                    returnValue,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkCommandBufferBeginInfo>* pBeginInfo)
+    StructPointerDecoder<Decoded_VkCommandBufferBeginInfo>/*@@@PLQ*/* pBeginInfo)
 {
     assert(pBeginInfo != nullptr);
 
@@ -168,7 +168,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdCopyBuffer(
     format::HandleId                            srcBuffer,
     format::HandleId                            dstBuffer,
     uint32_t                                    regionCount,
-    StructPointerDecoder<Decoded_VkBufferCopy>* pRegions)
+    StructPointerDecoder<Decoded_VkBufferCopy>/*@@@PLQ*/* pRegions)
 {
     GFXRECON_UNREFERENCED_PARAMETER(regionCount);
     GFXRECON_UNREFERENCED_PARAMETER(pRegions);
@@ -185,7 +185,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdCopyImage(
     format::HandleId                            dstImage,
     VkImageLayout                               dstImageLayout,
     uint32_t                                    regionCount,
-    StructPointerDecoder<Decoded_VkImageCopy>*  pRegions)
+    StructPointerDecoder<Decoded_VkImageCopy>/*@@@PLQ*/* pRegions)
 {
     GFXRECON_UNREFERENCED_PARAMETER(srcImageLayout);
     GFXRECON_UNREFERENCED_PARAMETER(dstImageLayout);
@@ -204,7 +204,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdBlitImage(
     format::HandleId                            dstImage,
     VkImageLayout                               dstImageLayout,
     uint32_t                                    regionCount,
-    StructPointerDecoder<Decoded_VkImageBlit>*  pRegions,
+    StructPointerDecoder<Decoded_VkImageBlit>/*@@@PLQ*/* pRegions,
     VkFilter                                    filter)
 {
     GFXRECON_UNREFERENCED_PARAMETER(srcImageLayout);
@@ -224,7 +224,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdCopyBufferToImage(
     format::HandleId                            dstImage,
     VkImageLayout                               dstImageLayout,
     uint32_t                                    regionCount,
-    StructPointerDecoder<Decoded_VkBufferImageCopy>* pRegions)
+    StructPointerDecoder<Decoded_VkBufferImageCopy>/*@@@PLQ*/* pRegions)
 {
     GFXRECON_UNREFERENCED_PARAMETER(dstImageLayout);
     GFXRECON_UNREFERENCED_PARAMETER(regionCount);
@@ -241,7 +241,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdCopyImageToBuffer(
     VkImageLayout                               srcImageLayout,
     format::HandleId                            dstBuffer,
     uint32_t                                    regionCount,
-    StructPointerDecoder<Decoded_VkBufferImageCopy>* pRegions)
+    StructPointerDecoder<Decoded_VkBufferImageCopy>/*@@@PLQ*/* pRegions)
 {
     GFXRECON_UNREFERENCED_PARAMETER(srcImageLayout);
     GFXRECON_UNREFERENCED_PARAMETER(regionCount);
@@ -286,9 +286,9 @@ void VulkanReferencedResourceConsumer::Process_vkCmdClearColorImage(
     format::HandleId                            commandBuffer,
     format::HandleId                            image,
     VkImageLayout                               imageLayout,
-    StructPointerDecoder<Decoded_VkClearColorValue>* pColor,
+    StructPointerDecoder<Decoded_VkClearColorValue>/*@@@PLQ*/* pColor,
     uint32_t                                    rangeCount,
-    StructPointerDecoder<Decoded_VkImageSubresourceRange>* pRanges)
+    StructPointerDecoder<Decoded_VkImageSubresourceRange>/*@@@PLQ*/* pRanges)
 {
     GFXRECON_UNREFERENCED_PARAMETER(imageLayout);
     GFXRECON_UNREFERENCED_PARAMETER(pColor);
@@ -303,9 +303,9 @@ void VulkanReferencedResourceConsumer::Process_vkCmdClearDepthStencilImage(
     format::HandleId                            commandBuffer,
     format::HandleId                            image,
     VkImageLayout                               imageLayout,
-    StructPointerDecoder<Decoded_VkClearDepthStencilValue>* pDepthStencil,
+    StructPointerDecoder<Decoded_VkClearDepthStencilValue>/*@@@PLQ*/* pDepthStencil,
     uint32_t                                    rangeCount,
-    StructPointerDecoder<Decoded_VkImageSubresourceRange>* pRanges)
+    StructPointerDecoder<Decoded_VkImageSubresourceRange>/*@@@PLQ*/* pRanges)
 {
     GFXRECON_UNREFERENCED_PARAMETER(imageLayout);
     GFXRECON_UNREFERENCED_PARAMETER(pDepthStencil);
@@ -323,7 +323,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdResolveImage(
     format::HandleId                            dstImage,
     VkImageLayout                               dstImageLayout,
     uint32_t                                    regionCount,
-    StructPointerDecoder<Decoded_VkImageResolve>* pRegions)
+    StructPointerDecoder<Decoded_VkImageResolve>/*@@@PLQ*/* pRegions)
 {
     GFXRECON_UNREFERENCED_PARAMETER(srcImageLayout);
     GFXRECON_UNREFERENCED_PARAMETER(dstImageLayout);
@@ -342,11 +342,11 @@ void VulkanReferencedResourceConsumer::Process_vkCmdWaitEvents(
     VkPipelineStageFlags                        srcStageMask,
     VkPipelineStageFlags                        dstStageMask,
     uint32_t                                    memoryBarrierCount,
-    StructPointerDecoder<Decoded_VkMemoryBarrier>* pMemoryBarriers,
+    StructPointerDecoder<Decoded_VkMemoryBarrier>/*@@@PLQ*/* pMemoryBarriers,
     uint32_t                                    bufferMemoryBarrierCount,
-    StructPointerDecoder<Decoded_VkBufferMemoryBarrier>* pBufferMemoryBarriers,
+    StructPointerDecoder<Decoded_VkBufferMemoryBarrier>/*@@@PLQ*/* pBufferMemoryBarriers,
     uint32_t                                    imageMemoryBarrierCount,
-    StructPointerDecoder<Decoded_VkImageMemoryBarrier>* pImageMemoryBarriers)
+    StructPointerDecoder<Decoded_VkImageMemoryBarrier>/*@@@PLQ*/* pImageMemoryBarriers)
 {
     GFXRECON_UNREFERENCED_PARAMETER(eventCount);
     GFXRECON_UNREFERENCED_PARAMETER(pEvents);
@@ -389,11 +389,11 @@ void VulkanReferencedResourceConsumer::Process_vkCmdPipelineBarrier(
     VkPipelineStageFlags                        dstStageMask,
     VkDependencyFlags                           dependencyFlags,
     uint32_t                                    memoryBarrierCount,
-    StructPointerDecoder<Decoded_VkMemoryBarrier>* pMemoryBarriers,
+    StructPointerDecoder<Decoded_VkMemoryBarrier>/*@@@PLQ*/* pMemoryBarriers,
     uint32_t                                    bufferMemoryBarrierCount,
-    StructPointerDecoder<Decoded_VkBufferMemoryBarrier>* pBufferMemoryBarriers,
+    StructPointerDecoder<Decoded_VkBufferMemoryBarrier>/*@@@PLQ*/* pBufferMemoryBarriers,
     uint32_t                                    imageMemoryBarrierCount,
-    StructPointerDecoder<Decoded_VkImageMemoryBarrier>* pImageMemoryBarriers)
+    StructPointerDecoder<Decoded_VkImageMemoryBarrier>/*@@@PLQ*/* pImageMemoryBarriers)
 {
     GFXRECON_UNREFERENCED_PARAMETER(srcStageMask);
     GFXRECON_UNREFERENCED_PARAMETER(dstStageMask);
@@ -452,7 +452,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdCopyQueryPoolResults(
 void VulkanReferencedResourceConsumer::Process_vkCmdBeginRenderPass(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* pRenderPassBegin,
+    StructPointerDecoder<Decoded_VkRenderPassBeginInfo>/*@@@PLQ*/* pRenderPassBegin,
     VkSubpassContents                           contents)
 {
     GFXRECON_UNREFERENCED_PARAMETER(contents);
@@ -556,8 +556,8 @@ void VulkanReferencedResourceConsumer::Process_vkCmdDrawIndexedIndirectCount(
 void VulkanReferencedResourceConsumer::Process_vkCmdBeginRenderPass2(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* pRenderPassBegin,
-    StructPointerDecoder<Decoded_VkSubpassBeginInfo>* pSubpassBeginInfo)
+    StructPointerDecoder<Decoded_VkRenderPassBeginInfo>/*@@@PLQ*/* pRenderPassBegin,
+    StructPointerDecoder<Decoded_VkSubpassBeginInfo>/*@@@PLQ*/* pSubpassBeginInfo)
 {
     GFXRECON_UNREFERENCED_PARAMETER(pSubpassBeginInfo);
 
@@ -602,7 +602,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdSetEvent2(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
     format::HandleId                            event,
-    StructPointerDecoder<Decoded_VkDependencyInfo>* pDependencyInfo)
+    StructPointerDecoder<Decoded_VkDependencyInfo>/*@@@PLQ*/* pDependencyInfo)
 {
     GFXRECON_UNREFERENCED_PARAMETER(event);
 
@@ -638,7 +638,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdWaitEvents2(
     format::HandleId                            commandBuffer,
     uint32_t                                    eventCount,
     HandlePointerDecoder<VkEvent>*              pEvents,
-    StructPointerDecoder<Decoded_VkDependencyInfo>* pDependencyInfos)
+    StructPointerDecoder<Decoded_VkDependencyInfo>/*@@@PLQ*/* pDependencyInfos)
 {
     GFXRECON_UNREFERENCED_PARAMETER(eventCount);
     GFXRECON_UNREFERENCED_PARAMETER(pEvents);
@@ -677,7 +677,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdWaitEvents2(
 void VulkanReferencedResourceConsumer::Process_vkCmdPipelineBarrier2(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkDependencyInfo>* pDependencyInfo)
+    StructPointerDecoder<Decoded_VkDependencyInfo>/*@@@PLQ*/* pDependencyInfo)
 {
     assert(pDependencyInfo != nullptr);
 
@@ -709,7 +709,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdPipelineBarrier2(
 void VulkanReferencedResourceConsumer::Process_vkCmdCopyBuffer2(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkCopyBufferInfo2>* pCopyBufferInfo)
+    StructPointerDecoder<Decoded_VkCopyBufferInfo2>/*@@@PLQ*/* pCopyBufferInfo)
 {
     assert(pCopyBufferInfo != nullptr);
 
@@ -724,7 +724,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdCopyBuffer2(
 void VulkanReferencedResourceConsumer::Process_vkCmdCopyImage2(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkCopyImageInfo2>* pCopyImageInfo)
+    StructPointerDecoder<Decoded_VkCopyImageInfo2>/*@@@PLQ*/* pCopyImageInfo)
 {
     assert(pCopyImageInfo != nullptr);
 
@@ -739,7 +739,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdCopyImage2(
 void VulkanReferencedResourceConsumer::Process_vkCmdCopyBufferToImage2(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkCopyBufferToImageInfo2>* pCopyBufferToImageInfo)
+    StructPointerDecoder<Decoded_VkCopyBufferToImageInfo2>/*@@@PLQ*/* pCopyBufferToImageInfo)
 {
     assert(pCopyBufferToImageInfo != nullptr);
 
@@ -754,7 +754,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdCopyBufferToImage2(
 void VulkanReferencedResourceConsumer::Process_vkCmdCopyImageToBuffer2(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkCopyImageToBufferInfo2>* pCopyImageToBufferInfo)
+    StructPointerDecoder<Decoded_VkCopyImageToBufferInfo2>/*@@@PLQ*/* pCopyImageToBufferInfo)
 {
     assert(pCopyImageToBufferInfo != nullptr);
 
@@ -769,7 +769,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdCopyImageToBuffer2(
 void VulkanReferencedResourceConsumer::Process_vkCmdBlitImage2(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkBlitImageInfo2>* pBlitImageInfo)
+    StructPointerDecoder<Decoded_VkBlitImageInfo2>/*@@@PLQ*/* pBlitImageInfo)
 {
     assert(pBlitImageInfo != nullptr);
 
@@ -784,7 +784,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdBlitImage2(
 void VulkanReferencedResourceConsumer::Process_vkCmdResolveImage2(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkResolveImageInfo2>* pResolveImageInfo)
+    StructPointerDecoder<Decoded_VkResolveImageInfo2>/*@@@PLQ*/* pResolveImageInfo)
 {
     assert(pResolveImageInfo != nullptr);
 
@@ -799,7 +799,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdResolveImage2(
 void VulkanReferencedResourceConsumer::Process_vkCmdBeginRendering(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkRenderingInfo>* pRenderingInfo)
+    StructPointerDecoder<Decoded_VkRenderingInfo>/*@@@PLQ*/* pRenderingInfo)
 {
     assert(pRenderingInfo != nullptr);
 
@@ -892,7 +892,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdBindVertexBuffers2(
 void VulkanReferencedResourceConsumer::Process_vkCmdBeginVideoCodingKHR(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkVideoBeginCodingInfoKHR>* pBeginInfo)
+    StructPointerDecoder<Decoded_VkVideoBeginCodingInfoKHR>/*@@@PLQ*/* pBeginInfo)
 {
     assert(pBeginInfo != nullptr);
 
@@ -918,7 +918,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdBeginVideoCodingKHR(
 void VulkanReferencedResourceConsumer::Process_vkCmdDecodeVideoKHR(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkVideoDecodeInfoKHR>* pDecodeInfo)
+    StructPointerDecoder<Decoded_VkVideoDecodeInfoKHR>/*@@@PLQ*/* pDecodeInfo)
 {
     assert(pDecodeInfo != nullptr);
 
@@ -957,7 +957,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdDecodeVideoKHR(
 void VulkanReferencedResourceConsumer::Process_vkCmdBeginRenderingKHR(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkRenderingInfo>* pRenderingInfo)
+    StructPointerDecoder<Decoded_VkRenderingInfo>/*@@@PLQ*/* pRenderingInfo)
 {
     assert(pRenderingInfo != nullptr);
 
@@ -1025,7 +1025,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdPushDescriptorSetKHR(
     format::HandleId                            layout,
     uint32_t                                    set,
     uint32_t                                    descriptorWriteCount,
-    StructPointerDecoder<Decoded_VkWriteDescriptorSet>* pDescriptorWrites)
+    StructPointerDecoder<Decoded_VkWriteDescriptorSet>/*@@@PLQ*/* pDescriptorWrites)
 {
     GFXRECON_UNREFERENCED_PARAMETER(pipelineBindPoint);
     GFXRECON_UNREFERENCED_PARAMETER(layout);
@@ -1106,8 +1106,8 @@ void VulkanReferencedResourceConsumer::Process_vkCmdPushDescriptorSetKHR(
 void VulkanReferencedResourceConsumer::Process_vkCmdBeginRenderPass2KHR(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* pRenderPassBegin,
-    StructPointerDecoder<Decoded_VkSubpassBeginInfo>* pSubpassBeginInfo)
+    StructPointerDecoder<Decoded_VkRenderPassBeginInfo>/*@@@PLQ*/* pRenderPassBegin,
+    StructPointerDecoder<Decoded_VkSubpassBeginInfo>/*@@@PLQ*/* pSubpassBeginInfo)
 {
     GFXRECON_UNREFERENCED_PARAMETER(pSubpassBeginInfo);
 
@@ -1189,7 +1189,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdDrawIndexedIndirectCountKHR(
 void VulkanReferencedResourceConsumer::Process_vkCmdEncodeVideoKHR(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkVideoEncodeInfoKHR>* pEncodeInfo)
+    StructPointerDecoder<Decoded_VkVideoEncodeInfoKHR>/*@@@PLQ*/* pEncodeInfo)
 {
     assert(pEncodeInfo != nullptr);
 
@@ -1229,7 +1229,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdSetEvent2KHR(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
     format::HandleId                            event,
-    StructPointerDecoder<Decoded_VkDependencyInfo>* pDependencyInfo)
+    StructPointerDecoder<Decoded_VkDependencyInfo>/*@@@PLQ*/* pDependencyInfo)
 {
     GFXRECON_UNREFERENCED_PARAMETER(event);
 
@@ -1265,7 +1265,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdWaitEvents2KHR(
     format::HandleId                            commandBuffer,
     uint32_t                                    eventCount,
     HandlePointerDecoder<VkEvent>*              pEvents,
-    StructPointerDecoder<Decoded_VkDependencyInfo>* pDependencyInfos)
+    StructPointerDecoder<Decoded_VkDependencyInfo>/*@@@PLQ*/* pDependencyInfos)
 {
     GFXRECON_UNREFERENCED_PARAMETER(eventCount);
     GFXRECON_UNREFERENCED_PARAMETER(pEvents);
@@ -1304,7 +1304,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdWaitEvents2KHR(
 void VulkanReferencedResourceConsumer::Process_vkCmdPipelineBarrier2KHR(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkDependencyInfo>* pDependencyInfo)
+    StructPointerDecoder<Decoded_VkDependencyInfo>/*@@@PLQ*/* pDependencyInfo)
 {
     assert(pDependencyInfo != nullptr);
 
@@ -1351,7 +1351,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdWriteBufferMarker2AMD(
 void VulkanReferencedResourceConsumer::Process_vkCmdCopyBuffer2KHR(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkCopyBufferInfo2>* pCopyBufferInfo)
+    StructPointerDecoder<Decoded_VkCopyBufferInfo2>/*@@@PLQ*/* pCopyBufferInfo)
 {
     assert(pCopyBufferInfo != nullptr);
 
@@ -1366,7 +1366,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdCopyBuffer2KHR(
 void VulkanReferencedResourceConsumer::Process_vkCmdCopyImage2KHR(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkCopyImageInfo2>* pCopyImageInfo)
+    StructPointerDecoder<Decoded_VkCopyImageInfo2>/*@@@PLQ*/* pCopyImageInfo)
 {
     assert(pCopyImageInfo != nullptr);
 
@@ -1381,7 +1381,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdCopyImage2KHR(
 void VulkanReferencedResourceConsumer::Process_vkCmdCopyBufferToImage2KHR(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkCopyBufferToImageInfo2>* pCopyBufferToImageInfo)
+    StructPointerDecoder<Decoded_VkCopyBufferToImageInfo2>/*@@@PLQ*/* pCopyBufferToImageInfo)
 {
     assert(pCopyBufferToImageInfo != nullptr);
 
@@ -1396,7 +1396,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdCopyBufferToImage2KHR(
 void VulkanReferencedResourceConsumer::Process_vkCmdCopyImageToBuffer2KHR(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkCopyImageToBufferInfo2>* pCopyImageToBufferInfo)
+    StructPointerDecoder<Decoded_VkCopyImageToBufferInfo2>/*@@@PLQ*/* pCopyImageToBufferInfo)
 {
     assert(pCopyImageToBufferInfo != nullptr);
 
@@ -1411,7 +1411,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdCopyImageToBuffer2KHR(
 void VulkanReferencedResourceConsumer::Process_vkCmdBlitImage2KHR(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkBlitImageInfo2>* pBlitImageInfo)
+    StructPointerDecoder<Decoded_VkBlitImageInfo2>/*@@@PLQ*/* pBlitImageInfo)
 {
     assert(pBlitImageInfo != nullptr);
 
@@ -1426,7 +1426,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdBlitImage2KHR(
 void VulkanReferencedResourceConsumer::Process_vkCmdResolveImage2KHR(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkResolveImageInfo2>* pResolveImageInfo)
+    StructPointerDecoder<Decoded_VkResolveImageInfo2>/*@@@PLQ*/* pResolveImageInfo)
 {
     assert(pResolveImageInfo != nullptr);
 
@@ -1590,7 +1590,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdDrawIndexedIndirectCountAMD(
 void VulkanReferencedResourceConsumer::Process_vkCmdBeginConditionalRenderingEXT(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkConditionalRenderingBeginInfoEXT>* pConditionalRenderingBegin)
+    StructPointerDecoder<Decoded_VkConditionalRenderingBeginInfoEXT>/*@@@PLQ*/* pConditionalRenderingBegin)
 {
     assert(pConditionalRenderingBegin != nullptr);
 
@@ -1615,7 +1615,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdBindShadingRateImageNV(
 void VulkanReferencedResourceConsumer::Process_vkCmdBuildAccelerationStructureNV(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkAccelerationStructureInfoNV>* pInfo,
+    StructPointerDecoder<Decoded_VkAccelerationStructureInfoNV>/*@@@PLQ*/* pInfo,
     format::HandleId                            instanceData,
     VkDeviceSize                                instanceOffset,
     VkBool32                                    update,
@@ -1768,7 +1768,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdBindVertexBuffers2EXT(
 void VulkanReferencedResourceConsumer::Process_vkCmdPreprocessGeneratedCommandsNV(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
-    StructPointerDecoder<Decoded_VkGeneratedCommandsInfoNV>* pGeneratedCommandsInfo)
+    StructPointerDecoder<Decoded_VkGeneratedCommandsInfoNV>/*@@@PLQ*/* pGeneratedCommandsInfo)
 {
     assert(pGeneratedCommandsInfo != nullptr);
 
@@ -1794,7 +1794,7 @@ void VulkanReferencedResourceConsumer::Process_vkCmdExecuteGeneratedCommandsNV(
     const ApiCallInfo&                          call_info,
     format::HandleId                            commandBuffer,
     VkBool32                                    isPreprocessed,
-    StructPointerDecoder<Decoded_VkGeneratedCommandsInfoNV>* pGeneratedCommandsInfo)
+    StructPointerDecoder<Decoded_VkGeneratedCommandsInfoNV>/*@@@PLQ*/* pGeneratedCommandsInfo)
 {
     GFXRECON_UNREFERENCED_PARAMETER(isPreprocessed);
 
