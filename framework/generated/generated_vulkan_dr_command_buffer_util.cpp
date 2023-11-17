@@ -67,7 +67,7 @@ struct handlesetstruct  {
 };
 std::map<VkCommandBuffer, handlesetstruct> handleset;
 
-void TrackDRCmdBindPipelineHandles(VkCommandBuffer commandBuffer, VkPipeline pipeline)
+void TrackDRCmdBindPipelineHandles(VkCommandBuffer commandBuffer, VkPipeline pipeline) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -77,7 +77,7 @@ void TrackDRCmdBindPipelineHandles(VkCommandBuffer commandBuffer, VkPipeline pip
     }
 }
 
-void TrackDRCmdBindDescriptorSetsHandles(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t descriptorSetCount, const VkDescriptorSet* pDescriptorSets)
+void TrackDRCmdBindDescriptorSetsHandles(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t descriptorSetCount, const VkDescriptorSet* pDescriptorSets) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -99,7 +99,7 @@ void TrackDRCmdBindDescriptorSetsHandles(VkCommandBuffer commandBuffer, VkPipeli
     }
 }
 
-void TrackDRCmdBindIndexBufferHandles(VkCommandBuffer commandBuffer, VkBuffer buffer)
+void TrackDRCmdBindIndexBufferHandles(VkCommandBuffer commandBuffer, VkBuffer buffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -109,7 +109,7 @@ void TrackDRCmdBindIndexBufferHandles(VkCommandBuffer commandBuffer, VkBuffer bu
     }
 }
 
-void TrackDRCmdBindVertexBuffersHandles(VkCommandBuffer commandBuffer, uint32_t bindingCount, const VkBuffer* pBuffers)
+void TrackDRCmdBindVertexBuffersHandles(VkCommandBuffer commandBuffer, uint32_t bindingCount, const VkBuffer* pBuffers) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -125,7 +125,7 @@ void TrackDRCmdBindVertexBuffersHandles(VkCommandBuffer commandBuffer, uint32_t 
     }
 }
 
-void TrackDRCmdDrawIndirectHandles(VkCommandBuffer commandBuffer, VkBuffer buffer)
+void TrackDRCmdDrawIndirectHandles(VkCommandBuffer commandBuffer, VkBuffer buffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -135,7 +135,7 @@ void TrackDRCmdDrawIndirectHandles(VkCommandBuffer commandBuffer, VkBuffer buffe
     }
 }
 
-void TrackDRCmdDrawIndexedIndirectHandles(VkCommandBuffer commandBuffer, VkBuffer buffer)
+void TrackDRCmdDrawIndexedIndirectHandles(VkCommandBuffer commandBuffer, VkBuffer buffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -145,7 +145,7 @@ void TrackDRCmdDrawIndexedIndirectHandles(VkCommandBuffer commandBuffer, VkBuffe
     }
 }
 
-void TrackDRCmdDispatchIndirectHandles(VkCommandBuffer commandBuffer, VkBuffer buffer)
+void TrackDRCmdDispatchIndirectHandles(VkCommandBuffer commandBuffer, VkBuffer buffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -155,7 +155,7 @@ void TrackDRCmdDispatchIndirectHandles(VkCommandBuffer commandBuffer, VkBuffer b
     }
 }
 
-void TrackDRCmdCopyBufferHandles(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer)
+void TrackDRCmdCopyBufferHandles(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -170,7 +170,7 @@ void TrackDRCmdCopyBufferHandles(VkCommandBuffer commandBuffer, VkBuffer srcBuff
     }
 }
 
-void TrackDRCmdCopyImageHandles(VkCommandBuffer commandBuffer, VkImage srcImage, VkImage dstImage)
+void TrackDRCmdCopyImageHandles(VkCommandBuffer commandBuffer, VkImage srcImage, VkImage dstImage) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -185,7 +185,7 @@ void TrackDRCmdCopyImageHandles(VkCommandBuffer commandBuffer, VkImage srcImage,
     }
 }
 
-void TrackDRCmdBlitImageHandles(VkCommandBuffer commandBuffer, VkImage srcImage, VkImage dstImage)
+void TrackDRCmdBlitImageHandles(VkCommandBuffer commandBuffer, VkImage srcImage, VkImage dstImage) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -200,7 +200,7 @@ void TrackDRCmdBlitImageHandles(VkCommandBuffer commandBuffer, VkImage srcImage,
     }
 }
 
-void TrackDRCmdCopyBufferToImageHandles(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkImage dstImage)
+void TrackDRCmdCopyBufferToImageHandles(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkImage dstImage) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -215,7 +215,7 @@ void TrackDRCmdCopyBufferToImageHandles(VkCommandBuffer commandBuffer, VkBuffer 
     }
 }
 
-void TrackDRCmdCopyImageToBufferHandles(VkCommandBuffer commandBuffer, VkImage srcImage, VkBuffer dstBuffer)
+void TrackDRCmdCopyImageToBufferHandles(VkCommandBuffer commandBuffer, VkImage srcImage, VkBuffer dstBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -230,7 +230,7 @@ void TrackDRCmdCopyImageToBufferHandles(VkCommandBuffer commandBuffer, VkImage s
     }
 }
 
-void TrackDRCmdUpdateBufferHandles(VkCommandBuffer commandBuffer, VkBuffer dstBuffer)
+void TrackDRCmdUpdateBufferHandles(VkCommandBuffer commandBuffer, VkBuffer dstBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -240,7 +240,7 @@ void TrackDRCmdUpdateBufferHandles(VkCommandBuffer commandBuffer, VkBuffer dstBu
     }
 }
 
-void TrackDRCmdFillBufferHandles(VkCommandBuffer commandBuffer, VkBuffer dstBuffer)
+void TrackDRCmdFillBufferHandles(VkCommandBuffer commandBuffer, VkBuffer dstBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -250,7 +250,7 @@ void TrackDRCmdFillBufferHandles(VkCommandBuffer commandBuffer, VkBuffer dstBuff
     }
 }
 
-void TrackDRCmdClearColorImageHandles(VkCommandBuffer commandBuffer, VkImage image)
+void TrackDRCmdClearColorImageHandles(VkCommandBuffer commandBuffer, VkImage image) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -260,7 +260,7 @@ void TrackDRCmdClearColorImageHandles(VkCommandBuffer commandBuffer, VkImage ima
     }
 }
 
-void TrackDRCmdClearDepthStencilImageHandles(VkCommandBuffer commandBuffer, VkImage image)
+void TrackDRCmdClearDepthStencilImageHandles(VkCommandBuffer commandBuffer, VkImage image) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -270,7 +270,7 @@ void TrackDRCmdClearDepthStencilImageHandles(VkCommandBuffer commandBuffer, VkIm
     }
 }
 
-void TrackDRCmdResolveImageHandles(VkCommandBuffer commandBuffer, VkImage srcImage, VkImage dstImage)
+void TrackDRCmdResolveImageHandles(VkCommandBuffer commandBuffer, VkImage srcImage, VkImage dstImage) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -285,7 +285,7 @@ void TrackDRCmdResolveImageHandles(VkCommandBuffer commandBuffer, VkImage srcIma
     }
 }
 
-void TrackDRCmdSetEventHandles(VkCommandBuffer commandBuffer, VkEvent event)
+void TrackDRCmdSetEventHandles(VkCommandBuffer commandBuffer, VkEvent event) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -295,7 +295,7 @@ void TrackDRCmdSetEventHandles(VkCommandBuffer commandBuffer, VkEvent event)
     }
 }
 
-void TrackDRCmdResetEventHandles(VkCommandBuffer commandBuffer, VkEvent event)
+void TrackDRCmdResetEventHandles(VkCommandBuffer commandBuffer, VkEvent event) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -305,7 +305,7 @@ void TrackDRCmdResetEventHandles(VkCommandBuffer commandBuffer, VkEvent event)
     }
 }
 
-void TrackDRCmdWaitEventsHandles(VkCommandBuffer commandBuffer, uint32_t eventCount, const VkEvent* pEvents, uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier* pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier* pImageMemoryBarriers)
+void TrackDRCmdWaitEventsHandles(VkCommandBuffer commandBuffer, uint32_t eventCount, const VkEvent* pEvents, uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier* pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier* pImageMemoryBarriers) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -347,7 +347,7 @@ void TrackDRCmdWaitEventsHandles(VkCommandBuffer commandBuffer, uint32_t eventCo
     }
 }
 
-void TrackDRCmdPipelineBarrierHandles(VkCommandBuffer commandBuffer, uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier* pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier* pImageMemoryBarriers)
+void TrackDRCmdPipelineBarrierHandles(VkCommandBuffer commandBuffer, uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier* pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier* pImageMemoryBarriers) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -377,7 +377,7 @@ void TrackDRCmdPipelineBarrierHandles(VkCommandBuffer commandBuffer, uint32_t bu
     }
 }
 
-void TrackDRCmdBeginQueryHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool)
+void TrackDRCmdBeginQueryHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -387,7 +387,7 @@ void TrackDRCmdBeginQueryHandles(VkCommandBuffer commandBuffer, VkQueryPool quer
     }
 }
 
-void TrackDRCmdEndQueryHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool)
+void TrackDRCmdEndQueryHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -397,7 +397,7 @@ void TrackDRCmdEndQueryHandles(VkCommandBuffer commandBuffer, VkQueryPool queryP
     }
 }
 
-void TrackDRCmdResetQueryPoolHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool)
+void TrackDRCmdResetQueryPoolHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -407,7 +407,7 @@ void TrackDRCmdResetQueryPoolHandles(VkCommandBuffer commandBuffer, VkQueryPool 
     }
 }
 
-void TrackDRCmdWriteTimestampHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool)
+void TrackDRCmdWriteTimestampHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -417,7 +417,7 @@ void TrackDRCmdWriteTimestampHandles(VkCommandBuffer commandBuffer, VkQueryPool 
     }
 }
 
-void TrackDRCmdCopyQueryPoolResultsHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool, VkBuffer dstBuffer)
+void TrackDRCmdCopyQueryPoolResultsHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool, VkBuffer dstBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -432,7 +432,7 @@ void TrackDRCmdCopyQueryPoolResultsHandles(VkCommandBuffer commandBuffer, VkQuer
     }
 }
 
-void TrackDRCmdPushConstantsHandles(VkCommandBuffer commandBuffer, VkPipelineLayout layout)
+void TrackDRCmdPushConstantsHandles(VkCommandBuffer commandBuffer, VkPipelineLayout layout) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -442,7 +442,7 @@ void TrackDRCmdPushConstantsHandles(VkCommandBuffer commandBuffer, VkPipelineLay
     }
 }
 
-void TrackDRCmdBeginRenderPassHandles(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo* pRenderPassBegin)
+void TrackDRCmdBeginRenderPassHandles(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo* pRenderPassBegin) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -488,7 +488,7 @@ void TrackDRCmdBeginRenderPassHandles(VkCommandBuffer commandBuffer, const VkRen
     }
 }
 
-void TrackDRCmdExecuteCommandsHandles(VkCommandBuffer commandBuffer, uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffers)
+void TrackDRCmdExecuteCommandsHandles(VkCommandBuffer commandBuffer, uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffers) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -504,7 +504,7 @@ void TrackDRCmdExecuteCommandsHandles(VkCommandBuffer commandBuffer, uint32_t co
     }
 }
 
-void TrackDRCmdDrawIndirectCountHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer)
+void TrackDRCmdDrawIndirectCountHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -519,7 +519,7 @@ void TrackDRCmdDrawIndirectCountHandles(VkCommandBuffer commandBuffer, VkBuffer 
     }
 }
 
-void TrackDRCmdDrawIndexedIndirectCountHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer)
+void TrackDRCmdDrawIndexedIndirectCountHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -534,7 +534,7 @@ void TrackDRCmdDrawIndexedIndirectCountHandles(VkCommandBuffer commandBuffer, Vk
     }
 }
 
-void TrackDRCmdBeginRenderPass2Handles(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo* pRenderPassBegin)
+void TrackDRCmdBeginRenderPass2Handles(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo* pRenderPassBegin) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -580,7 +580,7 @@ void TrackDRCmdBeginRenderPass2Handles(VkCommandBuffer commandBuffer, const VkRe
     }
 }
 
-void TrackDRCmdSetEvent2Handles(VkCommandBuffer commandBuffer, VkEvent event, const VkDependencyInfo* pDependencyInfo)
+void TrackDRCmdSetEvent2Handles(VkCommandBuffer commandBuffer, VkEvent event, const VkDependencyInfo* pDependencyInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -620,7 +620,7 @@ void TrackDRCmdSetEvent2Handles(VkCommandBuffer commandBuffer, VkEvent event, co
     }
 }
 
-void TrackDRCmdResetEvent2Handles(VkCommandBuffer commandBuffer, VkEvent event)
+void TrackDRCmdResetEvent2Handles(VkCommandBuffer commandBuffer, VkEvent event) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -630,7 +630,7 @@ void TrackDRCmdResetEvent2Handles(VkCommandBuffer commandBuffer, VkEvent event)
     }
 }
 
-void TrackDRCmdWaitEvents2Handles(VkCommandBuffer commandBuffer, uint32_t eventCount, const VkEvent* pEvents, const VkDependencyInfo* pDependencyInfos)
+void TrackDRCmdWaitEvents2Handles(VkCommandBuffer commandBuffer, uint32_t eventCount, const VkEvent* pEvents, const VkDependencyInfo* pDependencyInfos) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -679,7 +679,7 @@ void TrackDRCmdWaitEvents2Handles(VkCommandBuffer commandBuffer, uint32_t eventC
     }
 }
 
-void TrackDRCmdPipelineBarrier2Handles(VkCommandBuffer commandBuffer, const VkDependencyInfo* pDependencyInfo)
+void TrackDRCmdPipelineBarrier2Handles(VkCommandBuffer commandBuffer, const VkDependencyInfo* pDependencyInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -713,7 +713,7 @@ void TrackDRCmdPipelineBarrier2Handles(VkCommandBuffer commandBuffer, const VkDe
     }
 }
 
-void TrackDRCmdWriteTimestamp2Handles(VkCommandBuffer commandBuffer, VkQueryPool queryPool)
+void TrackDRCmdWriteTimestamp2Handles(VkCommandBuffer commandBuffer, VkQueryPool queryPool) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -723,7 +723,7 @@ void TrackDRCmdWriteTimestamp2Handles(VkCommandBuffer commandBuffer, VkQueryPool
     }
 }
 
-void TrackDRCmdCopyBuffer2Handles(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo)
+void TrackDRCmdCopyBuffer2Handles(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -742,7 +742,7 @@ void TrackDRCmdCopyBuffer2Handles(VkCommandBuffer commandBuffer, const VkCopyBuf
     }
 }
 
-void TrackDRCmdCopyImage2Handles(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo)
+void TrackDRCmdCopyImage2Handles(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -761,7 +761,7 @@ void TrackDRCmdCopyImage2Handles(VkCommandBuffer commandBuffer, const VkCopyImag
     }
 }
 
-void TrackDRCmdCopyBufferToImage2Handles(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo)
+void TrackDRCmdCopyBufferToImage2Handles(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -780,7 +780,7 @@ void TrackDRCmdCopyBufferToImage2Handles(VkCommandBuffer commandBuffer, const Vk
     }
 }
 
-void TrackDRCmdCopyImageToBuffer2Handles(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo)
+void TrackDRCmdCopyImageToBuffer2Handles(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -799,7 +799,7 @@ void TrackDRCmdCopyImageToBuffer2Handles(VkCommandBuffer commandBuffer, const Vk
     }
 }
 
-void TrackDRCmdBlitImage2Handles(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo)
+void TrackDRCmdBlitImage2Handles(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -818,7 +818,7 @@ void TrackDRCmdBlitImage2Handles(VkCommandBuffer commandBuffer, const VkBlitImag
     }
 }
 
-void TrackDRCmdResolveImage2Handles(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo)
+void TrackDRCmdResolveImage2Handles(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -837,7 +837,7 @@ void TrackDRCmdResolveImage2Handles(VkCommandBuffer commandBuffer, const VkResol
     }
 }
 
-void TrackDRCmdBeginRenderingHandles(VkCommandBuffer commandBuffer, const VkRenderingInfo* pRenderingInfo)
+void TrackDRCmdBeginRenderingHandles(VkCommandBuffer commandBuffer, const VkRenderingInfo* pRenderingInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -926,7 +926,7 @@ void TrackDRCmdBeginRenderingHandles(VkCommandBuffer commandBuffer, const VkRend
     }
 }
 
-void TrackDRCmdBindVertexBuffers2Handles(VkCommandBuffer commandBuffer, uint32_t bindingCount, const VkBuffer* pBuffers)
+void TrackDRCmdBindVertexBuffers2Handles(VkCommandBuffer commandBuffer, uint32_t bindingCount, const VkBuffer* pBuffers) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -942,7 +942,7 @@ void TrackDRCmdBindVertexBuffers2Handles(VkCommandBuffer commandBuffer, uint32_t
     }
 }
 
-void TrackDRCmdBeginVideoCodingKHRHandles(VkCommandBuffer commandBuffer, const VkVideoBeginCodingInfoKHR* pBeginInfo)
+void TrackDRCmdBeginVideoCodingKHRHandles(VkCommandBuffer commandBuffer, const VkVideoBeginCodingInfoKHR* pBeginInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -978,7 +978,7 @@ void TrackDRCmdBeginVideoCodingKHRHandles(VkCommandBuffer commandBuffer, const V
     }
 }
 
-void TrackDRCmdDecodeVideoKHRHandles(VkCommandBuffer commandBuffer, const VkVideoDecodeInfoKHR* pDecodeInfo)
+void TrackDRCmdDecodeVideoKHRHandles(VkCommandBuffer commandBuffer, const VkVideoDecodeInfoKHR* pDecodeInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1029,7 +1029,7 @@ void TrackDRCmdDecodeVideoKHRHandles(VkCommandBuffer commandBuffer, const VkVide
     }
 }
 
-void TrackDRCmdBeginRenderingKHRHandles(VkCommandBuffer commandBuffer, const VkRenderingInfo* pRenderingInfo)
+void TrackDRCmdBeginRenderingKHRHandles(VkCommandBuffer commandBuffer, const VkRenderingInfo* pRenderingInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1118,7 +1118,7 @@ void TrackDRCmdBeginRenderingKHRHandles(VkCommandBuffer commandBuffer, const VkR
     }
 }
 
-void TrackDRCmdPushDescriptorSetKHRHandles(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t descriptorWriteCount, const VkWriteDescriptorSet* pDescriptorWrites)
+void TrackDRCmdPushDescriptorSetKHRHandles(VkCommandBuffer commandBuffer, VkPipelineLayout layout, uint32_t descriptorWriteCount, const VkWriteDescriptorSet* pDescriptorWrites) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1228,7 +1228,7 @@ void TrackDRCmdPushDescriptorSetKHRHandles(VkCommandBuffer commandBuffer, VkPipe
     }
 }
 
-void TrackDRCmdBeginRenderPass2KHRHandles(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo* pRenderPassBegin)
+void TrackDRCmdBeginRenderPass2KHRHandles(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo* pRenderPassBegin) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1274,7 +1274,7 @@ void TrackDRCmdBeginRenderPass2KHRHandles(VkCommandBuffer commandBuffer, const V
     }
 }
 
-void TrackDRCmdDrawIndirectCountKHRHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer)
+void TrackDRCmdDrawIndirectCountKHRHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1289,7 +1289,7 @@ void TrackDRCmdDrawIndirectCountKHRHandles(VkCommandBuffer commandBuffer, VkBuff
     }
 }
 
-void TrackDRCmdDrawIndexedIndirectCountKHRHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer)
+void TrackDRCmdDrawIndexedIndirectCountKHRHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1304,7 +1304,7 @@ void TrackDRCmdDrawIndexedIndirectCountKHRHandles(VkCommandBuffer commandBuffer,
     }
 }
 
-void TrackDRCmdEncodeVideoKHRHandles(VkCommandBuffer commandBuffer, const VkVideoEncodeInfoKHR* pEncodeInfo)
+void TrackDRCmdEncodeVideoKHRHandles(VkCommandBuffer commandBuffer, const VkVideoEncodeInfoKHR* pEncodeInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1355,7 +1355,7 @@ void TrackDRCmdEncodeVideoKHRHandles(VkCommandBuffer commandBuffer, const VkVide
     }
 }
 
-void TrackDRCmdSetEvent2KHRHandles(VkCommandBuffer commandBuffer, VkEvent event, const VkDependencyInfo* pDependencyInfo)
+void TrackDRCmdSetEvent2KHRHandles(VkCommandBuffer commandBuffer, VkEvent event, const VkDependencyInfo* pDependencyInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1395,7 +1395,7 @@ void TrackDRCmdSetEvent2KHRHandles(VkCommandBuffer commandBuffer, VkEvent event,
     }
 }
 
-void TrackDRCmdResetEvent2KHRHandles(VkCommandBuffer commandBuffer, VkEvent event)
+void TrackDRCmdResetEvent2KHRHandles(VkCommandBuffer commandBuffer, VkEvent event) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1405,7 +1405,7 @@ void TrackDRCmdResetEvent2KHRHandles(VkCommandBuffer commandBuffer, VkEvent even
     }
 }
 
-void TrackDRCmdWaitEvents2KHRHandles(VkCommandBuffer commandBuffer, uint32_t eventCount, const VkEvent* pEvents, const VkDependencyInfo* pDependencyInfos)
+void TrackDRCmdWaitEvents2KHRHandles(VkCommandBuffer commandBuffer, uint32_t eventCount, const VkEvent* pEvents, const VkDependencyInfo* pDependencyInfos) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1454,7 +1454,7 @@ void TrackDRCmdWaitEvents2KHRHandles(VkCommandBuffer commandBuffer, uint32_t eve
     }
 }
 
-void TrackDRCmdPipelineBarrier2KHRHandles(VkCommandBuffer commandBuffer, const VkDependencyInfo* pDependencyInfo)
+void TrackDRCmdPipelineBarrier2KHRHandles(VkCommandBuffer commandBuffer, const VkDependencyInfo* pDependencyInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1488,7 +1488,7 @@ void TrackDRCmdPipelineBarrier2KHRHandles(VkCommandBuffer commandBuffer, const V
     }
 }
 
-void TrackDRCmdWriteTimestamp2KHRHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool)
+void TrackDRCmdWriteTimestamp2KHRHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1498,7 +1498,7 @@ void TrackDRCmdWriteTimestamp2KHRHandles(VkCommandBuffer commandBuffer, VkQueryP
     }
 }
 
-void TrackDRCmdWriteBufferMarker2AMDHandles(VkCommandBuffer commandBuffer, VkBuffer dstBuffer)
+void TrackDRCmdWriteBufferMarker2AMDHandles(VkCommandBuffer commandBuffer, VkBuffer dstBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1508,7 +1508,7 @@ void TrackDRCmdWriteBufferMarker2AMDHandles(VkCommandBuffer commandBuffer, VkBuf
     }
 }
 
-void TrackDRCmdCopyBuffer2KHRHandles(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo)
+void TrackDRCmdCopyBuffer2KHRHandles(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1527,7 +1527,7 @@ void TrackDRCmdCopyBuffer2KHRHandles(VkCommandBuffer commandBuffer, const VkCopy
     }
 }
 
-void TrackDRCmdCopyImage2KHRHandles(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo)
+void TrackDRCmdCopyImage2KHRHandles(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1546,7 +1546,7 @@ void TrackDRCmdCopyImage2KHRHandles(VkCommandBuffer commandBuffer, const VkCopyI
     }
 }
 
-void TrackDRCmdCopyBufferToImage2KHRHandles(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo)
+void TrackDRCmdCopyBufferToImage2KHRHandles(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1565,7 +1565,7 @@ void TrackDRCmdCopyBufferToImage2KHRHandles(VkCommandBuffer commandBuffer, const
     }
 }
 
-void TrackDRCmdCopyImageToBuffer2KHRHandles(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo)
+void TrackDRCmdCopyImageToBuffer2KHRHandles(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1584,7 +1584,7 @@ void TrackDRCmdCopyImageToBuffer2KHRHandles(VkCommandBuffer commandBuffer, const
     }
 }
 
-void TrackDRCmdBlitImage2KHRHandles(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo)
+void TrackDRCmdBlitImage2KHRHandles(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1603,7 +1603,7 @@ void TrackDRCmdBlitImage2KHRHandles(VkCommandBuffer commandBuffer, const VkBlitI
     }
 }
 
-void TrackDRCmdResolveImage2KHRHandles(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo)
+void TrackDRCmdResolveImage2KHRHandles(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1622,7 +1622,7 @@ void TrackDRCmdResolveImage2KHRHandles(VkCommandBuffer commandBuffer, const VkRe
     }
 }
 
-void TrackDRCmdBindIndexBuffer2KHRHandles(VkCommandBuffer commandBuffer, VkBuffer buffer)
+void TrackDRCmdBindIndexBuffer2KHRHandles(VkCommandBuffer commandBuffer, VkBuffer buffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1632,7 +1632,7 @@ void TrackDRCmdBindIndexBuffer2KHRHandles(VkCommandBuffer commandBuffer, VkBuffe
     }
 }
 
-void TrackDRCmdBindTransformFeedbackBuffersEXTHandles(VkCommandBuffer commandBuffer, uint32_t bindingCount, const VkBuffer* pBuffers)
+void TrackDRCmdBindTransformFeedbackBuffersEXTHandles(VkCommandBuffer commandBuffer, uint32_t bindingCount, const VkBuffer* pBuffers) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1648,7 +1648,7 @@ void TrackDRCmdBindTransformFeedbackBuffersEXTHandles(VkCommandBuffer commandBuf
     }
 }
 
-void TrackDRCmdBeginTransformFeedbackEXTHandles(VkCommandBuffer commandBuffer, uint32_t counterBufferCount, const VkBuffer* pCounterBuffers)
+void TrackDRCmdBeginTransformFeedbackEXTHandles(VkCommandBuffer commandBuffer, uint32_t counterBufferCount, const VkBuffer* pCounterBuffers) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1664,7 +1664,7 @@ void TrackDRCmdBeginTransformFeedbackEXTHandles(VkCommandBuffer commandBuffer, u
     }
 }
 
-void TrackDRCmdEndTransformFeedbackEXTHandles(VkCommandBuffer commandBuffer, uint32_t counterBufferCount, const VkBuffer* pCounterBuffers)
+void TrackDRCmdEndTransformFeedbackEXTHandles(VkCommandBuffer commandBuffer, uint32_t counterBufferCount, const VkBuffer* pCounterBuffers) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1680,7 +1680,7 @@ void TrackDRCmdEndTransformFeedbackEXTHandles(VkCommandBuffer commandBuffer, uin
     }
 }
 
-void TrackDRCmdBeginQueryIndexedEXTHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool)
+void TrackDRCmdBeginQueryIndexedEXTHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1690,7 +1690,7 @@ void TrackDRCmdBeginQueryIndexedEXTHandles(VkCommandBuffer commandBuffer, VkQuer
     }
 }
 
-void TrackDRCmdEndQueryIndexedEXTHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool)
+void TrackDRCmdEndQueryIndexedEXTHandles(VkCommandBuffer commandBuffer, VkQueryPool queryPool) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1700,7 +1700,7 @@ void TrackDRCmdEndQueryIndexedEXTHandles(VkCommandBuffer commandBuffer, VkQueryP
     }
 }
 
-void TrackDRCmdDrawIndirectByteCountEXTHandles(VkCommandBuffer commandBuffer, VkBuffer counterBuffer)
+void TrackDRCmdDrawIndirectByteCountEXTHandles(VkCommandBuffer commandBuffer, VkBuffer counterBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1710,7 +1710,7 @@ void TrackDRCmdDrawIndirectByteCountEXTHandles(VkCommandBuffer commandBuffer, Vk
     }
 }
 
-void TrackDRCmdDrawIndirectCountAMDHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer)
+void TrackDRCmdDrawIndirectCountAMDHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1725,7 +1725,7 @@ void TrackDRCmdDrawIndirectCountAMDHandles(VkCommandBuffer commandBuffer, VkBuff
     }
 }
 
-void TrackDRCmdDrawIndexedIndirectCountAMDHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer)
+void TrackDRCmdDrawIndexedIndirectCountAMDHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1740,7 +1740,7 @@ void TrackDRCmdDrawIndexedIndirectCountAMDHandles(VkCommandBuffer commandBuffer,
     }
 }
 
-void TrackDRCmdBeginConditionalRenderingEXTHandles(VkCommandBuffer commandBuffer, const VkConditionalRenderingBeginInfoEXT* pConditionalRenderingBegin)
+void TrackDRCmdBeginConditionalRenderingEXTHandles(VkCommandBuffer commandBuffer, const VkConditionalRenderingBeginInfoEXT* pConditionalRenderingBegin) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1754,7 +1754,7 @@ void TrackDRCmdBeginConditionalRenderingEXTHandles(VkCommandBuffer commandBuffer
     }
 }
 
-void TrackDRCmdBindShadingRateImageNVHandles(VkCommandBuffer commandBuffer, VkImageView imageView)
+void TrackDRCmdBindShadingRateImageNVHandles(VkCommandBuffer commandBuffer, VkImageView imageView) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1764,7 +1764,7 @@ void TrackDRCmdBindShadingRateImageNVHandles(VkCommandBuffer commandBuffer, VkIm
     }
 }
 
-void TrackDRCmdBuildAccelerationStructureNVHandles(VkCommandBuffer commandBuffer, const VkAccelerationStructureInfoNV* pInfo, VkBuffer instanceData, VkAccelerationStructureNV dst, VkAccelerationStructureNV src, VkBuffer scratch)
+void TrackDRCmdBuildAccelerationStructureNVHandles(VkCommandBuffer commandBuffer, const VkAccelerationStructureInfoNV* pInfo, VkBuffer instanceData, VkAccelerationStructureNV dst, VkAccelerationStructureNV src, VkBuffer scratch) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1823,7 +1823,7 @@ void TrackDRCmdBuildAccelerationStructureNVHandles(VkCommandBuffer commandBuffer
     }
 }
 
-void TrackDRCmdCopyAccelerationStructureNVHandles(VkCommandBuffer commandBuffer, VkAccelerationStructureNV dst, VkAccelerationStructureNV src)
+void TrackDRCmdCopyAccelerationStructureNVHandles(VkCommandBuffer commandBuffer, VkAccelerationStructureNV dst, VkAccelerationStructureNV src) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1838,7 +1838,7 @@ void TrackDRCmdCopyAccelerationStructureNVHandles(VkCommandBuffer commandBuffer,
     }
 }
 
-void TrackDRCmdTraceRaysNVHandles(VkCommandBuffer commandBuffer, VkBuffer raygenShaderBindingTableBuffer, VkBuffer missShaderBindingTableBuffer, VkBuffer hitShaderBindingTableBuffer, VkBuffer callableShaderBindingTableBuffer)
+void TrackDRCmdTraceRaysNVHandles(VkCommandBuffer commandBuffer, VkBuffer raygenShaderBindingTableBuffer, VkBuffer missShaderBindingTableBuffer, VkBuffer hitShaderBindingTableBuffer, VkBuffer callableShaderBindingTableBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1863,7 +1863,7 @@ void TrackDRCmdTraceRaysNVHandles(VkCommandBuffer commandBuffer, VkBuffer raygen
     }
 }
 
-void TrackDRCmdWriteAccelerationStructuresPropertiesNVHandles(VkCommandBuffer commandBuffer, uint32_t accelerationStructureCount, const VkAccelerationStructureNV* pAccelerationStructures, VkQueryPool queryPool)
+void TrackDRCmdWriteAccelerationStructuresPropertiesNVHandles(VkCommandBuffer commandBuffer, uint32_t accelerationStructureCount, const VkAccelerationStructureNV* pAccelerationStructures, VkQueryPool queryPool) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1884,7 +1884,7 @@ void TrackDRCmdWriteAccelerationStructuresPropertiesNVHandles(VkCommandBuffer co
     }
 }
 
-void TrackDRCmdWriteBufferMarkerAMDHandles(VkCommandBuffer commandBuffer, VkBuffer dstBuffer)
+void TrackDRCmdWriteBufferMarkerAMDHandles(VkCommandBuffer commandBuffer, VkBuffer dstBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1894,7 +1894,7 @@ void TrackDRCmdWriteBufferMarkerAMDHandles(VkCommandBuffer commandBuffer, VkBuff
     }
 }
 
-void TrackDRCmdDrawMeshTasksIndirectNVHandles(VkCommandBuffer commandBuffer, VkBuffer buffer)
+void TrackDRCmdDrawMeshTasksIndirectNVHandles(VkCommandBuffer commandBuffer, VkBuffer buffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1904,7 +1904,7 @@ void TrackDRCmdDrawMeshTasksIndirectNVHandles(VkCommandBuffer commandBuffer, VkB
     }
 }
 
-void TrackDRCmdDrawMeshTasksIndirectCountNVHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer)
+void TrackDRCmdDrawMeshTasksIndirectCountNVHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1919,7 +1919,7 @@ void TrackDRCmdDrawMeshTasksIndirectCountNVHandles(VkCommandBuffer commandBuffer
     }
 }
 
-void TrackDRCmdBindVertexBuffers2EXTHandles(VkCommandBuffer commandBuffer, uint32_t bindingCount, const VkBuffer* pBuffers)
+void TrackDRCmdBindVertexBuffers2EXTHandles(VkCommandBuffer commandBuffer, uint32_t bindingCount, const VkBuffer* pBuffers) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1935,7 +1935,7 @@ void TrackDRCmdBindVertexBuffers2EXTHandles(VkCommandBuffer commandBuffer, uint3
     }
 }
 
-void TrackDRCmdPreprocessGeneratedCommandsNVHandles(VkCommandBuffer commandBuffer, const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo)
+void TrackDRCmdPreprocessGeneratedCommandsNVHandles(VkCommandBuffer commandBuffer, const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -1982,7 +1982,7 @@ void TrackDRCmdPreprocessGeneratedCommandsNVHandles(VkCommandBuffer commandBuffe
     }
 }
 
-void TrackDRCmdExecuteGeneratedCommandsNVHandles(VkCommandBuffer commandBuffer, const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo)
+void TrackDRCmdExecuteGeneratedCommandsNVHandles(VkCommandBuffer commandBuffer, const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2029,7 +2029,7 @@ void TrackDRCmdExecuteGeneratedCommandsNVHandles(VkCommandBuffer commandBuffer, 
     }
 }
 
-void TrackDRCmdBindPipelineShaderGroupNVHandles(VkCommandBuffer commandBuffer, VkPipeline pipeline)
+void TrackDRCmdBindPipelineShaderGroupNVHandles(VkCommandBuffer commandBuffer, VkPipeline pipeline) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2039,7 +2039,7 @@ void TrackDRCmdBindPipelineShaderGroupNVHandles(VkCommandBuffer commandBuffer, V
     }
 }
 
-void TrackDRCmdBindInvocationMaskHUAWEIHandles(VkCommandBuffer commandBuffer, VkImageView imageView)
+void TrackDRCmdBindInvocationMaskHUAWEIHandles(VkCommandBuffer commandBuffer, VkImageView imageView) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2049,7 +2049,7 @@ void TrackDRCmdBindInvocationMaskHUAWEIHandles(VkCommandBuffer commandBuffer, Vk
     }
 }
 
-void TrackDRCmdBuildMicromapsEXTHandles(VkCommandBuffer commandBuffer, uint32_t infoCount, const VkMicromapBuildInfoEXT* pInfos)
+void TrackDRCmdBuildMicromapsEXTHandles(VkCommandBuffer commandBuffer, uint32_t infoCount, const VkMicromapBuildInfoEXT* pInfos) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2066,7 +2066,7 @@ void TrackDRCmdBuildMicromapsEXTHandles(VkCommandBuffer commandBuffer, uint32_t 
     }
 }
 
-void TrackDRCmdCopyMicromapEXTHandles(VkCommandBuffer commandBuffer, const VkCopyMicromapInfoEXT* pInfo)
+void TrackDRCmdCopyMicromapEXTHandles(VkCommandBuffer commandBuffer, const VkCopyMicromapInfoEXT* pInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2085,7 +2085,7 @@ void TrackDRCmdCopyMicromapEXTHandles(VkCommandBuffer commandBuffer, const VkCop
     }
 }
 
-void TrackDRCmdCopyMicromapToMemoryEXTHandles(VkCommandBuffer commandBuffer, const VkCopyMicromapToMemoryInfoEXT* pInfo)
+void TrackDRCmdCopyMicromapToMemoryEXTHandles(VkCommandBuffer commandBuffer, const VkCopyMicromapToMemoryInfoEXT* pInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2099,7 +2099,7 @@ void TrackDRCmdCopyMicromapToMemoryEXTHandles(VkCommandBuffer commandBuffer, con
     }
 }
 
-void TrackDRCmdCopyMemoryToMicromapEXTHandles(VkCommandBuffer commandBuffer, const VkCopyMemoryToMicromapInfoEXT* pInfo)
+void TrackDRCmdCopyMemoryToMicromapEXTHandles(VkCommandBuffer commandBuffer, const VkCopyMemoryToMicromapInfoEXT* pInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2113,7 +2113,7 @@ void TrackDRCmdCopyMemoryToMicromapEXTHandles(VkCommandBuffer commandBuffer, con
     }
 }
 
-void TrackDRCmdWriteMicromapsPropertiesEXTHandles(VkCommandBuffer commandBuffer, uint32_t micromapCount, const VkMicromapEXT* pMicromaps, VkQueryPool queryPool)
+void TrackDRCmdWriteMicromapsPropertiesEXTHandles(VkCommandBuffer commandBuffer, uint32_t micromapCount, const VkMicromapEXT* pMicromaps, VkQueryPool queryPool) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2134,7 +2134,7 @@ void TrackDRCmdWriteMicromapsPropertiesEXTHandles(VkCommandBuffer commandBuffer,
     }
 }
 
-void TrackDRCmdDrawClusterIndirectHUAWEIHandles(VkCommandBuffer commandBuffer, VkBuffer buffer)
+void TrackDRCmdDrawClusterIndirectHUAWEIHandles(VkCommandBuffer commandBuffer, VkBuffer buffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2144,7 +2144,7 @@ void TrackDRCmdDrawClusterIndirectHUAWEIHandles(VkCommandBuffer commandBuffer, V
     }
 }
 
-void TrackDRCmdUpdatePipelineIndirectBufferNVHandles(VkCommandBuffer commandBuffer, VkPipeline pipeline)
+void TrackDRCmdUpdatePipelineIndirectBufferNVHandles(VkCommandBuffer commandBuffer, VkPipeline pipeline) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2154,7 +2154,7 @@ void TrackDRCmdUpdatePipelineIndirectBufferNVHandles(VkCommandBuffer commandBuff
     }
 }
 
-void TrackDRCmdOpticalFlowExecuteNVHandles(VkCommandBuffer commandBuffer, VkOpticalFlowSessionNV session)
+void TrackDRCmdOpticalFlowExecuteNVHandles(VkCommandBuffer commandBuffer, VkOpticalFlowSessionNV session) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2164,7 +2164,7 @@ void TrackDRCmdOpticalFlowExecuteNVHandles(VkCommandBuffer commandBuffer, VkOpti
     }
 }
 
-void TrackDRCmdBindShadersEXTHandles(VkCommandBuffer commandBuffer, uint32_t stageCount, const VkShaderEXT* pShaders)
+void TrackDRCmdBindShadersEXTHandles(VkCommandBuffer commandBuffer, uint32_t stageCount, const VkShaderEXT* pShaders) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2180,7 +2180,7 @@ void TrackDRCmdBindShadersEXTHandles(VkCommandBuffer commandBuffer, uint32_t sta
     }
 }
 
-void TrackDRCmdBuildAccelerationStructuresKHRHandles(VkCommandBuffer commandBuffer, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos)
+void TrackDRCmdBuildAccelerationStructuresKHRHandles(VkCommandBuffer commandBuffer, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2202,7 +2202,7 @@ void TrackDRCmdBuildAccelerationStructuresKHRHandles(VkCommandBuffer commandBuff
     }
 }
 
-void TrackDRCmdBuildAccelerationStructuresIndirectKHRHandles(VkCommandBuffer commandBuffer, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos)
+void TrackDRCmdBuildAccelerationStructuresIndirectKHRHandles(VkCommandBuffer commandBuffer, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2224,7 +2224,7 @@ void TrackDRCmdBuildAccelerationStructuresIndirectKHRHandles(VkCommandBuffer com
     }
 }
 
-void TrackDRCmdCopyAccelerationStructureKHRHandles(VkCommandBuffer commandBuffer, const VkCopyAccelerationStructureInfoKHR* pInfo)
+void TrackDRCmdCopyAccelerationStructureKHRHandles(VkCommandBuffer commandBuffer, const VkCopyAccelerationStructureInfoKHR* pInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2243,7 +2243,7 @@ void TrackDRCmdCopyAccelerationStructureKHRHandles(VkCommandBuffer commandBuffer
     }
 }
 
-void TrackDRCmdCopyAccelerationStructureToMemoryKHRHandles(VkCommandBuffer commandBuffer, const VkCopyAccelerationStructureToMemoryInfoKHR* pInfo)
+void TrackDRCmdCopyAccelerationStructureToMemoryKHRHandles(VkCommandBuffer commandBuffer, const VkCopyAccelerationStructureToMemoryInfoKHR* pInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2257,7 +2257,7 @@ void TrackDRCmdCopyAccelerationStructureToMemoryKHRHandles(VkCommandBuffer comma
     }
 }
 
-void TrackDRCmdCopyMemoryToAccelerationStructureKHRHandles(VkCommandBuffer commandBuffer, const VkCopyMemoryToAccelerationStructureInfoKHR* pInfo)
+void TrackDRCmdCopyMemoryToAccelerationStructureKHRHandles(VkCommandBuffer commandBuffer, const VkCopyMemoryToAccelerationStructureInfoKHR* pInfo) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2271,7 +2271,7 @@ void TrackDRCmdCopyMemoryToAccelerationStructureKHRHandles(VkCommandBuffer comma
     }
 }
 
-void TrackDRCmdWriteAccelerationStructuresPropertiesKHRHandles(VkCommandBuffer commandBuffer, uint32_t accelerationStructureCount, const VkAccelerationStructureKHR* pAccelerationStructures, VkQueryPool queryPool)
+void TrackDRCmdWriteAccelerationStructuresPropertiesKHRHandles(VkCommandBuffer commandBuffer, uint32_t accelerationStructureCount, const VkAccelerationStructureKHR* pAccelerationStructures, VkQueryPool queryPool) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2292,7 +2292,7 @@ void TrackDRCmdWriteAccelerationStructuresPropertiesKHRHandles(VkCommandBuffer c
     }
 }
 
-void TrackDRCmdDrawMeshTasksIndirectEXTHandles(VkCommandBuffer commandBuffer, VkBuffer buffer)
+void TrackDRCmdDrawMeshTasksIndirectEXTHandles(VkCommandBuffer commandBuffer, VkBuffer buffer) //@@@DLO
 {
     assert(commandBuffer);
 
@@ -2302,7 +2302,7 @@ void TrackDRCmdDrawMeshTasksIndirectEXTHandles(VkCommandBuffer commandBuffer, Vk
     }
 }
 
-void TrackDRCmdDrawMeshTasksIndirectCountEXTHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer)
+void TrackDRCmdDrawMeshTasksIndirectCountEXTHandles(VkCommandBuffer commandBuffer, VkBuffer buffer, VkBuffer countBuffer) //@@@DLO
 {
     assert(commandBuffer);
 
