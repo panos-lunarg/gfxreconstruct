@@ -81,7 +81,7 @@ struct Decoded_StdVideoH264SequenceParameterSetVui
     StdVideoH264SequenceParameterSetVui* decoded_value{ nullptr };
 
     Decoded_StdVideoH264SpsVuiFlags* flags{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH264HrdParameters>* pHrdParameters{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH264HrdParameters>/*@@@PLQ*/* pHrdParameters{ nullptr };
 };
 
 struct Decoded_StdVideoH264SpsFlags
@@ -109,8 +109,8 @@ struct Decoded_StdVideoH264SequenceParameterSet
 
     Decoded_StdVideoH264SpsFlags* flags{ nullptr };
     PointerDecoder<int32_t> pOffsetForRefFrame;
-    StructPointerDecoder<Decoded_StdVideoH264ScalingLists>* pScalingLists{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH264SequenceParameterSetVui>* pSequenceParameterSetVui{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH264ScalingLists>/*@@@PLQ*/* pScalingLists{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH264SequenceParameterSetVui>/*@@@PLQ*/* pSequenceParameterSetVui{ nullptr };
 };
 
 struct Decoded_StdVideoH264PpsFlags
@@ -127,7 +127,7 @@ struct Decoded_StdVideoH264PictureParameterSet
     StdVideoH264PictureParameterSet* decoded_value{ nullptr };
 
     Decoded_StdVideoH264PpsFlags* flags{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH264ScalingLists>* pScalingLists{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH264ScalingLists>/*@@@PLQ*/* pScalingLists{ nullptr };
 };
 
 struct Decoded_StdVideoDecodeH264PictureInfoFlags
@@ -240,9 +240,9 @@ struct Decoded_StdVideoEncodeH264ReferenceListsInfo
     PointerDecoder<uint8_t> RefPicList0;
     PointerDecoder<uint8_t> RefPicList1;
     PointerDecoder<uint8_t> reserved1;
-    StructPointerDecoder<Decoded_StdVideoEncodeH264RefListModEntry>* pRefList0ModOperations{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoEncodeH264RefListModEntry>* pRefList1ModOperations{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoEncodeH264RefPicMarkingEntry>* pRefPicMarkingOperations{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoEncodeH264RefListModEntry>/*@@@PLQ*/* pRefList0ModOperations{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoEncodeH264RefListModEntry>/*@@@PLQ*/* pRefList1ModOperations{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoEncodeH264RefPicMarkingEntry>/*@@@PLQ*/* pRefPicMarkingOperations{ nullptr };
 };
 
 struct Decoded_StdVideoEncodeH264PictureInfo
@@ -253,7 +253,7 @@ struct Decoded_StdVideoEncodeH264PictureInfo
 
     Decoded_StdVideoEncodeH264PictureInfoFlags* flags{ nullptr };
     PointerDecoder<uint8_t> reserved1;
-    StructPointerDecoder<Decoded_StdVideoEncodeH264ReferenceListsInfo>* pRefLists{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoEncodeH264ReferenceListsInfo>/*@@@PLQ*/* pRefLists{ nullptr };
 };
 
 struct Decoded_StdVideoEncodeH264ReferenceInfo
@@ -272,7 +272,7 @@ struct Decoded_StdVideoEncodeH264SliceHeader
     StdVideoEncodeH264SliceHeader* decoded_value{ nullptr };
 
     Decoded_StdVideoEncodeH264SliceHeaderFlags* flags{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoEncodeH264WeightTable>* pWeightTable{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoEncodeH264WeightTable>/*@@@PLQ*/* pWeightTable{ nullptr };
 };
 
 struct Decoded_StdVideoH265ProfileTierLevelFlags
@@ -331,8 +331,8 @@ struct Decoded_StdVideoH265HrdParameters
     PointerDecoder<uint8_t> cpb_cnt_minus1;
     PointerDecoder<uint16_t> elemental_duration_in_tc_minus1;
     PointerDecoder<uint16_t> reserved;
-    StructPointerDecoder<Decoded_StdVideoH265SubLayerHrdParameters>* pSubLayerHrdParametersNal{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265SubLayerHrdParameters>* pSubLayerHrdParametersVcl{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265SubLayerHrdParameters>/*@@@PLQ*/* pSubLayerHrdParametersNal{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265SubLayerHrdParameters>/*@@@PLQ*/* pSubLayerHrdParametersVcl{ nullptr };
 };
 
 struct Decoded_StdVideoH265VpsFlags
@@ -349,9 +349,9 @@ struct Decoded_StdVideoH265VideoParameterSet
     StdVideoH265VideoParameterSet* decoded_value{ nullptr };
 
     Decoded_StdVideoH265VpsFlags* flags{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265DecPicBufMgr>* pDecPicBufMgr{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265HrdParameters>* pHrdParameters{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265ProfileTierLevel>* pProfileTierLevel{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265DecPicBufMgr>/*@@@PLQ*/* pDecPicBufMgr{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265HrdParameters>/*@@@PLQ*/* pHrdParameters{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265ProfileTierLevel>/*@@@PLQ*/* pProfileTierLevel{ nullptr };
 };
 
 struct Decoded_StdVideoH265ScalingLists
@@ -409,7 +409,7 @@ struct Decoded_StdVideoH265SequenceParameterSetVui
     StdVideoH265SequenceParameterSetVui* decoded_value{ nullptr };
 
     Decoded_StdVideoH265SpsVuiFlags* flags{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265HrdParameters>* pHrdParameters{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265HrdParameters>/*@@@PLQ*/* pHrdParameters{ nullptr };
 };
 
 struct Decoded_StdVideoH265PredictorPaletteEntries
@@ -435,13 +435,13 @@ struct Decoded_StdVideoH265SequenceParameterSet
     StdVideoH265SequenceParameterSet* decoded_value{ nullptr };
 
     Decoded_StdVideoH265SpsFlags* flags{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265ProfileTierLevel>* pProfileTierLevel{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265DecPicBufMgr>* pDecPicBufMgr{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265ScalingLists>* pScalingLists{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265ShortTermRefPicSet>* pShortTermRefPicSet{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265LongTermRefPicsSps>* pLongTermRefPicsSps{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265SequenceParameterSetVui>* pSequenceParameterSetVui{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265PredictorPaletteEntries>* pPredictorPaletteEntries{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265ProfileTierLevel>/*@@@PLQ*/* pProfileTierLevel{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265DecPicBufMgr>/*@@@PLQ*/* pDecPicBufMgr{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265ScalingLists>/*@@@PLQ*/* pScalingLists{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265ShortTermRefPicSet>/*@@@PLQ*/* pShortTermRefPicSet{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265LongTermRefPicsSps>/*@@@PLQ*/* pLongTermRefPicsSps{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265SequenceParameterSetVui>/*@@@PLQ*/* pSequenceParameterSetVui{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265PredictorPaletteEntries>/*@@@PLQ*/* pPredictorPaletteEntries{ nullptr };
 };
 
 struct Decoded_StdVideoH265PpsFlags
@@ -462,8 +462,8 @@ struct Decoded_StdVideoH265PictureParameterSet
     PointerDecoder<int8_t> cr_qp_offset_list;
     PointerDecoder<uint16_t> column_width_minus1;
     PointerDecoder<uint16_t> row_height_minus1;
-    StructPointerDecoder<Decoded_StdVideoH265ScalingLists>* pScalingLists{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265PredictorPaletteEntries>* pPredictorPaletteEntries{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265ScalingLists>/*@@@PLQ*/* pScalingLists{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265PredictorPaletteEntries>/*@@@PLQ*/* pPredictorPaletteEntries{ nullptr };
 };
 
 struct Decoded_StdVideoDecodeH265PictureInfoFlags
@@ -551,7 +551,7 @@ struct Decoded_StdVideoEncodeH265SliceSegmentHeader
     StdVideoEncodeH265SliceSegmentHeader* decoded_value{ nullptr };
 
     Decoded_StdVideoEncodeH265SliceSegmentHeaderFlags* flags{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoEncodeH265WeightTable>* pWeightTable{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoEncodeH265WeightTable>/*@@@PLQ*/* pWeightTable{ nullptr };
 };
 
 struct Decoded_StdVideoEncodeH265ReferenceListsInfoFlags
@@ -589,9 +589,9 @@ struct Decoded_StdVideoEncodeH265PictureInfo
 
     Decoded_StdVideoEncodeH265PictureInfoFlags* flags{ nullptr };
     PointerDecoder<uint8_t> reserved1;
-    StructPointerDecoder<Decoded_StdVideoEncodeH265ReferenceListsInfo>* pRefLists{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265ShortTermRefPicSet>* pShortTermRefPicSet{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoEncodeH265LongTermRefPics>* pLongTermRefPics{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoEncodeH265ReferenceListsInfo>/*@@@PLQ*/* pRefLists{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265ShortTermRefPicSet>/*@@@PLQ*/* pShortTermRefPicSet{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoEncodeH265LongTermRefPics>/*@@@PLQ*/* pLongTermRefPics{ nullptr };
 };
 
 struct Decoded_StdVideoEncodeH265ReferenceInfoFlags
@@ -763,7 +763,7 @@ struct Decoded_VkInstanceCreateInfo
     VkInstanceCreateInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkApplicationInfo>* pApplicationInfo{ nullptr };
+    StructPointerDecoder<Decoded_VkApplicationInfo>/*@@@PLQ*/* pApplicationInfo{ nullptr };
     StringArrayDecoder ppEnabledLayerNames;
     StringArrayDecoder ppEnabledExtensionNames;
 };
@@ -809,8 +809,8 @@ struct Decoded_VkPhysicalDeviceMemoryProperties
 
     VkPhysicalDeviceMemoryProperties* decoded_value{ nullptr };
 
-    StructPointerDecoder<Decoded_VkMemoryType>* memoryTypes{ nullptr };
-    StructPointerDecoder<Decoded_VkMemoryHeap>* memoryHeaps{ nullptr };
+    StructPointerDecoder<Decoded_VkMemoryType>/*@@@PLQ*/* memoryTypes{ nullptr };
+    StructPointerDecoder<Decoded_VkMemoryHeap>/*@@@PLQ*/* memoryHeaps{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceSparseProperties
@@ -858,10 +858,10 @@ struct Decoded_VkDeviceCreateInfo
     VkDeviceCreateInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkDeviceQueueCreateInfo>* pQueueCreateInfos{ nullptr };
+    StructPointerDecoder<Decoded_VkDeviceQueueCreateInfo>/*@@@PLQ*/* pQueueCreateInfos{ nullptr };
     StringArrayDecoder ppEnabledLayerNames;
     StringArrayDecoder ppEnabledExtensionNames;
-    StructPointerDecoder<Decoded_VkPhysicalDeviceFeatures>* pEnabledFeatures{ nullptr };
+    StructPointerDecoder<Decoded_VkPhysicalDeviceFeatures>/*@@@PLQ*/* pEnabledFeatures{ nullptr };
 };
 
 struct Decoded_VkExtensionProperties
@@ -938,7 +938,7 @@ struct Decoded_VkSparseBufferMemoryBindInfo
     VkSparseBufferMemoryBindInfo* decoded_value{ nullptr };
 
     format::HandleId buffer{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkSparseMemoryBind>* pBinds{ nullptr };
+    StructPointerDecoder<Decoded_VkSparseMemoryBind>/*@@@PLQ*/* pBinds{ nullptr };
 };
 
 struct Decoded_VkSparseImageOpaqueMemoryBindInfo
@@ -948,7 +948,7 @@ struct Decoded_VkSparseImageOpaqueMemoryBindInfo
     VkSparseImageOpaqueMemoryBindInfo* decoded_value{ nullptr };
 
     format::HandleId image{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkSparseMemoryBind>* pBinds{ nullptr };
+    StructPointerDecoder<Decoded_VkSparseMemoryBind>/*@@@PLQ*/* pBinds{ nullptr };
 };
 
 struct Decoded_VkImageSubresource
@@ -977,7 +977,7 @@ struct Decoded_VkSparseImageMemoryBindInfo
     VkSparseImageMemoryBindInfo* decoded_value{ nullptr };
 
     format::HandleId image{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkSparseImageMemoryBind>* pBinds{ nullptr };
+    StructPointerDecoder<Decoded_VkSparseImageMemoryBind>/*@@@PLQ*/* pBinds{ nullptr };
 };
 
 struct Decoded_VkBindSparseInfo
@@ -988,9 +988,9 @@ struct Decoded_VkBindSparseInfo
 
     PNextNode* pNext{ nullptr };
     HandlePointerDecoder<VkSemaphore> pWaitSemaphores;
-    StructPointerDecoder<Decoded_VkSparseBufferMemoryBindInfo>* pBufferBinds{ nullptr };
-    StructPointerDecoder<Decoded_VkSparseImageOpaqueMemoryBindInfo>* pImageOpaqueBinds{ nullptr };
-    StructPointerDecoder<Decoded_VkSparseImageMemoryBindInfo>* pImageBinds{ nullptr };
+    StructPointerDecoder<Decoded_VkSparseBufferMemoryBindInfo>/*@@@PLQ*/* pBufferBinds{ nullptr };
+    StructPointerDecoder<Decoded_VkSparseImageOpaqueMemoryBindInfo>/*@@@PLQ*/* pImageOpaqueBinds{ nullptr };
+    StructPointerDecoder<Decoded_VkSparseImageMemoryBindInfo>/*@@@PLQ*/* pImageBinds{ nullptr };
     HandlePointerDecoder<VkSemaphore> pSignalSemaphores;
 };
 
@@ -1138,7 +1138,7 @@ struct Decoded_VkSpecializationInfo
 
     VkSpecializationInfo* decoded_value{ nullptr };
 
-    StructPointerDecoder<Decoded_VkSpecializationMapEntry>* pMapEntries{ nullptr };
+    StructPointerDecoder<Decoded_VkSpecializationMapEntry>/*@@@PLQ*/* pMapEntries{ nullptr };
     PointerDecoder<uint8_t> pData;
 };
 
@@ -1151,7 +1151,7 @@ struct Decoded_VkPipelineShaderStageCreateInfo
     PNextNode* pNext{ nullptr };
     format::HandleId module{ format::kNullHandleId };
     StringDecoder pName;
-    StructPointerDecoder<Decoded_VkSpecializationInfo>* pSpecializationInfo{ nullptr };
+    StructPointerDecoder<Decoded_VkSpecializationInfo>/*@@@PLQ*/* pSpecializationInfo{ nullptr };
 };
 
 struct Decoded_VkComputePipelineCreateInfo
@@ -1187,8 +1187,8 @@ struct Decoded_VkPipelineVertexInputStateCreateInfo
     VkPipelineVertexInputStateCreateInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkVertexInputBindingDescription>* pVertexBindingDescriptions{ nullptr };
-    StructPointerDecoder<Decoded_VkVertexInputAttributeDescription>* pVertexAttributeDescriptions{ nullptr };
+    StructPointerDecoder<Decoded_VkVertexInputBindingDescription>/*@@@PLQ*/* pVertexBindingDescriptions{ nullptr };
+    StructPointerDecoder<Decoded_VkVertexInputAttributeDescription>/*@@@PLQ*/* pVertexAttributeDescriptions{ nullptr };
 };
 
 struct Decoded_VkPipelineInputAssemblyStateCreateInfo
@@ -1223,8 +1223,8 @@ struct Decoded_VkPipelineViewportStateCreateInfo
     VkPipelineViewportStateCreateInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkViewport>* pViewports{ nullptr };
-    StructPointerDecoder<Decoded_VkRect2D>* pScissors{ nullptr };
+    StructPointerDecoder<Decoded_VkViewport>/*@@@PLQ*/* pViewports{ nullptr };
+    StructPointerDecoder<Decoded_VkRect2D>/*@@@PLQ*/* pScissors{ nullptr };
 };
 
 struct Decoded_VkPipelineRasterizationStateCreateInfo
@@ -1278,7 +1278,7 @@ struct Decoded_VkPipelineColorBlendStateCreateInfo
     VkPipelineColorBlendStateCreateInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineColorBlendAttachmentState>* pAttachments{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineColorBlendAttachmentState>/*@@@PLQ*/* pAttachments{ nullptr };
     PointerDecoder<float> blendConstants;
 };
 
@@ -1299,16 +1299,16 @@ struct Decoded_VkGraphicsPipelineCreateInfo
     VkGraphicsPipelineCreateInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineShaderStageCreateInfo>* pStages{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineVertexInputStateCreateInfo>* pVertexInputState{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineInputAssemblyStateCreateInfo>* pInputAssemblyState{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineTessellationStateCreateInfo>* pTessellationState{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineViewportStateCreateInfo>* pViewportState{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineRasterizationStateCreateInfo>* pRasterizationState{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineMultisampleStateCreateInfo>* pMultisampleState{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineDepthStencilStateCreateInfo>* pDepthStencilState{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineColorBlendStateCreateInfo>* pColorBlendState{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineDynamicStateCreateInfo>* pDynamicState{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineShaderStageCreateInfo>/*@@@PLQ*/* pStages{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineVertexInputStateCreateInfo>/*@@@PLQ*/* pVertexInputState{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineInputAssemblyStateCreateInfo>/*@@@PLQ*/* pInputAssemblyState{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineTessellationStateCreateInfo>/*@@@PLQ*/* pTessellationState{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineViewportStateCreateInfo>/*@@@PLQ*/* pViewportState{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineRasterizationStateCreateInfo>/*@@@PLQ*/* pRasterizationState{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineMultisampleStateCreateInfo>/*@@@PLQ*/* pMultisampleState{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineDepthStencilStateCreateInfo>/*@@@PLQ*/* pDepthStencilState{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineColorBlendStateCreateInfo>/*@@@PLQ*/* pColorBlendState{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineDynamicStateCreateInfo>/*@@@PLQ*/* pDynamicState{ nullptr };
     format::HandleId layout{ format::kNullHandleId };
     format::HandleId renderPass{ format::kNullHandleId };
     format::HandleId basePipelineHandle{ format::kNullHandleId };
@@ -1329,7 +1329,7 @@ struct Decoded_VkPipelineLayoutCreateInfo
 
     PNextNode* pNext{ nullptr };
     HandlePointerDecoder<VkDescriptorSetLayout> pSetLayouts;
-    StructPointerDecoder<Decoded_VkPushConstantRange>* pPushConstantRanges{ nullptr };
+    StructPointerDecoder<Decoded_VkPushConstantRange>/*@@@PLQ*/* pPushConstantRanges{ nullptr };
 };
 
 struct Decoded_VkSamplerCreateInfo
@@ -1375,7 +1375,7 @@ struct Decoded_VkDescriptorPoolCreateInfo
     VkDescriptorPoolCreateInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkDescriptorPoolSize>* pPoolSizes{ nullptr };
+    StructPointerDecoder<Decoded_VkDescriptorPoolSize>/*@@@PLQ*/* pPoolSizes{ nullptr };
 };
 
 struct Decoded_VkDescriptorSetAllocateInfo
@@ -1405,7 +1405,7 @@ struct Decoded_VkDescriptorSetLayoutCreateInfo
     VkDescriptorSetLayoutCreateInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkDescriptorSetLayoutBinding>* pBindings{ nullptr };
+    StructPointerDecoder<Decoded_VkDescriptorSetLayoutBinding>/*@@@PLQ*/* pBindings{ nullptr };
 };
 
 struct Decoded_VkAttachmentDescription
@@ -1439,10 +1439,10 @@ struct Decoded_VkSubpassDescription
 
     VkSubpassDescription* decoded_value{ nullptr };
 
-    StructPointerDecoder<Decoded_VkAttachmentReference>* pInputAttachments{ nullptr };
-    StructPointerDecoder<Decoded_VkAttachmentReference>* pColorAttachments{ nullptr };
-    StructPointerDecoder<Decoded_VkAttachmentReference>* pResolveAttachments{ nullptr };
-    StructPointerDecoder<Decoded_VkAttachmentReference>* pDepthStencilAttachment{ nullptr };
+    StructPointerDecoder<Decoded_VkAttachmentReference>/*@@@PLQ*/* pInputAttachments{ nullptr };
+    StructPointerDecoder<Decoded_VkAttachmentReference>/*@@@PLQ*/* pColorAttachments{ nullptr };
+    StructPointerDecoder<Decoded_VkAttachmentReference>/*@@@PLQ*/* pResolveAttachments{ nullptr };
+    StructPointerDecoder<Decoded_VkAttachmentReference>/*@@@PLQ*/* pDepthStencilAttachment{ nullptr };
     PointerDecoder<uint32_t> pPreserveAttachments;
 };
 
@@ -1460,9 +1460,9 @@ struct Decoded_VkRenderPassCreateInfo
     VkRenderPassCreateInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkAttachmentDescription>* pAttachments{ nullptr };
-    StructPointerDecoder<Decoded_VkSubpassDescription>* pSubpasses{ nullptr };
-    StructPointerDecoder<Decoded_VkSubpassDependency>* pDependencies{ nullptr };
+    StructPointerDecoder<Decoded_VkAttachmentDescription>/*@@@PLQ*/* pAttachments{ nullptr };
+    StructPointerDecoder<Decoded_VkSubpassDescription>/*@@@PLQ*/* pSubpasses{ nullptr };
+    StructPointerDecoder<Decoded_VkSubpassDependency>/*@@@PLQ*/* pDependencies{ nullptr };
 };
 
 struct Decoded_VkCommandPoolCreateInfo
@@ -1502,7 +1502,7 @@ struct Decoded_VkCommandBufferBeginInfo
     VkCommandBufferBeginInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkCommandBufferInheritanceInfo>* pInheritanceInfo{ nullptr };
+    StructPointerDecoder<Decoded_VkCommandBufferInheritanceInfo>/*@@@PLQ*/* pInheritanceInfo{ nullptr };
 };
 
 struct Decoded_VkBufferCopy
@@ -1562,9 +1562,9 @@ struct Decoded_VkImageBlit
     VkImageBlit* decoded_value{ nullptr };
 
     Decoded_VkImageSubresourceLayers* srcSubresource{ nullptr };
-    StructPointerDecoder<Decoded_VkOffset3D>* srcOffsets{ nullptr };
+    StructPointerDecoder<Decoded_VkOffset3D>/*@@@PLQ*/* srcOffsets{ nullptr };
     Decoded_VkImageSubresourceLayers* dstSubresource{ nullptr };
-    StructPointerDecoder<Decoded_VkOffset3D>* dstOffsets{ nullptr };
+    StructPointerDecoder<Decoded_VkOffset3D>/*@@@PLQ*/* dstOffsets{ nullptr };
 };
 
 struct Decoded_VkImageCopy
@@ -1603,7 +1603,7 @@ struct Decoded_VkRenderPassBeginInfo
     format::HandleId renderPass{ format::kNullHandleId };
     format::HandleId framebuffer{ format::kNullHandleId };
     Decoded_VkRect2D* renderArea{ nullptr };
-    StructPointerDecoder<Decoded_VkClearValue>* pClearValues{ nullptr };
+    StructPointerDecoder<Decoded_VkClearValue>/*@@@PLQ*/* pClearValues{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceSubgroupProperties
@@ -1682,7 +1682,7 @@ struct Decoded_VkDeviceGroupRenderPassBeginInfo
     VkDeviceGroupRenderPassBeginInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkRect2D>* pDeviceRenderAreas{ nullptr };
+    StructPointerDecoder<Decoded_VkRect2D>/*@@@PLQ*/* pDeviceRenderAreas{ nullptr };
 };
 
 struct Decoded_VkDeviceGroupCommandBufferBeginInfo
@@ -1733,7 +1733,7 @@ struct Decoded_VkBindImageMemoryDeviceGroupInfo
 
     PNextNode* pNext{ nullptr };
     PointerDecoder<uint32_t> pDeviceIndices;
-    StructPointerDecoder<Decoded_VkRect2D>* pSplitInstanceBindRegions{ nullptr };
+    StructPointerDecoder<Decoded_VkRect2D>/*@@@PLQ*/* pSplitInstanceBindRegions{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceGroupProperties
@@ -1917,7 +1917,7 @@ struct Decoded_VkRenderPassInputAttachmentAspectCreateInfo
     VkRenderPassInputAttachmentAspectCreateInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkInputAttachmentAspectReference>* pAspectReferences{ nullptr };
+    StructPointerDecoder<Decoded_VkInputAttachmentAspectReference>/*@@@PLQ*/* pAspectReferences{ nullptr };
 };
 
 struct Decoded_VkImageViewUsageCreateInfo
@@ -2083,7 +2083,7 @@ struct Decoded_VkDescriptorUpdateTemplateCreateInfo
     VkDescriptorUpdateTemplateCreateInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkDescriptorUpdateTemplateEntry>* pDescriptorUpdateEntries{ nullptr };
+    StructPointerDecoder<Decoded_VkDescriptorUpdateTemplateEntry>/*@@@PLQ*/* pDescriptorUpdateEntries{ nullptr };
     format::HandleId descriptorSetLayout{ format::kNullHandleId };
     format::HandleId pipelineLayout{ format::kNullHandleId };
 };
@@ -2341,10 +2341,10 @@ struct Decoded_VkSubpassDescription2
     VkSubpassDescription2* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkAttachmentReference2>* pInputAttachments{ nullptr };
-    StructPointerDecoder<Decoded_VkAttachmentReference2>* pColorAttachments{ nullptr };
-    StructPointerDecoder<Decoded_VkAttachmentReference2>* pResolveAttachments{ nullptr };
-    StructPointerDecoder<Decoded_VkAttachmentReference2>* pDepthStencilAttachment{ nullptr };
+    StructPointerDecoder<Decoded_VkAttachmentReference2>/*@@@PLQ*/* pInputAttachments{ nullptr };
+    StructPointerDecoder<Decoded_VkAttachmentReference2>/*@@@PLQ*/* pColorAttachments{ nullptr };
+    StructPointerDecoder<Decoded_VkAttachmentReference2>/*@@@PLQ*/* pResolveAttachments{ nullptr };
+    StructPointerDecoder<Decoded_VkAttachmentReference2>/*@@@PLQ*/* pDepthStencilAttachment{ nullptr };
     PointerDecoder<uint32_t> pPreserveAttachments;
 };
 
@@ -2364,9 +2364,9 @@ struct Decoded_VkRenderPassCreateInfo2
     VkRenderPassCreateInfo2* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkAttachmentDescription2>* pAttachments{ nullptr };
-    StructPointerDecoder<Decoded_VkSubpassDescription2>* pSubpasses{ nullptr };
-    StructPointerDecoder<Decoded_VkSubpassDependency2>* pDependencies{ nullptr };
+    StructPointerDecoder<Decoded_VkAttachmentDescription2>/*@@@PLQ*/* pAttachments{ nullptr };
+    StructPointerDecoder<Decoded_VkSubpassDescription2>/*@@@PLQ*/* pSubpasses{ nullptr };
+    StructPointerDecoder<Decoded_VkSubpassDependency2>/*@@@PLQ*/* pDependencies{ nullptr };
     PointerDecoder<uint32_t> pCorrelatedViewMasks;
 };
 
@@ -2490,7 +2490,7 @@ struct Decoded_VkSubpassDescriptionDepthStencilResolve
     VkSubpassDescriptionDepthStencilResolve* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkAttachmentReference2>* pDepthStencilResolveAttachment{ nullptr };
+    StructPointerDecoder<Decoded_VkAttachmentReference2>/*@@@PLQ*/* pDepthStencilResolveAttachment{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceDepthStencilResolveProperties
@@ -2573,7 +2573,7 @@ struct Decoded_VkFramebufferAttachmentsCreateInfo
     VkFramebufferAttachmentsCreateInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkFramebufferAttachmentImageInfo>* pAttachmentImageInfos{ nullptr };
+    StructPointerDecoder<Decoded_VkFramebufferAttachmentImageInfo>/*@@@PLQ*/* pAttachmentImageInfos{ nullptr };
 };
 
 struct Decoded_VkRenderPassAttachmentBeginInfo
@@ -2778,8 +2778,8 @@ struct Decoded_VkPipelineCreationFeedbackCreateInfo
     VkPipelineCreationFeedbackCreateInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineCreationFeedback>* pPipelineCreationFeedback{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineCreationFeedback>* pPipelineStageCreationFeedbacks{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineCreationFeedback>/*@@@PLQ*/* pPipelineCreationFeedback{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineCreationFeedback>/*@@@PLQ*/* pPipelineStageCreationFeedbacks{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceShaderTerminateInvocationFeatures
@@ -2886,9 +2886,9 @@ struct Decoded_VkDependencyInfo
     VkDependencyInfo* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkMemoryBarrier2>* pMemoryBarriers{ nullptr };
-    StructPointerDecoder<Decoded_VkBufferMemoryBarrier2>* pBufferMemoryBarriers{ nullptr };
-    StructPointerDecoder<Decoded_VkImageMemoryBarrier2>* pImageMemoryBarriers{ nullptr };
+    StructPointerDecoder<Decoded_VkMemoryBarrier2>/*@@@PLQ*/* pMemoryBarriers{ nullptr };
+    StructPointerDecoder<Decoded_VkBufferMemoryBarrier2>/*@@@PLQ*/* pBufferMemoryBarriers{ nullptr };
+    StructPointerDecoder<Decoded_VkImageMemoryBarrier2>/*@@@PLQ*/* pImageMemoryBarriers{ nullptr };
 };
 
 struct Decoded_VkSemaphoreSubmitInfo
@@ -2918,9 +2918,9 @@ struct Decoded_VkSubmitInfo2
     VkSubmitInfo2* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkSemaphoreSubmitInfo>* pWaitSemaphoreInfos{ nullptr };
-    StructPointerDecoder<Decoded_VkCommandBufferSubmitInfo>* pCommandBufferInfos{ nullptr };
-    StructPointerDecoder<Decoded_VkSemaphoreSubmitInfo>* pSignalSemaphoreInfos{ nullptr };
+    StructPointerDecoder<Decoded_VkSemaphoreSubmitInfo>/*@@@PLQ*/* pWaitSemaphoreInfos{ nullptr };
+    StructPointerDecoder<Decoded_VkCommandBufferSubmitInfo>/*@@@PLQ*/* pCommandBufferInfos{ nullptr };
+    StructPointerDecoder<Decoded_VkSemaphoreSubmitInfo>/*@@@PLQ*/* pSignalSemaphoreInfos{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceSynchronization2Features
@@ -2968,7 +2968,7 @@ struct Decoded_VkCopyBufferInfo2
     PNextNode* pNext{ nullptr };
     format::HandleId srcBuffer{ format::kNullHandleId };
     format::HandleId dstBuffer{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkBufferCopy2>* pRegions{ nullptr };
+    StructPointerDecoder<Decoded_VkBufferCopy2>/*@@@PLQ*/* pRegions{ nullptr };
 };
 
 struct Decoded_VkImageCopy2
@@ -2994,7 +2994,7 @@ struct Decoded_VkCopyImageInfo2
     PNextNode* pNext{ nullptr };
     format::HandleId srcImage{ format::kNullHandleId };
     format::HandleId dstImage{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkImageCopy2>* pRegions{ nullptr };
+    StructPointerDecoder<Decoded_VkImageCopy2>/*@@@PLQ*/* pRegions{ nullptr };
 };
 
 struct Decoded_VkBufferImageCopy2
@@ -3018,7 +3018,7 @@ struct Decoded_VkCopyBufferToImageInfo2
     PNextNode* pNext{ nullptr };
     format::HandleId srcBuffer{ format::kNullHandleId };
     format::HandleId dstImage{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkBufferImageCopy2>* pRegions{ nullptr };
+    StructPointerDecoder<Decoded_VkBufferImageCopy2>/*@@@PLQ*/* pRegions{ nullptr };
 };
 
 struct Decoded_VkCopyImageToBufferInfo2
@@ -3030,7 +3030,7 @@ struct Decoded_VkCopyImageToBufferInfo2
     PNextNode* pNext{ nullptr };
     format::HandleId srcImage{ format::kNullHandleId };
     format::HandleId dstBuffer{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkBufferImageCopy2>* pRegions{ nullptr };
+    StructPointerDecoder<Decoded_VkBufferImageCopy2>/*@@@PLQ*/* pRegions{ nullptr };
 };
 
 struct Decoded_VkImageBlit2
@@ -3041,9 +3041,9 @@ struct Decoded_VkImageBlit2
 
     PNextNode* pNext{ nullptr };
     Decoded_VkImageSubresourceLayers* srcSubresource{ nullptr };
-    StructPointerDecoder<Decoded_VkOffset3D>* srcOffsets{ nullptr };
+    StructPointerDecoder<Decoded_VkOffset3D>/*@@@PLQ*/* srcOffsets{ nullptr };
     Decoded_VkImageSubresourceLayers* dstSubresource{ nullptr };
-    StructPointerDecoder<Decoded_VkOffset3D>* dstOffsets{ nullptr };
+    StructPointerDecoder<Decoded_VkOffset3D>/*@@@PLQ*/* dstOffsets{ nullptr };
 };
 
 struct Decoded_VkBlitImageInfo2
@@ -3055,7 +3055,7 @@ struct Decoded_VkBlitImageInfo2
     PNextNode* pNext{ nullptr };
     format::HandleId srcImage{ format::kNullHandleId };
     format::HandleId dstImage{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkImageBlit2>* pRegions{ nullptr };
+    StructPointerDecoder<Decoded_VkImageBlit2>/*@@@PLQ*/* pRegions{ nullptr };
 };
 
 struct Decoded_VkImageResolve2
@@ -3081,7 +3081,7 @@ struct Decoded_VkResolveImageInfo2
     PNextNode* pNext{ nullptr };
     format::HandleId srcImage{ format::kNullHandleId };
     format::HandleId dstImage{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkImageResolve2>* pRegions{ nullptr };
+    StructPointerDecoder<Decoded_VkImageResolve2>/*@@@PLQ*/* pRegions{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceSubgroupSizeControlFeatures
@@ -3177,9 +3177,9 @@ struct Decoded_VkRenderingInfo
 
     PNextNode* pNext{ nullptr };
     Decoded_VkRect2D* renderArea{ nullptr };
-    StructPointerDecoder<Decoded_VkRenderingAttachmentInfo>* pColorAttachments{ nullptr };
-    StructPointerDecoder<Decoded_VkRenderingAttachmentInfo>* pDepthAttachment{ nullptr };
-    StructPointerDecoder<Decoded_VkRenderingAttachmentInfo>* pStencilAttachment{ nullptr };
+    StructPointerDecoder<Decoded_VkRenderingAttachmentInfo>/*@@@PLQ*/* pColorAttachments{ nullptr };
+    StructPointerDecoder<Decoded_VkRenderingAttachmentInfo>/*@@@PLQ*/* pDepthAttachment{ nullptr };
+    StructPointerDecoder<Decoded_VkRenderingAttachmentInfo>/*@@@PLQ*/* pStencilAttachment{ nullptr };
 };
 
 struct Decoded_VkPipelineRenderingCreateInfo
@@ -3272,7 +3272,7 @@ struct Decoded_VkDeviceBufferMemoryRequirements
     VkDeviceBufferMemoryRequirements* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkBufferCreateInfo>* pCreateInfo{ nullptr };
+    StructPointerDecoder<Decoded_VkBufferCreateInfo>/*@@@PLQ*/* pCreateInfo{ nullptr };
 };
 
 struct Decoded_VkDeviceImageMemoryRequirements
@@ -3282,7 +3282,7 @@ struct Decoded_VkDeviceImageMemoryRequirements
     VkDeviceImageMemoryRequirements* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkImageCreateInfo>* pCreateInfo{ nullptr };
+    StructPointerDecoder<Decoded_VkImageCreateInfo>/*@@@PLQ*/* pCreateInfo{ nullptr };
 };
 
 struct Decoded_VkSurfaceCapabilitiesKHR
@@ -3564,7 +3564,7 @@ struct Decoded_VkVideoProfileListInfoKHR
     VkVideoProfileListInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkVideoProfileInfoKHR>* pProfiles{ nullptr };
+    StructPointerDecoder<Decoded_VkVideoProfileInfoKHR>/*@@@PLQ*/* pProfiles{ nullptr };
 };
 
 struct Decoded_VkVideoCapabilitiesKHR
@@ -3618,7 +3618,7 @@ struct Decoded_VkVideoReferenceSlotInfoKHR
     VkVideoReferenceSlotInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkVideoPictureResourceInfoKHR>* pPictureResource{ nullptr };
+    StructPointerDecoder<Decoded_VkVideoPictureResourceInfoKHR>/*@@@PLQ*/* pPictureResource{ nullptr };
 };
 
 struct Decoded_VkVideoSessionMemoryRequirementsKHR
@@ -3648,9 +3648,9 @@ struct Decoded_VkVideoSessionCreateInfoKHR
     VkVideoSessionCreateInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkVideoProfileInfoKHR>* pVideoProfile{ nullptr };
+    StructPointerDecoder<Decoded_VkVideoProfileInfoKHR>/*@@@PLQ*/* pVideoProfile{ nullptr };
     Decoded_VkExtent2D* maxCodedExtent{ nullptr };
-    StructPointerDecoder<Decoded_VkExtensionProperties>* pStdHeaderVersion{ nullptr };
+    StructPointerDecoder<Decoded_VkExtensionProperties>/*@@@PLQ*/* pStdHeaderVersion{ nullptr };
 };
 
 struct Decoded_VkVideoSessionParametersCreateInfoKHR
@@ -3682,7 +3682,7 @@ struct Decoded_VkVideoBeginCodingInfoKHR
     PNextNode* pNext{ nullptr };
     format::HandleId videoSession{ format::kNullHandleId };
     format::HandleId videoSessionParameters{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkVideoReferenceSlotInfoKHR>* pReferenceSlots{ nullptr };
+    StructPointerDecoder<Decoded_VkVideoReferenceSlotInfoKHR>/*@@@PLQ*/* pReferenceSlots{ nullptr };
 };
 
 struct Decoded_VkVideoEndCodingInfoKHR
@@ -3730,8 +3730,8 @@ struct Decoded_VkVideoDecodeInfoKHR
     PNextNode* pNext{ nullptr };
     format::HandleId srcBuffer{ format::kNullHandleId };
     Decoded_VkVideoPictureResourceInfoKHR* dstPictureResource{ nullptr };
-    StructPointerDecoder<Decoded_VkVideoReferenceSlotInfoKHR>* pSetupReferenceSlot{ nullptr };
-    StructPointerDecoder<Decoded_VkVideoReferenceSlotInfoKHR>* pReferenceSlots{ nullptr };
+    StructPointerDecoder<Decoded_VkVideoReferenceSlotInfoKHR>/*@@@PLQ*/* pSetupReferenceSlot{ nullptr };
+    StructPointerDecoder<Decoded_VkVideoReferenceSlotInfoKHR>/*@@@PLQ*/* pReferenceSlots{ nullptr };
 };
 
 struct Decoded_VkVideoEncodeH264CapabilitiesKHR
@@ -4064,8 +4064,8 @@ struct Decoded_VkVideoDecodeH264SessionParametersAddInfoKHR
     VkVideoDecodeH264SessionParametersAddInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH264SequenceParameterSet>* pStdSPSs{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH264PictureParameterSet>* pStdPPSs{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH264SequenceParameterSet>/*@@@PLQ*/* pStdSPSs{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH264PictureParameterSet>/*@@@PLQ*/* pStdPPSs{ nullptr };
 };
 
 struct Decoded_VkVideoDecodeH264SessionParametersCreateInfoKHR
@@ -4075,7 +4075,7 @@ struct Decoded_VkVideoDecodeH264SessionParametersCreateInfoKHR
     VkVideoDecodeH264SessionParametersCreateInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkVideoDecodeH264SessionParametersAddInfoKHR>* pParametersAddInfo{ nullptr };
+    StructPointerDecoder<Decoded_VkVideoDecodeH264SessionParametersAddInfoKHR>/*@@@PLQ*/* pParametersAddInfo{ nullptr };
 };
 
 struct Decoded_VkVideoDecodeH264PictureInfoKHR
@@ -4085,7 +4085,7 @@ struct Decoded_VkVideoDecodeH264PictureInfoKHR
     VkVideoDecodeH264PictureInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoDecodeH264PictureInfo>* pStdPictureInfo{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoDecodeH264PictureInfo>/*@@@PLQ*/* pStdPictureInfo{ nullptr };
     PointerDecoder<uint32_t> pSliceOffsets;
 };
 
@@ -4096,7 +4096,7 @@ struct Decoded_VkVideoDecodeH264DpbSlotInfoKHR
     VkVideoDecodeH264DpbSlotInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoDecodeH264ReferenceInfo>* pStdReferenceInfo{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoDecodeH264ReferenceInfo>/*@@@PLQ*/* pStdReferenceInfo{ nullptr };
 };
 
 struct Decoded_VkRenderingFragmentShadingRateAttachmentInfoKHR
@@ -4229,7 +4229,7 @@ struct Decoded_VkExportMemoryWin32HandleInfoKHR
     VkExportMemoryWin32HandleInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_SECURITY_ATTRIBUTES>* pAttributes{ nullptr };
+    StructPointerDecoder<Decoded_SECURITY_ATTRIBUTES>/*@@@PLQ*/* pAttributes{ nullptr };
     WStringDecoder name;
 };
 
@@ -4319,7 +4319,7 @@ struct Decoded_VkExportSemaphoreWin32HandleInfoKHR
     VkExportSemaphoreWin32HandleInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_SECURITY_ATTRIBUTES>* pAttributes{ nullptr };
+    StructPointerDecoder<Decoded_SECURITY_ATTRIBUTES>/*@@@PLQ*/* pAttributes{ nullptr };
     WStringDecoder name;
 };
 
@@ -4395,7 +4395,7 @@ struct Decoded_VkPresentRegionKHR
 
     VkPresentRegionKHR* decoded_value{ nullptr };
 
-    StructPointerDecoder<Decoded_VkRectLayerKHR>* pRectangles{ nullptr };
+    StructPointerDecoder<Decoded_VkRectLayerKHR>/*@@@PLQ*/* pRectangles{ nullptr };
 };
 
 struct Decoded_VkPresentRegionsKHR
@@ -4405,7 +4405,7 @@ struct Decoded_VkPresentRegionsKHR
     VkPresentRegionsKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkPresentRegionKHR>* pRegions{ nullptr };
+    StructPointerDecoder<Decoded_VkPresentRegionKHR>/*@@@PLQ*/* pRegions{ nullptr };
 };
 
 typedef Decoded_VkDescriptorUpdateTemplateEntry Decoded_VkDescriptorUpdateTemplateEntryKHR;
@@ -4468,7 +4468,7 @@ struct Decoded_VkExportFenceWin32HandleInfoKHR
     VkExportFenceWin32HandleInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_SECURITY_ATTRIBUTES>* pAttributes{ nullptr };
+    StructPointerDecoder<Decoded_SECURITY_ATTRIBUTES>/*@@@PLQ*/* pAttributes{ nullptr };
     WStringDecoder name;
 };
 
@@ -4758,9 +4758,9 @@ struct Decoded_VkVideoDecodeH265SessionParametersAddInfoKHR
     VkVideoDecodeH265SessionParametersAddInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265VideoParameterSet>* pStdVPSs{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265SequenceParameterSet>* pStdSPSs{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoH265PictureParameterSet>* pStdPPSs{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265VideoParameterSet>/*@@@PLQ*/* pStdVPSs{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265SequenceParameterSet>/*@@@PLQ*/* pStdSPSs{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoH265PictureParameterSet>/*@@@PLQ*/* pStdPPSs{ nullptr };
 };
 
 struct Decoded_VkVideoDecodeH265SessionParametersCreateInfoKHR
@@ -4770,7 +4770,7 @@ struct Decoded_VkVideoDecodeH265SessionParametersCreateInfoKHR
     VkVideoDecodeH265SessionParametersCreateInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkVideoDecodeH265SessionParametersAddInfoKHR>* pParametersAddInfo{ nullptr };
+    StructPointerDecoder<Decoded_VkVideoDecodeH265SessionParametersAddInfoKHR>/*@@@PLQ*/* pParametersAddInfo{ nullptr };
 };
 
 struct Decoded_VkVideoDecodeH265PictureInfoKHR
@@ -4780,7 +4780,7 @@ struct Decoded_VkVideoDecodeH265PictureInfoKHR
     VkVideoDecodeH265PictureInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoDecodeH265PictureInfo>* pStdPictureInfo{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoDecodeH265PictureInfo>/*@@@PLQ*/* pStdPictureInfo{ nullptr };
     PointerDecoder<uint32_t> pSliceSegmentOffsets;
 };
 
@@ -4791,7 +4791,7 @@ struct Decoded_VkVideoDecodeH265DpbSlotInfoKHR
     VkVideoDecodeH265DpbSlotInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_StdVideoDecodeH265ReferenceInfo>* pStdReferenceInfo{ nullptr };
+    StructPointerDecoder<Decoded_StdVideoDecodeH265ReferenceInfo>/*@@@PLQ*/* pStdReferenceInfo{ nullptr };
 };
 
 struct Decoded_VkDeviceQueueGlobalPriorityCreateInfoKHR
@@ -4855,7 +4855,7 @@ struct Decoded_VkFragmentShadingRateAttachmentInfoKHR
     VkFragmentShadingRateAttachmentInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkAttachmentReference2>* pFragmentShadingRateAttachment{ nullptr };
+    StructPointerDecoder<Decoded_VkAttachmentReference2>/*@@@PLQ*/* pFragmentShadingRateAttachment{ nullptr };
     Decoded_VkExtent2D* shadingRateAttachmentTexelSize{ nullptr };
 };
 
@@ -5063,8 +5063,8 @@ struct Decoded_VkVideoEncodeInfoKHR
     PNextNode* pNext{ nullptr };
     format::HandleId dstBuffer{ format::kNullHandleId };
     Decoded_VkVideoPictureResourceInfoKHR* srcPictureResource{ nullptr };
-    StructPointerDecoder<Decoded_VkVideoReferenceSlotInfoKHR>* pSetupReferenceSlot{ nullptr };
-    StructPointerDecoder<Decoded_VkVideoReferenceSlotInfoKHR>* pReferenceSlots{ nullptr };
+    StructPointerDecoder<Decoded_VkVideoReferenceSlotInfoKHR>/*@@@PLQ*/* pSetupReferenceSlot{ nullptr };
+    StructPointerDecoder<Decoded_VkVideoReferenceSlotInfoKHR>/*@@@PLQ*/* pReferenceSlots{ nullptr };
 };
 
 struct Decoded_VkVideoEncodeCapabilitiesKHR
@@ -5111,7 +5111,7 @@ struct Decoded_VkVideoEncodeRateControlInfoKHR
     VkVideoEncodeRateControlInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkVideoEncodeRateControlLayerInfoKHR>* pLayers{ nullptr };
+    StructPointerDecoder<Decoded_VkVideoEncodeRateControlLayerInfoKHR>/*@@@PLQ*/* pLayers{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceVideoEncodeQualityLevelInfoKHR
@@ -5121,7 +5121,7 @@ struct Decoded_VkPhysicalDeviceVideoEncodeQualityLevelInfoKHR
     VkPhysicalDeviceVideoEncodeQualityLevelInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkVideoProfileInfoKHR>* pVideoProfile{ nullptr };
+    StructPointerDecoder<Decoded_VkVideoProfileInfoKHR>/*@@@PLQ*/* pVideoProfile{ nullptr };
 };
 
 struct Decoded_VkVideoEncodeQualityLevelPropertiesKHR
@@ -5327,8 +5327,8 @@ struct Decoded_VkDeviceImageSubresourceInfoKHR
     VkDeviceImageSubresourceInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkImageCreateInfo>* pCreateInfo{ nullptr };
-    StructPointerDecoder<Decoded_VkImageSubresource2KHR>* pSubresource{ nullptr };
+    StructPointerDecoder<Decoded_VkImageCreateInfo>/*@@@PLQ*/* pCreateInfo{ nullptr };
+    StructPointerDecoder<Decoded_VkImageSubresource2KHR>/*@@@PLQ*/* pSubresource{ nullptr };
 };
 
 struct Decoded_VkSubresourceLayout2KHR
@@ -5771,7 +5771,7 @@ struct Decoded_VkExportMemoryWin32HandleInfoNV
     VkExportMemoryWin32HandleInfoNV* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_SECURITY_ATTRIBUTES>* pAttributes{ nullptr };
+    StructPointerDecoder<Decoded_SECURITY_ATTRIBUTES>/*@@@PLQ*/* pAttributes{ nullptr };
 };
 
 struct Decoded_VkWin32KeyedMutexAcquireReleaseInfoNV
@@ -5897,7 +5897,7 @@ struct Decoded_VkPipelineViewportWScalingStateCreateInfoNV
     VkPipelineViewportWScalingStateCreateInfoNV* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkViewportWScalingNV>* pViewportWScalings{ nullptr };
+    StructPointerDecoder<Decoded_VkViewportWScalingNV>/*@@@PLQ*/* pViewportWScalings{ nullptr };
 };
 
 struct Decoded_VkSurfaceCapabilities2EXT
@@ -5976,7 +5976,7 @@ struct Decoded_VkPresentTimesInfoGOOGLE
     VkPresentTimesInfoGOOGLE* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkPresentTimeGOOGLE>* pTimes{ nullptr };
+    StructPointerDecoder<Decoded_VkPresentTimeGOOGLE>/*@@@PLQ*/* pTimes{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceMultiviewPerViewAttributesPropertiesNVX
@@ -6002,7 +6002,7 @@ struct Decoded_VkPipelineViewportSwizzleStateCreateInfoNV
     VkPipelineViewportSwizzleStateCreateInfoNV* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkViewportSwizzleNV>* pViewportSwizzles{ nullptr };
+    StructPointerDecoder<Decoded_VkViewportSwizzleNV>/*@@@PLQ*/* pViewportSwizzles{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceDiscardRectanglePropertiesEXT
@@ -6021,7 +6021,7 @@ struct Decoded_VkPipelineDiscardRectangleStateCreateInfoEXT
     VkPipelineDiscardRectangleStateCreateInfoEXT* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkRect2D>* pDiscardRectangles{ nullptr };
+    StructPointerDecoder<Decoded_VkRect2D>/*@@@PLQ*/* pDiscardRectangles{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceConservativeRasterizationPropertiesEXT
@@ -6140,9 +6140,9 @@ struct Decoded_VkDebugUtilsMessengerCallbackDataEXT
     PNextNode* pNext{ nullptr };
     StringDecoder pMessageIdName;
     StringDecoder pMessage;
-    StructPointerDecoder<Decoded_VkDebugUtilsLabelEXT>* pQueueLabels{ nullptr };
-    StructPointerDecoder<Decoded_VkDebugUtilsLabelEXT>* pCmdBufLabels{ nullptr };
-    StructPointerDecoder<Decoded_VkDebugUtilsObjectNameInfoEXT>* pObjects{ nullptr };
+    StructPointerDecoder<Decoded_VkDebugUtilsLabelEXT>/*@@@PLQ*/* pQueueLabels{ nullptr };
+    StructPointerDecoder<Decoded_VkDebugUtilsLabelEXT>/*@@@PLQ*/* pCmdBufLabels{ nullptr };
+    StructPointerDecoder<Decoded_VkDebugUtilsObjectNameInfoEXT>/*@@@PLQ*/* pObjects{ nullptr };
 };
 
 struct Decoded_VkDebugUtilsMessengerCreateInfoEXT
@@ -6261,7 +6261,7 @@ struct Decoded_VkSampleLocationsInfoEXT
 
     PNextNode* pNext{ nullptr };
     Decoded_VkExtent2D* sampleLocationGridSize{ nullptr };
-    StructPointerDecoder<Decoded_VkSampleLocationEXT>* pSampleLocations{ nullptr };
+    StructPointerDecoder<Decoded_VkSampleLocationEXT>/*@@@PLQ*/* pSampleLocations{ nullptr };
 };
 
 struct Decoded_VkAttachmentSampleLocationsEXT
@@ -6289,8 +6289,8 @@ struct Decoded_VkRenderPassSampleLocationsBeginInfoEXT
     VkRenderPassSampleLocationsBeginInfoEXT* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkAttachmentSampleLocationsEXT>* pAttachmentInitialSampleLocations{ nullptr };
-    StructPointerDecoder<Decoded_VkSubpassSampleLocationsEXT>* pPostSubpassSampleLocations{ nullptr };
+    StructPointerDecoder<Decoded_VkAttachmentSampleLocationsEXT>/*@@@PLQ*/* pAttachmentInitialSampleLocations{ nullptr };
+    StructPointerDecoder<Decoded_VkSubpassSampleLocationsEXT>/*@@@PLQ*/* pPostSubpassSampleLocations{ nullptr };
 };
 
 struct Decoded_VkPipelineSampleLocationsStateCreateInfoEXT
@@ -6402,7 +6402,7 @@ struct Decoded_VkDrmFormatModifierPropertiesListEXT
     VkDrmFormatModifierPropertiesListEXT* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkDrmFormatModifierPropertiesEXT>* pDrmFormatModifierProperties{ nullptr };
+    StructPointerDecoder<Decoded_VkDrmFormatModifierPropertiesEXT>/*@@@PLQ*/* pDrmFormatModifierProperties{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceImageDrmFormatModifierInfoEXT
@@ -6432,7 +6432,7 @@ struct Decoded_VkImageDrmFormatModifierExplicitCreateInfoEXT
     VkImageDrmFormatModifierExplicitCreateInfoEXT* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkSubresourceLayout>* pPlaneLayouts{ nullptr };
+    StructPointerDecoder<Decoded_VkSubresourceLayout>/*@@@PLQ*/* pPlaneLayouts{ nullptr };
 };
 
 struct Decoded_VkImageDrmFormatModifierPropertiesEXT
@@ -6458,7 +6458,7 @@ struct Decoded_VkDrmFormatModifierPropertiesList2EXT
     VkDrmFormatModifierPropertiesList2EXT* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkDrmFormatModifierProperties2EXT>* pDrmFormatModifierProperties{ nullptr };
+    StructPointerDecoder<Decoded_VkDrmFormatModifierProperties2EXT>/*@@@PLQ*/* pDrmFormatModifierProperties{ nullptr };
 };
 
 struct Decoded_VkValidationCacheCreateInfoEXT
@@ -6507,7 +6507,7 @@ struct Decoded_VkPipelineViewportShadingRateImageStateCreateInfoNV
     VkPipelineViewportShadingRateImageStateCreateInfoNV* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkShadingRatePaletteNV>* pShadingRatePalettes{ nullptr };
+    StructPointerDecoder<Decoded_VkShadingRatePaletteNV>/*@@@PLQ*/* pShadingRatePalettes{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceShadingRateImageFeaturesNV
@@ -6542,7 +6542,7 @@ struct Decoded_VkCoarseSampleOrderCustomNV
 
     VkCoarseSampleOrderCustomNV* decoded_value{ nullptr };
 
-    StructPointerDecoder<Decoded_VkCoarseSampleLocationNV>* pSampleLocations{ nullptr };
+    StructPointerDecoder<Decoded_VkCoarseSampleLocationNV>/*@@@PLQ*/* pSampleLocations{ nullptr };
 };
 
 struct Decoded_VkPipelineViewportCoarseSampleOrderStateCreateInfoNV
@@ -6552,7 +6552,7 @@ struct Decoded_VkPipelineViewportCoarseSampleOrderStateCreateInfoNV
     VkPipelineViewportCoarseSampleOrderStateCreateInfoNV* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkCoarseSampleOrderCustomNV>* pCustomSampleOrders{ nullptr };
+    StructPointerDecoder<Decoded_VkCoarseSampleOrderCustomNV>/*@@@PLQ*/* pCustomSampleOrders{ nullptr };
 };
 
 struct Decoded_VkRayTracingShaderGroupCreateInfoNV
@@ -6571,8 +6571,8 @@ struct Decoded_VkRayTracingPipelineCreateInfoNV
     VkRayTracingPipelineCreateInfoNV* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineShaderStageCreateInfo>* pStages{ nullptr };
-    StructPointerDecoder<Decoded_VkRayTracingShaderGroupCreateInfoNV>* pGroups{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineShaderStageCreateInfo>/*@@@PLQ*/* pStages{ nullptr };
+    StructPointerDecoder<Decoded_VkRayTracingShaderGroupCreateInfoNV>/*@@@PLQ*/* pGroups{ nullptr };
     format::HandleId layout{ format::kNullHandleId };
     format::HandleId basePipelineHandle{ format::kNullHandleId };
 };
@@ -6626,7 +6626,7 @@ struct Decoded_VkAccelerationStructureInfoNV
     VkAccelerationStructureInfoNV* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkGeometryNV>* pGeometries{ nullptr };
+    StructPointerDecoder<Decoded_VkGeometryNV>/*@@@PLQ*/* pGeometries{ nullptr };
 };
 
 struct Decoded_VkAccelerationStructureCreateInfoNV
@@ -6888,7 +6888,7 @@ struct Decoded_VkPipelineViewportExclusiveScissorStateCreateInfoNV
     VkPipelineViewportExclusiveScissorStateCreateInfoNV* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkRect2D>* pExclusiveScissors{ nullptr };
+    StructPointerDecoder<Decoded_VkRect2D>/*@@@PLQ*/* pExclusiveScissors{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceExclusiveScissorFeaturesNV
@@ -7418,7 +7418,7 @@ struct Decoded_VkCopyMemoryToImageInfoEXT
 
     PNextNode* pNext{ nullptr };
     format::HandleId dstImage{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkMemoryToImageCopyEXT>* pRegions{ nullptr };
+    StructPointerDecoder<Decoded_VkMemoryToImageCopyEXT>/*@@@PLQ*/* pRegions{ nullptr };
 };
 
 struct Decoded_VkCopyImageToMemoryInfoEXT
@@ -7429,7 +7429,7 @@ struct Decoded_VkCopyImageToMemoryInfoEXT
 
     PNextNode* pNext{ nullptr };
     format::HandleId srcImage{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkImageToMemoryCopyEXT>* pRegions{ nullptr };
+    StructPointerDecoder<Decoded_VkImageToMemoryCopyEXT>/*@@@PLQ*/* pRegions{ nullptr };
 };
 
 struct Decoded_VkCopyImageToImageInfoEXT
@@ -7441,7 +7441,7 @@ struct Decoded_VkCopyImageToImageInfoEXT
     PNextNode* pNext{ nullptr };
     format::HandleId srcImage{ format::kNullHandleId };
     format::HandleId dstImage{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkImageCopy2>* pRegions{ nullptr };
+    StructPointerDecoder<Decoded_VkImageCopy2>/*@@@PLQ*/* pRegions{ nullptr };
 };
 
 struct Decoded_VkHostImageLayoutTransitionInfoEXT
@@ -7602,9 +7602,9 @@ struct Decoded_VkGraphicsShaderGroupCreateInfoNV
     VkGraphicsShaderGroupCreateInfoNV* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineShaderStageCreateInfo>* pStages{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineVertexInputStateCreateInfo>* pVertexInputState{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineTessellationStateCreateInfo>* pTessellationState{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineShaderStageCreateInfo>/*@@@PLQ*/* pStages{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineVertexInputStateCreateInfo>/*@@@PLQ*/* pVertexInputState{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineTessellationStateCreateInfo>/*@@@PLQ*/* pTessellationState{ nullptr };
 };
 
 struct Decoded_VkGraphicsPipelineShaderGroupsCreateInfoNV
@@ -7614,7 +7614,7 @@ struct Decoded_VkGraphicsPipelineShaderGroupsCreateInfoNV
     VkGraphicsPipelineShaderGroupsCreateInfoNV* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkGraphicsShaderGroupCreateInfoNV>* pGroups{ nullptr };
+    StructPointerDecoder<Decoded_VkGraphicsShaderGroupCreateInfoNV>/*@@@PLQ*/* pGroups{ nullptr };
     HandlePointerDecoder<VkPipeline> pPipelines;
 };
 
@@ -7674,7 +7674,7 @@ struct Decoded_VkIndirectCommandsLayoutCreateInfoNV
     VkIndirectCommandsLayoutCreateInfoNV* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkIndirectCommandsLayoutTokenNV>* pTokens{ nullptr };
+    StructPointerDecoder<Decoded_VkIndirectCommandsLayoutTokenNV>/*@@@PLQ*/* pTokens{ nullptr };
     PointerDecoder<uint32_t> pStreamStrides;
 };
 
@@ -7687,7 +7687,7 @@ struct Decoded_VkGeneratedCommandsInfoNV
     PNextNode* pNext{ nullptr };
     format::HandleId pipeline{ format::kNullHandleId };
     format::HandleId indirectCommandsLayout{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkIndirectCommandsStreamNV>* pStreams{ nullptr };
+    StructPointerDecoder<Decoded_VkIndirectCommandsStreamNV>/*@@@PLQ*/* pStreams{ nullptr };
     format::HandleId preprocessBuffer{ format::kNullHandleId };
     format::HandleId sequencesCountBuffer{ format::kNullHandleId };
     format::HandleId sequencesIndexBuffer{ format::kNullHandleId };
@@ -7720,7 +7720,7 @@ struct Decoded_VkCommandBufferInheritanceViewportScissorInfoNV
     VkCommandBufferInheritanceViewportScissorInfoNV* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkViewport>* pViewportDepths{ nullptr };
+    StructPointerDecoder<Decoded_VkViewport>/*@@@PLQ*/* pViewportDepths{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceTexelBufferAlignmentFeaturesEXT
@@ -8163,8 +8163,8 @@ struct Decoded_VkDeviceFaultInfoEXT
 
     PNextNode* pNext{ nullptr };
     StringDecoder description;
-    StructPointerDecoder<Decoded_VkDeviceFaultAddressInfoEXT>* pAddressInfos{ nullptr };
-    StructPointerDecoder<Decoded_VkDeviceFaultVendorInfoEXT>* pVendorInfos{ nullptr };
+    StructPointerDecoder<Decoded_VkDeviceFaultAddressInfoEXT>/*@@@PLQ*/* pAddressInfos{ nullptr };
+    StructPointerDecoder<Decoded_VkDeviceFaultVendorInfoEXT>/*@@@PLQ*/* pVendorInfos{ nullptr };
     uint64_t pVendorBinaryData{ 0 };
 };
 
@@ -8233,7 +8233,7 @@ struct Decoded_VkMutableDescriptorTypeCreateInfoEXT
     VkMutableDescriptorTypeCreateInfoEXT* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkMutableDescriptorTypeListEXT>* pMutableDescriptorTypeLists{ nullptr };
+    StructPointerDecoder<Decoded_VkMutableDescriptorTypeListEXT>/*@@@PLQ*/* pMutableDescriptorTypeLists{ nullptr };
 };
 
 typedef Decoded_VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT Decoded_VkPhysicalDeviceMutableDescriptorTypeFeaturesVALVE;
@@ -8591,8 +8591,8 @@ struct Decoded_VkMicromapBuildInfoEXT
 
     PNextNode* pNext{ nullptr };
     format::HandleId dstMicromap{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkMicromapUsageEXT>* pUsageCounts{ nullptr };
-    StructPointerDecoder<Decoded_VkMicromapUsageEXT*>* ppUsageCounts{ nullptr };
+    StructPointerDecoder<Decoded_VkMicromapUsageEXT>/*@@@PLQ*/* pUsageCounts{ nullptr };
+    StructPointerDecoder<Decoded_VkMicromapUsageEXT*>/*@@@EHI*/* ppUsageCounts{ nullptr };
     Decoded_VkDeviceOrHostAddressConstKHR* data{ nullptr };
     Decoded_VkDeviceOrHostAddressKHR* scratchData{ nullptr };
     Decoded_VkDeviceOrHostAddressConstKHR* triangleArray{ nullptr };
@@ -8686,8 +8686,8 @@ struct Decoded_VkAccelerationStructureTrianglesOpacityMicromapEXT
 
     PNextNode* pNext{ nullptr };
     Decoded_VkDeviceOrHostAddressConstKHR* indexBuffer{ nullptr };
-    StructPointerDecoder<Decoded_VkMicromapUsageEXT>* pUsageCounts{ nullptr };
-    StructPointerDecoder<Decoded_VkMicromapUsageEXT*>* ppUsageCounts{ nullptr };
+    StructPointerDecoder<Decoded_VkMicromapUsageEXT>/*@@@PLQ*/* pUsageCounts{ nullptr };
+    StructPointerDecoder<Decoded_VkMicromapUsageEXT*>/*@@@EHI*/* ppUsageCounts{ nullptr };
     format::HandleId micromap{ format::kNullHandleId };
 };
 
@@ -8727,8 +8727,8 @@ struct Decoded_VkAccelerationStructureTrianglesDisplacementMicromapNV
     Decoded_VkDeviceOrHostAddressConstKHR* displacementVectorBuffer{ nullptr };
     Decoded_VkDeviceOrHostAddressConstKHR* displacedMicromapPrimitiveFlags{ nullptr };
     Decoded_VkDeviceOrHostAddressConstKHR* indexBuffer{ nullptr };
-    StructPointerDecoder<Decoded_VkMicromapUsageEXT>* pUsageCounts{ nullptr };
-    StructPointerDecoder<Decoded_VkMicromapUsageEXT*>* ppUsageCounts{ nullptr };
+    StructPointerDecoder<Decoded_VkMicromapUsageEXT>/*@@@PLQ*/* pUsageCounts{ nullptr };
+    StructPointerDecoder<Decoded_VkMicromapUsageEXT*>/*@@@EHI*/* ppUsageCounts{ nullptr };
     format::HandleId micromap{ format::kNullHandleId };
 };
 
@@ -8964,7 +8964,7 @@ struct Decoded_VkSubpassFragmentDensityMapOffsetEndInfoQCOM
     VkSubpassFragmentDensityMapOffsetEndInfoQCOM* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkOffset2D>* pFragmentDensityOffsets{ nullptr };
+    StructPointerDecoder<Decoded_VkOffset2D>/*@@@PLQ*/* pFragmentDensityOffsets{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceDeviceGeneratedCommandsComputeFeaturesNV
@@ -9143,7 +9143,7 @@ struct Decoded_VkRenderPassCreationFeedbackCreateInfoEXT
     VkRenderPassCreationFeedbackCreateInfoEXT* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkRenderPassCreationFeedbackInfoEXT>* pRenderPassFeedback{ nullptr };
+    StructPointerDecoder<Decoded_VkRenderPassCreationFeedbackInfoEXT>/*@@@PLQ*/* pRenderPassFeedback{ nullptr };
 };
 
 struct Decoded_VkRenderPassSubpassFeedbackInfoEXT
@@ -9162,7 +9162,7 @@ struct Decoded_VkRenderPassSubpassFeedbackCreateInfoEXT
     VkRenderPassSubpassFeedbackCreateInfoEXT* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkRenderPassSubpassFeedbackInfoEXT>* pSubpassFeedback{ nullptr };
+    StructPointerDecoder<Decoded_VkRenderPassSubpassFeedbackInfoEXT>/*@@@PLQ*/* pSubpassFeedback{ nullptr };
 };
 
 struct Decoded_VkDirectDriverLoadingInfoLUNARG
@@ -9182,7 +9182,7 @@ struct Decoded_VkDirectDriverLoadingListLUNARG
     VkDirectDriverLoadingListLUNARG* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkDirectDriverLoadingInfoLUNARG>* pDrivers{ nullptr };
+    StructPointerDecoder<Decoded_VkDirectDriverLoadingInfoLUNARG>/*@@@PLQ*/* pDrivers{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceShaderModuleIdentifierFeaturesEXT
@@ -9286,7 +9286,7 @@ struct Decoded_VkOpticalFlowExecuteInfoNV
     VkOpticalFlowExecuteInfoNV* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkRect2D>* pRegions{ nullptr };
+    StructPointerDecoder<Decoded_VkRect2D>/*@@@PLQ*/* pRegions{ nullptr };
 };
 
 struct Decoded_VkPhysicalDeviceLegacyDitheringFeaturesEXT
@@ -9363,8 +9363,8 @@ struct Decoded_VkShaderCreateInfoEXT
     PointerDecoder<uint8_t> pCode;
     StringDecoder pName;
     HandlePointerDecoder<VkDescriptorSetLayout> pSetLayouts;
-    StructPointerDecoder<Decoded_VkPushConstantRange>* pPushConstantRanges{ nullptr };
-    StructPointerDecoder<Decoded_VkSpecializationInfo>* pSpecializationInfo{ nullptr };
+    StructPointerDecoder<Decoded_VkPushConstantRange>/*@@@PLQ*/* pPushConstantRanges{ nullptr };
+    StructPointerDecoder<Decoded_VkSpecializationInfo>/*@@@PLQ*/* pSpecializationInfo{ nullptr };
 };
 
 typedef Decoded_VkPipelineShaderStageRequiredSubgroupSizeCreateInfo Decoded_VkShaderRequiredSubgroupSizeCreateInfoEXT;
@@ -9526,7 +9526,7 @@ struct Decoded_VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM
     VkMultiviewPerViewRenderAreasRenderPassBeginInfoQCOM* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkRect2D>* pPerViewRenderAreas{ nullptr };
+    StructPointerDecoder<Decoded_VkRect2D>/*@@@PLQ*/* pPerViewRenderAreas{ nullptr };
 };
 
 struct Decoded_VkPhysicalDevicePerStageDescriptorSetFeaturesNV
@@ -9696,8 +9696,8 @@ struct Decoded_VkAccelerationStructureBuildGeometryInfoKHR
     PNextNode* pNext{ nullptr };
     format::HandleId srcAccelerationStructure{ format::kNullHandleId };
     format::HandleId dstAccelerationStructure{ format::kNullHandleId };
-    StructPointerDecoder<Decoded_VkAccelerationStructureGeometryKHR>* pGeometries{ nullptr };
-    StructPointerDecoder<Decoded_VkAccelerationStructureGeometryKHR*>* ppGeometries{ nullptr };
+    StructPointerDecoder<Decoded_VkAccelerationStructureGeometryKHR>/*@@@PLQ*/* pGeometries{ nullptr };
+    StructPointerDecoder<Decoded_VkAccelerationStructureGeometryKHR*>/*@@@EHI*/* ppGeometries{ nullptr };
     Decoded_VkDeviceOrHostAddressKHR* scratchData{ nullptr };
 };
 
@@ -9827,11 +9827,11 @@ struct Decoded_VkRayTracingPipelineCreateInfoKHR
     VkRayTracingPipelineCreateInfoKHR* decoded_value{ nullptr };
 
     PNextNode* pNext{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineShaderStageCreateInfo>* pStages{ nullptr };
-    StructPointerDecoder<Decoded_VkRayTracingShaderGroupCreateInfoKHR>* pGroups{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineLibraryCreateInfoKHR>* pLibraryInfo{ nullptr };
-    StructPointerDecoder<Decoded_VkRayTracingPipelineInterfaceCreateInfoKHR>* pLibraryInterface{ nullptr };
-    StructPointerDecoder<Decoded_VkPipelineDynamicStateCreateInfo>* pDynamicState{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineShaderStageCreateInfo>/*@@@PLQ*/* pStages{ nullptr };
+    StructPointerDecoder<Decoded_VkRayTracingShaderGroupCreateInfoKHR>/*@@@PLQ*/* pGroups{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineLibraryCreateInfoKHR>/*@@@PLQ*/* pLibraryInfo{ nullptr };
+    StructPointerDecoder<Decoded_VkRayTracingPipelineInterfaceCreateInfoKHR>/*@@@PLQ*/* pLibraryInterface{ nullptr };
+    StructPointerDecoder<Decoded_VkPipelineDynamicStateCreateInfo>/*@@@PLQ*/* pDynamicState{ nullptr };
     format::HandleId layout{ format::kNullHandleId };
     format::HandleId basePipelineHandle{ format::kNullHandleId };
 };

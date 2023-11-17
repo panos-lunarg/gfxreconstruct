@@ -40,6 +40,15 @@ class BaseReplayConsumerBodyGenerator():
             values = info[2]
 
             cmddef = '' if first else '\n'
+
+            # Create structure containing all parameters
+            # Need for saving command buffers for dump resource
+            if values[0].full_type == 'VkCommandBuffer':
+                cmddef += 'struct ' + cmd + '_DRSaveStruct {\n'        #TODO: Use a better type name for struct
+                for value in values:
+                    cmddef += '    ' + value.full_type + ' ' + value.name + ';\n'
+                    cmddef += '    //@@@VBT ' + value.base_type + ' ' + value.name + ';\n'
+                cmddef += '};\n\n'
             cmddef += self.make_consumer_func_decl(
                 return_type,
                 '/*@@@WET*/{}ReplayConsumer::Process_'.format(platform_type) + cmd,
