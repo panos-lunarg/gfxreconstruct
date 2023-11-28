@@ -140,10 +140,16 @@ class VulkanReplayConsumerBodyGenerator(
         write('#include "util/defines.h"', file=self.outFile)
         self.newline()
         write('GFXRECON_BEGIN_NAMESPACE(gfxrecon)', file=self.outFile)
-        write('GFXRECON_BEGIN_NAMESPACE(decode)', file=self.outFile)
+        write('GFXRECON_BEGIN_NAMESPACE(decode) //@@@HYH', file=self.outFile)
         self.newline()
         write('template <typename T>', file=self.outFile)
         write('void InitializeOutputStructPNext(StructPointerDecoder<T> *decoder);//@@@EZA', file=self.outFile)
+        self.newline()
+        write('class cmdBuffApiCallClass //@@@WPK', file=self.outFile)
+        write('{', file=self.outFile)
+        write('public:', file=self.outFile)
+        write('    uint32_t apiCall;', file=self.outFile)
+        write('};', file=self.outFile)
 
     def endFile(self):
         """Method override."""
@@ -220,7 +226,6 @@ class VulkanReplayConsumerBodyGenerator(
 
     def generate_feature(self):
         """Performs C++ code generation for the feature."""
-        write('//@@@-GFE\n', file=self.outFile)
         BaseReplayConsumerBodyGenerator.generate_feature(self)
 
     def use_instance_table(self, name, typename):
@@ -369,10 +374,17 @@ class VulkanReplayConsumerBodyGenerator(
             body += '      //       Does begin clear the log?\n'
             body += '      //       A draw command that is to trigger the resource dump needs to be handled here\n'
             body += '      //       Note that only one cmdbuffer will need to be saved\n'
-            body += '      uint32_t i = format::ApiCall_'+name+';\n'
-            body += '      ' + name + '_DRSaveStruct s;\n'
-            body += '      s.commandBuffer = in_commandBuffer;\n'
-            body += '      printf("apicall: %d\\n", i);\n'
+            body += '      //@@DEELTEME1 uint32_t i = format::ApiCall_'+name+';\n'
+            body += '      ' + name + '_CmdBuffSaveClass s;  //@@@TMP tmp until code is changed to save to list\n'
+            body += '      //@@@THY TODO: rather than declare local var, add item to command list\n'
+            body += '      s.apiCall = format::ApiCall_'+name+';\n'
+            body += '      //@@@EDH TODO: Pick one of the following. Are they equivalent??\n'
+            body += '      VkCommandBuffer in_commandBuffer2 = /*@@@XJK*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);\n  //@@@RAJ experiment1'
+            body += '      //printf("@@@Line %d %p %llu\\n", __LINE__, in_commandBuffer->handle, commandBuffer);\n'
+            body += '      //s.commandBuffer = (VkCommandBuffer)commandBuffer;  //@@@HXZ Not sure if this is right\n'
+            #body += '      s.commandBuffer = in_commandBuffer->handle;\n'  #//@@@POSSIBLY DELETE THIS LINE?
+            body += '      s.commandBuffer = in_commandBuffer2;\n  //@@@RAJ experiment2'  # TODO: Combine this line with RAJ line above. Don't need temp var.
+            body += '      //@@@WSU TODO: save the rest of the args\n'
             body += '    }\n'
 
         drFuncExcludeList=['vkBeginCommandBuffer','vkResetCommandBuffer']
@@ -380,7 +392,7 @@ class VulkanReplayConsumerBodyGenerator(
         if values[0].base_type == 'VkCommandBuffer' and len(handle_params) > 1 and (name not in drFuncExcludeList):
             body += '    {\n'
             if name in ['vkCmdPipelineBarrier', 'vkCmdBeginRenderPass', 'vkCmdDebugMarkerInsertEXT']:
-                body += '        VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);\n'
+                body += '        VkCommandBuffer in_commandBuffer = /*@@@EDH*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);\n'
             if name == 'vkCmdPipelineBarrier':
                 body += '        const VkBufferMemoryBarrier* in_pBufferMemoryBarriers = pBufferMemoryBarriers->GetPointer();\n'
                 body += '        const VkImageMemoryBarrier* in_pImageMemoryBarriers = pImageMemoryBarriers->GetPointer();\n'
@@ -925,7 +937,7 @@ class VulkanReplayConsumerBodyGenerator(
                         preexpr.append(expr)
                 else:
                     expr = '{} {} = '.format(value.full_type, arg_name)
-                    expr += 'MapHandle<{type}Info>({}, &VulkanObjectInfoTable::Get{type}Info);'.format(
+                    expr += '/*@@@QKJ*/MapHandle<{type}Info>({}, &VulkanObjectInfoTable::Get{type}Info);'.format(
                         value.name, type=value.base_type[2:]
                     )
                     preexpr.append(expr)
@@ -949,7 +961,7 @@ class VulkanReplayConsumerBodyGenerator(
                 arg_name = 'in_' + value.name
                 args.append(arg_name)
                 expr = '{} {} = '.format(value.full_type, arg_name)
-                expr += 'MapHandle({}, {});'.format(
+                expr += '/*@@@REX*/MapHandle({}, {});'.format(
                     value.name,
                     self.get_generic_cmd_handle_type_value(name, value.name)
                 )
