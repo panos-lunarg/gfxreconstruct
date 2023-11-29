@@ -36,6 +36,8 @@
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)
                     
+ApiDecoder *g_decoder; // Temp, may move to call_info
+
 //void *g_parameter_buffer_data;    @@@DELETE ME
 //size_t g_parameter_buffer_size;   @@@DELETE ME
 
@@ -580,6 +582,7 @@ bool FileProcessor::ProcessFunctionCall(const format::BlockHeader& block_header,
                     DecodeAllocator::Begin();
                     call_info.parameter_buffer_data = parameter_buffer_.data();
                     call_info.parameter_buffer_size = parameter_buffer_size;
+                    g_decoder = decoder; // Temp, may move to call_info
                     decoder->DecodeFunctionCall(call_id, call_info, parameter_buffer_.data(), parameter_buffer_size);
                     DecodeAllocator::End();
                 }

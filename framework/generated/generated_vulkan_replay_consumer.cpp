@@ -35,16 +35,22 @@
 #include "generated/generated_vulkan_dr_command_buffer_util.h"
 #include "util/defines.h"
 
+//extern gfxrecon::decode::ApiDecoder *g_decoder; // Temp, may move to call_info
+
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode) //@@@HYH
+
+extern ApiDecoder *g_decoder; // Temp, may move to call_info
 
 template <typename T>
 void InitializeOutputStructPNext(StructPointerDecoder<T> *decoder);//@@@EZA
 
+#define TESTCODE 1  //@@@FOR TESTING!!!
+
 class CmdBuffApiCall //@@@WPK    This could be struct instead and then could omit public: below
 {
 public:
-    uint32_t apiCall;
+    gfxrecon::format::ApiCallId apiCall;
     uint64_t index;
     format::ThreadId thread_id;
     VkCommandBuffer commandBuffer;
@@ -1312,8 +1318,17 @@ void VulkanReplayConsumer::Process_vkBeginCommandBuffer(
     auto in_commandBuffer = GetObjectInfoTable().GetCommandBufferInfo(commandBuffer);
 
     MapStructHandles(pBeginInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
+#if TESTCODE
+    if (call_info.index != g_saveCmdBuf_BeginCommandBuffer_Index)
+    {
+        // We execute this command since we aren't saving commands
+        VkResult replay_result = OverrideBeginCommandBuffer(GetDeviceTable(in_commandBuffer->handle)->BeginCommandBuffer, returnValue, in_commandBuffer, pBeginInfo)/*@@@HNM*/;
+        CheckResult("vkBeginCommandBuffer", returnValue, replay_result, call_info);
+    }
+#else
     VkResult replay_result = OverrideBeginCommandBuffer(GetDeviceTable(in_commandBuffer->handle)->BeginCommandBuffer, returnValue, in_commandBuffer, pBeginInfo)/*@@@HNM*/;
     CheckResult("vkBeginCommandBuffer", returnValue, replay_result, call_info);
+#endif
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1329,7 +1344,7 @@ void VulkanReplayConsumer::Process_vkBeginCommandBuffer(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1353,8 +1368,15 @@ void VulkanReplayConsumer::Process_vkEndCommandBuffer(
     format::HandleId                            commandBuffer)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
+#if TESTCODE
+    if (!g_savingCommandBuffer )  {
+        VkResult replay_result = GetDeviceTable(in_commandBuffer)->EndCommandBuffer(in_commandBuffer)/*@@@ABC*/;
+        CheckResult("vkEndCommandBuffer", returnValue, replay_result, call_info);
+    }
+#else
     VkResult replay_result = GetDeviceTable(in_commandBuffer)->EndCommandBuffer(in_commandBuffer)/*@@@ABC*/;
     CheckResult("vkEndCommandBuffer", returnValue, replay_result, call_info);
+#endif
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1377,6 +1399,22 @@ void VulkanReplayConsumer::Process_vkEndCommandBuffer(
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
             savedDRCmdBuff.push_back(s);
+#if TESTCODE
+            // Playback the saved cmd buffer
+            g_savingCommandBuffer = false;
+            for (auto it = savedDRCmdBuff.begin(); it != savedDRCmdBuff.end(); it++)
+            {
+                printf("In Process_vkEndCommandBuffer:  apiCall=%d\n", it->apiCall);
+                ApiCallInfo replay_call_info;
+                replay_call_info.index = it->index;
+                replay_call_info.thread_id = it->thread_id;
+                replay_call_info.parameter_buffer_data = it->parameter_buffer_data.data(); // Not needed, since cmd won't be saved??
+                replay_call_info.parameter_buffer_size = it->parameter_buffer_size; // Not needed??
+                replay_call_info.thread_id = it->thread_id;
+                g_decoder->DecodeFunctionCall(it->apiCall, call_info, it->parameter_buffer_data.data(), it->parameter_buffer_size);
+                //Error:   error C2039: 'VulkanDecoder': is not a member of 'gfxrecon::decode'
+            }
+#endif
         }
 
         g_savingCommandBuffer = false;
@@ -1427,8 +1465,17 @@ void VulkanReplayConsumer::Process_vkCmdBindPipeline(
     format::HandleId                            pipeline)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
+#if TESTCODE
+    VkPipeline in_pipeline = 0;
+    if (!g_savingCommandBuffer ) 
+    {
+        in_pipeline = /*@@@QKJ*/MapHandle<PipelineInfo>(pipeline, &VulkanObjectInfoTable::GetPipelineInfo);//@@@DFK
+        GetDeviceTable(in_commandBuffer)->CmdBindPipeline(in_commandBuffer, pipelineBindPoint, in_pipeline)/*@@@ABC*/;//@@@HQA
+    }
+#else
     VkPipeline in_pipeline = /*@@@QKJ*/MapHandle<PipelineInfo>(pipeline, &VulkanObjectInfoTable::GetPipelineInfo);//@@@DFK
     GetDeviceTable(in_commandBuffer)->CmdBindPipeline(in_commandBuffer, pipelineBindPoint, in_pipeline)/*@@@ABC*/;//@@@HQA
+#endif
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1468,6 +1515,9 @@ void VulkanReplayConsumer::Process_vkCmdSetViewport(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkViewport* /*@@@AZI*/in_pViewports = /*@@@HUY*/pViewports->GetPointer();//@@@DFK
+#if TESTCODE
+    if (!g_savingCommandBuffer ) 
+#endif
     GetDeviceTable(in_commandBuffer)->CmdSetViewport(in_commandBuffer, firstViewport, viewportCount, /*@@@AZI*/in_pViewports)/*@@@ABC*/;//@@@HQA
 
     {
@@ -1505,6 +1555,9 @@ void VulkanReplayConsumer::Process_vkCmdSetScissor(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkRect2D* /*@@@AZI*/in_pScissors = /*@@@HUY*/pScissors->GetPointer();//@@@DFK
+#if TESTCODE
+    if (!g_savingCommandBuffer ) 
+#endif
     GetDeviceTable(in_commandBuffer)->CmdSetScissor(in_commandBuffer, firstScissor, scissorCount, /*@@@AZI*/in_pScissors)/*@@@ABC*/;//@@@HQA
 
     {
@@ -1793,6 +1846,9 @@ void VulkanReplayConsumer::Process_vkCmdBindDescriptorSets(
     VkPipelineLayout in_layout = /*@@@QKJ*/MapHandle<PipelineLayoutInfo>(layout, &VulkanObjectInfoTable::GetPipelineLayoutInfo);
     /*@@@HPA*/const VkDescriptorSet* /*@@@AZI*/in_pDescriptorSets = /*@@@EDO*/MapHandles<DescriptorSetInfo>(pDescriptorSets, descriptorSetCount, &VulkanObjectInfoTable::GetDescriptorSetInfo);
     /*@@@HPA*/const uint32_t* /*@@@AZI*/in_pDynamicOffsets = /*@@@HUY*/pDynamicOffsets->GetPointer();//@@@DFK
+#if TESTCODE
+    if (!g_savingCommandBuffer ) 
+#endif
     GetDeviceTable(in_commandBuffer)->CmdBindDescriptorSets(in_commandBuffer, pipelineBindPoint, in_layout, firstSet, descriptorSetCount, /*@@@AZI*/in_pDescriptorSets, dynamicOffsetCount, /*@@@AZI*/in_pDynamicOffsets)/*@@@ABC*/;//@@@HQA
 
     {
@@ -1915,6 +1971,9 @@ void VulkanReplayConsumer::Process_vkCmdDraw(
     uint32_t                                    firstInstance)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
+#if TESTCODE
+    if (!g_savingCommandBuffer ) 
+#endif
     GetDeviceTable(in_commandBuffer)->CmdDraw(in_commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance)/*@@@ABC*/;//@@@HQA
 
     {
@@ -3051,7 +3110,13 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass(
 {
     auto in_commandBuffer = GetObjectInfoTable().GetCommandBufferInfo(commandBuffer);
 
+#if TESTCODE
+    if (!g_savingCommandBuffer ) 
+#endif
     MapStructHandles(pRenderPassBegin->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
+#if TESTCODE
+    if (!g_savingCommandBuffer ) 
+#endif
     OverrideCmdBeginRenderPass(GetDeviceTable(in_commandBuffer->handle)->CmdBeginRenderPass, in_commandBuffer, pRenderPassBegin, contents)/*@@@PKQ*/;//@@@HQA
 
     {
@@ -3123,6 +3188,9 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderPass(
     format::HandleId                            commandBuffer)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
+#if TESTCODE
+    if (!g_savingCommandBuffer ) 
+#endif
     GetDeviceTable(in_commandBuffer)->CmdEndRenderPass(in_commandBuffer)/*@@@ABC*/;//@@@HQA
 
     {
