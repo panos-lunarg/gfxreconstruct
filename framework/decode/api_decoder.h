@@ -35,6 +35,8 @@
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)
 
+class ApiDecoder;
+
 struct ApiCallInfo
 {
     /// The block index of a function call. Stream processors like FileProcessor
@@ -49,8 +51,11 @@ struct ApiCallInfo
     format::ThreadId thread_id{ 0 };
 
     /// Parameter data read from capture file.
-    uint8_t *parameter_buffer_data;
-    size_t parameter_buffer_size;
+    uint8_t          *parameter_buffer_data;
+    size_t           parameter_buffer_size;
+
+    /// Decoder that created this api call - used by replay consumer when dumping resources
+    ApiDecoder       *decoder;
 };
 
 class ApiDecoder

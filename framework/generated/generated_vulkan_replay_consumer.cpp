@@ -35,27 +35,24 @@
 #include "generated/generated_vulkan_dr_command_buffer_util.h"
 #include "util/defines.h"
 
-//extern gfxrecon::decode::ApiDecoder *g_decoder; // Temp, may move to call_info
-
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode) //@@@HYH
 
-extern ApiDecoder *g_decoder; // Temp, may move to call_info
+#define TESTCODE 1
 
 template <typename T>
 void InitializeOutputStructPNext(StructPointerDecoder<T> *decoder);//@@@EZA
-
-#define TESTCODE 1  //@@@FOR TESTING!!!
 
 class CmdBuffApiCall //@@@WPK    This could be struct instead and then could omit public: below
 {
 public:
     gfxrecon::format::ApiCallId apiCall;
-    uint64_t index;
-    format::ThreadId thread_id;
-    VkCommandBuffer commandBuffer;
-    std::vector<uint8_t> parameter_buffer_data;
-    size_t parameter_buffer_size;
+    uint64_t                    index;
+    format::ThreadId            thread_id;
+    VkCommandBuffer             commandBuffer;
+    std::vector<uint8_t>        parameter_buffer_data;
+    size_t                      parameter_buffer_size;
+    ApiDecoder                  *decoder;
 };
 
 std::list<CmdBuffApiCall> savedDRCmdBuff; //@@@DSX
@@ -65,7 +62,7 @@ std::list<CmdBuffApiCall> savedDRCmdBuff; //@@@DSX
 uint64_t g_saveCmdBuf_BeginCommandBuffer_Index = 105;   //@@@ Index of vkBeginCommandBuffer command which will trigger saving of command buffer commands
 uint64_t g_dumpResourses_CmdDraw_Index = 111;           //@@@ Index of vkCmdDraw which will trigger dump resources
 uint64_t g_dumpResourses_QueueSubmit_Index = 154;       //@@@ Index of vkQueueSubmit in which we dump resources
-bool g_savingCommandBuffer = false;
+bool g_savingCommandBuffer = false;    //@@@DHY Need to change this to VkCommandBuffer and compare it??
 
 void VulkanReplayConsumer::Process_vkCreateInstance(
     const ApiCallInfo&                          call_info,
@@ -1321,13 +1318,11 @@ void VulkanReplayConsumer::Process_vkBeginCommandBuffer(
 #if TESTCODE
     if (call_info.index != g_saveCmdBuf_BeginCommandBuffer_Index)
     {
-        // We execute this command since we aren't saving commands
-        VkResult replay_result = OverrideBeginCommandBuffer(GetDeviceTable(in_commandBuffer->handle)->BeginCommandBuffer, returnValue, in_commandBuffer, pBeginInfo)/*@@@HNM*/;
-        CheckResult("vkBeginCommandBuffer", returnValue, replay_result, call_info);
-    }
-#else
+#endif
     VkResult replay_result = OverrideBeginCommandBuffer(GetDeviceTable(in_commandBuffer->handle)->BeginCommandBuffer, returnValue, in_commandBuffer, pBeginInfo)/*@@@HNM*/;
     CheckResult("vkBeginCommandBuffer", returnValue, replay_result, call_info);
+#if TESTCODE
+    }
 #endif
 
     {
@@ -1356,9 +1351,9 @@ void VulkanReplayConsumer::Process_vkBeginCommandBuffer(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -1369,13 +1364,13 @@ void VulkanReplayConsumer::Process_vkEndCommandBuffer(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
 #if TESTCODE
-    if (!g_savingCommandBuffer )  {
-        VkResult replay_result = GetDeviceTable(in_commandBuffer)->EndCommandBuffer(in_commandBuffer)/*@@@ABC*/;
-        CheckResult("vkEndCommandBuffer", returnValue, replay_result, call_info);
-    }
-#else
+    if (!g_savingCommandBuffer)
+    {
+#endif
     VkResult replay_result = GetDeviceTable(in_commandBuffer)->EndCommandBuffer(in_commandBuffer)/*@@@ABC*/;
     CheckResult("vkEndCommandBuffer", returnValue, replay_result, call_info);
+#if TESTCODE
+    }
 #endif
 
     {
@@ -1386,7 +1381,7 @@ void VulkanReplayConsumer::Process_vkEndCommandBuffer(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1398,25 +1393,23 @@ void VulkanReplayConsumer::Process_vkEndCommandBuffer(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
 #if TESTCODE
             // Playback the saved cmd buffer
             g_savingCommandBuffer = false;
             for (auto it = savedDRCmdBuff.begin(); it != savedDRCmdBuff.end(); it++)
             {
-                printf("In Process_vkEndCommandBuffer:  apiCall=%d\n", it->apiCall);
                 ApiCallInfo replay_call_info;
                 replay_call_info.index = it->index;
                 replay_call_info.thread_id = it->thread_id;
-                replay_call_info.parameter_buffer_data = it->parameter_buffer_data.data(); // Not needed, since cmd won't be saved??
+                replay_call_info.parameter_buffer_data = it->parameter_buffer_data.data(); // Not needed, since cmd will not be saved??
                 replay_call_info.parameter_buffer_size = it->parameter_buffer_size; // Not needed??
                 replay_call_info.thread_id = it->thread_id;
-                g_decoder->DecodeFunctionCall(it->apiCall, call_info, it->parameter_buffer_data.data(), it->parameter_buffer_size);
-                //Error:   error C2039: 'VulkanDecoder': is not a member of 'gfxrecon::decode'
+                it->decoder->DecodeFunctionCall(it->apiCall, call_info, it->parameter_buffer_data.data(), it->parameter_buffer_size);
             }
 #endif
         }
-
         g_savingCommandBuffer = false;
 
     }
@@ -1440,7 +1433,7 @@ void VulkanReplayConsumer::Process_vkResetCommandBuffer(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1452,9 +1445,9 @@ void VulkanReplayConsumer::Process_vkResetCommandBuffer(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -1465,17 +1458,11 @@ void VulkanReplayConsumer::Process_vkCmdBindPipeline(
     format::HandleId                            pipeline)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
-#if TESTCODE
-    VkPipeline in_pipeline = 0;
-    if (!g_savingCommandBuffer ) 
-    {
-        in_pipeline = /*@@@QKJ*/MapHandle<PipelineInfo>(pipeline, &VulkanObjectInfoTable::GetPipelineInfo);//@@@DFK
-        GetDeviceTable(in_commandBuffer)->CmdBindPipeline(in_commandBuffer, pipelineBindPoint, in_pipeline)/*@@@ABC*/;//@@@HQA
-    }
-#else
     VkPipeline in_pipeline = /*@@@QKJ*/MapHandle<PipelineInfo>(pipeline, &VulkanObjectInfoTable::GetPipelineInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBindPipeline(in_commandBuffer, pipelineBindPoint, in_pipeline)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
 #endif
+        GetDeviceTable(in_commandBuffer)->CmdBindPipeline(in_commandBuffer, pipelineBindPoint, in_pipeline)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1485,7 +1472,7 @@ void VulkanReplayConsumer::Process_vkCmdBindPipeline(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1497,9 +1484,9 @@ void VulkanReplayConsumer::Process_vkCmdBindPipeline(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBindPipelineHandles(in_commandBuffer, in_pipeline);
 
@@ -1516,9 +1503,9 @@ void VulkanReplayConsumer::Process_vkCmdSetViewport(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkViewport* /*@@@AZI*/in_pViewports = /*@@@HUY*/pViewports->GetPointer();//@@@DFK
 #if TESTCODE
-    if (!g_savingCommandBuffer ) 
+    if (!g_savingCommandBuffer)
 #endif
-    GetDeviceTable(in_commandBuffer)->CmdSetViewport(in_commandBuffer, firstViewport, viewportCount, /*@@@AZI*/in_pViewports)/*@@@ABC*/;//@@@HQA
+        GetDeviceTable(in_commandBuffer)->CmdSetViewport(in_commandBuffer, firstViewport, viewportCount, /*@@@AZI*/in_pViewports)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1528,7 +1515,7 @@ void VulkanReplayConsumer::Process_vkCmdSetViewport(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1540,9 +1527,9 @@ void VulkanReplayConsumer::Process_vkCmdSetViewport(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -1556,9 +1543,9 @@ void VulkanReplayConsumer::Process_vkCmdSetScissor(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkRect2D* /*@@@AZI*/in_pScissors = /*@@@HUY*/pScissors->GetPointer();//@@@DFK
 #if TESTCODE
-    if (!g_savingCommandBuffer ) 
+    if (!g_savingCommandBuffer)
 #endif
-    GetDeviceTable(in_commandBuffer)->CmdSetScissor(in_commandBuffer, firstScissor, scissorCount, /*@@@AZI*/in_pScissors)/*@@@ABC*/;//@@@HQA
+        GetDeviceTable(in_commandBuffer)->CmdSetScissor(in_commandBuffer, firstScissor, scissorCount, /*@@@AZI*/in_pScissors)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1568,7 +1555,7 @@ void VulkanReplayConsumer::Process_vkCmdSetScissor(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1580,9 +1567,9 @@ void VulkanReplayConsumer::Process_vkCmdSetScissor(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -1592,7 +1579,10 @@ void VulkanReplayConsumer::Process_vkCmdSetLineWidth(
     float                                       lineWidth)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetLineWidth(in_commandBuffer, lineWidth)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetLineWidth(in_commandBuffer, lineWidth)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1602,7 +1592,7 @@ void VulkanReplayConsumer::Process_vkCmdSetLineWidth(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1614,9 +1604,9 @@ void VulkanReplayConsumer::Process_vkCmdSetLineWidth(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -1628,7 +1618,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBias(
     float                                       depthBiasSlopeFactor)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthBias(in_commandBuffer, depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthBias(in_commandBuffer, depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1638,7 +1631,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBias(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1650,9 +1643,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBias(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -1663,7 +1656,10 @@ void VulkanReplayConsumer::Process_vkCmdSetBlendConstants(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const float* /*@@@AZI*/in_blendConstants = /*@@@HUY*/blendConstants->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetBlendConstants(in_commandBuffer, /*@@@AZI*/in_blendConstants)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetBlendConstants(in_commandBuffer, /*@@@AZI*/in_blendConstants)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1673,7 +1669,7 @@ void VulkanReplayConsumer::Process_vkCmdSetBlendConstants(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1685,9 +1681,9 @@ void VulkanReplayConsumer::Process_vkCmdSetBlendConstants(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -1698,7 +1694,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBounds(
     float                                       maxDepthBounds)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthBounds(in_commandBuffer, minDepthBounds, maxDepthBounds)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthBounds(in_commandBuffer, minDepthBounds, maxDepthBounds)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1708,7 +1707,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBounds(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1720,9 +1719,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBounds(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -1733,7 +1732,10 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilCompareMask(
     uint32_t                                    compareMask)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetStencilCompareMask(in_commandBuffer, faceMask, compareMask)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetStencilCompareMask(in_commandBuffer, faceMask, compareMask)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1743,7 +1745,7 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilCompareMask(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1755,9 +1757,9 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilCompareMask(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -1768,7 +1770,10 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilWriteMask(
     uint32_t                                    writeMask)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetStencilWriteMask(in_commandBuffer, faceMask, writeMask)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetStencilWriteMask(in_commandBuffer, faceMask, writeMask)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1778,7 +1783,7 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilWriteMask(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1790,9 +1795,9 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilWriteMask(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -1803,7 +1808,10 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilReference(
     uint32_t                                    reference)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetStencilReference(in_commandBuffer, faceMask, reference)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetStencilReference(in_commandBuffer, faceMask, reference)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1813,7 +1821,7 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilReference(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1825,9 +1833,9 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilReference(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -1847,9 +1855,9 @@ void VulkanReplayConsumer::Process_vkCmdBindDescriptorSets(
     /*@@@HPA*/const VkDescriptorSet* /*@@@AZI*/in_pDescriptorSets = /*@@@EDO*/MapHandles<DescriptorSetInfo>(pDescriptorSets, descriptorSetCount, &VulkanObjectInfoTable::GetDescriptorSetInfo);
     /*@@@HPA*/const uint32_t* /*@@@AZI*/in_pDynamicOffsets = /*@@@HUY*/pDynamicOffsets->GetPointer();//@@@DFK
 #if TESTCODE
-    if (!g_savingCommandBuffer ) 
+    if (!g_savingCommandBuffer)
 #endif
-    GetDeviceTable(in_commandBuffer)->CmdBindDescriptorSets(in_commandBuffer, pipelineBindPoint, in_layout, firstSet, descriptorSetCount, /*@@@AZI*/in_pDescriptorSets, dynamicOffsetCount, /*@@@AZI*/in_pDynamicOffsets)/*@@@ABC*/;//@@@HQA
+        GetDeviceTable(in_commandBuffer)->CmdBindDescriptorSets(in_commandBuffer, pipelineBindPoint, in_layout, firstSet, descriptorSetCount, /*@@@AZI*/in_pDescriptorSets, dynamicOffsetCount, /*@@@AZI*/in_pDynamicOffsets)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1859,7 +1867,7 @@ void VulkanReplayConsumer::Process_vkCmdBindDescriptorSets(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1871,9 +1879,9 @@ void VulkanReplayConsumer::Process_vkCmdBindDescriptorSets(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBindDescriptorSetsHandles(in_commandBuffer, in_layout, descriptorSetCount, in_pDescriptorSets);
 
@@ -1889,7 +1897,10 @@ void VulkanReplayConsumer::Process_vkCmdBindIndexBuffer(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBindIndexBuffer(in_commandBuffer, in_buffer, offset, indexType)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBindIndexBuffer(in_commandBuffer, in_buffer, offset, indexType)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1899,7 +1910,7 @@ void VulkanReplayConsumer::Process_vkCmdBindIndexBuffer(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1911,9 +1922,9 @@ void VulkanReplayConsumer::Process_vkCmdBindIndexBuffer(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBindIndexBufferHandles(in_commandBuffer, in_buffer);
 
@@ -1931,7 +1942,10 @@ void VulkanReplayConsumer::Process_vkCmdBindVertexBuffers(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkBuffer* /*@@@AZI*/in_pBuffers = /*@@@EDO*/MapHandles<BufferInfo>(pBuffers, bindingCount, &VulkanObjectInfoTable::GetBufferInfo);
     /*@@@HPA*/const VkDeviceSize* /*@@@AZI*/in_pOffsets = /*@@@HUY*/pOffsets->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBindVertexBuffers(in_commandBuffer, firstBinding, bindingCount, /*@@@AZI*/in_pBuffers, /*@@@AZI*/in_pOffsets)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBindVertexBuffers(in_commandBuffer, firstBinding, bindingCount, /*@@@AZI*/in_pBuffers, /*@@@AZI*/in_pOffsets)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1941,7 +1955,7 @@ void VulkanReplayConsumer::Process_vkCmdBindVertexBuffers(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1953,9 +1967,9 @@ void VulkanReplayConsumer::Process_vkCmdBindVertexBuffers(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBindVertexBuffersHandles(in_commandBuffer, bindingCount, in_pBuffers);
 
@@ -1972,9 +1986,9 @@ void VulkanReplayConsumer::Process_vkCmdDraw(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
 #if TESTCODE
-    if (!g_savingCommandBuffer ) 
+    if (!g_savingCommandBuffer)
 #endif
-    GetDeviceTable(in_commandBuffer)->CmdDraw(in_commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance)/*@@@ABC*/;//@@@HQA
+        GetDeviceTable(in_commandBuffer)->CmdDraw(in_commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -1984,7 +1998,7 @@ void VulkanReplayConsumer::Process_vkCmdDraw(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -1996,9 +2010,9 @@ void VulkanReplayConsumer::Process_vkCmdDraw(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -2012,7 +2026,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexed(
     uint32_t                                    firstInstance)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawIndexed(in_commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawIndexed(in_commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2022,7 +2039,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexed(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2034,9 +2051,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexed(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -2050,7 +2067,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirect(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawIndirect(in_commandBuffer, in_buffer, offset, drawCount, stride)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawIndirect(in_commandBuffer, in_buffer, offset, drawCount, stride)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2060,7 +2080,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirect(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2072,9 +2092,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirect(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDrawIndirectHandles(in_commandBuffer, in_buffer);
 
@@ -2091,7 +2111,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirect(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawIndexedIndirect(in_commandBuffer, in_buffer, offset, drawCount, stride)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawIndexedIndirect(in_commandBuffer, in_buffer, offset, drawCount, stride)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2101,7 +2124,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirect(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2113,9 +2136,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirect(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDrawIndexedIndirectHandles(in_commandBuffer, in_buffer);
 
@@ -2130,7 +2153,10 @@ void VulkanReplayConsumer::Process_vkCmdDispatch(
     uint32_t                                    groupCountZ)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDispatch(in_commandBuffer, groupCountX, groupCountY, groupCountZ)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDispatch(in_commandBuffer, groupCountX, groupCountY, groupCountZ)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2140,7 +2166,7 @@ void VulkanReplayConsumer::Process_vkCmdDispatch(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2152,9 +2178,9 @@ void VulkanReplayConsumer::Process_vkCmdDispatch(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -2166,7 +2192,10 @@ void VulkanReplayConsumer::Process_vkCmdDispatchIndirect(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDispatchIndirect(in_commandBuffer, in_buffer, offset)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDispatchIndirect(in_commandBuffer, in_buffer, offset)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2176,7 +2205,7 @@ void VulkanReplayConsumer::Process_vkCmdDispatchIndirect(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2188,9 +2217,9 @@ void VulkanReplayConsumer::Process_vkCmdDispatchIndirect(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDispatchIndirectHandles(in_commandBuffer, in_buffer);
 
@@ -2209,7 +2238,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyBuffer(
     VkBuffer in_srcBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(srcBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     VkBuffer in_dstBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(dstBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     /*@@@HPA*/const VkBufferCopy* /*@@@AZI*/in_pRegions = /*@@@HUY*/pRegions->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyBuffer(in_commandBuffer, in_srcBuffer, in_dstBuffer, regionCount, /*@@@AZI*/in_pRegions)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyBuffer(in_commandBuffer, in_srcBuffer, in_dstBuffer, regionCount, /*@@@AZI*/in_pRegions)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2219,7 +2251,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyBuffer(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2231,9 +2263,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyBuffer(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyBufferHandles(in_commandBuffer, in_srcBuffer, in_dstBuffer);
 
@@ -2254,7 +2286,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyImage(
     VkImage in_srcImage = /*@@@QKJ*/MapHandle<ImageInfo>(srcImage, &VulkanObjectInfoTable::GetImageInfo);
     VkImage in_dstImage = /*@@@QKJ*/MapHandle<ImageInfo>(dstImage, &VulkanObjectInfoTable::GetImageInfo);
     /*@@@HPA*/const VkImageCopy* /*@@@AZI*/in_pRegions = /*@@@HUY*/pRegions->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyImage(in_commandBuffer, in_srcImage, srcImageLayout, in_dstImage, dstImageLayout, regionCount, /*@@@AZI*/in_pRegions)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyImage(in_commandBuffer, in_srcImage, srcImageLayout, in_dstImage, dstImageLayout, regionCount, /*@@@AZI*/in_pRegions)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2264,7 +2299,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyImage(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2276,9 +2311,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyImage(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyImageHandles(in_commandBuffer, in_srcImage, in_dstImage);
 
@@ -2300,7 +2335,10 @@ void VulkanReplayConsumer::Process_vkCmdBlitImage(
     VkImage in_srcImage = /*@@@QKJ*/MapHandle<ImageInfo>(srcImage, &VulkanObjectInfoTable::GetImageInfo);
     VkImage in_dstImage = /*@@@QKJ*/MapHandle<ImageInfo>(dstImage, &VulkanObjectInfoTable::GetImageInfo);
     /*@@@HPA*/const VkImageBlit* /*@@@AZI*/in_pRegions = /*@@@HUY*/pRegions->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBlitImage(in_commandBuffer, in_srcImage, srcImageLayout, in_dstImage, dstImageLayout, regionCount, /*@@@AZI*/in_pRegions, filter)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBlitImage(in_commandBuffer, in_srcImage, srcImageLayout, in_dstImage, dstImageLayout, regionCount, /*@@@AZI*/in_pRegions, filter)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2310,7 +2348,7 @@ void VulkanReplayConsumer::Process_vkCmdBlitImage(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2322,9 +2360,9 @@ void VulkanReplayConsumer::Process_vkCmdBlitImage(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBlitImageHandles(in_commandBuffer, in_srcImage, in_dstImage);
 
@@ -2344,7 +2382,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage(
     VkBuffer in_srcBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(srcBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     VkImage in_dstImage = /*@@@QKJ*/MapHandle<ImageInfo>(dstImage, &VulkanObjectInfoTable::GetImageInfo);
     /*@@@HPA*/const VkBufferImageCopy* /*@@@AZI*/in_pRegions = /*@@@HUY*/pRegions->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyBufferToImage(in_commandBuffer, in_srcBuffer, in_dstImage, dstImageLayout, regionCount, /*@@@AZI*/in_pRegions)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyBufferToImage(in_commandBuffer, in_srcBuffer, in_dstImage, dstImageLayout, regionCount, /*@@@AZI*/in_pRegions)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2354,7 +2395,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2366,9 +2407,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyBufferToImageHandles(in_commandBuffer, in_srcBuffer, in_dstImage);
 
@@ -2388,7 +2429,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer(
     VkImage in_srcImage = /*@@@QKJ*/MapHandle<ImageInfo>(srcImage, &VulkanObjectInfoTable::GetImageInfo);
     VkBuffer in_dstBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(dstBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     /*@@@HPA*/const VkBufferImageCopy* /*@@@AZI*/in_pRegions = /*@@@HUY*/pRegions->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyImageToBuffer(in_commandBuffer, in_srcImage, srcImageLayout, in_dstBuffer, regionCount, /*@@@AZI*/in_pRegions)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyImageToBuffer(in_commandBuffer, in_srcImage, srcImageLayout, in_dstBuffer, regionCount, /*@@@AZI*/in_pRegions)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2398,7 +2442,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2410,9 +2454,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyImageToBufferHandles(in_commandBuffer, in_srcImage, in_dstBuffer);
 
@@ -2430,7 +2474,10 @@ void VulkanReplayConsumer::Process_vkCmdUpdateBuffer(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_dstBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(dstBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     /*@@@HPA*/const void* /*@@@AZI*/in_pData = /*@@@HUY*/pData->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdUpdateBuffer(in_commandBuffer, in_dstBuffer, dstOffset, dataSize, /*@@@AZI*/in_pData)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdUpdateBuffer(in_commandBuffer, in_dstBuffer, dstOffset, dataSize, /*@@@AZI*/in_pData)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2440,7 +2487,7 @@ void VulkanReplayConsumer::Process_vkCmdUpdateBuffer(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2452,9 +2499,9 @@ void VulkanReplayConsumer::Process_vkCmdUpdateBuffer(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdUpdateBufferHandles(in_commandBuffer, in_dstBuffer);
 
@@ -2471,7 +2518,10 @@ void VulkanReplayConsumer::Process_vkCmdFillBuffer(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_dstBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(dstBuffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdFillBuffer(in_commandBuffer, in_dstBuffer, dstOffset, size, data)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdFillBuffer(in_commandBuffer, in_dstBuffer, dstOffset, size, data)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2481,7 +2531,7 @@ void VulkanReplayConsumer::Process_vkCmdFillBuffer(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2493,9 +2543,9 @@ void VulkanReplayConsumer::Process_vkCmdFillBuffer(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdFillBufferHandles(in_commandBuffer, in_dstBuffer);
 
@@ -2515,7 +2565,10 @@ void VulkanReplayConsumer::Process_vkCmdClearColorImage(
     VkImage in_image = /*@@@QKJ*/MapHandle<ImageInfo>(image, &VulkanObjectInfoTable::GetImageInfo);
     /*@@@HPA*/const VkClearColorValue* /*@@@AZI*/in_pColor = /*@@@HUY*/pColor->GetPointer();
     /*@@@HPA*/const VkImageSubresourceRange* /*@@@AZI*/in_pRanges = /*@@@HUY*/pRanges->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdClearColorImage(in_commandBuffer, in_image, imageLayout, /*@@@AZI*/in_pColor, rangeCount, /*@@@AZI*/in_pRanges)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdClearColorImage(in_commandBuffer, in_image, imageLayout, /*@@@AZI*/in_pColor, rangeCount, /*@@@AZI*/in_pRanges)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2525,7 +2578,7 @@ void VulkanReplayConsumer::Process_vkCmdClearColorImage(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2537,9 +2590,9 @@ void VulkanReplayConsumer::Process_vkCmdClearColorImage(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdClearColorImageHandles(in_commandBuffer, in_image);
 
@@ -2559,7 +2612,10 @@ void VulkanReplayConsumer::Process_vkCmdClearDepthStencilImage(
     VkImage in_image = /*@@@QKJ*/MapHandle<ImageInfo>(image, &VulkanObjectInfoTable::GetImageInfo);
     /*@@@HPA*/const VkClearDepthStencilValue* /*@@@AZI*/in_pDepthStencil = /*@@@HUY*/pDepthStencil->GetPointer();
     /*@@@HPA*/const VkImageSubresourceRange* /*@@@AZI*/in_pRanges = /*@@@HUY*/pRanges->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdClearDepthStencilImage(in_commandBuffer, in_image, imageLayout, /*@@@AZI*/in_pDepthStencil, rangeCount, /*@@@AZI*/in_pRanges)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdClearDepthStencilImage(in_commandBuffer, in_image, imageLayout, /*@@@AZI*/in_pDepthStencil, rangeCount, /*@@@AZI*/in_pRanges)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2569,7 +2625,7 @@ void VulkanReplayConsumer::Process_vkCmdClearDepthStencilImage(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2581,9 +2637,9 @@ void VulkanReplayConsumer::Process_vkCmdClearDepthStencilImage(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdClearDepthStencilImageHandles(in_commandBuffer, in_image);
 
@@ -2601,7 +2657,10 @@ void VulkanReplayConsumer::Process_vkCmdClearAttachments(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkClearAttachment* /*@@@AZI*/in_pAttachments = /*@@@HUY*/pAttachments->GetPointer();
     /*@@@HPA*/const VkClearRect* /*@@@AZI*/in_pRects = /*@@@HUY*/pRects->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdClearAttachments(in_commandBuffer, attachmentCount, /*@@@AZI*/in_pAttachments, rectCount, /*@@@AZI*/in_pRects)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdClearAttachments(in_commandBuffer, attachmentCount, /*@@@AZI*/in_pAttachments, rectCount, /*@@@AZI*/in_pRects)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2611,7 +2670,7 @@ void VulkanReplayConsumer::Process_vkCmdClearAttachments(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2623,9 +2682,9 @@ void VulkanReplayConsumer::Process_vkCmdClearAttachments(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -2643,7 +2702,10 @@ void VulkanReplayConsumer::Process_vkCmdResolveImage(
     VkImage in_srcImage = /*@@@QKJ*/MapHandle<ImageInfo>(srcImage, &VulkanObjectInfoTable::GetImageInfo);
     VkImage in_dstImage = /*@@@QKJ*/MapHandle<ImageInfo>(dstImage, &VulkanObjectInfoTable::GetImageInfo);
     /*@@@HPA*/const VkImageResolve* /*@@@AZI*/in_pRegions = /*@@@HUY*/pRegions->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdResolveImage(in_commandBuffer, in_srcImage, srcImageLayout, in_dstImage, dstImageLayout, regionCount, /*@@@AZI*/in_pRegions)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdResolveImage(in_commandBuffer, in_srcImage, srcImageLayout, in_dstImage, dstImageLayout, regionCount, /*@@@AZI*/in_pRegions)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2653,7 +2715,7 @@ void VulkanReplayConsumer::Process_vkCmdResolveImage(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2665,9 +2727,9 @@ void VulkanReplayConsumer::Process_vkCmdResolveImage(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdResolveImageHandles(in_commandBuffer, in_srcImage, in_dstImage);
 
@@ -2682,7 +2744,10 @@ void VulkanReplayConsumer::Process_vkCmdSetEvent(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkEvent in_event = /*@@@QKJ*/MapHandle<EventInfo>(event, &VulkanObjectInfoTable::GetEventInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetEvent(in_commandBuffer, in_event, stageMask)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetEvent(in_commandBuffer, in_event, stageMask)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2692,7 +2757,7 @@ void VulkanReplayConsumer::Process_vkCmdSetEvent(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2704,9 +2769,9 @@ void VulkanReplayConsumer::Process_vkCmdSetEvent(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdSetEventHandles(in_commandBuffer, in_event);
 
@@ -2721,7 +2786,10 @@ void VulkanReplayConsumer::Process_vkCmdResetEvent(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkEvent in_event = /*@@@QKJ*/MapHandle<EventInfo>(event, &VulkanObjectInfoTable::GetEventInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdResetEvent(in_commandBuffer, in_event, stageMask)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdResetEvent(in_commandBuffer, in_event, stageMask)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2731,7 +2799,7 @@ void VulkanReplayConsumer::Process_vkCmdResetEvent(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2743,9 +2811,9 @@ void VulkanReplayConsumer::Process_vkCmdResetEvent(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdResetEventHandles(in_commandBuffer, in_event);
 
@@ -2773,7 +2841,10 @@ void VulkanReplayConsumer::Process_vkCmdWaitEvents(
     /*@@@HWC*/MapStructArrayHandles(pBufferMemoryBarriers->GetMetaStructPointer(), pBufferMemoryBarriers->GetLength(), GetObjectInfoTable());
     /*@@@HPA*/const VkImageMemoryBarrier* /*@@@AZI*/in_pImageMemoryBarriers = /*@@@HUY*/pImageMemoryBarriers->GetPointer();
     /*@@@HWC*/MapStructArrayHandles(pImageMemoryBarriers->GetMetaStructPointer(), pImageMemoryBarriers->GetLength(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdWaitEvents(in_commandBuffer, eventCount, /*@@@AZI*/in_pEvents, srcStageMask, dstStageMask, memoryBarrierCount, /*@@@AZI*/in_pMemoryBarriers, bufferMemoryBarrierCount, /*@@@AZI*/in_pBufferMemoryBarriers, imageMemoryBarrierCount, /*@@@AZI*/in_pImageMemoryBarriers)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdWaitEvents(in_commandBuffer, eventCount, /*@@@AZI*/in_pEvents, srcStageMask, dstStageMask, memoryBarrierCount, /*@@@AZI*/in_pMemoryBarriers, bufferMemoryBarrierCount, /*@@@AZI*/in_pBufferMemoryBarriers, imageMemoryBarrierCount, /*@@@AZI*/in_pImageMemoryBarriers)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2783,7 +2854,7 @@ void VulkanReplayConsumer::Process_vkCmdWaitEvents(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2795,9 +2866,9 @@ void VulkanReplayConsumer::Process_vkCmdWaitEvents(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdWaitEventsHandles(in_commandBuffer, eventCount, in_pEvents, bufferMemoryBarrierCount, in_pBufferMemoryBarriers, imageMemoryBarrierCount, in_pImageMemoryBarriers);
 
@@ -2822,7 +2893,10 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier(
     /*@@@HWC*/MapStructArrayHandles(pBufferMemoryBarriers->GetMetaStructPointer(), pBufferMemoryBarriers->GetLength(), GetObjectInfoTable());
 
     /*@@@HWC*/MapStructArrayHandles(pImageMemoryBarriers->GetMetaStructPointer(), pImageMemoryBarriers->GetLength(), GetObjectInfoTable());//@@@DFK
-    OverrideCmdPipelineBarrier(GetDeviceTable(in_commandBuffer->handle)->CmdPipelineBarrier, in_commandBuffer, srcStageMask, dstStageMask, dependencyFlags, memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers)/*@@@PKQ*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        OverrideCmdPipelineBarrier(GetDeviceTable(in_commandBuffer->handle)->CmdPipelineBarrier, in_commandBuffer, srcStageMask, dstStageMask, dependencyFlags, memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers)/*@@@PKQ*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2832,7 +2906,7 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2844,9 +2918,9 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         const VkBufferMemoryBarrier* in_pBufferMemoryBarriers = pBufferMemoryBarriers->GetPointer();
         const VkImageMemoryBarrier* in_pImageMemoryBarriers = pImageMemoryBarriers->GetPointer();
@@ -2864,7 +2938,10 @@ void VulkanReplayConsumer::Process_vkCmdBeginQuery(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkQueryPool in_queryPool = /*@@@QKJ*/MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBeginQuery(in_commandBuffer, in_queryPool, query, flags)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBeginQuery(in_commandBuffer, in_queryPool, query, flags)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2874,7 +2951,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginQuery(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2886,9 +2963,9 @@ void VulkanReplayConsumer::Process_vkCmdBeginQuery(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBeginQueryHandles(in_commandBuffer, in_queryPool);
 
@@ -2903,7 +2980,10 @@ void VulkanReplayConsumer::Process_vkCmdEndQuery(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkQueryPool in_queryPool = /*@@@QKJ*/MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdEndQuery(in_commandBuffer, in_queryPool, query)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdEndQuery(in_commandBuffer, in_queryPool, query)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2913,7 +2993,7 @@ void VulkanReplayConsumer::Process_vkCmdEndQuery(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2925,9 +3005,9 @@ void VulkanReplayConsumer::Process_vkCmdEndQuery(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdEndQueryHandles(in_commandBuffer, in_queryPool);
 
@@ -2943,7 +3023,10 @@ void VulkanReplayConsumer::Process_vkCmdResetQueryPool(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkQueryPool in_queryPool = /*@@@QKJ*/MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdResetQueryPool(in_commandBuffer, in_queryPool, firstQuery, queryCount)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdResetQueryPool(in_commandBuffer, in_queryPool, firstQuery, queryCount)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2953,7 +3036,7 @@ void VulkanReplayConsumer::Process_vkCmdResetQueryPool(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -2965,9 +3048,9 @@ void VulkanReplayConsumer::Process_vkCmdResetQueryPool(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdResetQueryPoolHandles(in_commandBuffer, in_queryPool);
 
@@ -2983,7 +3066,10 @@ void VulkanReplayConsumer::Process_vkCmdWriteTimestamp(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkQueryPool in_queryPool = /*@@@QKJ*/MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdWriteTimestamp(in_commandBuffer, pipelineStage, in_queryPool, query)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdWriteTimestamp(in_commandBuffer, pipelineStage, in_queryPool, query)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -2993,7 +3079,7 @@ void VulkanReplayConsumer::Process_vkCmdWriteTimestamp(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -3005,9 +3091,9 @@ void VulkanReplayConsumer::Process_vkCmdWriteTimestamp(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdWriteTimestampHandles(in_commandBuffer, in_queryPool);
 
@@ -3028,7 +3114,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyQueryPoolResults(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkQueryPool in_queryPool = /*@@@QKJ*/MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);
     VkBuffer in_dstBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(dstBuffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyQueryPoolResults(in_commandBuffer, in_queryPool, firstQuery, queryCount, in_dstBuffer, dstOffset, stride, flags)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyQueryPoolResults(in_commandBuffer, in_queryPool, firstQuery, queryCount, in_dstBuffer, dstOffset, stride, flags)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -3038,7 +3127,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyQueryPoolResults(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -3050,9 +3139,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyQueryPoolResults(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyQueryPoolResultsHandles(in_commandBuffer, in_queryPool, in_dstBuffer);
 
@@ -3071,7 +3160,10 @@ void VulkanReplayConsumer::Process_vkCmdPushConstants(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkPipelineLayout in_layout = /*@@@QKJ*/MapHandle<PipelineLayoutInfo>(layout, &VulkanObjectInfoTable::GetPipelineLayoutInfo);
     /*@@@HPA*/const void* /*@@@AZI*/in_pValues = /*@@@HUY*/pValues->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdPushConstants(in_commandBuffer, in_layout, stageFlags, offset, size, /*@@@AZI*/in_pValues)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdPushConstants(in_commandBuffer, in_layout, stageFlags, offset, size, /*@@@AZI*/in_pValues)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -3081,7 +3173,7 @@ void VulkanReplayConsumer::Process_vkCmdPushConstants(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -3093,9 +3185,9 @@ void VulkanReplayConsumer::Process_vkCmdPushConstants(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdPushConstantsHandles(in_commandBuffer, in_layout);
 
@@ -3110,14 +3202,11 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass(
 {
     auto in_commandBuffer = GetObjectInfoTable().GetCommandBufferInfo(commandBuffer);
 
-#if TESTCODE
-    if (!g_savingCommandBuffer ) 
-#endif
     MapStructHandles(pRenderPassBegin->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
 #if TESTCODE
-    if (!g_savingCommandBuffer ) 
+    if (!g_savingCommandBuffer)
 #endif
-    OverrideCmdBeginRenderPass(GetDeviceTable(in_commandBuffer->handle)->CmdBeginRenderPass, in_commandBuffer, pRenderPassBegin, contents)/*@@@PKQ*/;//@@@HQA
+        OverrideCmdBeginRenderPass(GetDeviceTable(in_commandBuffer->handle)->CmdBeginRenderPass, in_commandBuffer, pRenderPassBegin, contents)/*@@@PKQ*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -3127,7 +3216,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -3139,9 +3228,9 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         const VkRenderPassBeginInfo* in_pRenderPassBegin = pRenderPassBegin->GetPointer();
         TrackDRCmdBeginRenderPassHandles(in_commandBuffer, in_pRenderPassBegin);
@@ -3155,7 +3244,10 @@ void VulkanReplayConsumer::Process_vkCmdNextSubpass(
     VkSubpassContents                           contents)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdNextSubpass(in_commandBuffer, contents)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdNextSubpass(in_commandBuffer, contents)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -3165,7 +3257,7 @@ void VulkanReplayConsumer::Process_vkCmdNextSubpass(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -3177,9 +3269,9 @@ void VulkanReplayConsumer::Process_vkCmdNextSubpass(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -3189,9 +3281,9 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderPass(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
 #if TESTCODE
-    if (!g_savingCommandBuffer ) 
+    if (!g_savingCommandBuffer)
 #endif
-    GetDeviceTable(in_commandBuffer)->CmdEndRenderPass(in_commandBuffer)/*@@@ABC*/;//@@@HQA
+        GetDeviceTable(in_commandBuffer)->CmdEndRenderPass(in_commandBuffer)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -3201,7 +3293,7 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderPass(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -3213,9 +3305,9 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderPass(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -3227,7 +3319,10 @@ void VulkanReplayConsumer::Process_vkCmdExecuteCommands(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCommandBuffer* /*@@@AZI*/in_pCommandBuffers = /*@@@EDO*/MapHandles<CommandBufferInfo>(pCommandBuffers, commandBufferCount, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdExecuteCommands(in_commandBuffer, commandBufferCount, /*@@@AZI*/in_pCommandBuffers)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdExecuteCommands(in_commandBuffer, commandBufferCount, /*@@@AZI*/in_pCommandBuffers)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -3237,7 +3332,7 @@ void VulkanReplayConsumer::Process_vkCmdExecuteCommands(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -3249,9 +3344,9 @@ void VulkanReplayConsumer::Process_vkCmdExecuteCommands(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdExecuteCommandsHandles(in_commandBuffer, commandBufferCount, in_pCommandBuffers);
 
@@ -3305,7 +3400,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDeviceMask(
     uint32_t                                    deviceMask)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDeviceMask(in_commandBuffer, deviceMask)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDeviceMask(in_commandBuffer, deviceMask)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -3315,7 +3413,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDeviceMask(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -3327,9 +3425,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDeviceMask(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -3344,7 +3442,10 @@ void VulkanReplayConsumer::Process_vkCmdDispatchBase(
     uint32_t                                    groupCountZ)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDispatchBase(in_commandBuffer, baseGroupX, baseGroupY, baseGroupZ, groupCountX, groupCountY, groupCountZ)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDispatchBase(in_commandBuffer, baseGroupX, baseGroupY, baseGroupZ, groupCountX, groupCountY, groupCountZ)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -3354,7 +3455,7 @@ void VulkanReplayConsumer::Process_vkCmdDispatchBase(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -3366,9 +3467,9 @@ void VulkanReplayConsumer::Process_vkCmdDispatchBase(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -3674,7 +3775,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCount(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     VkBuffer in_countBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawIndirectCount(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawIndirectCount(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -3684,7 +3788,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCount(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -3696,9 +3800,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCount(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDrawIndirectCountHandles(in_commandBuffer, in_buffer, in_countBuffer);
 
@@ -3718,7 +3822,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCount(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     VkBuffer in_countBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawIndexedIndirectCount(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawIndexedIndirectCount(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -3728,7 +3835,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCount(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -3740,9 +3847,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCount(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDrawIndexedIndirectCountHandles(in_commandBuffer, in_buffer, in_countBuffer);
 
@@ -3776,7 +3883,10 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass2(
     /*@@@HPA*/const VkRenderPassBeginInfo* /*@@@AZI*/in_pRenderPassBegin = /*@@@HUY*/pRenderPassBegin->GetPointer();
     MapStructHandles(pRenderPassBegin->GetMetaStructPointer(), GetObjectInfoTable());
     /*@@@HPA*/const VkSubpassBeginInfo* /*@@@AZI*/in_pSubpassBeginInfo = /*@@@HUY*/pSubpassBeginInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBeginRenderPass2(in_commandBuffer, /*@@@AZI*/in_pRenderPassBegin, /*@@@AZI*/in_pSubpassBeginInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBeginRenderPass2(in_commandBuffer, /*@@@AZI*/in_pRenderPassBegin, /*@@@AZI*/in_pSubpassBeginInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -3786,7 +3896,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -3798,9 +3908,9 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBeginRenderPass2Handles(in_commandBuffer, in_pRenderPassBegin);
 
@@ -3816,7 +3926,10 @@ void VulkanReplayConsumer::Process_vkCmdNextSubpass2(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkSubpassBeginInfo* /*@@@AZI*/in_pSubpassBeginInfo = /*@@@HUY*/pSubpassBeginInfo->GetPointer();
     /*@@@HPA*/const VkSubpassEndInfo* /*@@@AZI*/in_pSubpassEndInfo = /*@@@HUY*/pSubpassEndInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdNextSubpass2(in_commandBuffer, /*@@@AZI*/in_pSubpassBeginInfo, /*@@@AZI*/in_pSubpassEndInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdNextSubpass2(in_commandBuffer, /*@@@AZI*/in_pSubpassBeginInfo, /*@@@AZI*/in_pSubpassEndInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -3826,7 +3939,7 @@ void VulkanReplayConsumer::Process_vkCmdNextSubpass2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -3838,9 +3951,9 @@ void VulkanReplayConsumer::Process_vkCmdNextSubpass2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -3851,7 +3964,10 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderPass2(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkSubpassEndInfo* /*@@@AZI*/in_pSubpassEndInfo = /*@@@HUY*/pSubpassEndInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdEndRenderPass2(in_commandBuffer, /*@@@AZI*/in_pSubpassEndInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdEndRenderPass2(in_commandBuffer, /*@@@AZI*/in_pSubpassEndInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -3861,7 +3977,7 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderPass2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -3873,9 +3989,9 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderPass2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -4055,7 +4171,10 @@ void VulkanReplayConsumer::Process_vkCmdSetEvent2(
     VkEvent in_event = /*@@@QKJ*/MapHandle<EventInfo>(event, &VulkanObjectInfoTable::GetEventInfo);
     /*@@@HPA*/const VkDependencyInfo* /*@@@AZI*/in_pDependencyInfo = /*@@@HUY*/pDependencyInfo->GetPointer();
     MapStructHandles(pDependencyInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetEvent2(in_commandBuffer, in_event, /*@@@AZI*/in_pDependencyInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetEvent2(in_commandBuffer, in_event, /*@@@AZI*/in_pDependencyInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4065,7 +4184,7 @@ void VulkanReplayConsumer::Process_vkCmdSetEvent2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4077,9 +4196,9 @@ void VulkanReplayConsumer::Process_vkCmdSetEvent2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdSetEvent2Handles(in_commandBuffer, in_event, in_pDependencyInfo);
 
@@ -4094,7 +4213,10 @@ void VulkanReplayConsumer::Process_vkCmdResetEvent2(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkEvent in_event = /*@@@QKJ*/MapHandle<EventInfo>(event, &VulkanObjectInfoTable::GetEventInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdResetEvent2(in_commandBuffer, in_event, stageMask)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdResetEvent2(in_commandBuffer, in_event, stageMask)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4104,7 +4226,7 @@ void VulkanReplayConsumer::Process_vkCmdResetEvent2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4116,9 +4238,9 @@ void VulkanReplayConsumer::Process_vkCmdResetEvent2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdResetEvent2Handles(in_commandBuffer, in_event);
 
@@ -4136,7 +4258,10 @@ void VulkanReplayConsumer::Process_vkCmdWaitEvents2(
     /*@@@HPA*/const VkEvent* /*@@@AZI*/in_pEvents = /*@@@EDO*/MapHandles<EventInfo>(pEvents, eventCount, &VulkanObjectInfoTable::GetEventInfo);
     /*@@@HPA*/const VkDependencyInfo* /*@@@AZI*/in_pDependencyInfos = /*@@@HUY*/pDependencyInfos->GetPointer();
     /*@@@HWC*/MapStructArrayHandles(pDependencyInfos->GetMetaStructPointer(), pDependencyInfos->GetLength(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdWaitEvents2(in_commandBuffer, eventCount, /*@@@AZI*/in_pEvents, /*@@@AZI*/in_pDependencyInfos)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdWaitEvents2(in_commandBuffer, eventCount, /*@@@AZI*/in_pEvents, /*@@@AZI*/in_pDependencyInfos)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4146,7 +4271,7 @@ void VulkanReplayConsumer::Process_vkCmdWaitEvents2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4158,9 +4283,9 @@ void VulkanReplayConsumer::Process_vkCmdWaitEvents2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdWaitEvents2Handles(in_commandBuffer, eventCount, in_pEvents, in_pDependencyInfos);
 
@@ -4175,7 +4300,10 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier2(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkDependencyInfo* /*@@@AZI*/in_pDependencyInfo = /*@@@HUY*/pDependencyInfo->GetPointer();
     MapStructHandles(pDependencyInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdPipelineBarrier2(in_commandBuffer, /*@@@AZI*/in_pDependencyInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdPipelineBarrier2(in_commandBuffer, /*@@@AZI*/in_pDependencyInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4185,7 +4313,7 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4197,9 +4325,9 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdPipelineBarrier2Handles(in_commandBuffer, in_pDependencyInfo);
 
@@ -4215,7 +4343,10 @@ void VulkanReplayConsumer::Process_vkCmdWriteTimestamp2(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkQueryPool in_queryPool = /*@@@QKJ*/MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdWriteTimestamp2(in_commandBuffer, stage, in_queryPool, query)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdWriteTimestamp2(in_commandBuffer, stage, in_queryPool, query)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4225,7 +4356,7 @@ void VulkanReplayConsumer::Process_vkCmdWriteTimestamp2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4237,9 +4368,9 @@ void VulkanReplayConsumer::Process_vkCmdWriteTimestamp2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdWriteTimestamp2Handles(in_commandBuffer, in_queryPool);
 
@@ -4270,7 +4401,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyBuffer2(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCopyBufferInfo2* /*@@@AZI*/in_pCopyBufferInfo = /*@@@HUY*/pCopyBufferInfo->GetPointer();
     MapStructHandles(pCopyBufferInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyBuffer2(in_commandBuffer, /*@@@AZI*/in_pCopyBufferInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyBuffer2(in_commandBuffer, /*@@@AZI*/in_pCopyBufferInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4280,7 +4414,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyBuffer2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4292,9 +4426,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyBuffer2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyBuffer2Handles(in_commandBuffer, in_pCopyBufferInfo);
 
@@ -4309,7 +4443,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyImage2(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCopyImageInfo2* /*@@@AZI*/in_pCopyImageInfo = /*@@@HUY*/pCopyImageInfo->GetPointer();
     MapStructHandles(pCopyImageInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyImage2(in_commandBuffer, /*@@@AZI*/in_pCopyImageInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyImage2(in_commandBuffer, /*@@@AZI*/in_pCopyImageInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4319,7 +4456,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyImage2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4331,9 +4468,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyImage2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyImage2Handles(in_commandBuffer, in_pCopyImageInfo);
 
@@ -4348,7 +4485,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage2(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCopyBufferToImageInfo2* /*@@@AZI*/in_pCopyBufferToImageInfo = /*@@@HUY*/pCopyBufferToImageInfo->GetPointer();
     MapStructHandles(pCopyBufferToImageInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyBufferToImage2(in_commandBuffer, /*@@@AZI*/in_pCopyBufferToImageInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyBufferToImage2(in_commandBuffer, /*@@@AZI*/in_pCopyBufferToImageInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4358,7 +4498,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4370,9 +4510,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyBufferToImage2Handles(in_commandBuffer, in_pCopyBufferToImageInfo);
 
@@ -4387,7 +4527,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer2(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCopyImageToBufferInfo2* /*@@@AZI*/in_pCopyImageToBufferInfo = /*@@@HUY*/pCopyImageToBufferInfo->GetPointer();
     MapStructHandles(pCopyImageToBufferInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyImageToBuffer2(in_commandBuffer, /*@@@AZI*/in_pCopyImageToBufferInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyImageToBuffer2(in_commandBuffer, /*@@@AZI*/in_pCopyImageToBufferInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4397,7 +4540,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4409,9 +4552,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyImageToBuffer2Handles(in_commandBuffer, in_pCopyImageToBufferInfo);
 
@@ -4426,7 +4569,10 @@ void VulkanReplayConsumer::Process_vkCmdBlitImage2(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkBlitImageInfo2* /*@@@AZI*/in_pBlitImageInfo = /*@@@HUY*/pBlitImageInfo->GetPointer();
     MapStructHandles(pBlitImageInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBlitImage2(in_commandBuffer, /*@@@AZI*/in_pBlitImageInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBlitImage2(in_commandBuffer, /*@@@AZI*/in_pBlitImageInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4436,7 +4582,7 @@ void VulkanReplayConsumer::Process_vkCmdBlitImage2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4448,9 +4594,9 @@ void VulkanReplayConsumer::Process_vkCmdBlitImage2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBlitImage2Handles(in_commandBuffer, in_pBlitImageInfo);
 
@@ -4465,7 +4611,10 @@ void VulkanReplayConsumer::Process_vkCmdResolveImage2(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkResolveImageInfo2* /*@@@AZI*/in_pResolveImageInfo = /*@@@HUY*/pResolveImageInfo->GetPointer();
     MapStructHandles(pResolveImageInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdResolveImage2(in_commandBuffer, /*@@@AZI*/in_pResolveImageInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdResolveImage2(in_commandBuffer, /*@@@AZI*/in_pResolveImageInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4475,7 +4624,7 @@ void VulkanReplayConsumer::Process_vkCmdResolveImage2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4487,9 +4636,9 @@ void VulkanReplayConsumer::Process_vkCmdResolveImage2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdResolveImage2Handles(in_commandBuffer, in_pResolveImageInfo);
 
@@ -4504,7 +4653,10 @@ void VulkanReplayConsumer::Process_vkCmdBeginRendering(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkRenderingInfo* /*@@@AZI*/in_pRenderingInfo = /*@@@HUY*/pRenderingInfo->GetPointer();
     MapStructHandles(pRenderingInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBeginRendering(in_commandBuffer, /*@@@AZI*/in_pRenderingInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBeginRendering(in_commandBuffer, /*@@@AZI*/in_pRenderingInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4514,7 +4666,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginRendering(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4526,9 +4678,9 @@ void VulkanReplayConsumer::Process_vkCmdBeginRendering(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBeginRenderingHandles(in_commandBuffer, in_pRenderingInfo);
 
@@ -4540,7 +4692,10 @@ void VulkanReplayConsumer::Process_vkCmdEndRendering(
     format::HandleId                            commandBuffer)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdEndRendering(in_commandBuffer)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdEndRendering(in_commandBuffer)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4550,7 +4705,7 @@ void VulkanReplayConsumer::Process_vkCmdEndRendering(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4562,9 +4717,9 @@ void VulkanReplayConsumer::Process_vkCmdEndRendering(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -4574,7 +4729,10 @@ void VulkanReplayConsumer::Process_vkCmdSetCullMode(
     VkCullModeFlags                             cullMode)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetCullMode(in_commandBuffer, cullMode)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetCullMode(in_commandBuffer, cullMode)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4584,7 +4742,7 @@ void VulkanReplayConsumer::Process_vkCmdSetCullMode(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4596,9 +4754,9 @@ void VulkanReplayConsumer::Process_vkCmdSetCullMode(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -4608,7 +4766,10 @@ void VulkanReplayConsumer::Process_vkCmdSetFrontFace(
     VkFrontFace                                 frontFace)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetFrontFace(in_commandBuffer, frontFace)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetFrontFace(in_commandBuffer, frontFace)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4618,7 +4779,7 @@ void VulkanReplayConsumer::Process_vkCmdSetFrontFace(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4630,9 +4791,9 @@ void VulkanReplayConsumer::Process_vkCmdSetFrontFace(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -4642,7 +4803,10 @@ void VulkanReplayConsumer::Process_vkCmdSetPrimitiveTopology(
     VkPrimitiveTopology                         primitiveTopology)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetPrimitiveTopology(in_commandBuffer, primitiveTopology)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetPrimitiveTopology(in_commandBuffer, primitiveTopology)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4652,7 +4816,7 @@ void VulkanReplayConsumer::Process_vkCmdSetPrimitiveTopology(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4664,9 +4828,9 @@ void VulkanReplayConsumer::Process_vkCmdSetPrimitiveTopology(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -4678,7 +4842,10 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportWithCount(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkViewport* /*@@@AZI*/in_pViewports = /*@@@HUY*/pViewports->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetViewportWithCount(in_commandBuffer, viewportCount, /*@@@AZI*/in_pViewports)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetViewportWithCount(in_commandBuffer, viewportCount, /*@@@AZI*/in_pViewports)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4688,7 +4855,7 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportWithCount(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4700,9 +4867,9 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportWithCount(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -4714,7 +4881,10 @@ void VulkanReplayConsumer::Process_vkCmdSetScissorWithCount(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkRect2D* /*@@@AZI*/in_pScissors = /*@@@HUY*/pScissors->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetScissorWithCount(in_commandBuffer, scissorCount, /*@@@AZI*/in_pScissors)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetScissorWithCount(in_commandBuffer, scissorCount, /*@@@AZI*/in_pScissors)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4724,7 +4894,7 @@ void VulkanReplayConsumer::Process_vkCmdSetScissorWithCount(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4736,9 +4906,9 @@ void VulkanReplayConsumer::Process_vkCmdSetScissorWithCount(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -4757,7 +4927,10 @@ void VulkanReplayConsumer::Process_vkCmdBindVertexBuffers2(
     /*@@@HPA*/const VkDeviceSize* /*@@@AZI*/in_pOffsets = /*@@@HUY*/pOffsets->GetPointer();
     /*@@@HPA*/const VkDeviceSize* /*@@@AZI*/in_pSizes = /*@@@HUY*/pSizes->GetPointer();
     /*@@@HPA*/const VkDeviceSize* /*@@@AZI*/in_pStrides = /*@@@HUY*/pStrides->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBindVertexBuffers2(in_commandBuffer, firstBinding, bindingCount, /*@@@AZI*/in_pBuffers, /*@@@AZI*/in_pOffsets, /*@@@AZI*/in_pSizes, /*@@@AZI*/in_pStrides)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBindVertexBuffers2(in_commandBuffer, firstBinding, bindingCount, /*@@@AZI*/in_pBuffers, /*@@@AZI*/in_pOffsets, /*@@@AZI*/in_pSizes, /*@@@AZI*/in_pStrides)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4767,7 +4940,7 @@ void VulkanReplayConsumer::Process_vkCmdBindVertexBuffers2(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4779,9 +4952,9 @@ void VulkanReplayConsumer::Process_vkCmdBindVertexBuffers2(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBindVertexBuffers2Handles(in_commandBuffer, bindingCount, in_pBuffers);
 
@@ -4794,7 +4967,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthTestEnable(
     VkBool32                                    depthTestEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthTestEnable(in_commandBuffer, depthTestEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthTestEnable(in_commandBuffer, depthTestEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4804,7 +4980,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthTestEnable(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4816,9 +4992,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthTestEnable(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -4828,7 +5004,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthWriteEnable(
     VkBool32                                    depthWriteEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthWriteEnable(in_commandBuffer, depthWriteEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthWriteEnable(in_commandBuffer, depthWriteEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4838,7 +5017,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthWriteEnable(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4850,9 +5029,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthWriteEnable(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -4862,7 +5041,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthCompareOp(
     VkCompareOp                                 depthCompareOp)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthCompareOp(in_commandBuffer, depthCompareOp)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthCompareOp(in_commandBuffer, depthCompareOp)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4872,7 +5054,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthCompareOp(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4884,9 +5066,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthCompareOp(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -4896,7 +5078,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBoundsTestEnable(
     VkBool32                                    depthBoundsTestEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthBoundsTestEnable(in_commandBuffer, depthBoundsTestEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthBoundsTestEnable(in_commandBuffer, depthBoundsTestEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4906,7 +5091,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBoundsTestEnable(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4918,9 +5103,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBoundsTestEnable(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -4930,7 +5115,10 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilTestEnable(
     VkBool32                                    stencilTestEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetStencilTestEnable(in_commandBuffer, stencilTestEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetStencilTestEnable(in_commandBuffer, stencilTestEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4940,7 +5128,7 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilTestEnable(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4952,9 +5140,9 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilTestEnable(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -4968,7 +5156,10 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilOp(
     VkCompareOp                                 compareOp)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetStencilOp(in_commandBuffer, faceMask, failOp, passOp, depthFailOp, compareOp)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetStencilOp(in_commandBuffer, faceMask, failOp, passOp, depthFailOp, compareOp)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -4978,7 +5169,7 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilOp(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -4990,9 +5181,9 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilOp(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -5002,7 +5193,10 @@ void VulkanReplayConsumer::Process_vkCmdSetRasterizerDiscardEnable(
     VkBool32                                    rasterizerDiscardEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetRasterizerDiscardEnable(in_commandBuffer, rasterizerDiscardEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetRasterizerDiscardEnable(in_commandBuffer, rasterizerDiscardEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -5012,7 +5206,7 @@ void VulkanReplayConsumer::Process_vkCmdSetRasterizerDiscardEnable(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -5024,9 +5218,9 @@ void VulkanReplayConsumer::Process_vkCmdSetRasterizerDiscardEnable(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -5036,7 +5230,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBiasEnable(
     VkBool32                                    depthBiasEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthBiasEnable(in_commandBuffer, depthBiasEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthBiasEnable(in_commandBuffer, depthBiasEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -5046,7 +5243,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBiasEnable(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -5058,9 +5255,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBiasEnable(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -5070,7 +5267,10 @@ void VulkanReplayConsumer::Process_vkCmdSetPrimitiveRestartEnable(
     VkBool32                                    primitiveRestartEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetPrimitiveRestartEnable(in_commandBuffer, primitiveRestartEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetPrimitiveRestartEnable(in_commandBuffer, primitiveRestartEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -5080,7 +5280,7 @@ void VulkanReplayConsumer::Process_vkCmdSetPrimitiveRestartEnable(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -5092,9 +5292,9 @@ void VulkanReplayConsumer::Process_vkCmdSetPrimitiveRestartEnable(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -5825,7 +6025,10 @@ void VulkanReplayConsumer::Process_vkCmdBeginVideoCodingKHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkVideoBeginCodingInfoKHR* /*@@@AZI*/in_pBeginInfo = /*@@@HUY*/pBeginInfo->GetPointer();
     MapStructHandles(pBeginInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBeginVideoCodingKHR(in_commandBuffer, /*@@@AZI*/in_pBeginInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBeginVideoCodingKHR(in_commandBuffer, /*@@@AZI*/in_pBeginInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -5835,7 +6038,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginVideoCodingKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -5847,9 +6050,9 @@ void VulkanReplayConsumer::Process_vkCmdBeginVideoCodingKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBeginVideoCodingKHRHandles(in_commandBuffer, in_pBeginInfo);
 
@@ -5863,7 +6066,10 @@ void VulkanReplayConsumer::Process_vkCmdEndVideoCodingKHR(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkVideoEndCodingInfoKHR* /*@@@AZI*/in_pEndCodingInfo = /*@@@HUY*/pEndCodingInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdEndVideoCodingKHR(in_commandBuffer, /*@@@AZI*/in_pEndCodingInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdEndVideoCodingKHR(in_commandBuffer, /*@@@AZI*/in_pEndCodingInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -5873,7 +6079,7 @@ void VulkanReplayConsumer::Process_vkCmdEndVideoCodingKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -5885,9 +6091,9 @@ void VulkanReplayConsumer::Process_vkCmdEndVideoCodingKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -5898,7 +6104,10 @@ void VulkanReplayConsumer::Process_vkCmdControlVideoCodingKHR(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkVideoCodingControlInfoKHR* /*@@@AZI*/in_pCodingControlInfo = /*@@@HUY*/pCodingControlInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdControlVideoCodingKHR(in_commandBuffer, /*@@@AZI*/in_pCodingControlInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdControlVideoCodingKHR(in_commandBuffer, /*@@@AZI*/in_pCodingControlInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -5908,7 +6117,7 @@ void VulkanReplayConsumer::Process_vkCmdControlVideoCodingKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -5920,9 +6129,9 @@ void VulkanReplayConsumer::Process_vkCmdControlVideoCodingKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -5934,7 +6143,10 @@ void VulkanReplayConsumer::Process_vkCmdDecodeVideoKHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkVideoDecodeInfoKHR* /*@@@AZI*/in_pDecodeInfo = /*@@@HUY*/pDecodeInfo->GetPointer();
     MapStructHandles(pDecodeInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDecodeVideoKHR(in_commandBuffer, /*@@@AZI*/in_pDecodeInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDecodeVideoKHR(in_commandBuffer, /*@@@AZI*/in_pDecodeInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -5944,7 +6156,7 @@ void VulkanReplayConsumer::Process_vkCmdDecodeVideoKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -5956,9 +6168,9 @@ void VulkanReplayConsumer::Process_vkCmdDecodeVideoKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDecodeVideoKHRHandles(in_commandBuffer, in_pDecodeInfo);
 
@@ -5973,7 +6185,10 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderingKHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkRenderingInfo* /*@@@AZI*/in_pRenderingInfo = /*@@@HUY*/pRenderingInfo->GetPointer();
     MapStructHandles(pRenderingInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBeginRenderingKHR(in_commandBuffer, /*@@@AZI*/in_pRenderingInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBeginRenderingKHR(in_commandBuffer, /*@@@AZI*/in_pRenderingInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -5983,7 +6198,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderingKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -5995,9 +6210,9 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderingKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBeginRenderingKHRHandles(in_commandBuffer, in_pRenderingInfo);
 
@@ -6009,7 +6224,10 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderingKHR(
     format::HandleId                            commandBuffer)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdEndRenderingKHR(in_commandBuffer)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdEndRenderingKHR(in_commandBuffer)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -6019,7 +6237,7 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderingKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -6031,9 +6249,9 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderingKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -6144,7 +6362,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDeviceMaskKHR(
     uint32_t                                    deviceMask)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDeviceMaskKHR(in_commandBuffer, deviceMask)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDeviceMaskKHR(in_commandBuffer, deviceMask)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -6154,7 +6375,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDeviceMaskKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -6166,9 +6387,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDeviceMaskKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -6183,7 +6404,10 @@ void VulkanReplayConsumer::Process_vkCmdDispatchBaseKHR(
     uint32_t                                    groupCountZ)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDispatchBaseKHR(in_commandBuffer, baseGroupX, baseGroupY, baseGroupZ, groupCountX, groupCountY, groupCountZ)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDispatchBaseKHR(in_commandBuffer, baseGroupX, baseGroupY, baseGroupZ, groupCountX, groupCountY, groupCountZ)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -6193,7 +6417,7 @@ void VulkanReplayConsumer::Process_vkCmdDispatchBaseKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -6205,9 +6429,9 @@ void VulkanReplayConsumer::Process_vkCmdDispatchBaseKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -6397,7 +6621,10 @@ void VulkanReplayConsumer::Process_vkCmdPushDescriptorSetKHR(
     VkPipelineLayout in_layout = /*@@@QKJ*/MapHandle<PipelineLayoutInfo>(layout, &VulkanObjectInfoTable::GetPipelineLayoutInfo);
     /*@@@HPA*/const VkWriteDescriptorSet* /*@@@AZI*/in_pDescriptorWrites = /*@@@HUY*/pDescriptorWrites->GetPointer();
     /*@@@HWC*/MapStructArrayHandles(pDescriptorWrites->GetMetaStructPointer(), pDescriptorWrites->GetLength(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdPushDescriptorSetKHR(in_commandBuffer, pipelineBindPoint, in_layout, set, descriptorWriteCount, /*@@@AZI*/in_pDescriptorWrites)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdPushDescriptorSetKHR(in_commandBuffer, pipelineBindPoint, in_layout, set, descriptorWriteCount, /*@@@AZI*/in_pDescriptorWrites)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -6407,7 +6634,7 @@ void VulkanReplayConsumer::Process_vkCmdPushDescriptorSetKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -6419,9 +6646,9 @@ void VulkanReplayConsumer::Process_vkCmdPushDescriptorSetKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdPushDescriptorSetKHRHandles(in_commandBuffer, in_layout, descriptorWriteCount, in_pDescriptorWrites);
 
@@ -6486,7 +6713,10 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass2KHR(
     /*@@@HPA*/const VkRenderPassBeginInfo* /*@@@AZI*/in_pRenderPassBegin = /*@@@HUY*/pRenderPassBegin->GetPointer();
     MapStructHandles(pRenderPassBegin->GetMetaStructPointer(), GetObjectInfoTable());
     /*@@@HPA*/const VkSubpassBeginInfo* /*@@@AZI*/in_pSubpassBeginInfo = /*@@@HUY*/pSubpassBeginInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBeginRenderPass2KHR(in_commandBuffer, /*@@@AZI*/in_pRenderPassBegin, /*@@@AZI*/in_pSubpassBeginInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBeginRenderPass2KHR(in_commandBuffer, /*@@@AZI*/in_pRenderPassBegin, /*@@@AZI*/in_pSubpassBeginInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -6496,7 +6726,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -6508,9 +6738,9 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBeginRenderPass2KHRHandles(in_commandBuffer, in_pRenderPassBegin);
 
@@ -6526,7 +6756,10 @@ void VulkanReplayConsumer::Process_vkCmdNextSubpass2KHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkSubpassBeginInfo* /*@@@AZI*/in_pSubpassBeginInfo = /*@@@HUY*/pSubpassBeginInfo->GetPointer();
     /*@@@HPA*/const VkSubpassEndInfo* /*@@@AZI*/in_pSubpassEndInfo = /*@@@HUY*/pSubpassEndInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdNextSubpass2KHR(in_commandBuffer, /*@@@AZI*/in_pSubpassBeginInfo, /*@@@AZI*/in_pSubpassEndInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdNextSubpass2KHR(in_commandBuffer, /*@@@AZI*/in_pSubpassBeginInfo, /*@@@AZI*/in_pSubpassEndInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -6536,7 +6769,7 @@ void VulkanReplayConsumer::Process_vkCmdNextSubpass2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -6548,9 +6781,9 @@ void VulkanReplayConsumer::Process_vkCmdNextSubpass2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -6561,7 +6794,10 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderPass2KHR(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkSubpassEndInfo* /*@@@AZI*/in_pSubpassEndInfo = /*@@@HUY*/pSubpassEndInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdEndRenderPass2KHR(in_commandBuffer, /*@@@AZI*/in_pSubpassEndInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdEndRenderPass2KHR(in_commandBuffer, /*@@@AZI*/in_pSubpassEndInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -6571,7 +6807,7 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderPass2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -6583,9 +6819,9 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderPass2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -6973,7 +7209,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCountKHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     VkBuffer in_countBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawIndirectCountKHR(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawIndirectCountKHR(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -6983,7 +7222,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCountKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -6995,9 +7234,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCountKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDrawIndirectCountKHRHandles(in_commandBuffer, in_buffer, in_countBuffer);
 
@@ -7017,7 +7256,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCountKHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     VkBuffer in_countBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawIndexedIndirectCountKHR(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawIndexedIndirectCountKHR(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7027,7 +7269,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCountKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7039,9 +7281,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCountKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDrawIndexedIndirectCountKHRHandles(in_commandBuffer, in_buffer, in_countBuffer);
 
@@ -7113,7 +7355,10 @@ void VulkanReplayConsumer::Process_vkCmdSetFragmentShadingRateKHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkExtent2D* /*@@@AZI*/in_pFragmentSize = /*@@@HUY*/pFragmentSize->GetPointer();
     /*@@@HPA*/const VkFragmentShadingRateCombinerOpKHR* /*@@@AZI*/in_combinerOps = /*@@@HUY*/combinerOps->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetFragmentShadingRateKHR(in_commandBuffer, /*@@@AZI*/in_pFragmentSize, /*@@@AZI*/in_combinerOps)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetFragmentShadingRateKHR(in_commandBuffer, /*@@@AZI*/in_pFragmentSize, /*@@@AZI*/in_combinerOps)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7123,7 +7368,7 @@ void VulkanReplayConsumer::Process_vkCmdSetFragmentShadingRateKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7135,9 +7380,9 @@ void VulkanReplayConsumer::Process_vkCmdSetFragmentShadingRateKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -7387,7 +7632,10 @@ void VulkanReplayConsumer::Process_vkCmdEncodeVideoKHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkVideoEncodeInfoKHR* /*@@@AZI*/in_pEncodeInfo = /*@@@HUY*/pEncodeInfo->GetPointer();
     MapStructHandles(pEncodeInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdEncodeVideoKHR(in_commandBuffer, /*@@@AZI*/in_pEncodeInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdEncodeVideoKHR(in_commandBuffer, /*@@@AZI*/in_pEncodeInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7397,7 +7645,7 @@ void VulkanReplayConsumer::Process_vkCmdEncodeVideoKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7409,9 +7657,9 @@ void VulkanReplayConsumer::Process_vkCmdEncodeVideoKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdEncodeVideoKHRHandles(in_commandBuffer, in_pEncodeInfo);
 
@@ -7428,7 +7676,10 @@ void VulkanReplayConsumer::Process_vkCmdSetEvent2KHR(
     VkEvent in_event = /*@@@QKJ*/MapHandle<EventInfo>(event, &VulkanObjectInfoTable::GetEventInfo);
     /*@@@HPA*/const VkDependencyInfo* /*@@@AZI*/in_pDependencyInfo = /*@@@HUY*/pDependencyInfo->GetPointer();
     MapStructHandles(pDependencyInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetEvent2KHR(in_commandBuffer, in_event, /*@@@AZI*/in_pDependencyInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetEvent2KHR(in_commandBuffer, in_event, /*@@@AZI*/in_pDependencyInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7438,7 +7689,7 @@ void VulkanReplayConsumer::Process_vkCmdSetEvent2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7450,9 +7701,9 @@ void VulkanReplayConsumer::Process_vkCmdSetEvent2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdSetEvent2KHRHandles(in_commandBuffer, in_event, in_pDependencyInfo);
 
@@ -7467,7 +7718,10 @@ void VulkanReplayConsumer::Process_vkCmdResetEvent2KHR(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkEvent in_event = /*@@@QKJ*/MapHandle<EventInfo>(event, &VulkanObjectInfoTable::GetEventInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdResetEvent2KHR(in_commandBuffer, in_event, stageMask)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdResetEvent2KHR(in_commandBuffer, in_event, stageMask)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7477,7 +7731,7 @@ void VulkanReplayConsumer::Process_vkCmdResetEvent2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7489,9 +7743,9 @@ void VulkanReplayConsumer::Process_vkCmdResetEvent2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdResetEvent2KHRHandles(in_commandBuffer, in_event);
 
@@ -7509,7 +7763,10 @@ void VulkanReplayConsumer::Process_vkCmdWaitEvents2KHR(
     /*@@@HPA*/const VkEvent* /*@@@AZI*/in_pEvents = /*@@@EDO*/MapHandles<EventInfo>(pEvents, eventCount, &VulkanObjectInfoTable::GetEventInfo);
     /*@@@HPA*/const VkDependencyInfo* /*@@@AZI*/in_pDependencyInfos = /*@@@HUY*/pDependencyInfos->GetPointer();
     /*@@@HWC*/MapStructArrayHandles(pDependencyInfos->GetMetaStructPointer(), pDependencyInfos->GetLength(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdWaitEvents2KHR(in_commandBuffer, eventCount, /*@@@AZI*/in_pEvents, /*@@@AZI*/in_pDependencyInfos)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdWaitEvents2KHR(in_commandBuffer, eventCount, /*@@@AZI*/in_pEvents, /*@@@AZI*/in_pDependencyInfos)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7519,7 +7776,7 @@ void VulkanReplayConsumer::Process_vkCmdWaitEvents2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7531,9 +7788,9 @@ void VulkanReplayConsumer::Process_vkCmdWaitEvents2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdWaitEvents2KHRHandles(in_commandBuffer, eventCount, in_pEvents, in_pDependencyInfos);
 
@@ -7548,7 +7805,10 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier2KHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkDependencyInfo* /*@@@AZI*/in_pDependencyInfo = /*@@@HUY*/pDependencyInfo->GetPointer();
     MapStructHandles(pDependencyInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdPipelineBarrier2KHR(in_commandBuffer, /*@@@AZI*/in_pDependencyInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdPipelineBarrier2KHR(in_commandBuffer, /*@@@AZI*/in_pDependencyInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7558,7 +7818,7 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7570,9 +7830,9 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdPipelineBarrier2KHRHandles(in_commandBuffer, in_pDependencyInfo);
 
@@ -7588,7 +7848,10 @@ void VulkanReplayConsumer::Process_vkCmdWriteTimestamp2KHR(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkQueryPool in_queryPool = /*@@@QKJ*/MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdWriteTimestamp2KHR(in_commandBuffer, stage, in_queryPool, query)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdWriteTimestamp2KHR(in_commandBuffer, stage, in_queryPool, query)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7598,7 +7861,7 @@ void VulkanReplayConsumer::Process_vkCmdWriteTimestamp2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7610,9 +7873,9 @@ void VulkanReplayConsumer::Process_vkCmdWriteTimestamp2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdWriteTimestamp2KHRHandles(in_commandBuffer, in_queryPool);
 
@@ -7645,7 +7908,10 @@ void VulkanReplayConsumer::Process_vkCmdWriteBufferMarker2AMD(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_dstBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(dstBuffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdWriteBufferMarker2AMD(in_commandBuffer, stage, in_dstBuffer, dstOffset, marker)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdWriteBufferMarker2AMD(in_commandBuffer, stage, in_dstBuffer, dstOffset, marker)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7655,7 +7921,7 @@ void VulkanReplayConsumer::Process_vkCmdWriteBufferMarker2AMD(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7667,9 +7933,9 @@ void VulkanReplayConsumer::Process_vkCmdWriteBufferMarker2AMD(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdWriteBufferMarker2AMDHandles(in_commandBuffer, in_dstBuffer);
 
@@ -7697,7 +7963,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyBuffer2KHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCopyBufferInfo2* /*@@@AZI*/in_pCopyBufferInfo = /*@@@HUY*/pCopyBufferInfo->GetPointer();
     MapStructHandles(pCopyBufferInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyBuffer2KHR(in_commandBuffer, /*@@@AZI*/in_pCopyBufferInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyBuffer2KHR(in_commandBuffer, /*@@@AZI*/in_pCopyBufferInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7707,7 +7976,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyBuffer2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7719,9 +7988,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyBuffer2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyBuffer2KHRHandles(in_commandBuffer, in_pCopyBufferInfo);
 
@@ -7736,7 +8005,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyImage2KHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCopyImageInfo2* /*@@@AZI*/in_pCopyImageInfo = /*@@@HUY*/pCopyImageInfo->GetPointer();
     MapStructHandles(pCopyImageInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyImage2KHR(in_commandBuffer, /*@@@AZI*/in_pCopyImageInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyImage2KHR(in_commandBuffer, /*@@@AZI*/in_pCopyImageInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7746,7 +8018,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyImage2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7758,9 +8030,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyImage2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyImage2KHRHandles(in_commandBuffer, in_pCopyImageInfo);
 
@@ -7775,7 +8047,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage2KHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCopyBufferToImageInfo2* /*@@@AZI*/in_pCopyBufferToImageInfo = /*@@@HUY*/pCopyBufferToImageInfo->GetPointer();
     MapStructHandles(pCopyBufferToImageInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyBufferToImage2KHR(in_commandBuffer, /*@@@AZI*/in_pCopyBufferToImageInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyBufferToImage2KHR(in_commandBuffer, /*@@@AZI*/in_pCopyBufferToImageInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7785,7 +8060,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7797,9 +8072,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyBufferToImage2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyBufferToImage2KHRHandles(in_commandBuffer, in_pCopyBufferToImageInfo);
 
@@ -7814,7 +8089,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer2KHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCopyImageToBufferInfo2* /*@@@AZI*/in_pCopyImageToBufferInfo = /*@@@HUY*/pCopyImageToBufferInfo->GetPointer();
     MapStructHandles(pCopyImageToBufferInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyImageToBuffer2KHR(in_commandBuffer, /*@@@AZI*/in_pCopyImageToBufferInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyImageToBuffer2KHR(in_commandBuffer, /*@@@AZI*/in_pCopyImageToBufferInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7824,7 +8102,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7836,9 +8114,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyImageToBuffer2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyImageToBuffer2KHRHandles(in_commandBuffer, in_pCopyImageToBufferInfo);
 
@@ -7853,7 +8131,10 @@ void VulkanReplayConsumer::Process_vkCmdBlitImage2KHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkBlitImageInfo2* /*@@@AZI*/in_pBlitImageInfo = /*@@@HUY*/pBlitImageInfo->GetPointer();
     MapStructHandles(pBlitImageInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBlitImage2KHR(in_commandBuffer, /*@@@AZI*/in_pBlitImageInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBlitImage2KHR(in_commandBuffer, /*@@@AZI*/in_pBlitImageInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7863,7 +8144,7 @@ void VulkanReplayConsumer::Process_vkCmdBlitImage2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7875,9 +8156,9 @@ void VulkanReplayConsumer::Process_vkCmdBlitImage2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBlitImage2KHRHandles(in_commandBuffer, in_pBlitImageInfo);
 
@@ -7892,7 +8173,10 @@ void VulkanReplayConsumer::Process_vkCmdResolveImage2KHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkResolveImageInfo2* /*@@@AZI*/in_pResolveImageInfo = /*@@@HUY*/pResolveImageInfo->GetPointer();
     MapStructHandles(pResolveImageInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdResolveImage2KHR(in_commandBuffer, /*@@@AZI*/in_pResolveImageInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdResolveImage2KHR(in_commandBuffer, /*@@@AZI*/in_pResolveImageInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7902,7 +8186,7 @@ void VulkanReplayConsumer::Process_vkCmdResolveImage2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7914,9 +8198,9 @@ void VulkanReplayConsumer::Process_vkCmdResolveImage2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdResolveImage2KHRHandles(in_commandBuffer, in_pResolveImageInfo);
 
@@ -7929,7 +8213,10 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysIndirect2KHR(
     VkDeviceAddress                             indirectDeviceAddress)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdTraceRaysIndirect2KHR(in_commandBuffer, indirectDeviceAddress)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdTraceRaysIndirect2KHR(in_commandBuffer, indirectDeviceAddress)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -7939,7 +8226,7 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysIndirect2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -7951,9 +8238,9 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysIndirect2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -8010,7 +8297,10 @@ void VulkanReplayConsumer::Process_vkCmdBindIndexBuffer2KHR(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBindIndexBuffer2KHR(in_commandBuffer, in_buffer, offset, size, indexType)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBindIndexBuffer2KHR(in_commandBuffer, in_buffer, offset, size, indexType)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8020,7 +8310,7 @@ void VulkanReplayConsumer::Process_vkCmdBindIndexBuffer2KHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8032,9 +8322,9 @@ void VulkanReplayConsumer::Process_vkCmdBindIndexBuffer2KHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBindIndexBuffer2KHRHandles(in_commandBuffer, in_buffer);
 
@@ -8190,7 +8480,10 @@ void VulkanReplayConsumer::Process_vkCmdDebugMarkerBeginEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkDebugMarkerMarkerInfoEXT* /*@@@AZI*/in_pMarkerInfo = /*@@@HUY*/pMarkerInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDebugMarkerBeginEXT(in_commandBuffer, /*@@@AZI*/in_pMarkerInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDebugMarkerBeginEXT(in_commandBuffer, /*@@@AZI*/in_pMarkerInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8200,7 +8493,7 @@ void VulkanReplayConsumer::Process_vkCmdDebugMarkerBeginEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8212,9 +8505,9 @@ void VulkanReplayConsumer::Process_vkCmdDebugMarkerBeginEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -8223,7 +8516,10 @@ void VulkanReplayConsumer::Process_vkCmdDebugMarkerEndEXT(
     format::HandleId                            commandBuffer)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDebugMarkerEndEXT(in_commandBuffer)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDebugMarkerEndEXT(in_commandBuffer)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8233,7 +8529,7 @@ void VulkanReplayConsumer::Process_vkCmdDebugMarkerEndEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8245,9 +8541,9 @@ void VulkanReplayConsumer::Process_vkCmdDebugMarkerEndEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -8257,7 +8553,10 @@ void VulkanReplayConsumer::Process_vkCmdDebugMarkerInsertEXT(
     StructPointerDecoder<Decoded_VkDebugMarkerMarkerInfoEXT>/*@@@PLQ*/* pMarkerInfo)
 {
     auto in_commandBuffer = GetObjectInfoTable().GetCommandBufferInfo(commandBuffer);//@@@DFK
-    OverrideCmdDebugMarkerInsertEXT(GetDeviceTable(in_commandBuffer->handle)->CmdDebugMarkerInsertEXT, in_commandBuffer, pMarkerInfo)/*@@@PKQ*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        OverrideCmdDebugMarkerInsertEXT(GetDeviceTable(in_commandBuffer->handle)->CmdDebugMarkerInsertEXT, in_commandBuffer, pMarkerInfo)/*@@@PKQ*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8267,7 +8566,7 @@ void VulkanReplayConsumer::Process_vkCmdDebugMarkerInsertEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8279,9 +8578,9 @@ void VulkanReplayConsumer::Process_vkCmdDebugMarkerInsertEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -8298,7 +8597,10 @@ void VulkanReplayConsumer::Process_vkCmdBindTransformFeedbackBuffersEXT(
     /*@@@HPA*/const VkBuffer* /*@@@AZI*/in_pBuffers = /*@@@EDO*/MapHandles<BufferInfo>(pBuffers, bindingCount, &VulkanObjectInfoTable::GetBufferInfo);
     /*@@@HPA*/const VkDeviceSize* /*@@@AZI*/in_pOffsets = /*@@@HUY*/pOffsets->GetPointer();
     /*@@@HPA*/const VkDeviceSize* /*@@@AZI*/in_pSizes = /*@@@HUY*/pSizes->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBindTransformFeedbackBuffersEXT(in_commandBuffer, firstBinding, bindingCount, /*@@@AZI*/in_pBuffers, /*@@@AZI*/in_pOffsets, /*@@@AZI*/in_pSizes)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBindTransformFeedbackBuffersEXT(in_commandBuffer, firstBinding, bindingCount, /*@@@AZI*/in_pBuffers, /*@@@AZI*/in_pOffsets, /*@@@AZI*/in_pSizes)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8308,7 +8610,7 @@ void VulkanReplayConsumer::Process_vkCmdBindTransformFeedbackBuffersEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8320,9 +8622,9 @@ void VulkanReplayConsumer::Process_vkCmdBindTransformFeedbackBuffersEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBindTransformFeedbackBuffersEXTHandles(in_commandBuffer, bindingCount, in_pBuffers);
 
@@ -8340,7 +8642,10 @@ void VulkanReplayConsumer::Process_vkCmdBeginTransformFeedbackEXT(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkBuffer* /*@@@AZI*/in_pCounterBuffers = /*@@@EDO*/MapHandles<BufferInfo>(pCounterBuffers, counterBufferCount, &VulkanObjectInfoTable::GetBufferInfo);
     /*@@@HPA*/const VkDeviceSize* /*@@@AZI*/in_pCounterBufferOffsets = /*@@@HUY*/pCounterBufferOffsets->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBeginTransformFeedbackEXT(in_commandBuffer, firstCounterBuffer, counterBufferCount, /*@@@AZI*/in_pCounterBuffers, /*@@@AZI*/in_pCounterBufferOffsets)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBeginTransformFeedbackEXT(in_commandBuffer, firstCounterBuffer, counterBufferCount, /*@@@AZI*/in_pCounterBuffers, /*@@@AZI*/in_pCounterBufferOffsets)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8350,7 +8655,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginTransformFeedbackEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8362,9 +8667,9 @@ void VulkanReplayConsumer::Process_vkCmdBeginTransformFeedbackEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBeginTransformFeedbackEXTHandles(in_commandBuffer, counterBufferCount, in_pCounterBuffers);
 
@@ -8382,7 +8687,10 @@ void VulkanReplayConsumer::Process_vkCmdEndTransformFeedbackEXT(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkBuffer* /*@@@AZI*/in_pCounterBuffers = /*@@@EDO*/MapHandles<BufferInfo>(pCounterBuffers, counterBufferCount, &VulkanObjectInfoTable::GetBufferInfo);
     /*@@@HPA*/const VkDeviceSize* /*@@@AZI*/in_pCounterBufferOffsets = /*@@@HUY*/pCounterBufferOffsets->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdEndTransformFeedbackEXT(in_commandBuffer, firstCounterBuffer, counterBufferCount, /*@@@AZI*/in_pCounterBuffers, /*@@@AZI*/in_pCounterBufferOffsets)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdEndTransformFeedbackEXT(in_commandBuffer, firstCounterBuffer, counterBufferCount, /*@@@AZI*/in_pCounterBuffers, /*@@@AZI*/in_pCounterBufferOffsets)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8392,7 +8700,7 @@ void VulkanReplayConsumer::Process_vkCmdEndTransformFeedbackEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8404,9 +8712,9 @@ void VulkanReplayConsumer::Process_vkCmdEndTransformFeedbackEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdEndTransformFeedbackEXTHandles(in_commandBuffer, counterBufferCount, in_pCounterBuffers);
 
@@ -8423,7 +8731,10 @@ void VulkanReplayConsumer::Process_vkCmdBeginQueryIndexedEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkQueryPool in_queryPool = /*@@@QKJ*/MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBeginQueryIndexedEXT(in_commandBuffer, in_queryPool, query, flags, index)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBeginQueryIndexedEXT(in_commandBuffer, in_queryPool, query, flags, index)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8433,7 +8744,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginQueryIndexedEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8445,9 +8756,9 @@ void VulkanReplayConsumer::Process_vkCmdBeginQueryIndexedEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBeginQueryIndexedEXTHandles(in_commandBuffer, in_queryPool);
 
@@ -8463,7 +8774,10 @@ void VulkanReplayConsumer::Process_vkCmdEndQueryIndexedEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkQueryPool in_queryPool = /*@@@QKJ*/MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdEndQueryIndexedEXT(in_commandBuffer, in_queryPool, query, index)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdEndQueryIndexedEXT(in_commandBuffer, in_queryPool, query, index)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8473,7 +8787,7 @@ void VulkanReplayConsumer::Process_vkCmdEndQueryIndexedEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8485,9 +8799,9 @@ void VulkanReplayConsumer::Process_vkCmdEndQueryIndexedEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdEndQueryIndexedEXTHandles(in_commandBuffer, in_queryPool);
 
@@ -8506,7 +8820,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectByteCountEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_counterBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(counterBuffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawIndirectByteCountEXT(in_commandBuffer, instanceCount, firstInstance, in_counterBuffer, counterBufferOffset, counterOffset, vertexStride)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawIndirectByteCountEXT(in_commandBuffer, instanceCount, firstInstance, in_counterBuffer, counterBufferOffset, counterOffset, vertexStride)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8516,7 +8833,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectByteCountEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8528,9 +8845,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectByteCountEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDrawIndirectByteCountEXTHandles(in_commandBuffer, in_counterBuffer);
 
@@ -8577,7 +8894,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCountAMD(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     VkBuffer in_countBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawIndirectCountAMD(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawIndirectCountAMD(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8587,7 +8907,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCountAMD(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8599,9 +8919,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCountAMD(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDrawIndirectCountAMDHandles(in_commandBuffer, in_buffer, in_countBuffer);
 
@@ -8621,7 +8941,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCountAMD(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     VkBuffer in_countBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawIndexedIndirectCountAMD(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawIndexedIndirectCountAMD(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8631,7 +8954,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCountAMD(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8643,9 +8966,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCountAMD(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDrawIndexedIndirectCountAMDHandles(in_commandBuffer, in_buffer, in_countBuffer);
 
@@ -8749,7 +9072,10 @@ void VulkanReplayConsumer::Process_vkCmdBeginConditionalRenderingEXT(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkConditionalRenderingBeginInfoEXT* /*@@@AZI*/in_pConditionalRenderingBegin = /*@@@HUY*/pConditionalRenderingBegin->GetPointer();
     MapStructHandles(pConditionalRenderingBegin->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBeginConditionalRenderingEXT(in_commandBuffer, /*@@@AZI*/in_pConditionalRenderingBegin)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBeginConditionalRenderingEXT(in_commandBuffer, /*@@@AZI*/in_pConditionalRenderingBegin)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8759,7 +9085,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginConditionalRenderingEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8771,9 +9097,9 @@ void VulkanReplayConsumer::Process_vkCmdBeginConditionalRenderingEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBeginConditionalRenderingEXTHandles(in_commandBuffer, in_pConditionalRenderingBegin);
 
@@ -8785,7 +9111,10 @@ void VulkanReplayConsumer::Process_vkCmdEndConditionalRenderingEXT(
     format::HandleId                            commandBuffer)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdEndConditionalRenderingEXT(in_commandBuffer)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdEndConditionalRenderingEXT(in_commandBuffer)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8795,7 +9124,7 @@ void VulkanReplayConsumer::Process_vkCmdEndConditionalRenderingEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8807,9 +9136,9 @@ void VulkanReplayConsumer::Process_vkCmdEndConditionalRenderingEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -8822,7 +9151,10 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportWScalingNV(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkViewportWScalingNV* /*@@@AZI*/in_pViewportWScalings = /*@@@HUY*/pViewportWScalings->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetViewportWScalingNV(in_commandBuffer, firstViewport, viewportCount, /*@@@AZI*/in_pViewportWScalings)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetViewportWScalingNV(in_commandBuffer, firstViewport, viewportCount, /*@@@AZI*/in_pViewportWScalings)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -8832,7 +9164,7 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportWScalingNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -8844,9 +9176,9 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportWScalingNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -9040,7 +9372,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDiscardRectangleEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkRect2D* /*@@@AZI*/in_pDiscardRectangles = /*@@@HUY*/pDiscardRectangles->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDiscardRectangleEXT(in_commandBuffer, firstDiscardRectangle, discardRectangleCount, /*@@@AZI*/in_pDiscardRectangles)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDiscardRectangleEXT(in_commandBuffer, firstDiscardRectangle, discardRectangleCount, /*@@@AZI*/in_pDiscardRectangles)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -9050,7 +9385,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDiscardRectangleEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -9062,9 +9397,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDiscardRectangleEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -9074,7 +9409,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDiscardRectangleEnableEXT(
     VkBool32                                    discardRectangleEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDiscardRectangleEnableEXT(in_commandBuffer, discardRectangleEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDiscardRectangleEnableEXT(in_commandBuffer, discardRectangleEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -9084,7 +9422,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDiscardRectangleEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -9096,9 +9434,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDiscardRectangleEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -9108,7 +9446,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDiscardRectangleModeEXT(
     VkDiscardRectangleModeEXT                   discardRectangleMode)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDiscardRectangleModeEXT(in_commandBuffer, discardRectangleMode)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDiscardRectangleModeEXT(in_commandBuffer, discardRectangleMode)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -9118,7 +9459,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDiscardRectangleModeEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -9130,9 +9471,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDiscardRectangleModeEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -9255,7 +9596,10 @@ void VulkanReplayConsumer::Process_vkCmdBeginDebugUtilsLabelEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkDebugUtilsLabelEXT* /*@@@AZI*/in_pLabelInfo = /*@@@HUY*/pLabelInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBeginDebugUtilsLabelEXT(in_commandBuffer, /*@@@AZI*/in_pLabelInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBeginDebugUtilsLabelEXT(in_commandBuffer, /*@@@AZI*/in_pLabelInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -9265,7 +9609,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginDebugUtilsLabelEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -9277,9 +9621,9 @@ void VulkanReplayConsumer::Process_vkCmdBeginDebugUtilsLabelEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -9288,7 +9632,10 @@ void VulkanReplayConsumer::Process_vkCmdEndDebugUtilsLabelEXT(
     format::HandleId                            commandBuffer)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdEndDebugUtilsLabelEXT(in_commandBuffer)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdEndDebugUtilsLabelEXT(in_commandBuffer)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -9298,7 +9645,7 @@ void VulkanReplayConsumer::Process_vkCmdEndDebugUtilsLabelEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -9310,9 +9657,9 @@ void VulkanReplayConsumer::Process_vkCmdEndDebugUtilsLabelEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -9323,7 +9670,10 @@ void VulkanReplayConsumer::Process_vkCmdInsertDebugUtilsLabelEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkDebugUtilsLabelEXT* /*@@@AZI*/in_pLabelInfo = /*@@@HUY*/pLabelInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdInsertDebugUtilsLabelEXT(in_commandBuffer, /*@@@AZI*/in_pLabelInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdInsertDebugUtilsLabelEXT(in_commandBuffer, /*@@@AZI*/in_pLabelInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -9333,7 +9683,7 @@ void VulkanReplayConsumer::Process_vkCmdInsertDebugUtilsLabelEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -9345,9 +9695,9 @@ void VulkanReplayConsumer::Process_vkCmdInsertDebugUtilsLabelEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -9431,7 +9781,10 @@ void VulkanReplayConsumer::Process_vkCmdSetSampleLocationsEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkSampleLocationsInfoEXT* /*@@@AZI*/in_pSampleLocationsInfo = /*@@@HUY*/pSampleLocationsInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetSampleLocationsEXT(in_commandBuffer, /*@@@AZI*/in_pSampleLocationsInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetSampleLocationsEXT(in_commandBuffer, /*@@@AZI*/in_pSampleLocationsInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -9441,7 +9794,7 @@ void VulkanReplayConsumer::Process_vkCmdSetSampleLocationsEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -9453,9 +9806,9 @@ void VulkanReplayConsumer::Process_vkCmdSetSampleLocationsEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -9557,7 +9910,10 @@ void VulkanReplayConsumer::Process_vkCmdBindShadingRateImageNV(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkImageView in_imageView = /*@@@QKJ*/MapHandle<ImageViewInfo>(imageView, &VulkanObjectInfoTable::GetImageViewInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBindShadingRateImageNV(in_commandBuffer, in_imageView, imageLayout)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBindShadingRateImageNV(in_commandBuffer, in_imageView, imageLayout)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -9567,7 +9923,7 @@ void VulkanReplayConsumer::Process_vkCmdBindShadingRateImageNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -9579,9 +9935,9 @@ void VulkanReplayConsumer::Process_vkCmdBindShadingRateImageNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBindShadingRateImageNVHandles(in_commandBuffer, in_imageView);
 
@@ -9597,7 +9953,10 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportShadingRatePaletteNV(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkShadingRatePaletteNV* /*@@@AZI*/in_pShadingRatePalettes = /*@@@HUY*/pShadingRatePalettes->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetViewportShadingRatePaletteNV(in_commandBuffer, firstViewport, viewportCount, /*@@@AZI*/in_pShadingRatePalettes)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetViewportShadingRatePaletteNV(in_commandBuffer, firstViewport, viewportCount, /*@@@AZI*/in_pShadingRatePalettes)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -9607,7 +9966,7 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportShadingRatePaletteNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -9619,9 +9978,9 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportShadingRatePaletteNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -9634,7 +9993,10 @@ void VulkanReplayConsumer::Process_vkCmdSetCoarseSampleOrderNV(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCoarseSampleOrderCustomNV* /*@@@AZI*/in_pCustomSampleOrders = /*@@@HUY*/pCustomSampleOrders->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetCoarseSampleOrderNV(in_commandBuffer, sampleOrderType, customSampleOrderCount, /*@@@AZI*/in_pCustomSampleOrders)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetCoarseSampleOrderNV(in_commandBuffer, sampleOrderType, customSampleOrderCount, /*@@@AZI*/in_pCustomSampleOrders)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -9644,7 +10006,7 @@ void VulkanReplayConsumer::Process_vkCmdSetCoarseSampleOrderNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -9656,9 +10018,9 @@ void VulkanReplayConsumer::Process_vkCmdSetCoarseSampleOrderNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -9740,7 +10102,10 @@ void VulkanReplayConsumer::Process_vkCmdBuildAccelerationStructureNV(
     VkAccelerationStructureNV in_dst = /*@@@QKJ*/MapHandle<AccelerationStructureNVInfo>(dst, &VulkanObjectInfoTable::GetAccelerationStructureNVInfo);
     VkAccelerationStructureNV in_src = /*@@@QKJ*/MapHandle<AccelerationStructureNVInfo>(src, &VulkanObjectInfoTable::GetAccelerationStructureNVInfo);
     VkBuffer in_scratch = /*@@@QKJ*/MapHandle<BufferInfo>(scratch, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBuildAccelerationStructureNV(in_commandBuffer, /*@@@AZI*/in_pInfo, in_instanceData, instanceOffset, update, in_dst, in_src, in_scratch, scratchOffset)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBuildAccelerationStructureNV(in_commandBuffer, /*@@@AZI*/in_pInfo, in_instanceData, instanceOffset, update, in_dst, in_src, in_scratch, scratchOffset)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -9750,7 +10115,7 @@ void VulkanReplayConsumer::Process_vkCmdBuildAccelerationStructureNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -9762,9 +10127,9 @@ void VulkanReplayConsumer::Process_vkCmdBuildAccelerationStructureNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBuildAccelerationStructureNVHandles(in_commandBuffer, in_pInfo, in_instanceData, in_dst, in_src, in_scratch);
 
@@ -9781,7 +10146,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyAccelerationStructureNV(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkAccelerationStructureNV in_dst = /*@@@QKJ*/MapHandle<AccelerationStructureNVInfo>(dst, &VulkanObjectInfoTable::GetAccelerationStructureNVInfo);
     VkAccelerationStructureNV in_src = /*@@@QKJ*/MapHandle<AccelerationStructureNVInfo>(src, &VulkanObjectInfoTable::GetAccelerationStructureNVInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyAccelerationStructureNV(in_commandBuffer, in_dst, in_src, mode)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyAccelerationStructureNV(in_commandBuffer, in_dst, in_src, mode)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -9791,7 +10159,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyAccelerationStructureNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -9803,9 +10171,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyAccelerationStructureNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyAccelerationStructureNVHandles(in_commandBuffer, in_dst, in_src);
 
@@ -9835,7 +10203,10 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysNV(
     VkBuffer in_missShaderBindingTableBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(missShaderBindingTableBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     VkBuffer in_hitShaderBindingTableBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(hitShaderBindingTableBuffer, &VulkanObjectInfoTable::GetBufferInfo);
     VkBuffer in_callableShaderBindingTableBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(callableShaderBindingTableBuffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdTraceRaysNV(in_commandBuffer, in_raygenShaderBindingTableBuffer, raygenShaderBindingOffset, in_missShaderBindingTableBuffer, missShaderBindingOffset, missShaderBindingStride, in_hitShaderBindingTableBuffer, hitShaderBindingOffset, hitShaderBindingStride, in_callableShaderBindingTableBuffer, callableShaderBindingOffset, callableShaderBindingStride, width, height, depth)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdTraceRaysNV(in_commandBuffer, in_raygenShaderBindingTableBuffer, raygenShaderBindingOffset, in_missShaderBindingTableBuffer, missShaderBindingOffset, missShaderBindingStride, in_hitShaderBindingTableBuffer, hitShaderBindingOffset, hitShaderBindingStride, in_callableShaderBindingTableBuffer, callableShaderBindingOffset, callableShaderBindingStride, width, height, depth)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -9845,7 +10216,7 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -9857,9 +10228,9 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdTraceRaysNVHandles(in_commandBuffer, in_raygenShaderBindingTableBuffer, in_missShaderBindingTableBuffer, in_hitShaderBindingTableBuffer, in_callableShaderBindingTableBuffer);
 
@@ -9949,7 +10320,10 @@ void VulkanReplayConsumer::Process_vkCmdWriteAccelerationStructuresPropertiesNV(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkAccelerationStructureNV* /*@@@AZI*/in_pAccelerationStructures = /*@@@EDO*/MapHandles<AccelerationStructureNVInfo>(pAccelerationStructures, accelerationStructureCount, &VulkanObjectInfoTable::GetAccelerationStructureNVInfo);
     VkQueryPool in_queryPool = /*@@@QKJ*/MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdWriteAccelerationStructuresPropertiesNV(in_commandBuffer, accelerationStructureCount, /*@@@AZI*/in_pAccelerationStructures, queryType, in_queryPool, firstQuery)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdWriteAccelerationStructuresPropertiesNV(in_commandBuffer, accelerationStructureCount, /*@@@AZI*/in_pAccelerationStructures, queryType, in_queryPool, firstQuery)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -9959,7 +10333,7 @@ void VulkanReplayConsumer::Process_vkCmdWriteAccelerationStructuresPropertiesNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -9971,9 +10345,9 @@ void VulkanReplayConsumer::Process_vkCmdWriteAccelerationStructuresPropertiesNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdWriteAccelerationStructuresPropertiesNVHandles(in_commandBuffer, accelerationStructureCount, in_pAccelerationStructures, in_queryPool);
 
@@ -10019,7 +10393,10 @@ void VulkanReplayConsumer::Process_vkCmdWriteBufferMarkerAMD(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_dstBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(dstBuffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdWriteBufferMarkerAMD(in_commandBuffer, pipelineStage, in_dstBuffer, dstOffset, marker)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdWriteBufferMarkerAMD(in_commandBuffer, pipelineStage, in_dstBuffer, dstOffset, marker)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -10029,7 +10406,7 @@ void VulkanReplayConsumer::Process_vkCmdWriteBufferMarkerAMD(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10041,9 +10418,9 @@ void VulkanReplayConsumer::Process_vkCmdWriteBufferMarkerAMD(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdWriteBufferMarkerAMDHandles(in_commandBuffer, in_dstBuffer);
 
@@ -10089,7 +10466,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksNV(
     uint32_t                                    firstTask)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksNV(in_commandBuffer, taskCount, firstTask)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksNV(in_commandBuffer, taskCount, firstTask)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -10099,7 +10479,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10111,9 +10491,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -10127,7 +10507,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectNV(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksIndirectNV(in_commandBuffer, in_buffer, offset, drawCount, stride)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksIndirectNV(in_commandBuffer, in_buffer, offset, drawCount, stride)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -10137,7 +10520,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10149,9 +10532,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDrawMeshTasksIndirectNVHandles(in_commandBuffer, in_buffer);
 
@@ -10171,7 +10554,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectCountNV(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     VkBuffer in_countBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksIndirectCountNV(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksIndirectCountNV(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -10181,7 +10567,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectCountNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10193,9 +10579,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectCountNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDrawMeshTasksIndirectCountNVHandles(in_commandBuffer, in_buffer, in_countBuffer);
 
@@ -10211,7 +10597,10 @@ void VulkanReplayConsumer::Process_vkCmdSetExclusiveScissorEnableNV(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkBool32* /*@@@AZI*/in_pExclusiveScissorEnables = /*@@@HUY*/pExclusiveScissorEnables->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetExclusiveScissorEnableNV(in_commandBuffer, firstExclusiveScissor, exclusiveScissorCount, /*@@@AZI*/in_pExclusiveScissorEnables)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetExclusiveScissorEnableNV(in_commandBuffer, firstExclusiveScissor, exclusiveScissorCount, /*@@@AZI*/in_pExclusiveScissorEnables)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -10221,7 +10610,7 @@ void VulkanReplayConsumer::Process_vkCmdSetExclusiveScissorEnableNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10233,9 +10622,9 @@ void VulkanReplayConsumer::Process_vkCmdSetExclusiveScissorEnableNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -10248,7 +10637,10 @@ void VulkanReplayConsumer::Process_vkCmdSetExclusiveScissorNV(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkRect2D* /*@@@AZI*/in_pExclusiveScissors = /*@@@HUY*/pExclusiveScissors->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetExclusiveScissorNV(in_commandBuffer, firstExclusiveScissor, exclusiveScissorCount, /*@@@AZI*/in_pExclusiveScissors)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetExclusiveScissorNV(in_commandBuffer, firstExclusiveScissor, exclusiveScissorCount, /*@@@AZI*/in_pExclusiveScissors)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -10258,7 +10650,7 @@ void VulkanReplayConsumer::Process_vkCmdSetExclusiveScissorNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10270,9 +10662,9 @@ void VulkanReplayConsumer::Process_vkCmdSetExclusiveScissorNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -10283,7 +10675,10 @@ void VulkanReplayConsumer::Process_vkCmdSetCheckpointNV(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const void* /*@@@AZI*/in_pCheckpointMarker = /*@@@WPX*/PreProcessExternalObject(pCheckpointMarker, format::ApiCallId::ApiCall_vkCmdSetCheckpointNV, "vkCmdSetCheckpointNV");//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetCheckpointNV(in_commandBuffer, /*@@@AZI*/in_pCheckpointMarker)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetCheckpointNV(in_commandBuffer, /*@@@AZI*/in_pCheckpointMarker)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -10293,7 +10688,7 @@ void VulkanReplayConsumer::Process_vkCmdSetCheckpointNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10305,9 +10700,9 @@ void VulkanReplayConsumer::Process_vkCmdSetCheckpointNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -10363,7 +10758,7 @@ void VulkanReplayConsumer::Process_vkCmdSetPerformanceMarkerINTEL(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10375,9 +10770,9 @@ void VulkanReplayConsumer::Process_vkCmdSetPerformanceMarkerINTEL(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -10400,7 +10795,7 @@ void VulkanReplayConsumer::Process_vkCmdSetPerformanceStreamMarkerINTEL(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10412,9 +10807,9 @@ void VulkanReplayConsumer::Process_vkCmdSetPerformanceStreamMarkerINTEL(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -10437,7 +10832,7 @@ void VulkanReplayConsumer::Process_vkCmdSetPerformanceOverrideINTEL(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10449,9 +10844,9 @@ void VulkanReplayConsumer::Process_vkCmdSetPerformanceOverrideINTEL(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -10726,7 +11121,10 @@ void VulkanReplayConsumer::Process_vkCmdSetLineStippleEXT(
     uint16_t                                    lineStipplePattern)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetLineStippleEXT(in_commandBuffer, lineStippleFactor, lineStipplePattern)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetLineStippleEXT(in_commandBuffer, lineStippleFactor, lineStipplePattern)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -10736,7 +11134,7 @@ void VulkanReplayConsumer::Process_vkCmdSetLineStippleEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10748,9 +11146,9 @@ void VulkanReplayConsumer::Process_vkCmdSetLineStippleEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -10772,7 +11170,10 @@ void VulkanReplayConsumer::Process_vkCmdSetCullModeEXT(
     VkCullModeFlags                             cullMode)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetCullModeEXT(in_commandBuffer, cullMode)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetCullModeEXT(in_commandBuffer, cullMode)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -10782,7 +11183,7 @@ void VulkanReplayConsumer::Process_vkCmdSetCullModeEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10794,9 +11195,9 @@ void VulkanReplayConsumer::Process_vkCmdSetCullModeEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -10806,7 +11207,10 @@ void VulkanReplayConsumer::Process_vkCmdSetFrontFaceEXT(
     VkFrontFace                                 frontFace)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetFrontFaceEXT(in_commandBuffer, frontFace)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetFrontFaceEXT(in_commandBuffer, frontFace)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -10816,7 +11220,7 @@ void VulkanReplayConsumer::Process_vkCmdSetFrontFaceEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10828,9 +11232,9 @@ void VulkanReplayConsumer::Process_vkCmdSetFrontFaceEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -10840,7 +11244,10 @@ void VulkanReplayConsumer::Process_vkCmdSetPrimitiveTopologyEXT(
     VkPrimitiveTopology                         primitiveTopology)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetPrimitiveTopologyEXT(in_commandBuffer, primitiveTopology)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetPrimitiveTopologyEXT(in_commandBuffer, primitiveTopology)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -10850,7 +11257,7 @@ void VulkanReplayConsumer::Process_vkCmdSetPrimitiveTopologyEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10862,9 +11269,9 @@ void VulkanReplayConsumer::Process_vkCmdSetPrimitiveTopologyEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -10876,7 +11283,10 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportWithCountEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkViewport* /*@@@AZI*/in_pViewports = /*@@@HUY*/pViewports->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetViewportWithCountEXT(in_commandBuffer, viewportCount, /*@@@AZI*/in_pViewports)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetViewportWithCountEXT(in_commandBuffer, viewportCount, /*@@@AZI*/in_pViewports)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -10886,7 +11296,7 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportWithCountEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10898,9 +11308,9 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportWithCountEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -10912,7 +11322,10 @@ void VulkanReplayConsumer::Process_vkCmdSetScissorWithCountEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkRect2D* /*@@@AZI*/in_pScissors = /*@@@HUY*/pScissors->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetScissorWithCountEXT(in_commandBuffer, scissorCount, /*@@@AZI*/in_pScissors)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetScissorWithCountEXT(in_commandBuffer, scissorCount, /*@@@AZI*/in_pScissors)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -10922,7 +11335,7 @@ void VulkanReplayConsumer::Process_vkCmdSetScissorWithCountEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10934,9 +11347,9 @@ void VulkanReplayConsumer::Process_vkCmdSetScissorWithCountEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -10955,7 +11368,10 @@ void VulkanReplayConsumer::Process_vkCmdBindVertexBuffers2EXT(
     /*@@@HPA*/const VkDeviceSize* /*@@@AZI*/in_pOffsets = /*@@@HUY*/pOffsets->GetPointer();
     /*@@@HPA*/const VkDeviceSize* /*@@@AZI*/in_pSizes = /*@@@HUY*/pSizes->GetPointer();
     /*@@@HPA*/const VkDeviceSize* /*@@@AZI*/in_pStrides = /*@@@HUY*/pStrides->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBindVertexBuffers2EXT(in_commandBuffer, firstBinding, bindingCount, /*@@@AZI*/in_pBuffers, /*@@@AZI*/in_pOffsets, /*@@@AZI*/in_pSizes, /*@@@AZI*/in_pStrides)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBindVertexBuffers2EXT(in_commandBuffer, firstBinding, bindingCount, /*@@@AZI*/in_pBuffers, /*@@@AZI*/in_pOffsets, /*@@@AZI*/in_pSizes, /*@@@AZI*/in_pStrides)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -10965,7 +11381,7 @@ void VulkanReplayConsumer::Process_vkCmdBindVertexBuffers2EXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -10977,9 +11393,9 @@ void VulkanReplayConsumer::Process_vkCmdBindVertexBuffers2EXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBindVertexBuffers2EXTHandles(in_commandBuffer, bindingCount, in_pBuffers);
 
@@ -10992,7 +11408,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthTestEnableEXT(
     VkBool32                                    depthTestEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthTestEnableEXT(in_commandBuffer, depthTestEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthTestEnableEXT(in_commandBuffer, depthTestEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11002,7 +11421,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthTestEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11014,9 +11433,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthTestEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -11026,7 +11445,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthWriteEnableEXT(
     VkBool32                                    depthWriteEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthWriteEnableEXT(in_commandBuffer, depthWriteEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthWriteEnableEXT(in_commandBuffer, depthWriteEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11036,7 +11458,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthWriteEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11048,9 +11470,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthWriteEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -11060,7 +11482,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthCompareOpEXT(
     VkCompareOp                                 depthCompareOp)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthCompareOpEXT(in_commandBuffer, depthCompareOp)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthCompareOpEXT(in_commandBuffer, depthCompareOp)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11070,7 +11495,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthCompareOpEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11082,9 +11507,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthCompareOpEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -11094,7 +11519,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBoundsTestEnableEXT(
     VkBool32                                    depthBoundsTestEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthBoundsTestEnableEXT(in_commandBuffer, depthBoundsTestEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthBoundsTestEnableEXT(in_commandBuffer, depthBoundsTestEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11104,7 +11532,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBoundsTestEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11116,9 +11544,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBoundsTestEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -11128,7 +11556,10 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilTestEnableEXT(
     VkBool32                                    stencilTestEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetStencilTestEnableEXT(in_commandBuffer, stencilTestEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetStencilTestEnableEXT(in_commandBuffer, stencilTestEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11138,7 +11569,7 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilTestEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11150,9 +11581,9 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilTestEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -11166,7 +11597,10 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilOpEXT(
     VkCompareOp                                 compareOp)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetStencilOpEXT(in_commandBuffer, faceMask, failOp, passOp, depthFailOp, compareOp)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetStencilOpEXT(in_commandBuffer, faceMask, failOp, passOp, depthFailOp, compareOp)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11176,7 +11610,7 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilOpEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11188,9 +11622,9 @@ void VulkanReplayConsumer::Process_vkCmdSetStencilOpEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -11302,7 +11736,10 @@ void VulkanReplayConsumer::Process_vkCmdPreprocessGeneratedCommandsNV(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkGeneratedCommandsInfoNV* /*@@@AZI*/in_pGeneratedCommandsInfo = /*@@@HUY*/pGeneratedCommandsInfo->GetPointer();
     MapStructHandles(pGeneratedCommandsInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdPreprocessGeneratedCommandsNV(in_commandBuffer, /*@@@AZI*/in_pGeneratedCommandsInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdPreprocessGeneratedCommandsNV(in_commandBuffer, /*@@@AZI*/in_pGeneratedCommandsInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11312,7 +11749,7 @@ void VulkanReplayConsumer::Process_vkCmdPreprocessGeneratedCommandsNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11324,9 +11761,9 @@ void VulkanReplayConsumer::Process_vkCmdPreprocessGeneratedCommandsNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdPreprocessGeneratedCommandsNVHandles(in_commandBuffer, in_pGeneratedCommandsInfo);
 
@@ -11342,7 +11779,10 @@ void VulkanReplayConsumer::Process_vkCmdExecuteGeneratedCommandsNV(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkGeneratedCommandsInfoNV* /*@@@AZI*/in_pGeneratedCommandsInfo = /*@@@HUY*/pGeneratedCommandsInfo->GetPointer();
     MapStructHandles(pGeneratedCommandsInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdExecuteGeneratedCommandsNV(in_commandBuffer, isPreprocessed, /*@@@AZI*/in_pGeneratedCommandsInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdExecuteGeneratedCommandsNV(in_commandBuffer, isPreprocessed, /*@@@AZI*/in_pGeneratedCommandsInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11352,7 +11792,7 @@ void VulkanReplayConsumer::Process_vkCmdExecuteGeneratedCommandsNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11364,9 +11804,9 @@ void VulkanReplayConsumer::Process_vkCmdExecuteGeneratedCommandsNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdExecuteGeneratedCommandsNVHandles(in_commandBuffer, in_pGeneratedCommandsInfo);
 
@@ -11382,7 +11822,10 @@ void VulkanReplayConsumer::Process_vkCmdBindPipelineShaderGroupNV(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkPipeline in_pipeline = /*@@@QKJ*/MapHandle<PipelineInfo>(pipeline, &VulkanObjectInfoTable::GetPipelineInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBindPipelineShaderGroupNV(in_commandBuffer, pipelineBindPoint, in_pipeline, groupIndex)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBindPipelineShaderGroupNV(in_commandBuffer, pipelineBindPoint, in_pipeline, groupIndex)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11392,7 +11835,7 @@ void VulkanReplayConsumer::Process_vkCmdBindPipelineShaderGroupNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11404,9 +11847,9 @@ void VulkanReplayConsumer::Process_vkCmdBindPipelineShaderGroupNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBindPipelineShaderGroupNVHandles(in_commandBuffer, in_pipeline);
 
@@ -11452,7 +11895,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBias2EXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkDepthBiasInfoEXT* /*@@@AZI*/in_pDepthBiasInfo = /*@@@HUY*/pDepthBiasInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthBias2EXT(in_commandBuffer, /*@@@AZI*/in_pDepthBiasInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthBias2EXT(in_commandBuffer, /*@@@AZI*/in_pDepthBiasInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11462,7 +11908,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBias2EXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11474,9 +11920,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBias2EXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -11579,7 +12025,10 @@ void VulkanReplayConsumer::Process_vkCmdSetFragmentShadingRateEnumNV(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkFragmentShadingRateCombinerOpKHR* /*@@@AZI*/in_combinerOps = /*@@@HUY*/combinerOps->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetFragmentShadingRateEnumNV(in_commandBuffer, shadingRate, /*@@@AZI*/in_combinerOps)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetFragmentShadingRateEnumNV(in_commandBuffer, shadingRate, /*@@@AZI*/in_combinerOps)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11589,7 +12038,7 @@ void VulkanReplayConsumer::Process_vkCmdSetFragmentShadingRateEnumNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11601,9 +12050,9 @@ void VulkanReplayConsumer::Process_vkCmdSetFragmentShadingRateEnumNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -11691,7 +12140,10 @@ void VulkanReplayConsumer::Process_vkCmdSetVertexInputEXT(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkVertexInputBindingDescription2EXT* /*@@@AZI*/in_pVertexBindingDescriptions = /*@@@HUY*/pVertexBindingDescriptions->GetPointer();
     /*@@@HPA*/const VkVertexInputAttributeDescription2EXT* /*@@@AZI*/in_pVertexAttributeDescriptions = /*@@@HUY*/pVertexAttributeDescriptions->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetVertexInputEXT(in_commandBuffer, vertexBindingDescriptionCount, /*@@@AZI*/in_pVertexBindingDescriptions, vertexAttributeDescriptionCount, /*@@@AZI*/in_pVertexAttributeDescriptions)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetVertexInputEXT(in_commandBuffer, vertexBindingDescriptionCount, /*@@@AZI*/in_pVertexBindingDescriptions, vertexAttributeDescriptionCount, /*@@@AZI*/in_pVertexAttributeDescriptions)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11701,7 +12153,7 @@ void VulkanReplayConsumer::Process_vkCmdSetVertexInputEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11713,9 +12165,9 @@ void VulkanReplayConsumer::Process_vkCmdSetVertexInputEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -11785,7 +12237,10 @@ void VulkanReplayConsumer::Process_vkCmdBindInvocationMaskHUAWEI(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkImageView in_imageView = /*@@@QKJ*/MapHandle<ImageViewInfo>(imageView, &VulkanObjectInfoTable::GetImageViewInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBindInvocationMaskHUAWEI(in_commandBuffer, in_imageView, imageLayout)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBindInvocationMaskHUAWEI(in_commandBuffer, in_imageView, imageLayout)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11795,7 +12250,7 @@ void VulkanReplayConsumer::Process_vkCmdBindInvocationMaskHUAWEI(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11807,9 +12262,9 @@ void VulkanReplayConsumer::Process_vkCmdBindInvocationMaskHUAWEI(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBindInvocationMaskHUAWEIHandles(in_commandBuffer, in_imageView);
 
@@ -11838,7 +12293,10 @@ void VulkanReplayConsumer::Process_vkCmdSetPatchControlPointsEXT(
     uint32_t                                    patchControlPoints)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetPatchControlPointsEXT(in_commandBuffer, patchControlPoints)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetPatchControlPointsEXT(in_commandBuffer, patchControlPoints)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11848,7 +12306,7 @@ void VulkanReplayConsumer::Process_vkCmdSetPatchControlPointsEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11860,9 +12318,9 @@ void VulkanReplayConsumer::Process_vkCmdSetPatchControlPointsEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -11872,7 +12330,10 @@ void VulkanReplayConsumer::Process_vkCmdSetRasterizerDiscardEnableEXT(
     VkBool32                                    rasterizerDiscardEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetRasterizerDiscardEnableEXT(in_commandBuffer, rasterizerDiscardEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetRasterizerDiscardEnableEXT(in_commandBuffer, rasterizerDiscardEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11882,7 +12343,7 @@ void VulkanReplayConsumer::Process_vkCmdSetRasterizerDiscardEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11894,9 +12355,9 @@ void VulkanReplayConsumer::Process_vkCmdSetRasterizerDiscardEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -11906,7 +12367,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBiasEnableEXT(
     VkBool32                                    depthBiasEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthBiasEnableEXT(in_commandBuffer, depthBiasEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthBiasEnableEXT(in_commandBuffer, depthBiasEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11916,7 +12380,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBiasEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11928,9 +12392,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthBiasEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -11940,7 +12404,10 @@ void VulkanReplayConsumer::Process_vkCmdSetLogicOpEXT(
     VkLogicOp                                   logicOp)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetLogicOpEXT(in_commandBuffer, logicOp)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetLogicOpEXT(in_commandBuffer, logicOp)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11950,7 +12417,7 @@ void VulkanReplayConsumer::Process_vkCmdSetLogicOpEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11962,9 +12429,9 @@ void VulkanReplayConsumer::Process_vkCmdSetLogicOpEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -11974,7 +12441,10 @@ void VulkanReplayConsumer::Process_vkCmdSetPrimitiveRestartEnableEXT(
     VkBool32                                    primitiveRestartEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetPrimitiveRestartEnableEXT(in_commandBuffer, primitiveRestartEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetPrimitiveRestartEnableEXT(in_commandBuffer, primitiveRestartEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -11984,7 +12454,7 @@ void VulkanReplayConsumer::Process_vkCmdSetPrimitiveRestartEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -11996,9 +12466,9 @@ void VulkanReplayConsumer::Process_vkCmdSetPrimitiveRestartEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -12040,7 +12510,10 @@ void VulkanReplayConsumer::Process_vkCmdSetColorWriteEnableEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkBool32* /*@@@AZI*/in_pColorWriteEnables = /*@@@HUY*/pColorWriteEnables->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetColorWriteEnableEXT(in_commandBuffer, attachmentCount, /*@@@AZI*/in_pColorWriteEnables)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetColorWriteEnableEXT(in_commandBuffer, attachmentCount, /*@@@AZI*/in_pColorWriteEnables)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12050,7 +12523,7 @@ void VulkanReplayConsumer::Process_vkCmdSetColorWriteEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12062,9 +12535,9 @@ void VulkanReplayConsumer::Process_vkCmdSetColorWriteEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -12079,7 +12552,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawMultiEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkMultiDrawInfoEXT* /*@@@AZI*/in_pVertexInfo = /*@@@HUY*/pVertexInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawMultiEXT(in_commandBuffer, drawCount, /*@@@AZI*/in_pVertexInfo, instanceCount, firstInstance, stride)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawMultiEXT(in_commandBuffer, drawCount, /*@@@AZI*/in_pVertexInfo, instanceCount, firstInstance, stride)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12089,7 +12565,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawMultiEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12101,9 +12577,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawMultiEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -12120,7 +12596,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawMultiIndexedEXT(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkMultiDrawIndexedInfoEXT* /*@@@AZI*/in_pIndexInfo = /*@@@HUY*/pIndexInfo->GetPointer();
     /*@@@HPA*/const int32_t* /*@@@AZI*/in_pVertexOffset = /*@@@HUY*/pVertexOffset->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawMultiIndexedEXT(in_commandBuffer, drawCount, /*@@@AZI*/in_pIndexInfo, instanceCount, firstInstance, stride, /*@@@AZI*/in_pVertexOffset)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawMultiIndexedEXT(in_commandBuffer, drawCount, /*@@@AZI*/in_pIndexInfo, instanceCount, firstInstance, stride, /*@@@AZI*/in_pVertexOffset)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12130,7 +12609,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawMultiIndexedEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12142,9 +12621,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawMultiIndexedEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -12189,7 +12668,10 @@ void VulkanReplayConsumer::Process_vkCmdBuildMicromapsEXT(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkMicromapBuildInfoEXT* /*@@@AZI*/in_pInfos = /*@@@HUY*/pInfos->GetPointer();
     /*@@@HWC*/MapStructArrayHandles(pInfos->GetMetaStructPointer(), pInfos->GetLength(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBuildMicromapsEXT(in_commandBuffer, infoCount, /*@@@AZI*/in_pInfos)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBuildMicromapsEXT(in_commandBuffer, infoCount, /*@@@AZI*/in_pInfos)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12199,7 +12681,7 @@ void VulkanReplayConsumer::Process_vkCmdBuildMicromapsEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12211,9 +12693,9 @@ void VulkanReplayConsumer::Process_vkCmdBuildMicromapsEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBuildMicromapsEXTHandles(in_commandBuffer, infoCount, in_pInfos);
 
@@ -12307,7 +12789,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyMicromapEXT(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCopyMicromapInfoEXT* /*@@@AZI*/in_pInfo = /*@@@HUY*/pInfo->GetPointer();
     MapStructHandles(pInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyMicromapEXT(in_commandBuffer, /*@@@AZI*/in_pInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyMicromapEXT(in_commandBuffer, /*@@@AZI*/in_pInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12317,7 +12802,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyMicromapEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12329,9 +12814,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyMicromapEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyMicromapEXTHandles(in_commandBuffer, in_pInfo);
 
@@ -12346,7 +12831,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyMicromapToMemoryEXT(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCopyMicromapToMemoryInfoEXT* /*@@@AZI*/in_pInfo = /*@@@HUY*/pInfo->GetPointer();
     MapStructHandles(pInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyMicromapToMemoryEXT(in_commandBuffer, /*@@@AZI*/in_pInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyMicromapToMemoryEXT(in_commandBuffer, /*@@@AZI*/in_pInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12356,7 +12844,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyMicromapToMemoryEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12368,9 +12856,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyMicromapToMemoryEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyMicromapToMemoryEXTHandles(in_commandBuffer, in_pInfo);
 
@@ -12385,7 +12873,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyMemoryToMicromapEXT(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCopyMemoryToMicromapInfoEXT* /*@@@AZI*/in_pInfo = /*@@@HUY*/pInfo->GetPointer();
     MapStructHandles(pInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyMemoryToMicromapEXT(in_commandBuffer, /*@@@AZI*/in_pInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyMemoryToMicromapEXT(in_commandBuffer, /*@@@AZI*/in_pInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12395,7 +12886,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyMemoryToMicromapEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12407,9 +12898,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyMemoryToMicromapEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyMemoryToMicromapEXTHandles(in_commandBuffer, in_pInfo);
 
@@ -12428,7 +12919,10 @@ void VulkanReplayConsumer::Process_vkCmdWriteMicromapsPropertiesEXT(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkMicromapEXT* /*@@@AZI*/in_pMicromaps = /*@@@EDO*/MapHandles<MicromapEXTInfo>(pMicromaps, micromapCount, &VulkanObjectInfoTable::GetMicromapEXTInfo);
     VkQueryPool in_queryPool = /*@@@QKJ*/MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdWriteMicromapsPropertiesEXT(in_commandBuffer, micromapCount, /*@@@AZI*/in_pMicromaps, queryType, in_queryPool, firstQuery)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdWriteMicromapsPropertiesEXT(in_commandBuffer, micromapCount, /*@@@AZI*/in_pMicromaps, queryType, in_queryPool, firstQuery)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12438,7 +12932,7 @@ void VulkanReplayConsumer::Process_vkCmdWriteMicromapsPropertiesEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12450,9 +12944,9 @@ void VulkanReplayConsumer::Process_vkCmdWriteMicromapsPropertiesEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdWriteMicromapsPropertiesEXTHandles(in_commandBuffer, micromapCount, in_pMicromaps, in_queryPool);
 
@@ -12494,7 +12988,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawClusterHUAWEI(
     uint32_t                                    groupCountZ)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawClusterHUAWEI(in_commandBuffer, groupCountX, groupCountY, groupCountZ)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawClusterHUAWEI(in_commandBuffer, groupCountX, groupCountY, groupCountZ)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12504,7 +13001,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawClusterHUAWEI(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12516,9 +13013,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawClusterHUAWEI(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -12530,7 +13027,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawClusterIndirectHUAWEI(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawClusterIndirectHUAWEI(in_commandBuffer, in_buffer, offset)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawClusterIndirectHUAWEI(in_commandBuffer, in_buffer, offset)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12540,7 +13040,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawClusterIndirectHUAWEI(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12552,9 +13052,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawClusterIndirectHUAWEI(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDrawClusterIndirectHUAWEIHandles(in_commandBuffer, in_buffer);
 
@@ -12621,7 +13121,10 @@ void VulkanReplayConsumer::Process_vkCmdUpdatePipelineIndirectBufferNV(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkPipeline in_pipeline = /*@@@QKJ*/MapHandle<PipelineInfo>(pipeline, &VulkanObjectInfoTable::GetPipelineInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdUpdatePipelineIndirectBufferNV(in_commandBuffer, pipelineBindPoint, in_pipeline)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdUpdatePipelineIndirectBufferNV(in_commandBuffer, pipelineBindPoint, in_pipeline)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12631,7 +13134,7 @@ void VulkanReplayConsumer::Process_vkCmdUpdatePipelineIndirectBufferNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12643,9 +13146,9 @@ void VulkanReplayConsumer::Process_vkCmdUpdatePipelineIndirectBufferNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdUpdatePipelineIndirectBufferNVHandles(in_commandBuffer, in_pipeline);
 
@@ -12670,7 +13173,10 @@ void VulkanReplayConsumer::Process_vkCmdSetTessellationDomainOriginEXT(
     VkTessellationDomainOrigin                  domainOrigin)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetTessellationDomainOriginEXT(in_commandBuffer, domainOrigin)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetTessellationDomainOriginEXT(in_commandBuffer, domainOrigin)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12680,7 +13186,7 @@ void VulkanReplayConsumer::Process_vkCmdSetTessellationDomainOriginEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12692,9 +13198,9 @@ void VulkanReplayConsumer::Process_vkCmdSetTessellationDomainOriginEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -12704,7 +13210,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthClampEnableEXT(
     VkBool32                                    depthClampEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthClampEnableEXT(in_commandBuffer, depthClampEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthClampEnableEXT(in_commandBuffer, depthClampEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12714,7 +13223,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthClampEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12726,9 +13235,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthClampEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -12738,7 +13247,10 @@ void VulkanReplayConsumer::Process_vkCmdSetPolygonModeEXT(
     VkPolygonMode                               polygonMode)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetPolygonModeEXT(in_commandBuffer, polygonMode)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetPolygonModeEXT(in_commandBuffer, polygonMode)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12748,7 +13260,7 @@ void VulkanReplayConsumer::Process_vkCmdSetPolygonModeEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12760,9 +13272,9 @@ void VulkanReplayConsumer::Process_vkCmdSetPolygonModeEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -12772,7 +13284,10 @@ void VulkanReplayConsumer::Process_vkCmdSetRasterizationSamplesEXT(
     VkSampleCountFlagBits                       rasterizationSamples)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetRasterizationSamplesEXT(in_commandBuffer, rasterizationSamples)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetRasterizationSamplesEXT(in_commandBuffer, rasterizationSamples)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12782,7 +13297,7 @@ void VulkanReplayConsumer::Process_vkCmdSetRasterizationSamplesEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12794,9 +13309,9 @@ void VulkanReplayConsumer::Process_vkCmdSetRasterizationSamplesEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -12808,7 +13323,10 @@ void VulkanReplayConsumer::Process_vkCmdSetSampleMaskEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkSampleMask* /*@@@AZI*/in_pSampleMask = /*@@@HUY*/pSampleMask->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetSampleMaskEXT(in_commandBuffer, samples, /*@@@AZI*/in_pSampleMask)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetSampleMaskEXT(in_commandBuffer, samples, /*@@@AZI*/in_pSampleMask)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12818,7 +13336,7 @@ void VulkanReplayConsumer::Process_vkCmdSetSampleMaskEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12830,9 +13348,9 @@ void VulkanReplayConsumer::Process_vkCmdSetSampleMaskEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -12842,7 +13360,10 @@ void VulkanReplayConsumer::Process_vkCmdSetAlphaToCoverageEnableEXT(
     VkBool32                                    alphaToCoverageEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetAlphaToCoverageEnableEXT(in_commandBuffer, alphaToCoverageEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetAlphaToCoverageEnableEXT(in_commandBuffer, alphaToCoverageEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12852,7 +13373,7 @@ void VulkanReplayConsumer::Process_vkCmdSetAlphaToCoverageEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12864,9 +13385,9 @@ void VulkanReplayConsumer::Process_vkCmdSetAlphaToCoverageEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -12876,7 +13397,10 @@ void VulkanReplayConsumer::Process_vkCmdSetAlphaToOneEnableEXT(
     VkBool32                                    alphaToOneEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetAlphaToOneEnableEXT(in_commandBuffer, alphaToOneEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetAlphaToOneEnableEXT(in_commandBuffer, alphaToOneEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12886,7 +13410,7 @@ void VulkanReplayConsumer::Process_vkCmdSetAlphaToOneEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12898,9 +13422,9 @@ void VulkanReplayConsumer::Process_vkCmdSetAlphaToOneEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -12910,7 +13434,10 @@ void VulkanReplayConsumer::Process_vkCmdSetLogicOpEnableEXT(
     VkBool32                                    logicOpEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetLogicOpEnableEXT(in_commandBuffer, logicOpEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetLogicOpEnableEXT(in_commandBuffer, logicOpEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12920,7 +13447,7 @@ void VulkanReplayConsumer::Process_vkCmdSetLogicOpEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12932,9 +13459,9 @@ void VulkanReplayConsumer::Process_vkCmdSetLogicOpEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -12947,7 +13474,10 @@ void VulkanReplayConsumer::Process_vkCmdSetColorBlendEnableEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkBool32* /*@@@AZI*/in_pColorBlendEnables = /*@@@HUY*/pColorBlendEnables->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetColorBlendEnableEXT(in_commandBuffer, firstAttachment, attachmentCount, /*@@@AZI*/in_pColorBlendEnables)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetColorBlendEnableEXT(in_commandBuffer, firstAttachment, attachmentCount, /*@@@AZI*/in_pColorBlendEnables)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12957,7 +13487,7 @@ void VulkanReplayConsumer::Process_vkCmdSetColorBlendEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -12969,9 +13499,9 @@ void VulkanReplayConsumer::Process_vkCmdSetColorBlendEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -12984,7 +13514,10 @@ void VulkanReplayConsumer::Process_vkCmdSetColorBlendEquationEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkColorBlendEquationEXT* /*@@@AZI*/in_pColorBlendEquations = /*@@@HUY*/pColorBlendEquations->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetColorBlendEquationEXT(in_commandBuffer, firstAttachment, attachmentCount, /*@@@AZI*/in_pColorBlendEquations)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetColorBlendEquationEXT(in_commandBuffer, firstAttachment, attachmentCount, /*@@@AZI*/in_pColorBlendEquations)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -12994,7 +13527,7 @@ void VulkanReplayConsumer::Process_vkCmdSetColorBlendEquationEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13006,9 +13539,9 @@ void VulkanReplayConsumer::Process_vkCmdSetColorBlendEquationEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13021,7 +13554,10 @@ void VulkanReplayConsumer::Process_vkCmdSetColorWriteMaskEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkColorComponentFlags* /*@@@AZI*/in_pColorWriteMasks = /*@@@HUY*/pColorWriteMasks->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetColorWriteMaskEXT(in_commandBuffer, firstAttachment, attachmentCount, /*@@@AZI*/in_pColorWriteMasks)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetColorWriteMaskEXT(in_commandBuffer, firstAttachment, attachmentCount, /*@@@AZI*/in_pColorWriteMasks)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13031,7 +13567,7 @@ void VulkanReplayConsumer::Process_vkCmdSetColorWriteMaskEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13043,9 +13579,9 @@ void VulkanReplayConsumer::Process_vkCmdSetColorWriteMaskEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13055,7 +13591,10 @@ void VulkanReplayConsumer::Process_vkCmdSetRasterizationStreamEXT(
     uint32_t                                    rasterizationStream)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetRasterizationStreamEXT(in_commandBuffer, rasterizationStream)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetRasterizationStreamEXT(in_commandBuffer, rasterizationStream)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13065,7 +13604,7 @@ void VulkanReplayConsumer::Process_vkCmdSetRasterizationStreamEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13077,9 +13616,9 @@ void VulkanReplayConsumer::Process_vkCmdSetRasterizationStreamEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13089,7 +13628,10 @@ void VulkanReplayConsumer::Process_vkCmdSetConservativeRasterizationModeEXT(
     VkConservativeRasterizationModeEXT          conservativeRasterizationMode)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetConservativeRasterizationModeEXT(in_commandBuffer, conservativeRasterizationMode)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetConservativeRasterizationModeEXT(in_commandBuffer, conservativeRasterizationMode)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13099,7 +13641,7 @@ void VulkanReplayConsumer::Process_vkCmdSetConservativeRasterizationModeEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13111,9 +13653,9 @@ void VulkanReplayConsumer::Process_vkCmdSetConservativeRasterizationModeEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13123,7 +13665,10 @@ void VulkanReplayConsumer::Process_vkCmdSetExtraPrimitiveOverestimationSizeEXT(
     float                                       extraPrimitiveOverestimationSize)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetExtraPrimitiveOverestimationSizeEXT(in_commandBuffer, extraPrimitiveOverestimationSize)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetExtraPrimitiveOverestimationSizeEXT(in_commandBuffer, extraPrimitiveOverestimationSize)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13133,7 +13678,7 @@ void VulkanReplayConsumer::Process_vkCmdSetExtraPrimitiveOverestimationSizeEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13145,9 +13690,9 @@ void VulkanReplayConsumer::Process_vkCmdSetExtraPrimitiveOverestimationSizeEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13157,7 +13702,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthClipEnableEXT(
     VkBool32                                    depthClipEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthClipEnableEXT(in_commandBuffer, depthClipEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthClipEnableEXT(in_commandBuffer, depthClipEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13167,7 +13715,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthClipEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13179,9 +13727,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthClipEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13191,7 +13739,10 @@ void VulkanReplayConsumer::Process_vkCmdSetSampleLocationsEnableEXT(
     VkBool32                                    sampleLocationsEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetSampleLocationsEnableEXT(in_commandBuffer, sampleLocationsEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetSampleLocationsEnableEXT(in_commandBuffer, sampleLocationsEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13201,7 +13752,7 @@ void VulkanReplayConsumer::Process_vkCmdSetSampleLocationsEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13213,9 +13764,9 @@ void VulkanReplayConsumer::Process_vkCmdSetSampleLocationsEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13228,7 +13779,10 @@ void VulkanReplayConsumer::Process_vkCmdSetColorBlendAdvancedEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkColorBlendAdvancedEXT* /*@@@AZI*/in_pColorBlendAdvanced = /*@@@HUY*/pColorBlendAdvanced->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetColorBlendAdvancedEXT(in_commandBuffer, firstAttachment, attachmentCount, /*@@@AZI*/in_pColorBlendAdvanced)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetColorBlendAdvancedEXT(in_commandBuffer, firstAttachment, attachmentCount, /*@@@AZI*/in_pColorBlendAdvanced)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13238,7 +13792,7 @@ void VulkanReplayConsumer::Process_vkCmdSetColorBlendAdvancedEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13250,9 +13804,9 @@ void VulkanReplayConsumer::Process_vkCmdSetColorBlendAdvancedEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13262,7 +13816,10 @@ void VulkanReplayConsumer::Process_vkCmdSetProvokingVertexModeEXT(
     VkProvokingVertexModeEXT                    provokingVertexMode)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetProvokingVertexModeEXT(in_commandBuffer, provokingVertexMode)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetProvokingVertexModeEXT(in_commandBuffer, provokingVertexMode)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13272,7 +13829,7 @@ void VulkanReplayConsumer::Process_vkCmdSetProvokingVertexModeEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13284,9 +13841,9 @@ void VulkanReplayConsumer::Process_vkCmdSetProvokingVertexModeEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13296,7 +13853,10 @@ void VulkanReplayConsumer::Process_vkCmdSetLineRasterizationModeEXT(
     VkLineRasterizationModeEXT                  lineRasterizationMode)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetLineRasterizationModeEXT(in_commandBuffer, lineRasterizationMode)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetLineRasterizationModeEXT(in_commandBuffer, lineRasterizationMode)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13306,7 +13866,7 @@ void VulkanReplayConsumer::Process_vkCmdSetLineRasterizationModeEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13318,9 +13878,9 @@ void VulkanReplayConsumer::Process_vkCmdSetLineRasterizationModeEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13330,7 +13890,10 @@ void VulkanReplayConsumer::Process_vkCmdSetLineStippleEnableEXT(
     VkBool32                                    stippledLineEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetLineStippleEnableEXT(in_commandBuffer, stippledLineEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetLineStippleEnableEXT(in_commandBuffer, stippledLineEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13340,7 +13903,7 @@ void VulkanReplayConsumer::Process_vkCmdSetLineStippleEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13352,9 +13915,9 @@ void VulkanReplayConsumer::Process_vkCmdSetLineStippleEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13364,7 +13927,10 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthClipNegativeOneToOneEXT(
     VkBool32                                    negativeOneToOne)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetDepthClipNegativeOneToOneEXT(in_commandBuffer, negativeOneToOne)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetDepthClipNegativeOneToOneEXT(in_commandBuffer, negativeOneToOne)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13374,7 +13940,7 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthClipNegativeOneToOneEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13386,9 +13952,9 @@ void VulkanReplayConsumer::Process_vkCmdSetDepthClipNegativeOneToOneEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13398,7 +13964,10 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportWScalingEnableNV(
     VkBool32                                    viewportWScalingEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetViewportWScalingEnableNV(in_commandBuffer, viewportWScalingEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetViewportWScalingEnableNV(in_commandBuffer, viewportWScalingEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13408,7 +13977,7 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportWScalingEnableNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13420,9 +13989,9 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportWScalingEnableNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13435,7 +14004,10 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportSwizzleNV(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkViewportSwizzleNV* /*@@@AZI*/in_pViewportSwizzles = /*@@@HUY*/pViewportSwizzles->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetViewportSwizzleNV(in_commandBuffer, firstViewport, viewportCount, /*@@@AZI*/in_pViewportSwizzles)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetViewportSwizzleNV(in_commandBuffer, firstViewport, viewportCount, /*@@@AZI*/in_pViewportSwizzles)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13445,7 +14017,7 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportSwizzleNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13457,9 +14029,9 @@ void VulkanReplayConsumer::Process_vkCmdSetViewportSwizzleNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13469,7 +14041,10 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageToColorEnableNV(
     VkBool32                                    coverageToColorEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetCoverageToColorEnableNV(in_commandBuffer, coverageToColorEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetCoverageToColorEnableNV(in_commandBuffer, coverageToColorEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13479,7 +14054,7 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageToColorEnableNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13491,9 +14066,9 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageToColorEnableNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13503,7 +14078,10 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageToColorLocationNV(
     uint32_t                                    coverageToColorLocation)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetCoverageToColorLocationNV(in_commandBuffer, coverageToColorLocation)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetCoverageToColorLocationNV(in_commandBuffer, coverageToColorLocation)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13513,7 +14091,7 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageToColorLocationNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13525,9 +14103,9 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageToColorLocationNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13537,7 +14115,10 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageModulationModeNV(
     VkCoverageModulationModeNV                  coverageModulationMode)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetCoverageModulationModeNV(in_commandBuffer, coverageModulationMode)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetCoverageModulationModeNV(in_commandBuffer, coverageModulationMode)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13547,7 +14128,7 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageModulationModeNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13559,9 +14140,9 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageModulationModeNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13571,7 +14152,10 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageModulationTableEnableNV(
     VkBool32                                    coverageModulationTableEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetCoverageModulationTableEnableNV(in_commandBuffer, coverageModulationTableEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetCoverageModulationTableEnableNV(in_commandBuffer, coverageModulationTableEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13581,7 +14165,7 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageModulationTableEnableNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13593,9 +14177,9 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageModulationTableEnableNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13607,7 +14191,10 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageModulationTableNV(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const float* /*@@@AZI*/in_pCoverageModulationTable = /*@@@HUY*/pCoverageModulationTable->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetCoverageModulationTableNV(in_commandBuffer, coverageModulationTableCount, /*@@@AZI*/in_pCoverageModulationTable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetCoverageModulationTableNV(in_commandBuffer, coverageModulationTableCount, /*@@@AZI*/in_pCoverageModulationTable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13617,7 +14204,7 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageModulationTableNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13629,9 +14216,9 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageModulationTableNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13641,7 +14228,10 @@ void VulkanReplayConsumer::Process_vkCmdSetShadingRateImageEnableNV(
     VkBool32                                    shadingRateImageEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetShadingRateImageEnableNV(in_commandBuffer, shadingRateImageEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetShadingRateImageEnableNV(in_commandBuffer, shadingRateImageEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13651,7 +14241,7 @@ void VulkanReplayConsumer::Process_vkCmdSetShadingRateImageEnableNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13663,9 +14253,9 @@ void VulkanReplayConsumer::Process_vkCmdSetShadingRateImageEnableNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13675,7 +14265,10 @@ void VulkanReplayConsumer::Process_vkCmdSetRepresentativeFragmentTestEnableNV(
     VkBool32                                    representativeFragmentTestEnable)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetRepresentativeFragmentTestEnableNV(in_commandBuffer, representativeFragmentTestEnable)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetRepresentativeFragmentTestEnableNV(in_commandBuffer, representativeFragmentTestEnable)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13685,7 +14278,7 @@ void VulkanReplayConsumer::Process_vkCmdSetRepresentativeFragmentTestEnableNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13697,9 +14290,9 @@ void VulkanReplayConsumer::Process_vkCmdSetRepresentativeFragmentTestEnableNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13709,7 +14302,10 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageReductionModeNV(
     VkCoverageReductionModeNV                   coverageReductionMode)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetCoverageReductionModeNV(in_commandBuffer, coverageReductionMode)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetCoverageReductionModeNV(in_commandBuffer, coverageReductionMode)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13719,7 +14315,7 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageReductionModeNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13731,9 +14327,9 @@ void VulkanReplayConsumer::Process_vkCmdSetCoverageReductionModeNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -13837,7 +14433,10 @@ void VulkanReplayConsumer::Process_vkCmdOpticalFlowExecuteNV(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkOpticalFlowSessionNV in_session = /*@@@QKJ*/MapHandle<OpticalFlowSessionNVInfo>(session, &VulkanObjectInfoTable::GetOpticalFlowSessionNVInfo);
     /*@@@HPA*/const VkOpticalFlowExecuteInfoNV* /*@@@AZI*/in_pExecuteInfo = /*@@@HUY*/pExecuteInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdOpticalFlowExecuteNV(in_commandBuffer, in_session, /*@@@AZI*/in_pExecuteInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdOpticalFlowExecuteNV(in_commandBuffer, in_session, /*@@@AZI*/in_pExecuteInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13847,7 +14446,7 @@ void VulkanReplayConsumer::Process_vkCmdOpticalFlowExecuteNV(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13859,9 +14458,9 @@ void VulkanReplayConsumer::Process_vkCmdOpticalFlowExecuteNV(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdOpticalFlowExecuteNVHandles(in_commandBuffer, in_session);
 
@@ -13928,7 +14527,10 @@ void VulkanReplayConsumer::Process_vkCmdBindShadersEXT(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkShaderStageFlagBits* /*@@@AZI*/in_pStages = /*@@@HUY*/pStages->GetPointer();
     /*@@@HPA*/const VkShaderEXT* /*@@@AZI*/in_pShaders = /*@@@EDO*/MapHandles<ShaderEXTInfo>(pShaders, stageCount, &VulkanObjectInfoTable::GetShaderEXTInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBindShadersEXT(in_commandBuffer, stageCount, /*@@@AZI*/in_pStages, /*@@@AZI*/in_pShaders)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBindShadersEXT(in_commandBuffer, stageCount, /*@@@AZI*/in_pStages, /*@@@AZI*/in_pShaders)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -13938,7 +14540,7 @@ void VulkanReplayConsumer::Process_vkCmdBindShadersEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -13950,9 +14552,9 @@ void VulkanReplayConsumer::Process_vkCmdBindShadersEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBindShadersEXTHandles(in_commandBuffer, stageCount, in_pShaders);
 
@@ -13998,7 +14600,10 @@ void VulkanReplayConsumer::Process_vkCmdSetAttachmentFeedbackLoopEnableEXT(
     VkImageAspectFlags                          aspectMask)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetAttachmentFeedbackLoopEnableEXT(in_commandBuffer, aspectMask)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetAttachmentFeedbackLoopEnableEXT(in_commandBuffer, aspectMask)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -14008,7 +14613,7 @@ void VulkanReplayConsumer::Process_vkCmdSetAttachmentFeedbackLoopEnableEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -14020,9 +14625,9 @@ void VulkanReplayConsumer::Process_vkCmdSetAttachmentFeedbackLoopEnableEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -14069,7 +14674,10 @@ void VulkanReplayConsumer::Process_vkCmdBuildAccelerationStructuresKHR(
     /*@@@HPA*/const VkAccelerationStructureBuildGeometryInfoKHR* /*@@@AZI*/in_pInfos = /*@@@HUY*/pInfos->GetPointer();
     /*@@@HWC*/MapStructArrayHandles(pInfos->GetMetaStructPointer(), pInfos->GetLength(), GetObjectInfoTable());
     /*@@@HPA*/const VkAccelerationStructureBuildRangeInfoKHR* const* /*@@@AZI*/in_ppBuildRangeInfos = /*@@@HUY*/ppBuildRangeInfos->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBuildAccelerationStructuresKHR(in_commandBuffer, infoCount, /*@@@AZI*/in_pInfos, /*@@@AZI*/in_ppBuildRangeInfos)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBuildAccelerationStructuresKHR(in_commandBuffer, infoCount, /*@@@AZI*/in_pInfos, /*@@@AZI*/in_ppBuildRangeInfos)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -14079,7 +14687,7 @@ void VulkanReplayConsumer::Process_vkCmdBuildAccelerationStructuresKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -14091,9 +14699,9 @@ void VulkanReplayConsumer::Process_vkCmdBuildAccelerationStructuresKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBuildAccelerationStructuresKHRHandles(in_commandBuffer, infoCount, in_pInfos);
 
@@ -14115,7 +14723,10 @@ void VulkanReplayConsumer::Process_vkCmdBuildAccelerationStructuresIndirectKHR(
     /*@@@HPA*/const VkDeviceAddress* /*@@@AZI*/in_pIndirectDeviceAddresses = /*@@@HUY*/pIndirectDeviceAddresses->GetPointer();
     /*@@@HPA*/const uint32_t* /*@@@AZI*/in_pIndirectStrides = /*@@@HUY*/pIndirectStrides->GetPointer();
     /*@@@HPA*/const uint32_t* const* /*@@@AZI*/in_ppMaxPrimitiveCounts = /*@@@HUY*/ppMaxPrimitiveCounts->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBuildAccelerationStructuresIndirectKHR(in_commandBuffer, infoCount, /*@@@AZI*/in_pInfos, /*@@@AZI*/in_pIndirectDeviceAddresses, /*@@@AZI*/in_pIndirectStrides, /*@@@AZI*/in_ppMaxPrimitiveCounts)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdBuildAccelerationStructuresIndirectKHR(in_commandBuffer, infoCount, /*@@@AZI*/in_pInfos, /*@@@AZI*/in_pIndirectDeviceAddresses, /*@@@AZI*/in_pIndirectStrides, /*@@@AZI*/in_ppMaxPrimitiveCounts)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -14125,7 +14736,7 @@ void VulkanReplayConsumer::Process_vkCmdBuildAccelerationStructuresIndirectKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -14137,9 +14748,9 @@ void VulkanReplayConsumer::Process_vkCmdBuildAccelerationStructuresIndirectKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdBuildAccelerationStructuresIndirectKHRHandles(in_commandBuffer, infoCount, in_pInfos);
 
@@ -14202,7 +14813,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyAccelerationStructureKHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCopyAccelerationStructureInfoKHR* /*@@@AZI*/in_pInfo = /*@@@HUY*/pInfo->GetPointer();
     MapStructHandles(pInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyAccelerationStructureKHR(in_commandBuffer, /*@@@AZI*/in_pInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyAccelerationStructureKHR(in_commandBuffer, /*@@@AZI*/in_pInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -14212,7 +14826,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyAccelerationStructureKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -14224,9 +14838,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyAccelerationStructureKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyAccelerationStructureKHRHandles(in_commandBuffer, in_pInfo);
 
@@ -14241,7 +14855,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyAccelerationStructureToMemoryKHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCopyAccelerationStructureToMemoryInfoKHR* /*@@@AZI*/in_pInfo = /*@@@HUY*/pInfo->GetPointer();
     MapStructHandles(pInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyAccelerationStructureToMemoryKHR(in_commandBuffer, /*@@@AZI*/in_pInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyAccelerationStructureToMemoryKHR(in_commandBuffer, /*@@@AZI*/in_pInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -14251,7 +14868,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyAccelerationStructureToMemoryKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -14263,9 +14880,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyAccelerationStructureToMemoryKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyAccelerationStructureToMemoryKHRHandles(in_commandBuffer, in_pInfo);
 
@@ -14280,7 +14897,10 @@ void VulkanReplayConsumer::Process_vkCmdCopyMemoryToAccelerationStructureKHR(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkCopyMemoryToAccelerationStructureInfoKHR* /*@@@AZI*/in_pInfo = /*@@@HUY*/pInfo->GetPointer();
     MapStructHandles(pInfo->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdCopyMemoryToAccelerationStructureKHR(in_commandBuffer, /*@@@AZI*/in_pInfo)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdCopyMemoryToAccelerationStructureKHR(in_commandBuffer, /*@@@AZI*/in_pInfo)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -14290,7 +14910,7 @@ void VulkanReplayConsumer::Process_vkCmdCopyMemoryToAccelerationStructureKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -14302,9 +14922,9 @@ void VulkanReplayConsumer::Process_vkCmdCopyMemoryToAccelerationStructureKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdCopyMemoryToAccelerationStructureKHRHandles(in_commandBuffer, in_pInfo);
 
@@ -14335,7 +14955,10 @@ void VulkanReplayConsumer::Process_vkCmdWriteAccelerationStructuresPropertiesKHR
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     /*@@@HPA*/const VkAccelerationStructureKHR* /*@@@AZI*/in_pAccelerationStructures = /*@@@EDO*/MapHandles<AccelerationStructureKHRInfo>(pAccelerationStructures, accelerationStructureCount, &VulkanObjectInfoTable::GetAccelerationStructureKHRInfo);
     VkQueryPool in_queryPool = /*@@@QKJ*/MapHandle<QueryPoolInfo>(queryPool, &VulkanObjectInfoTable::GetQueryPoolInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdWriteAccelerationStructuresPropertiesKHR(in_commandBuffer, accelerationStructureCount, /*@@@AZI*/in_pAccelerationStructures, queryType, in_queryPool, firstQuery)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdWriteAccelerationStructuresPropertiesKHR(in_commandBuffer, accelerationStructureCount, /*@@@AZI*/in_pAccelerationStructures, queryType, in_queryPool, firstQuery)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -14345,7 +14968,7 @@ void VulkanReplayConsumer::Process_vkCmdWriteAccelerationStructuresPropertiesKHR
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -14357,9 +14980,9 @@ void VulkanReplayConsumer::Process_vkCmdWriteAccelerationStructuresPropertiesKHR
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdWriteAccelerationStructuresPropertiesKHRHandles(in_commandBuffer, accelerationStructureCount, in_pAccelerationStructures, in_queryPool);
 
@@ -14411,7 +15034,10 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysKHR(
     /*@@@HPA*/const VkStridedDeviceAddressRegionKHR* /*@@@AZI*/in_pMissShaderBindingTable = /*@@@HUY*/pMissShaderBindingTable->GetPointer();
     /*@@@HPA*/const VkStridedDeviceAddressRegionKHR* /*@@@AZI*/in_pHitShaderBindingTable = /*@@@HUY*/pHitShaderBindingTable->GetPointer();
     /*@@@HPA*/const VkStridedDeviceAddressRegionKHR* /*@@@AZI*/in_pCallableShaderBindingTable = /*@@@HUY*/pCallableShaderBindingTable->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdTraceRaysKHR(in_commandBuffer, /*@@@AZI*/in_pRaygenShaderBindingTable, /*@@@AZI*/in_pMissShaderBindingTable, /*@@@AZI*/in_pHitShaderBindingTable, /*@@@AZI*/in_pCallableShaderBindingTable, width, height, depth)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdTraceRaysKHR(in_commandBuffer, /*@@@AZI*/in_pRaygenShaderBindingTable, /*@@@AZI*/in_pMissShaderBindingTable, /*@@@AZI*/in_pHitShaderBindingTable, /*@@@AZI*/in_pCallableShaderBindingTable, width, height, depth)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -14421,7 +15047,7 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -14433,9 +15059,9 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -14494,7 +15120,10 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysIndirectKHR(
     /*@@@HPA*/const VkStridedDeviceAddressRegionKHR* /*@@@AZI*/in_pMissShaderBindingTable = /*@@@HUY*/pMissShaderBindingTable->GetPointer();
     /*@@@HPA*/const VkStridedDeviceAddressRegionKHR* /*@@@AZI*/in_pHitShaderBindingTable = /*@@@HUY*/pHitShaderBindingTable->GetPointer();
     /*@@@HPA*/const VkStridedDeviceAddressRegionKHR* /*@@@AZI*/in_pCallableShaderBindingTable = /*@@@HUY*/pCallableShaderBindingTable->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdTraceRaysIndirectKHR(in_commandBuffer, /*@@@AZI*/in_pRaygenShaderBindingTable, /*@@@AZI*/in_pMissShaderBindingTable, /*@@@AZI*/in_pHitShaderBindingTable, /*@@@AZI*/in_pCallableShaderBindingTable, indirectDeviceAddress)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdTraceRaysIndirectKHR(in_commandBuffer, /*@@@AZI*/in_pRaygenShaderBindingTable, /*@@@AZI*/in_pMissShaderBindingTable, /*@@@AZI*/in_pHitShaderBindingTable, /*@@@AZI*/in_pCallableShaderBindingTable, indirectDeviceAddress)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -14504,7 +15133,7 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysIndirectKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -14516,9 +15145,9 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysIndirectKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -14541,7 +15170,10 @@ void VulkanReplayConsumer::Process_vkCmdSetRayTracingPipelineStackSizeKHR(
     uint32_t                                    pipelineStackSize)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdSetRayTracingPipelineStackSizeKHR(in_commandBuffer, pipelineStackSize)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdSetRayTracingPipelineStackSizeKHR(in_commandBuffer, pipelineStackSize)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -14551,7 +15183,7 @@ void VulkanReplayConsumer::Process_vkCmdSetRayTracingPipelineStackSizeKHR(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -14563,9 +15195,9 @@ void VulkanReplayConsumer::Process_vkCmdSetRayTracingPipelineStackSizeKHR(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -14577,7 +15209,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksEXT(
     uint32_t                                    groupCountZ)
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksEXT(in_commandBuffer, groupCountX, groupCountY, groupCountZ)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksEXT(in_commandBuffer, groupCountX, groupCountY, groupCountZ)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -14587,7 +15222,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -14599,9 +15234,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
     }
 }
 
@@ -14615,7 +15250,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectEXT(
 {
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksIndirectEXT(in_commandBuffer, in_buffer, offset, drawCount, stride)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksIndirectEXT(in_commandBuffer, in_buffer, offset, drawCount, stride)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -14625,7 +15263,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -14637,9 +15275,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDrawMeshTasksIndirectEXTHandles(in_commandBuffer, in_buffer);
 
@@ -14659,7 +15297,10 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectCountEXT(
     VkCommandBuffer in_commandBuffer = /*@@@QKJ*/MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
     VkBuffer in_buffer = /*@@@QKJ*/MapHandle<BufferInfo>(buffer, &VulkanObjectInfoTable::GetBufferInfo);
     VkBuffer in_countBuffer = /*@@@QKJ*/MapHandle<BufferInfo>(countBuffer, &VulkanObjectInfoTable::GetBufferInfo);//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksIndirectCountEXT(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
+#if TESTCODE
+    if (!g_savingCommandBuffer)
+#endif
+        GetDeviceTable(in_commandBuffer)->CmdDrawMeshTasksIndirectCountEXT(in_commandBuffer, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HQA
 
     {
         VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
@@ -14669,7 +15310,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectCountEXT(
         //       Does begin clear the log?
         //       A draw command that is to trigger the resource dump needs to be handled here
         //       Note that only one cmdbuffer will need to be saved
-        if (g_savingCommandBuffer )
+        if (g_savingCommandBuffer)
         {
             //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.
             //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???
@@ -14681,9 +15322,9 @@ void VulkanReplayConsumer::Process_vkCmdDrawMeshTasksIndirectCountEXT(
             s.parameter_buffer_data.resize(call_info.parameter_buffer_size);
             s.parameter_buffer_size = call_info.parameter_buffer_size;
             memcpy(s.parameter_buffer_data.data(), call_info.parameter_buffer_data, call_info.parameter_buffer_size);
+            s.decoder = call_info.decoder;
             savedDRCmdBuff.push_back(s);
         }
-
         //@@@XZP Log all handles associated with command buffers
         TrackDRCmdDrawMeshTasksIndirectCountEXTHandles(in_commandBuffer, in_buffer, in_countBuffer);
 
