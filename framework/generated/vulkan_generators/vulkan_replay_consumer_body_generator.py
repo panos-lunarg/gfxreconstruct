@@ -153,9 +153,7 @@ class VulkanReplayConsumerBodyGenerator(
         write('{', file=self.outFile)
         write('public:', file=self.outFile)
         write('    gfxrecon::format::ApiCallId apiCall;', file=self.outFile)
-        write('    uint64_t                    index;', file=self.outFile)
         write('    format::ThreadId            thread_id;', file=self.outFile)
-        write('    VkCommandBuffer             commandBuffer;', file=self.outFile)
         write('    std::vector<uint8_t>        parameter_buffer_data;', file=self.outFile)
         write('    size_t                      parameter_buffer_size;', file=self.outFile)
         write('    ApiDecoder                  *decoder;', file=self.outFile)
@@ -170,8 +168,8 @@ class VulkanReplayConsumerBodyGenerator(
         write('uint64_t g_saveCmdBuf_BeginCommandBuffer_Index = 105;   //@@@ Index of vkBeginCommandBuffer command which will trigger saving of command buffer commands', file=self.outFile)
         write('uint64_t g_dumpResourses_CmdDraw_Index = 111;           //@@@ Index of vkCmdDraw which will trigger dump resources', file=self.outFile)
         write('uint64_t g_dumpResourses_QueueSubmit_Index = 154;       //@@@ Index of vkQueueSubmit in which we dump resources', file=self.outFile)
-        #//@@@TODO: need to make sure only commands destined for g_saveCmdBuf_BeginCommandBuffer_Index are saved. Begin/End can be nested!!!
-        write('bool g_savingCommandBuffer = false;    //@@@DHY Need to change this to VkCommandBuffer and compare it??', file=self.outFile)
+        self.newline()
+        write('static format::HandleId  g_savingCommandBuffer = 0;                     //@@@ commandBuffer we are current saving', file=self.outFile)
 
     def endFile(self):
         """Method override."""
@@ -378,7 +376,7 @@ class VulkanReplayConsumerBodyGenerator(
                 body += '#endif\n'
             if name == 'vkEndCommandBuffer':
                 body += '#if TESTCODE\n'
-                body += '    if (!g_savingCommandBuffer)\n'
+                body += '    if (g_savingCommandBuffer != commandBuffer)\n'
                 body += '    {\n'
                 body += '#endif\n'
             body += '    VkResult replay_result = {};\n'.format(call_expr)
@@ -392,7 +390,7 @@ class VulkanReplayConsumerBodyGenerator(
         else:
             if values[0].full_type == 'VkCommandBuffer':
                 body += '#if TESTCODE\n'
-                body += '    if (!g_savingCommandBuffer)\n'
+                body += '    if (g_savingCommandBuffer != commandBuffer)\n'
                 body += '#endif\n'
                 body += '        {};//@@@HQA\n'.format(call_expr)
             else:
@@ -413,23 +411,18 @@ class VulkanReplayConsumerBodyGenerator(
                 body += '        //@@@WTN Enable saving of command buffer if we have reached the designated BeginCmdBuffer cmd\n'
                 body += '        if (call_info.index == g_saveCmdBuf_BeginCommandBuffer_Index)\n'
                 body += '        {\n'
-                body += '            g_savingCommandBuffer = true;\n'
+                body += '            g_savingCommandBuffer = commandBuffer;\n'
                 body += '        }\n'
                 body += '\n'
 
             body += '        //@@@ECH Save this command if we are currently saving commands\n'
-            body += '        //       reset clears the log\n'
-            body += '        //       Does begin clear the log?\n'
-            body += '        //       A draw command that is to trigger the resource dump needs to be handled here\n'
-            body += '        //       Note that only one cmdbuffer will need to be saved\n'
-            body += '        if (g_savingCommandBuffer)\n'
+            body += '        //       TODO: should reset clear the current command buffer??\n'
+            body += '        //       TODO: What should we do when we encounter the draw command that is to trigger the resource dump??\n'
+            body += '        if (g_savingCommandBuffer == commandBuffer)\n'
             body += '        {\n'
-            body += '            //@@@AWP Can this be made into a function? It would reduce code size for all these replay funcs.\n'
-            body += '            //@@@GHY Save away call info. We save translated commandBuffer for convienience.  NEEEDED???\n'
+            body += '            //@@@AWP TODO: Can this be made into a function? It would reduce code size for all the replay funcs.\n'
             body += '            CmdBuffApiCall s;\n'
-            body += '            s.commandBuffer = in_commandBuffer;\n'
             body += '            s.apiCall = format::ApiCall_'+name+';\n'
-            body += '            s.index = call_info.index;\n'
             body += '            s.thread_id = call_info.thread_id;\n'
             body += '            s.parameter_buffer_data.resize(call_info.parameter_buffer_size);\n'
             body += '            s.parameter_buffer_size = call_info.parameter_buffer_size;\n'
@@ -439,24 +432,20 @@ class VulkanReplayConsumerBodyGenerator(
             if name =='vkEndCommandBuffer':
                 body += '#if TESTCODE\n'
                 body += '            // Playback the saved cmd buffer\n'
-                body += '            g_savingCommandBuffer = false;\n'
+                body += '            g_savingCommandBuffer = 0;\n'
                 body += '            for (auto it = savedDRCmdBuff.begin(); it != savedDRCmdBuff.end(); it++)\n'
                 body += '            {\n'
                 body += '                ApiCallInfo replay_call_info;\n'
-                body += '                replay_call_info.index = it->index;\n'
+                body += '                replay_call_info.index = 0; //@@@ZXC Set to 0 to keep from triggering another cmdbuf save\n'
                 body += '                replay_call_info.thread_id = it->thread_id;\n'
-                body += '                replay_call_info.parameter_buffer_data = it->parameter_buffer_data.data(); // Not needed, since cmd will not be saved??\n'
-                body += '                replay_call_info.parameter_buffer_size = it->parameter_buffer_size; // Not needed??\n'
+                body += '                replay_call_info.parameter_buffer_data = it->parameter_buffer_data.data(); // Not really needed since cmd will not be saved,\n'
+                body += '                replay_call_info.parameter_buffer_size = it->parameter_buffer_size;        // but they are set here for completeness.\n'
                 body += '                replay_call_info.thread_id = it->thread_id;\n'
-                body += '                it->decoder->DecodeFunctionCall(it->apiCall, call_info, it->parameter_buffer_data.data(), it->parameter_buffer_size);\n'
+                body += '                it->decoder->DecodeFunctionCall(it->apiCall, replay_call_info, it->parameter_buffer_data.data(), it->parameter_buffer_size);\n'
                 body += '            }\n'
+                body += '            savedDRCmdBuff.clear();\n'
                 body += '#endif\n'
             body += '        }\n'
-
-            if name =='vkEndCommandBuffer':
-                body += '        g_savingCommandBuffer = false;\n'
-                body += '\n'
-
 
         drFuncExcludeList=['vkBeginCommandBuffer','vkResetCommandBuffer']
         handle_params = self.get_param_list_handles(values)
