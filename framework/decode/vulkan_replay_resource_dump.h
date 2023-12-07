@@ -39,8 +39,14 @@ class VulkanReplayResourceDump
   public:
     VulkanReplayResourceDump() = delete;
 
-    VulkanReplayResourceDump(const VulkanObjectInfoTable& object_info_table) :
-        recording(false), object_info_table_(object_info_table)
+    VulkanReplayResourceDump(uint64_t                     begin_command_buffer_index,
+                             uint64_t                     cmdDraw_index,
+                             uint64_t                     CmdTraceRaysKHR_index,
+                             uint64_t                     QueueSubmit_index,
+                             const VulkanObjectInfoTable& object_info_table) :
+        BeginCommandBuffer_Index(begin_command_buffer_index),
+        CmdDraw_Index(cmdDraw_index), CmdTraceRaysKHR_Index(CmdTraceRaysKHR_index),
+        QueueSubmit_Index(QueueSubmit_index), recording(false), object_info_table_(object_info_table)
     {}
 
     VkResult CloneCommandBuffer(format::HandleId commandBuffer, PFN_vkAllocateCommandBuffers func);
@@ -64,7 +70,7 @@ class VulkanReplayResourceDump
         assert(!recording);
         assert(command_buffer != VK_NULL_HANDLE);
 
-        return g_dumpResourses_QueueSubmit_Index == index;
+        return QueueSubmit_Index == index;
     }
 
     bool DumpingDrawCallIndex(uint64_t index) const
@@ -72,10 +78,18 @@ class VulkanReplayResourceDump
         assert(recording);
         assert(command_buffer != VK_NULL_HANDLE);
 
-        return g_dumpResourses_CmdDraw_Index == index;
+        return CmdDraw_Index == index;
     }
 
-    bool DumpingBeginCommandBufferIndex(uint64_t index) const { return g_saveCmdBuf_BeginCommandBuffer_Index == index; }
+    bool DumpingTraceRaysIndex(uint64_t index) const
+    {
+        assert(recording);
+        assert(command_buffer != VK_NULL_HANDLE);
+
+        return CmdTraceRaysKHR_Index == index;
+    }
+
+    bool DumpingBeginCommandBufferIndex(uint64_t index) const { return BeginCommandBuffer_Index == index; }
 
     bool IsRecording() const { return recording; }
 
@@ -105,9 +119,10 @@ class VulkanReplayResourceDump
 
     const VulkanObjectInfoTable& object_info_table_;
 
-    const uint64_t g_saveCmdBuf_BeginCommandBuffer_Index = 107;
-    const uint64_t g_dumpResourses_CmdDraw_Index         = 114;
-    const uint64_t g_dumpResourses_QueueSubmit_Index     = 579;
+    uint64_t BeginCommandBuffer_Index;
+    uint64_t CmdDraw_Index;
+    uint64_t CmdTraceRaysKHR_Index;
+    uint64_t QueueSubmit_Index;
 };
 
 GFXRECON_END_NAMESPACE(gfxrecon)
