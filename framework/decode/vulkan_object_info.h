@@ -458,7 +458,8 @@ struct CommandBufferInfo : public VulkanPoolObjectInfo<VkCommandBuffer>
 
 struct RenderPassInfo : public VulkanObjectInfo<VkRenderPass>
 {
-    std::vector<VkImageLayout> attachment_description_final_layouts;
+    std::vector<VkImageLayout>       attachment_description_final_layouts;
+    std::vector<VkAttachmentStoreOp> store_ops;
 };
 
 //
