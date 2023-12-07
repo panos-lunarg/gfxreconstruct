@@ -33,6 +33,7 @@
 #include "decode/vulkan_object_info.h"
 #include "decode/vulkan_object_info_table.h"
 #include "decode/vulkan_replay_options.h"
+#include "decode/vulkan_replay_resource_dump.h"
 #include "decode/vulkan_resource_allocator.h"
 #include "decode/vulkan_resource_tracking_consumer.h"
 #include "decode/vulkan_resource_initializer.h"
@@ -533,6 +534,7 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                          VkQueryResultFlags        flags);
 
     VkResult OverrideQueueSubmit(PFN_vkQueueSubmit                                 func,
+                                 uint64_t                                          index,
                                  VkResult                                          original_result,
                                  const QueueInfo*                                  queue_info,
                                  uint32_t                                          submitCount,
@@ -1025,6 +1027,8 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                        HandlePointerDecoder<VkFramebuffer>*                   frame_buffer_decoder);
 
     const VulkanReplayOptions options_;
+
+    VulkanReplayResourceDump dumper;
 
   private:
     void RaiseFatalError(const char* message) const;
