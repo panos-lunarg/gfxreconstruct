@@ -189,7 +189,6 @@ struct VulkanPoolObjectInfo : public VulkanObjectInfo<T>
 
 typedef VulkanObjectInfo<VkEvent>                         EventInfo;
 typedef VulkanObjectInfo<VkQueryPool>                     QueryPoolInfo;
-typedef VulkanObjectInfo<VkBufferView>                    BufferViewInfo;
 typedef VulkanObjectInfo<VkShaderModule>                  ShaderModuleInfo;
 typedef VulkanObjectInfo<VkPipelineLayout>                PipelineLayoutInfo;
 typedef VulkanObjectInfo<VkPrivateDataSlot>               PrivateDataSlotInfo;
@@ -312,6 +311,11 @@ struct BufferInfo : public VulkanObjectInfo<VkBuffer>
     VkMemoryPropertyFlags memory_property_flags{ 0 };
     VkBufferUsageFlags    usage{ 0 };
     uint32_t              queue_family_index{ 0 };
+};
+
+struct BufferViewInfo : public VulkanObjectInfo<VkBufferView>
+{
+    format::HandleId buffer_id{ format::kNullHandleId };
 };
 
 struct ImageInfo : public VulkanObjectInfo<VkImage>
