@@ -1158,6 +1158,44 @@ void VulkanReplayConsumer::Process_vkUpdateDescriptorSets(
     const VkCopyDescriptorSet* in_pDescriptorCopies = pDescriptorCopies->GetPointer();
     MapStructArrayHandles(pDescriptorCopies->GetMetaStructPointer(), pDescriptorCopies->GetLength(), GetObjectInfoTable());//@@@DFK
     GetDeviceTable(in_device)->UpdateDescriptorSets(in_device, descriptorWriteCount, in_pDescriptorWrites, descriptorCopyCount, in_pDescriptorCopies);//@@@HQA
+
+    ////////
+
+    const auto *writes_meta = pDescriptorWrites->GetMetaStructPointer();
+    for (uint32_t s = 0; s < descriptorWriteCount; ++s)
+    {
+        DescriptorSetInfo *dst_set_info = GetObjectInfoTable().GetDescriptorSetInfo(writes_meta[s].dstSet);
+
+        for (uint32_t b = 0; b < in_pDescriptorWrites[s].descriptorCount; ++b)
+        {
+            switch (in_pDescriptorWrites[s].descriptorType)
+            {
+            case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+            {
+                descriptor_binding_info bi;
+                bi.desc_type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                bi.image_info.image_layout = in_pDescriptorWrites[s].pImageInfo[b].imageLayout;
+                bi.image_info.image_view_id = writes_meta[s].pImageInfo->GetMetaStructPointer()[b].imageView;
+
+                dst_set_info->descriptors[in_pDescriptorWrites[s].dstBinding + b] = bi;
+            } break;
+
+            case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+            {
+                descriptor_binding_info bi;
+                bi.desc_type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                bi.buffer_info.buffer_id = writes_meta[s].pBufferInfo->GetMetaStructPointer()[b].buffer;
+                bi.buffer_info.offset = in_pDescriptorWrites[s].pBufferInfo[b].offset;
+                bi.buffer_info.range = in_pDescriptorWrites[s].pBufferInfo[b].range;
+
+                dst_set_info->descriptors[in_pDescriptorWrites[s].dstBinding + b] = bi;
+            } break;
+
+            default:
+                break;
+            }
+        }
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCreateFramebuffer(
@@ -1553,6 +1591,7 @@ void VulkanReplayConsumer::Process_vkCmdBindDescriptorSets(
     if (dumper.IsRecording())
     {
         GetDeviceTable(dumper.GetClonedCommandBuffer())->CmdBindDescriptorSets(dumper.GetClonedCommandBuffer(), pipelineBindPoint, in_layout, firstSet, descriptorSetCount, in_pDescriptorSets, dynamicOffsetCount, in_pDynamicOffsets)/*@@@ABC*/;//@@@HERE
+        dumper.DetectWritableResources(pDescriptorSets->GetPointer(), descriptorSetCount);
     }
 }
 
@@ -10090,6 +10129,11 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysKHR(
     if (dumper.IsRecording())
     {
         GetDeviceTable(dumper.GetClonedCommandBuffer())->CmdTraceRaysKHR(dumper.GetClonedCommandBuffer(), in_pRaygenShaderBindingTable, in_pMissShaderBindingTable, in_pHitShaderBindingTable, in_pCallableShaderBindingTable, width, height, depth)/*@@@ABC*/;//@@@HERE
+
+        if (dumper.DumpingDrawCallIndex(call_info.index))
+        {
+            dumper.FinalizeCommandBuffer(*GetDeviceTable(in_commandBuffer));
+        }
     }
 }
 

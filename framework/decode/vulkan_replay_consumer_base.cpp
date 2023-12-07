@@ -3425,6 +3425,7 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
     {
         GetDeviceTable(queue_info->handle)->QueueWaitIdle(queue_info->handle);
         dumper.DumpAttachments(GetDeviceTable(queue_info->handle), index);
+        dumper.DumpResources(GetDeviceTable(queue_info->handle), index);
     }
 
     if ((options_.sync_queue_submissions) && (result == VK_SUCCESS))
