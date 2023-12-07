@@ -39,19 +39,25 @@ class VulkanReplayResourceDump
   public:
     VulkanReplayResourceDump() = delete;
 
-    VulkanReplayResourceDump(const VulkanObjectInfoTable& object_info_table) : object_info_table_(object_info_table) {}
+    VulkanReplayResourceDump(const VulkanObjectInfoTable& object_info_table) :
+        recording(false), object_info_table_(object_info_table)
+    {}
 
     VkResult CloneCommandBuffer(format::HandleId commandBuffer, PFN_vkAllocateCommandBuffers func);
 
     void FinalizeCommandBuffer(const encode::DeviceTable& device_table);
-
-    void DumpAttachments(const encode::DeviceTable* device_table, uint64_t index);
 
     void ModifyCommandBufferSubmision(std::vector<VkSubmitInfo>& modified_submit_infos);
 
     VkCommandBuffer GetClonedCommandBuffer() const { return command_buffer; }
 
     void SetRenderTargets(format::HandleId render_pass, format::HandleId frame_buffer, const VkRect2D& rp_area);
+
+    void DetectWritableResources(const format::HandleId* descriptor_sets_ids, uint32_t descriptor_sets_count);
+
+    void DumpAttachments(const encode::DeviceTable* device_table, uint64_t index);
+
+    void DumpResources(const encode::DeviceTable* device_table, uint64_t index);
 
     bool DumpingSubmissionIndex(uint64_t index) const
     {
@@ -78,11 +84,24 @@ class VulkanReplayResourceDump
     format::HandleId original_command_buffer        = format::kNullHandleId;
     VkCommandBuffer  original_command_buffer_handle = VK_NULL_HANDLE;
 
-    std::vector<VkAttachmentStoreOp> attachment_store_ops;
-    std::vector<const ImageInfo*>    attachment_image_ids;
-    VkRect2D                         rendering_arrea{};
+    struct
+    {
+        std::vector<VkAttachmentStoreOp> attachment_store_ops;
+        std::vector<const ImageInfo*>    attachment_image_ids;
+        VkRect2D                         rendering_arrea{};
+    } render_targets;
 
-    bool recording = false;
+    struct
+    {
+        std::vector<const ImageInfo*> image_infos;
+    } storage_images;
+
+    struct
+    {
+        std::vector<const BufferInfo*> buffer_infos;
+    } storage_buffers;
+
+    bool recording;
 
     const VulkanObjectInfoTable& object_info_table_;
 
