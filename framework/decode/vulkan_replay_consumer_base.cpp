@@ -158,9 +158,10 @@ static uint32_t GetHardwareBufferFormatBpp(uint32_t format)
 
 VulkanReplayConsumerBase::VulkanReplayConsumerBase(std::shared_ptr<application::Application> application,
                                                    const VulkanReplayOptions&                options) :
-    loader_handle_(nullptr),
-    get_instance_proc_addr_(nullptr), create_instance_proc_(nullptr), application_(application), options_(options),
-    loading_trim_state_(false), replaying_trimmed_capture_(false), have_imported_semaphores_(false), fps_info_(nullptr)
+    dumper(object_info_table_),
+    loader_handle_(nullptr), get_instance_proc_addr_(nullptr), create_instance_proc_(nullptr),
+    application_(application), options_(options), loading_trim_state_(false), replaying_trimmed_capture_(false),
+    have_imported_semaphores_(false), fps_info_(nullptr)
 {
     assert(application_ != nullptr);
     assert(options.create_resource_allocator != nullptr);
@@ -3308,6 +3309,7 @@ VkResult VulkanReplayConsumerBase::OverrideGetQueryPoolResults(PFN_vkGetQueryPoo
 }
 
 VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
+                                                       uint64_t          index,
                                                        VkResult          original_result,
                                                        const QueueInfo*  queue_info,
                                                        uint32_t          submitCount,
@@ -3330,7 +3332,7 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
     // Only attempt to filter imported semaphores if we know at least one has been imported.
     // If rendering is restricted to a specific surface, shadow semaphore and forward progress state will need to be
     // tracked.
-    if ((!have_imported_semaphores_) && (options_.surface_index == -1))
+    if ((!have_imported_semaphores_) && (options_.surface_index == -1) && (!options_.dumping_resource))
     {
         result = func(queue_info->handle, submitCount, submit_infos, fence);
     }
@@ -3363,7 +3365,7 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
             }
         }
 
-        if (altered_submits.empty())
+        if (altered_submits.empty() && !options_.dumping_resource)
         {
             result = func(queue_info->handle, submitCount, submit_infos, fence);
         }
@@ -3419,11 +3421,22 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
                 modified_submit_info.pSignalSemaphores    = signal_semaphores.data();
             }
 
+            if (submit_info_data != nullptr && (options_.dumping_resource) && dumper.DumpingSubmissionIndex(index))
+            {
+                dumper.ModifyCommandBufferSubmision(modified_submit_infos);
+            }
+
             result = func(queue_info->handle,
                           static_cast<uint32_t>(modified_submit_infos.size()),
                           modified_submit_infos.data(),
                           fence);
         }
+    }
+
+    if (dumper.DumpingSubmissionIndex(index))
+    {
+        GetDeviceTable(queue_info->handle)->QueueWaitIdle(queue_info->handle);
+        dumper.DumpAttachments(GetDeviceTable(queue_info->handle), index);
     }
 
     if ((options_.sync_queue_submissions) && (result == VK_SUCCESS))
@@ -4051,9 +4064,9 @@ VkResult VulkanReplayConsumerBase::OverrideAllocateMemory(
 
             VkMemoryAllocateInfo                     modified_allocate_info = (*replay_allocate_info);
             VkMemoryOpaqueCaptureAddressAllocateInfo address_info           = {
-                          VK_STRUCTURE_TYPE_MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO,
-                          modified_allocate_info.pNext,
-                          opaque_address
+                VK_STRUCTURE_TYPE_MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO,
+                modified_allocate_info.pNext,
+                opaque_address
             };
             modified_allocate_info.pNext = &address_info;
 
@@ -4722,6 +4735,7 @@ void StoreAttachmentDescriptionFinalLayouts(const T* pCreateInfo, HandlePointerD
         for (uint32_t i = 0; i < attachment_count; ++i)
         {
             render_pass_info->attachment_description_final_layouts[i] = attachment_descs[i].finalLayout;
+            render_pass_info->store_ops.push_back(attachment_descs[i].storeOp);
         }
     }
 }
@@ -5430,6 +5444,15 @@ VkResult VulkanReplayConsumerBase::OverrideGetSwapchainImagesKHR(PFN_vkGetSwapch
                     break;
                 }
 
+                image_info->format             = swapchain_info->format;
+                image_info->extent             = { swapchain_info->width, swapchain_info->height, 1 };
+                image_info->layer_count        = swapchain_info->image_array_layers;
+                image_info->level_count        = 1;
+                image_info->tiling             = VK_IMAGE_TILING_OPTIMAL;
+                image_info->usage              = swapchain_info->image_usage;
+                image_info->sample_count       = VK_SAMPLE_COUNT_1_BIT;
+                image_info->type               = VK_IMAGE_TYPE_2D;
+                image_info->current_layout     = VK_IMAGE_LAYOUT_UNDEFINED;
                 image_info->is_swapchain_image = true;
 
                 // Create a copy of the image info to use for image cleanup when the swapchain is destroyed.
@@ -5460,6 +5483,15 @@ VkResult VulkanReplayConsumerBase::OverrideGetSwapchainImagesKHR(PFN_vkGetSwapch
                 auto image_info = reinterpret_cast<ImageInfo*>(pSwapchainImages->GetConsumerData(i));
                 assert(image_info != nullptr);
 
+                image_info->format             = swapchain_info->format;
+                image_info->extent             = { swapchain_info->width, swapchain_info->height, 1 };
+                image_info->layer_count        = swapchain_info->image_array_layers;
+                image_info->level_count        = 1;
+                image_info->tiling             = VK_IMAGE_TILING_OPTIMAL;
+                image_info->usage              = swapchain_info->image_usage;
+                image_info->sample_count       = VK_SAMPLE_COUNT_1_BIT;
+                image_info->type               = VK_IMAGE_TYPE_2D;
+                image_info->current_layout     = VK_IMAGE_LAYOUT_UNDEFINED;
                 image_info->is_swapchain_image = true;
             }
 
