@@ -227,7 +227,8 @@ void VulkanReplayResourceDump::SetRenderTargets(format::HandleId render_pass,
     render_targets.rendering_arrea = rp_area;
 }
 
-void VulkanReplayResourceDump::DetectWritableResources(const format::HandleId* descriptor_sets_ids,
+void VulkanReplayResourceDump::DetectWritableResources(uint32_t                first_set,
+                                                       const format::HandleId* descriptor_sets_ids,
                                                        uint32_t                descriptor_sets_count)
 {
     assert(descriptor_sets_ids);
@@ -250,17 +251,45 @@ void VulkanReplayResourceDump::DetectWritableResources(const format::HandleId* d
                     const ImageInfo* img_info = object_info_table_.GetImageInfo(img_view_info->image_id);
                     assert(img_info);
 
-                    storage_images.image_infos.push_back(img_info);
+                    bound_descriptor_sets[first_set + i].image_infos[binding.first] = img_info;
                 }
+                break;
 
                 case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+                case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
                 {
                     const BufferInfo* buffer_info =
                         object_info_table_.GetBufferInfo(binding.second.buffer_info.buffer_id);
                     assert(buffer_info);
 
-                    storage_buffers.buffer_infos.push_back(buffer_info);
+                    bound_descriptor_sets[first_set + i].buffer_infos[binding.first] = buffer_info;
                 }
+                break;
+
+                case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+                {
+                    const BufferViewInfo* buffer_view_info =
+                        object_info_table_.GetBufferViewInfo(binding.second.texel_buffer_view);
+                    assert(buffer_view_info);
+
+                    const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(buffer_view_info->buffer_id);
+                    assert(buffer_info);
+
+                    bound_descriptor_sets[first_set + i].buffer_infos[binding.first] = buffer_info;
+                }
+                break;
+
+                case VK_DESCRIPTOR_TYPE_SAMPLER:
+                case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+                case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+                case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+                case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+                case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+                case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+                case VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK:
+                case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
+                    // These are read only resources
+                    return;
 
                 default:
                     GFXRECON_LOG_WARNING_ONCE("Descriptor type not handled")
@@ -283,36 +312,41 @@ void VulkanReplayResourceDump::DumpResources(const encode::DeviceTable* device_t
     graphics::VulkanResourcesUtil resource_util(
         device_info->handle, *device_table, *phys_dev_info->replay_device_info->memory_properties);
 
-    for (const auto img : storage_images.image_infos)
+    for (auto desc_set : bound_descriptor_sets)
     {
-        std::vector<uint8_t>  data;
-        std::vector<uint64_t> subresource_offsets;
-        std::vector<uint64_t> subresource_sizes;
+        for (const auto storage_images : desc_set.second.image_infos)
+        {
+            const ImageInfo* img = storage_images.second;
 
-        resource_util.ReadFromImageResourceStaging(img->handle,
-                                                   img->format,
-                                                   img->type,
-                                                   img->extent,
-                                                   img->level_count,
-                                                   img->layer_count,
-                                                   img->tiling,
-                                                   img->sample_count,
-                                                   img->current_layout,
-                                                   0,
-                                                   VK_IMAGE_ASPECT_COLOR_BIT,
-                                                   data,
-                                                   subresource_offsets,
-                                                   subresource_sizes);
+            std::vector<uint8_t>  data;
+            std::vector<uint64_t> subresource_offsets;
+            std::vector<uint64_t> subresource_sizes;
 
-        std::stringstream ss;
+            resource_util.ReadFromImageResourceStaging(img->handle,
+                                                       img->format,
+                                                       img->type,
+                                                       img->extent,
+                                                       img->level_count,
+                                                       img->layer_count,
+                                                       img->tiling,
+                                                       img->sample_count,
+                                                       img->current_layout,
+                                                       0,
+                                                       VK_IMAGE_ASPECT_COLOR_BIT,
+                                                       data,
+                                                       subresource_offsets,
+                                                       subresource_sizes);
 
-        ss << "storage_image_" << img->capture_id << "_index_" << index << ".bmp";
+            std::stringstream ss;
 
-        util::imagewriter::WriteBmpImage(
-            ss.str(), img->extent.width, img->extent.height, subresource_sizes[0], data.data());
+            ss << "storage_image_" << img->capture_id << "_index_" << index << ".bmp";
+
+            util::imagewriter::WriteBmpImage(
+                ss.str(), img->extent.width, img->extent.height, subresource_sizes[0], data.data());
+        }
+
+        desc_set.second.image_infos.clear();
     }
-
-    storage_images.image_infos.clear();
 }
 
 GFXRECON_END_NAMESPACE(gfxrecon)
