@@ -35,6 +35,7 @@
 #include "vulkan/vulkan.h"
 
 #include <memory>
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -196,7 +197,6 @@ typedef VulkanObjectInfo<VkPipelineLayout>                PipelineLayoutInfo;
 typedef VulkanObjectInfo<VkPrivateDataSlot>               PrivateDataSlotInfo;
 typedef VulkanObjectInfo<VkDescriptorSetLayout>           DescriptorSetLayoutInfo;
 typedef VulkanObjectInfo<VkSampler>                       SamplerInfo;
-typedef VulkanPoolObjectInfo<VkDescriptorSet>             DescriptorSetInfo;
 typedef VulkanPoolInfo<VkCommandPool>                     CommandPoolInfo;
 typedef VulkanObjectInfo<VkSamplerYcbcrConversion>        SamplerYcbcrConversionInfo;
 typedef VulkanObjectInfo<VkDisplayModeKHR>                DisplayModeKHRInfo;
@@ -468,6 +468,32 @@ struct RenderPassInfo : public VulkanObjectInfo<VkRenderPass>
 {
     std::vector<VkImageLayout>       attachment_description_final_layouts;
     std::vector<VkAttachmentStoreOp> store_ops;
+};
+
+struct descriptor_type_image_info
+{
+    format::HandleId image_view_id;
+    VkImageLayout    image_layout;
+};
+
+struct descriptor_type_buffer_info
+{
+    format::HandleId buffer_id;
+    VkDeviceSize     offset;
+    VkDeviceSize     range;
+};
+
+struct descriptor_binding_info
+{
+    VkDescriptorType            desc_type;
+    descriptor_type_image_info  image_info;
+    descriptor_type_buffer_info buffer_info;
+    format::HandleId            texel_buffer_view;
+};
+
+struct DescriptorSetInfo : public VulkanPoolObjectInfo<VkDescriptorSet>
+{
+    std::map<uint32_t, descriptor_binding_info> descriptors;
 };
 
 //
