@@ -334,7 +334,7 @@ class VulkanReplayConsumerBodyGenerator(
         if return_type == 'VkResult':
             # if name == 'vkBeginCommandBuffer':
             #     body += '#if TESTCODE\n'
-            #     body += '    if (call_info.index != g_saveCmdBuf_BeginCommandBuffer_Index)\n'
+            #     body += '    if (call_info.index != BeginCommandBuffer_Index)\n'
             #     body += '    {\n'
             #     body += '#endif\n'
             # if name == 'vkEndCommandBuffer':
