@@ -20,8 +20,8 @@
 ** DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef GFXRECON_DECODE_VULKAN_REPLAY_RESOURCE_DUMPING
-#define GFXRECON_DECODE_VULKAN_REPLAY_RESOURCE_DUMPING
+#ifndef GFXRECON_DECODE_VULKAN_REPLAY_RESOURCE_DUMPING_H
+#define GFXRECON_DECODE_VULKAN_REPLAY_RESOURCE_DUMPING_H
 
 #include "decode/vulkan_object_info_table.h"
 #include "generated/generated_vulkan_dispatch_table.h"
@@ -30,6 +30,7 @@
 #include "vulkan/vulkan.h"
 
 #include <vector>
+#include <map>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)
@@ -59,7 +60,9 @@ class VulkanReplayResourceDump
 
     void SetRenderTargets(format::HandleId render_pass, format::HandleId frame_buffer, const VkRect2D& rp_area);
 
-    void DetectWritableResources(const format::HandleId* descriptor_sets_ids, uint32_t descriptor_sets_count);
+    void DetectWritableResources(uint32_t                first_set,
+                                 const format::HandleId* descriptor_sets_ids,
+                                 uint32_t                descriptor_sets_count);
 
     void DumpAttachments(const encode::DeviceTable* device_table, uint64_t index);
 
@@ -105,27 +108,24 @@ class VulkanReplayResourceDump
         VkRect2D                         rendering_arrea{};
     } render_targets;
 
-    struct
+    struct descriptor_set_bindings
     {
-        std::vector<const ImageInfo*> image_infos;
-    } storage_images;
+        std::map<uint32_t, const ImageInfo*>  image_infos;
+        std::map<uint32_t, const BufferInfo*> buffer_infos;
+    };
 
-    struct
-    {
-        std::vector<const BufferInfo*> buffer_infos;
-    } storage_buffers;
-
-    bool recording;
-
-    const VulkanObjectInfoTable& object_info_table_;
+    std::map<uint32_t, descriptor_set_bindings> bound_descriptor_sets;
 
     uint64_t BeginCommandBuffer_Index;
     uint64_t CmdDraw_Index;
     uint64_t CmdTraceRaysKHR_Index;
     uint64_t QueueSubmit_Index;
+    bool     recording;
+
+    const VulkanObjectInfoTable& object_info_table_;
 };
 
 GFXRECON_END_NAMESPACE(gfxrecon)
 GFXRECON_END_NAMESPACE(decode)
 
-#endif /* GFXRECON_DECODE_VULKAN_REPLAY_RESOURCE_DUMPING */
+#endif /* GFXRECON_DECODE_VULKAN_REPLAY_RESOURCE_DUMPING_H */

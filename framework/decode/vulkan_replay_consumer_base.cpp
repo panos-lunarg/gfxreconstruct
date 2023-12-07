@@ -7559,5 +7559,48 @@ void VulkanReplayConsumerBase::Process_vkCreateRayTracingPipelinesKHR(
     }
 }
 
+void VulkanReplayConsumerBase::UpdateDescriptorSets(
+    uint32_t descriptor_write_count, StructPointerDecoder<Decoded_VkWriteDescriptorSet>* descriptor_writes_p)
+{
+    const VkWriteDescriptorSet* in_pDescriptorWrites = descriptor_writes_p->GetPointer();
+    const auto*                 writes_meta          = descriptor_writes_p->GetMetaStructPointer();
+    for (uint32_t s = 0; s < descriptor_write_count; ++s)
+    {
+        DescriptorSetInfo* dst_set_info = GetObjectInfoTable().GetDescriptorSetInfo(writes_meta[s].dstSet);
+
+        for (uint32_t b = 0; b < in_pDescriptorWrites[s].descriptorCount; ++b)
+        {
+            switch (in_pDescriptorWrites[s].descriptorType)
+            {
+                case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+                {
+                    descriptor_binding_info bi;
+                    bi.desc_type                = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                    bi.image_info.image_layout  = in_pDescriptorWrites[s].pImageInfo[b].imageLayout;
+                    bi.image_info.image_view_id = writes_meta[s].pImageInfo->GetMetaStructPointer()[b].imageView;
+
+                    dst_set_info->descriptors[in_pDescriptorWrites[s].dstBinding + b] = bi;
+                }
+                break;
+
+                case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+                {
+                    descriptor_binding_info bi;
+                    bi.desc_type             = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                    bi.buffer_info.buffer_id = writes_meta[s].pBufferInfo->GetMetaStructPointer()[b].buffer;
+                    bi.buffer_info.offset    = in_pDescriptorWrites[s].pBufferInfo[b].offset;
+                    bi.buffer_info.range     = in_pDescriptorWrites[s].pBufferInfo[b].range;
+
+                    dst_set_info->descriptors[in_pDescriptorWrites[s].dstBinding + b] = bi;
+                }
+                break;
+
+                default:
+                    break;
+            }
+        }
+    }
+}
+
 GFXRECON_END_NAMESPACE(decode)
 GFXRECON_END_NAMESPACE(gfxrecon)

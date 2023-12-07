@@ -1026,6 +1026,9 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                        StructPointerDecoder<Decoded_VkAllocationCallbacks>*   allocator_decoder,
                                        HandlePointerDecoder<VkFramebuffer>*                   frame_buffer_decoder);
 
+    void UpdateDescriptorSets(uint32_t                                            descriptor_write_count,
+                              StructPointerDecoder<Decoded_VkWriteDescriptorSet>* descriptor_writes_p);
+
     const VulkanReplayOptions options_;
 
     VulkanReplayResourceDump dumper;
