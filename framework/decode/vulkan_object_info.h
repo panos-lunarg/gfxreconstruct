@@ -462,8 +462,18 @@ struct CommandBufferInfo : public VulkanPoolObjectInfo<VkCommandBuffer>
 
 struct RenderPassInfo : public VulkanObjectInfo<VkRenderPass>
 {
-    std::vector<VkImageLayout>       attachment_description_final_layouts;
-    std::vector<VkAttachmentStoreOp> store_ops;
+    std::vector<VkImageLayout>           attachment_description_final_layouts;
+    std::vector<VkAttachmentDescription> attachment_descs;
+
+    struct SubpassReferences
+    {
+        std::vector<VkAttachmentReference> color_att_refs;
+        VkAttachmentReference              depth_att_ref;
+    };
+
+    // The attachment references per subpass
+    std::vector<SubpassReferences> subpass_refs;
+    uint32_t current_subpass;
 };
 
 struct descriptor_type_image_info
