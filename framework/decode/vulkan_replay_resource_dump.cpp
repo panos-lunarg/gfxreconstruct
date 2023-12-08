@@ -25,10 +25,42 @@
 #include "util/image_writer.h"
 #include "vulkan_replay_resource_dump.h"
 
+#include "Vulkan-Utility-Libraries/vk_format_utils.h"
+
 #include <sstream>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)
+
+static util::imagewriter::DataFormats VkFormatToImageWriterDataFormat(VkFormat format)
+{
+    switch (format)
+    {
+        case VK_FORMAT_R8G8B8_UNORM:
+            return util::imagewriter::DataFormats::kFormat_RGB;
+
+        case VK_FORMAT_R8G8B8A8_UNORM:
+            return util::imagewriter::DataFormats::kFormat_RGBA;
+
+        case VK_FORMAT_B8G8R8_UNORM:
+            return util::imagewriter::DataFormats::kFormat_BGR;
+
+        case VK_FORMAT_B8G8R8A8_UNORM:
+            return util::imagewriter::DataFormats::kFormat_BGRA;
+
+        case VK_FORMAT_D32_SFLOAT:
+        case VK_FORMAT_D32_SFLOAT_S8_UINT:
+            return util::imagewriter::DataFormats::kFormat_D32;
+
+        case VK_FORMAT_D16_UNORM:
+            return util::imagewriter::DataFormats::kFormat_D16;
+
+        default:
+            GFXRECON_LOG_ERROR("%s() failed to handle format: %s", __func__, util::ToString<VkFormat>(format).c_str());
+            assert(0);
+            return util::imagewriter::DataFormats::kFormat_UNSPECIFIED;
+    }
+}
 
 VkResult VulkanReplayResourceDump::CloneCommandBuffer(format::HandleId commandBuffer, PFN_vkAllocateCommandBuffers func)
 {
@@ -191,11 +223,15 @@ void VulkanReplayResourceDump::DumpAttachments(const encode::DeviceTable* device
                << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_" << 0
                << ".bmp";
 
+            const uint32_t texel_size = vkuFormatElementSizeWithAspect(img->format, VK_IMAGE_ASPECT_COLOR_BIT);
+            const uint32_t stride     = texel_size * img->extent.width;
+
             util::imagewriter::WriteBmpImage(ss.str(),
                                              img->extent.width,
                                              img->extent.height,
                                              subresource_sizes[0],
                                              data.data(),
+                                             stride,
                                              VkFormatToImageWriterDataFormat(img->format));
         }
     }
@@ -204,44 +240,46 @@ void VulkanReplayResourceDump::DumpAttachments(const encode::DeviceTable* device
     {
         if (render_targets.depth_att_storeOp != VK_ATTACHMENT_STORE_OP_STORE)
         {
-            GFXRECON_LOG_WARNING("Dumping depth attachment with storeOp != VK_ATTACHMENT_STORE_OP_STORE");
-
-            const ImageInfo* img = render_targets.depth_att_img;
-
-            std::vector<uint8_t>  data;
-            std::vector<uint64_t> subresource_offsets;
-            std::vector<uint64_t> subresource_sizes;
-
-            resource_util.ReadFromImageResourceStaging(
-                img->handle,
-                img->format,
-                img->type,
-                VkExtent3D{ render_targets.render_area.extent.width, render_targets.render_area.extent.height, 1 },
-                img->level_count,
-                img->layer_count,
-                img->tiling,
-                img->sample_count,
-                img->current_layout,
-                0,
-                VK_IMAGE_ASPECT_DEPTH_BIT,
-                data,
-                subresource_offsets,
-                subresource_sizes);
-
-            std::stringstream ss;
-
-            ss << "vkCmdDraw_" << CmdDraw_Index << "_aspect_"
-               << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
-               << ".bmp";
-
-            util::imagewriter::WriteBmpImage(ss.str(),
-                                             img->extent.width,
-                                             img->extent.height,
-                                             subresource_sizes[0],
-                                             data.data(),
-                                             VkFormatToImageWriterDataFormat(img->format),
-                                             sizeof(uint16_t));
+            GFXRECON_LOG_WARNING("Dumping depth attachment with a storeOp different than VK_ATTACHMENT_STORE_OP_STORE");
         }
+
+        const ImageInfo* img = render_targets.depth_att_img;
+
+        std::vector<uint8_t>  data;
+        std::vector<uint64_t> subresource_offsets;
+        std::vector<uint64_t> subresource_sizes;
+
+        resource_util.ReadFromImageResourceStaging(
+            img->handle,
+            img->format,
+            img->type,
+            VkExtent3D{ render_targets.render_area.extent.width, render_targets.render_area.extent.height, 1 },
+            img->level_count,
+            img->layer_count,
+            img->tiling,
+            img->sample_count,
+            img->current_layout,
+            0,
+            VK_IMAGE_ASPECT_DEPTH_BIT,
+            data,
+            subresource_offsets,
+            subresource_sizes);
+
+        std::stringstream ss;
+
+        ss << "vkCmdDraw_" << CmdDraw_Index << "_aspect_"
+           << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0 << ".bmp";
+
+        const uint32_t texel_size = vkuFormatElementSizeWithAspect(img->format, VK_IMAGE_ASPECT_DEPTH_BIT);
+        const uint32_t stride     = texel_size * img->extent.width;
+
+        util::imagewriter::WriteBmpImage(ss.str(),
+                                         img->extent.width,
+                                         img->extent.height,
+                                         subresource_sizes[0],
+                                         data.data(),
+                                         stride,
+                                         VkFormatToImageWriterDataFormat(img->format));
     }
 
     exit(0);
@@ -390,8 +428,16 @@ void VulkanReplayResourceDump::DumpResources(const encode::DeviceTable* device_t
 
             ss << "storage_image_" << img->capture_id << "_index_" << index << ".bmp";
 
-            util::imagewriter::WriteBmpImage(
-                ss.str(), img->extent.width, img->extent.height, subresource_sizes[0], data.data());
+            const uint32_t texel_size = vkuFormatElementSize(img->format);
+            const uint32_t stride     = texel_size * img->extent.width;
+
+            util::imagewriter::WriteBmpImage(ss.str(),
+                                             img->extent.width,
+                                             img->extent.height,
+                                             subresource_sizes[0],
+                                             data.data(),
+                                             stride,
+                                             VkFormatToImageWriterDataFormat(img->format));
         }
 
         desc_set.second.image_infos.clear();
