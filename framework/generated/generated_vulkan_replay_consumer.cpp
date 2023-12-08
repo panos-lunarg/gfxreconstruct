@@ -2186,8 +2186,6 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass(
     // Push command in the command buffer clone
     if (dumper.IsRecording())
     {
-        const auto* rp_begin_info_meta = pRenderPassBegin->GetMetaStructPointer();
-        dumper.SetRenderTargets (rp_begin_info_meta->renderPass, rp_begin_info_meta->framebuffer, *rp_begin_info_meta->renderArea->decoded_value);
         GetDeviceTable(dumper.GetClonedCommandBuffer())->CmdBeginRenderPass(dumper.GetClonedCommandBuffer(), pRenderPassBegin->GetPointer(), contents)/*@@@ABC*/;//@@@HERE
     }
 }
@@ -2697,6 +2695,10 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass2(
     // Push command in the command buffer clone
     if (dumper.IsRecording())
     {
+        // XXX: vkCmdBeginRenderPass2 is not handled in the same way as vkCmdBeginRenderPass
+
+        // const auto* rp_begin_info_meta = pRenderPassBegin->GetMetaStructPointer();
+        // dumper.SetRenderTargets (rp_begin_info_meta->renderPass, rp_begin_info_meta->framebuffer, *rp_begin_info_meta->renderArea->decoded_value);
         GetDeviceTable(dumper.GetClonedCommandBuffer())->CmdBeginRenderPass2(dumper.GetClonedCommandBuffer(), in_pRenderPassBegin, in_pSubpassBeginInfo)/*@@@ABC*/;//@@@HERE
     }
 }
@@ -3126,6 +3128,35 @@ void VulkanReplayConsumer::Process_vkCmdBeginRendering(
     if (dumper.IsRecording())
     {
         GetDeviceTable(dumper.GetClonedCommandBuffer())->CmdBeginRendering(dumper.GetClonedCommandBuffer(), in_pRenderingInfo)/*@@@ABC*/;//@@@HERE
+
+        const auto* rendering_info_meta = pRenderingInfo->GetMetaStructPointer();
+
+        const auto* color_attachments_meta = rendering_info_meta->pColorAttachments->GetMetaStructPointer();
+        std::vector<const ImageInfo*> color_att_img_infos(static_cast<size_t>(in_pRenderingInfo->colorAttachmentCount));
+        std::vector<VkAttachmentStoreOp> color_att_storeOps(static_cast<size_t>(in_pRenderingInfo->colorAttachmentCount));
+        for (uint32_t i =0; i < in_pRenderingInfo->colorAttachmentCount; ++i)
+        {
+            const ImageViewInfo *img_view_info = GetObjectInfoTable().GetImageViewInfo(color_attachments_meta[i].imageView);
+            assert(img_view_info);
+
+            const ImageInfo* img_info = GetObjectInfoTable().GetImageInfo(img_view_info->image_id);
+            assert(img_info);
+
+            color_att_img_infos[i] = img_info;
+
+            color_att_storeOps[i] = in_pRenderingInfo->pColorAttachments[i].storeOp;
+        }
+
+        const auto* depth_attachment = rendering_info_meta->pDepthAttachment->GetMetaStructPointer();
+
+        const ImageViewInfo *depth_img_view_info = GetObjectInfoTable().GetImageViewInfo(depth_attachment->imageView);
+        assert(depth_img_view_info);
+
+        const ImageInfo* depth_img_info = GetObjectInfoTable().GetImageInfo(depth_img_view_info->image_id);
+        assert(depth_img_info);
+
+        dumper.SetRenderTargets(color_att_img_infos, color_att_storeOps, depth_img_info, in_pRenderingInfo->pDepthAttachment->storeOp);
+        dumper.SetRenderArea(in_pRenderingInfo->renderArea);
     }
 }
 
@@ -4206,6 +4237,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderingKHR(
     if (dumper.IsRecording())
     {
         GetDeviceTable(dumper.GetClonedCommandBuffer())->CmdBeginRenderingKHR(dumper.GetClonedCommandBuffer(), in_pRenderingInfo)/*@@@ABC*/;//@@@HERE
+        // dumper.SetRenderTargets(pRenderingInfo->GetMetaStructPointer());
     }
 }
 
