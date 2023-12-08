@@ -66,8 +66,13 @@ GFXRECON_BEGIN_NAMESPACE(imagewriter)
 const uint16_t kBmpBitCount = 32; // Expecting 32-bit BGRA bitmap data.
 const uint32_t kImageBpp    = 4;  // Expecting 4 bytes per pixel for 32-bit BGRA bitmap data.
 
-bool WriteBmpImage(
-    const std::string& filename, uint32_t width, uint32_t height, uint64_t data_size, const void* data, uint32_t pitch)
+bool WriteBmpImage(const std::string& filename,
+                   uint32_t           width,
+                   uint32_t           height,
+                   uint64_t           data_size,
+                   const void*        data,
+                   uint32_t           pitch,
+                   DataFormats        format)
 {
     bool     success   = false;
     uint32_t row_pitch = width * kImageBpp;
@@ -111,11 +116,41 @@ bool WriteBmpImage(
 
             // Y needs to be inverted when writing the bitmap data.
             auto height_1 = height - 1;
-            auto bytes    = reinterpret_cast<const uint8_t*>(data);
 
-            for (uint32_t i = 0; i < height; ++i)
+            for (uint32_t y = 0; y < height; ++y)
             {
-                util::platform::FileWrite(&bytes[(height_1 - i) * row_pitch], 1, width * kImageBpp, file);
+                if (format == kFormat_D16)
+                {
+                    assert(pitch);
+
+                    const uint16_t* bytes_u16 = reinterpret_cast<const uint16_t*>(data);
+                    for (uint32_t x = 0; x < width; ++x)
+                    {
+                        const uint16_t normalized_depth = bytes_u16[(height_1 - y) * width + x];
+                        const float    float_depth      = static_cast<float>(normalized_depth) / 32767.0f;
+                        const uint8_t  depth            = static_cast<uint8_t>(float_depth * 255.0f);
+                        uint32_t       rgba             = (0xff << 24) | (depth << 16) | (depth << 8) | depth;
+                        util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                    }
+                }
+                else if (format == kFormat_D32)
+                {
+                    assert(pitch);
+
+                    const float* bytes_float = reinterpret_cast<const float*>(data);
+                    for (uint32_t x = 0; x < width; ++x)
+                    {
+                        const float   float_depth = bytes_float[(height_1 - y) * width + x];
+                        const uint8_t depth       = static_cast<uint8_t>(float_depth * 255.0f);
+                        uint32_t      rgba        = (0xff << 24) | (depth << 16) | (depth << 8) | depth;
+                        util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                    }
+                }
+                else
+                {
+                    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
+                    util::platform::FileWrite(&bytes[(height_1 - y) * row_pitch], 1, width * kImageBpp, file);
+                }
             }
 
             if (!ferror(file))
