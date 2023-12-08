@@ -58,8 +58,15 @@ class VulkanReplayResourceDump
 
     VkCommandBuffer GetClonedCommandBuffer() const { return command_buffer; }
 
-    void SetRenderTargets(format::HandleId render_pass, format::HandleId frame_buffer, const VkRect2D& rp_area);
+    // Call with vkCmdBeginRendering(KHR)
+    void SetRenderTargets(const std::vector<const ImageInfo*>&    color_att_imgs,
+                          const std::vector<VkAttachmentStoreOp>& color_att_storeOps,
+                          const ImageInfo*                        depth_att_img,
+                          VkAttachmentStoreOp                     depth_storeOp);
 
+    void SetRenderArea(const VkRect2D& render_area) { render_targets.render_area = render_area; }
+
+    // Call with vkCmdBindDescriptorSets to scan for dumpable resources
     void DetectWritableResources(uint32_t                first_set,
                                  const format::HandleId* descriptor_sets_ids,
                                  uint32_t                descriptor_sets_count);
@@ -103,9 +110,13 @@ class VulkanReplayResourceDump
 
     struct
     {
-        std::vector<VkAttachmentStoreOp> attachment_store_ops;
-        std::vector<const ImageInfo*>    attachment_image_ids;
-        VkRect2D                         rendering_arrea{};
+        std::vector<const ImageInfo*>    color_att_imgs;
+        std::vector<VkAttachmentStoreOp> color_att_storeOps;
+
+        const ImageInfo*    depth_att_img{ nullptr };
+        VkAttachmentStoreOp depth_att_storeOp;
+
+        VkRect2D render_area{ 0 };
     } render_targets;
 
     struct descriptor_set_bindings
