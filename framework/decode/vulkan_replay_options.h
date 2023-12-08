@@ -46,6 +46,11 @@ static constexpr uint64_t g_CmdDraw_Index            = 114;
 static constexpr uint64_t g_CmdTraceRaysKHR_Index    = 0;
 static constexpr uint64_t g_QueueSubmit_Index        = 579;
 
+// static constexpr uint64_t g_BeginCommandBuffer_Index = 104;
+// static constexpr uint64_t g_CmdDraw_Index            = 110;
+// static constexpr uint64_t g_CmdTraceRaysKHR_Index    = 0;
+// static constexpr uint64_t g_QueueSubmit_Index        = 695;
+
 struct VulkanReplayOptions : public ReplayOptions
 {
     bool                         enable_vulkan{ true };

@@ -59,6 +59,17 @@ struct BmpInfoHeader
     uint32_t clr_important;
 };
 
+enum DataFormats
+{
+    kFormat_UNSPECIFIED = 0,
+    kFormat_RGB,
+    kFormat_RGBA,
+    kFormat_BGR,
+    kFormat_BGRA,
+    kFormat_D32,
+    kFormat_D16
+};
+
 #pragma pack(pop)
 
 bool WriteBmpImage(const std::string& filename,
@@ -66,7 +77,8 @@ bool WriteBmpImage(const std::string& filename,
                    uint32_t           height,
                    uint64_t           data_size,
                    const void*        data,
-                   uint32_t           pitch = 0);
+                   uint32_t           pitch       = 0,
+                   DataFormats        data_format = kFormat_UNSPECIFIED);
 
 bool WritePngImage(const std::string& filename,
                    uint32_t           width,
