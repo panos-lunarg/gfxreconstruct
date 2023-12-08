@@ -4617,7 +4617,6 @@ void StoreAttachmentDescriptionFinalLayouts(const T* pCreateInfo, HandlePointerD
         for (uint32_t i = 0; i < attachment_count; ++i)
         {
             render_pass_info->attachment_description_final_layouts[i] = attachment_descs[i].finalLayout;
-            render_pass_info->store_ops.push_back(attachment_descs[i].storeOp);
         }
     }
 }
@@ -4643,6 +4642,29 @@ VkResult VulkanReplayConsumerBase::OverrideCreateRenderPass(
     if ((result == VK_SUCCESS) && (pCreateInfo->GetPointer() != nullptr))
     {
         StoreAttachmentDescriptionFinalLayouts(pCreateInfo, pRenderPass);
+    }
+
+    const VkRenderPassCreateInfo* create_info      = pCreateInfo->GetPointer();
+    auto                          render_pass_info = reinterpret_cast<RenderPassInfo*>(pRenderPass->GetConsumerData(0));
+    assert(render_pass_info);
+
+    for (uint32_t i = 0; i < create_info->attachmentCount; ++i)
+    {
+        render_pass_info->attachment_descs.push_back(create_info->pAttachments[i]);
+    }
+
+    for (uint32_t i = 0; i < create_info->subpassCount; ++i)
+    {
+        struct RenderPassInfo::SubpassReferences sp_ref;
+        for (uint32_t s = 0; s < create_info->pSubpasses[i].colorAttachmentCount; ++s)
+        {
+            sp_ref.color_att_refs.push_back(create_info->pSubpasses[i].pColorAttachments[s]);
+        }
+
+        sp_ref.depth_att_ref = *create_info->pSubpasses[i].pDepthStencilAttachment;
+
+        render_pass_info->subpass_refs.push_back(std::move(sp_ref));
+        render_pass_info->current_subpass = 0;
     }
 
     return result;
@@ -6869,8 +6891,9 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass(
     StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* render_pass_begin_info_decoder,
     VkSubpassContents                                    contents)
 {
-    auto framebuffer_id = render_pass_begin_info_decoder->GetMetaStructPointer()->framebuffer;
-    auto render_pass_id = render_pass_begin_info_decoder->GetMetaStructPointer()->renderPass;
+    const auto render_pass_info_meta = render_pass_begin_info_decoder->GetMetaStructPointer();
+    auto       framebuffer_id        = render_pass_info_meta->framebuffer;
+    auto       render_pass_id        = render_pass_info_meta->renderPass;
     command_buffer_info->frame_buffer_ids.push_back(framebuffer_id);
 
     auto framebuffer_info = object_info_table_.GetFramebufferInfo(framebuffer_id);
@@ -6887,6 +6910,47 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass(
             command_buffer_info->image_layout_barriers[image_view_info->image_id] =
                 render_pass_info->attachment_description_final_layouts[i];
         }
+    }
+
+    // Update render targets
+    if (dumper.IsRecording())
+    {
+        assert(render_pass_info->current_subpass == 0);
+
+        const RenderPassInfo* render_pass_info =
+            object_info_table_.GetRenderPassInfo(render_pass_info_meta->renderPass);
+        assert(render_pass_info);
+
+        std::vector<const ImageInfo*>    color_att_imgs;
+        std::vector<VkAttachmentStoreOp> color_att_storeOps;
+
+        // Parse color attachments
+        for (const auto& att_ref : render_pass_info->subpass_refs[0].color_att_refs)
+        {
+            const uint32_t       att_idx = att_ref.attachment;
+            const ImageViewInfo* img_view_info =
+                object_info_table_.GetImageViewInfo(framebuffer_info->attachment_image_view_ids[att_idx]);
+            assert(img_view_info);
+
+            const ImageInfo* img_info = object_info_table_.GetImageInfo(img_view_info->image_id);
+            assert(img_info);
+
+            color_att_imgs.push_back(img_info);
+            color_att_storeOps.push_back(render_pass_info->attachment_descs[att_idx].storeOp);
+        }
+
+        const uint32_t       depth_att_idx = render_pass_info->subpass_refs[0].depth_att_ref.attachment;
+        const ImageViewInfo* depth_img_view_info =
+            object_info_table_.GetImageViewInfo(framebuffer_info->attachment_image_view_ids[depth_att_idx]);
+        assert(depth_img_view_info);
+
+        const ImageInfo* depth_img_info = object_info_table_.GetImageInfo(depth_img_view_info->image_id);
+        assert(depth_img_info);
+
+        VkAttachmentStoreOp depth_att_storeOp = render_pass_info->attachment_descs[depth_att_idx].storeOp;
+
+        dumper.SetRenderTargets(color_att_imgs, color_att_storeOps, depth_img_info, depth_att_storeOp);
+        dumper.SetRenderArea(render_pass_begin_info_decoder->GetPointer()->renderArea);
     }
 
     VkCommandBuffer command_buffer = command_buffer_info->handle;
