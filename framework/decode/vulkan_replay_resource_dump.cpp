@@ -226,8 +226,8 @@ void VulkanReplayResourceDump::DumpAttachments(const encode::DeviceTable* device
 
             std::stringstream filename;
             filename << "vkCmdDraw_" << CmdDraw_Index << "_att_" << i << "_aspect_"
-               << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_" << 0
-               << ".bmp";
+                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_" << 0
+                     << ".bmp";
 
             const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
             const uint32_t stride     = texel_size * image_info->extent.width;
@@ -273,7 +273,8 @@ void VulkanReplayResourceDump::DumpAttachments(const encode::DeviceTable* device
 
         std::stringstream filename;
         filename << "vkCmdDraw_" << CmdDraw_Index << "_aspect_"
-           << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0 << ".bmp";
+                 << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
+                 << ".bmp";
 
         const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_DEPTH_BIT);
         const uint32_t stride     = texel_size * image_info->extent.width;
@@ -319,11 +320,34 @@ void VulkanReplayResourceDump::SetRenderTargets(const std::vector<const ImageInf
     render_targets.depth_att_storeOp  = depth_storeOp;
 }
 
-void VulkanReplayResourceDump::DetectWritableResources(uint32_t                first_set,
-                                                       const format::HandleId* descriptor_sets_ids,
-                                                       uint32_t                descriptor_sets_count)
+void VulkanReplayResourceDump::UpdateDescriptors(VkPipelineBindPoint     pipeline_bind_point,
+                                                 uint32_t                first_set,
+                                                 const format::HandleId* descriptor_sets_ids,
+                                                 uint32_t                descriptor_sets_count)
 {
     assert(descriptor_sets_ids);
+
+    DescriptorSetBindPoints bind_point;
+    switch (pipeline_bind_point)
+    {
+        case VK_PIPELINE_BIND_POINT_GRAPHICS:
+            bind_point = BIND_POINT_GRAPHICS;
+            break;
+
+        case VK_PIPELINE_BIND_POINT_COMPUTE:
+            bind_point = BIND_POINT_COMPUTE;
+            break;
+
+        case VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR:
+            bind_point = BIND_POINT_RAY_TRACING;
+            break;
+
+        default:
+            GFXRECON_LOG_ERROR("Unrecognized pipeline bind point (%d)", pipeline_bind_point);
+            assert(0);
+            return;
+            break;
+    }
 
     for (uint32_t i = 0; i < descriptor_sets_count; ++i)
     {
@@ -343,7 +367,7 @@ void VulkanReplayResourceDump::DetectWritableResources(uint32_t                f
                     const ImageInfo* img_info = object_info_table_.GetImageInfo(img_view_info->image_id);
                     assert(img_info);
 
-                    bound_descriptor_sets[first_set + i].image_infos[binding.first] = img_info;
+                    bound_descriptor_sets[bind_point][first_set + i].image_infos[binding.first] = img_info;
                 }
                 break;
 
@@ -354,7 +378,7 @@ void VulkanReplayResourceDump::DetectWritableResources(uint32_t                f
                         object_info_table_.GetBufferInfo(binding.second.buffer_info.buffer_id);
                     assert(buffer_info);
 
-                    bound_descriptor_sets[first_set + i].buffer_infos[binding.first] = buffer_info;
+                    bound_descriptor_sets[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
                 }
                 break;
 
@@ -367,7 +391,7 @@ void VulkanReplayResourceDump::DetectWritableResources(uint32_t                f
                     const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(buffer_view_info->buffer_id);
                     assert(buffer_info);
 
-                    bound_descriptor_sets[first_set + i].buffer_infos[binding.first] = buffer_info;
+                    bound_descriptor_sets[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
                 }
                 break;
 
@@ -404,7 +428,23 @@ void VulkanReplayResourceDump::DumpResources(const encode::DeviceTable* device_t
     graphics::VulkanResourcesUtil resource_util(
         device_info->handle, *device_table, *phys_dev_info->replay_device_info->memory_properties);
 
-    for (auto desc_set : bound_descriptor_sets)
+    DescriptorSetBindPoints bind_point;
+    if (CmdDraw_Index)
+    {
+        bind_point = BIND_POINT_GRAPHICS;
+    }
+    else if (CmdDispatch_Index)
+    {
+        bind_point = BIND_POINT_COMPUTE;
+    }
+    else
+    {
+        assert(CmdTraceRaysKHR_Index);
+
+        bind_point = BIND_POINT_RAY_TRACING;
+    }
+
+    for (auto desc_set : bound_descriptor_sets[bind_point])
     {
         for (const auto storage_image : desc_set.second.image_infos)
         {
