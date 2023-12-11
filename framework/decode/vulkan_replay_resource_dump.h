@@ -69,9 +69,10 @@ class VulkanReplayResourceDump
     void SetRenderArea(const VkRect2D& render_area) { render_targets.render_area = render_area; }
 
     // Call with vkCmdBindDescriptorSets to scan for dumpable resources
-    void DetectWritableResources(uint32_t                first_set,
-                                 const format::HandleId* descriptor_sets_ids,
-                                 uint32_t                descriptor_sets_count);
+    void UpdateDescriptors(VkPipelineBindPoint     pipeline_bind_point,
+                           uint32_t                first_set,
+                           const format::HandleId* descriptor_sets_ids,
+                           uint32_t                descriptor_sets_count);
 
     void DumpAttachments(const encode::DeviceTable* device_table, uint64_t index);
 
@@ -137,7 +138,18 @@ class VulkanReplayResourceDump
         std::map<uint32_t, const BufferInfo*> buffer_infos;
     };
 
-    std::map<uint32_t, descriptor_set_bindings> bound_descriptor_sets;
+    using descriptor_set_t = std::map<uint32_t, descriptor_set_bindings>;
+
+    enum DescriptorSetBindPoints
+    {
+        BIND_POINT_GRAPHICS = 0,
+        BIND_POINT_COMPUTE,
+        BIND_POINT_RAY_TRACING,
+
+        BIND_POINT_COUNT = 3
+    };
+
+    descriptor_set_t bound_descriptor_sets[BIND_POINT_COUNT];
 
     uint64_t BeginCommandBuffer_Index;
     uint64_t CmdDraw_Index;
