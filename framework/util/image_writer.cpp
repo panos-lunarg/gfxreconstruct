@@ -148,6 +148,35 @@ bool WriteBmpImage(const std::string& filename,
                         util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
                     }
                 }
+                else if (format == kFormat_RGBA)
+                {
+                    assert(pitch);
+
+                    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
+                    for (uint32_t x = 0; x < width; ++x)
+                    {
+                        const uint8_t  r    = bytes[(height_1 - y) * 4 * width + (4 * x) + 0];
+                        const uint8_t  g    = bytes[(height_1 - y) * 4 * width + (4 * x) + 1];
+                        const uint8_t  b    = bytes[(height_1 - y) * 4 * width + (4 * x) + 2];
+                        const uint8_t  a    = bytes[(height_1 - y) * 4 * width + (4 * x) + 3];
+                        const uint32_t rgba = (a << 24) | (r << 16) | (g << 8) | b;
+                        util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                    }
+                }
+                else if (format == kFormat_RGB)
+                {
+                    assert(pitch);
+
+                    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
+                    for (uint32_t x = 0; x < width; ++x)
+                    {
+                        const uint8_t  r    = bytes[(height_1 - y) * 3 * width + (3 * x) + 0];
+                        const uint8_t  g    = bytes[(height_1 - y) * 3 * width + (3 * x) + 1];
+                        const uint8_t  b    = bytes[(height_1 - y) * 3 * width + (3 * x) + 2];
+                        const uint32_t rgba = (0xff << 24) | (r << 16) | (g << 8) | b;
+                        util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                    }
+                }
                 else
                 {
                     const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
