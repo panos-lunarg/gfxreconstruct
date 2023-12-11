@@ -1708,6 +1708,11 @@ void VulkanReplayConsumer::Process_vkCmdDispatch(
     if (dumper.IsRecording())
     {
         GetDeviceTable(dumper.GetClonedCommandBuffer())->CmdDispatch(dumper.GetClonedCommandBuffer(), groupCountX, groupCountY, groupCountZ)/*@@@ABC*/;//@@@HERE
+
+        if (dumper.DumpingDispatchIndex(call_info.index))
+        {
+            dumper.FinalizeCommandBuffer(*GetDeviceTable(in_commandBuffer));
+        }
     }
 }
 
@@ -2187,6 +2192,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass(
     if (dumper.IsRecording())
     {
         GetDeviceTable(dumper.GetClonedCommandBuffer())->CmdBeginRenderPass(dumper.GetClonedCommandBuffer(), pRenderPassBegin->GetPointer(), contents)/*@@@ABC*/;//@@@HERE
+        dumper.EnterRenderPass();
     }
 }
 
@@ -2216,6 +2222,7 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderPass(
     if (dumper.IsRecording())
     {
         GetDeviceTable(dumper.GetClonedCommandBuffer())->CmdEndRenderPass(dumper.GetClonedCommandBuffer())/*@@@ABC*/;//@@@HERE
+        dumper.ExitRenderPass();
     }
 }
 
