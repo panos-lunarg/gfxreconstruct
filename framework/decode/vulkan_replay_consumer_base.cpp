@@ -158,6 +158,7 @@ VulkanReplayConsumerBase::VulkanReplayConsumerBase(std::shared_ptr<application::
                                                    const VulkanReplayOptions&                options) :
     dumper(options.BeginCommandBuffer_Index,
            options.CmdDraw_Index,
+           options.CmdDispatch_Index,
            options.CmdTraceRaysKHR_Index,
            options.QueueSubmit_Index,
            object_info_table_),

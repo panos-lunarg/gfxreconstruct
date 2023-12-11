@@ -42,12 +42,14 @@ class VulkanReplayResourceDump
 
     VulkanReplayResourceDump(uint64_t                     begin_command_buffer_index,
                              uint64_t                     cmdDraw_index,
+                             uint64_t                     cmdDispatch_index,
                              uint64_t                     CmdTraceRaysKHR_index,
                              uint64_t                     QueueSubmit_index,
                              const VulkanObjectInfoTable& object_info_table) :
         BeginCommandBuffer_Index(begin_command_buffer_index),
-        CmdDraw_Index(cmdDraw_index), CmdTraceRaysKHR_Index(CmdTraceRaysKHR_index),
-        QueueSubmit_Index(QueueSubmit_index), recording(false), object_info_table_(object_info_table)
+        CmdDraw_Index(cmdDraw_index), CmdDispatch_Index(cmdDispatch_index),
+        CmdTraceRaysKHR_Index(CmdTraceRaysKHR_index), QueueSubmit_Index(QueueSubmit_index), recording(false),
+        inside_renderpass(false), object_info_table_(object_info_table)
     {}
 
     VkResult CloneCommandBuffer(format::HandleId commandBuffer, PFN_vkAllocateCommandBuffers func);
@@ -75,10 +77,12 @@ class VulkanReplayResourceDump
 
     void DumpResources(const encode::DeviceTable* device_table, uint64_t index);
 
+    void EnterRenderPass() { inside_renderpass = true; }
+    void ExitRenderPass() { inside_renderpass = false; }
+
     bool DumpingSubmissionIndex(uint64_t index) const
     {
         assert(!recording);
-        assert(command_buffer != VK_NULL_HANDLE);
 
         return QueueSubmit_Index == index;
     }
@@ -89,6 +93,14 @@ class VulkanReplayResourceDump
         assert(command_buffer != VK_NULL_HANDLE);
 
         return CmdDraw_Index == index;
+    }
+
+    bool DumpingDispatchIndex(uint64_t index) const
+    {
+        assert(recording);
+        assert(command_buffer != VK_NULL_HANDLE);
+
+        return CmdDispatch_Index == index;
     }
 
     bool DumpingTraceRaysIndex(uint64_t index) const
@@ -129,9 +141,12 @@ class VulkanReplayResourceDump
 
     uint64_t BeginCommandBuffer_Index;
     uint64_t CmdDraw_Index;
+    uint64_t CmdDispatch_Index;
     uint64_t CmdTraceRaysKHR_Index;
     uint64_t QueueSubmit_Index;
-    bool     recording;
+
+    bool recording;
+    bool inside_renderpass;
 
     const VulkanObjectInfoTable& object_info_table_;
 };
