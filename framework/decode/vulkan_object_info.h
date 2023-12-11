@@ -312,6 +312,7 @@ struct BufferInfo : public VulkanObjectInfo<VkBuffer>
     // The following values are only used when loading the initial state for trimmed files.
     VkMemoryPropertyFlags memory_property_flags{ 0 };
     VkBufferUsageFlags    usage{ 0 };
+    VkDeviceSize          size{ 0 };
     uint32_t              queue_family_index{ 0 };
 };
 
@@ -489,7 +490,7 @@ struct RenderPassInfo : public VulkanObjectInfo<VkRenderPass>
 
     // The attachment references per subpass
     std::vector<SubpassReferences> subpass_refs;
-    uint32_t current_subpass;
+    uint32_t                       current_subpass;
 };
 
 struct descriptor_type_image_info
