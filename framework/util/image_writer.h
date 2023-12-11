@@ -59,6 +59,8 @@ struct BmpInfoHeader
     uint32_t clr_important;
 };
 
+#pragma pack(pop)
+
 enum DataFormats
 {
     kFormat_UNSPECIFIED = 0,
@@ -69,8 +71,6 @@ enum DataFormats
     kFormat_D32,
     kFormat_D16
 };
-
-#pragma pack(pop)
 
 bool WriteBmpImage(const std::string& filename,
                    uint32_t           width,

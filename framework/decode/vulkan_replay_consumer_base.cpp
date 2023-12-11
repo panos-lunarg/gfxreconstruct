@@ -4442,6 +4442,7 @@ VulkanReplayConsumerBase::OverrideCreateBuffer(PFN_vkCreateBuffer               
 
         buffer_info->allocator_data = allocator_data;
         buffer_info->usage          = replay_create_info->usage;
+        buffer_info->size           = replay_create_info->size;
 
         if ((replay_create_info->sharingMode == VK_SHARING_MODE_CONCURRENT) &&
             (replay_create_info->queueFamilyIndexCount > 0) && (replay_create_info->pQueueFamilyIndices != nullptr))
