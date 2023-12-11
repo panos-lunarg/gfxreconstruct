@@ -149,19 +149,25 @@ void VulkanReplayResourceDump::FinalizeCommandBuffer(const encode::DeviceTable& 
         img_barriers.push_back(std::move(img_barrier));
     }
 
-    device_table.CmdEndRenderPass(command_buffer);
+    if (inside_renderpass)
+    {
+        device_table.CmdEndRenderPass(command_buffer);
+    }
 
     // Inset pipeline barrier after EndRenderPass
-    device_table.CmdPipelineBarrier(command_buffer,
-                                    VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                                    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                                    0,
-                                    0,
-                                    nullptr,
-                                    0,
-                                    nullptr,
-                                    img_barriers.size(),
-                                    img_barriers.data());
+    if (img_barriers.size())
+    {
+        device_table.CmdPipelineBarrier(command_buffer,
+                                        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                        VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                        0,
+                                        0,
+                                        nullptr,
+                                        0,
+                                        nullptr,
+                                        img_barriers.size(),
+                                        img_barriers.data());
+    }
 
     device_table.EndCommandBuffer(command_buffer);
 
