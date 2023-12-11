@@ -31,9 +31,7 @@ GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(util)
 GFXRECON_BEGIN_NAMESPACE(bufferwriter)
 
-bool WriteBuffer(const std::string& filename,
-                 const void*        data,
-                 size_t             size);
+bool WriteBuffer(const std::string& filename, const void* data, size_t size);
 
 GFXRECON_END_NAMESPACE(gfxrecon)
 GFXRECON_END_NAMESPACE(util)
