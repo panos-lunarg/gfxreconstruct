@@ -1556,7 +1556,7 @@ void VulkanReplayConsumer::Process_vkCmdBindDescriptorSets(
     if (dumper.IsRecording())
     {
         GetDeviceTable(dumper.GetClonedCommandBuffer())->CmdBindDescriptorSets(dumper.GetClonedCommandBuffer(), pipelineBindPoint, in_layout, firstSet, descriptorSetCount, in_pDescriptorSets, dynamicOffsetCount, in_pDynamicOffsets)/*@@@ABC*/;//@@@HERE
-        dumper.DetectWritableResources(firstSet, pDescriptorSets->GetPointer(), descriptorSetCount);
+        dumper.UpdateDescriptors(pipelineBindPoint, firstSet, pDescriptorSets->GetPointer(), descriptorSetCount);
     }
 }
 
