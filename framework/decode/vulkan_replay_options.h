@@ -41,10 +41,11 @@ typedef std::function<VulkanResourceAllocator*()> CreateResourceAllocator;
 // Default log level to use prior to loading settings.
 const util::Log::Severity kDefaultLogLevel = util::Log::Severity::kInfoSeverity;
 
-static constexpr uint64_t g_BeginCommandBuffer_Index = 107;
-static constexpr uint64_t g_CmdDraw_Index            = 114;
+static constexpr uint64_t g_BeginCommandBuffer_Index = 185;
+static constexpr uint64_t g_CmdDraw_Index            = 0;
+static constexpr uint64_t g_CmdDispatch_Index        = 189;
 static constexpr uint64_t g_CmdTraceRaysKHR_Index    = 0;
-static constexpr uint64_t g_QueueSubmit_Index        = 579;
+static constexpr uint64_t g_QueueSubmit_Index        = 1942;
 
 // static constexpr uint64_t g_BeginCommandBuffer_Index = 104;
 // static constexpr uint64_t g_CmdDraw_Index            = 110;
@@ -73,6 +74,7 @@ struct VulkanReplayOptions : public ReplayOptions
 
     uint64_t BeginCommandBuffer_Index{ g_BeginCommandBuffer_Index };
     uint64_t CmdDraw_Index{ g_CmdDraw_Index };
+    uint64_t CmdDispatch_Index{ g_CmdDispatch_Index };
     uint64_t CmdTraceRaysKHR_Index{ g_CmdTraceRaysKHR_Index };
     uint64_t QueueSubmit_Index{ g_QueueSubmit_Index };
 };
