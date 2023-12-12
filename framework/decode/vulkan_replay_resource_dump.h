@@ -45,11 +45,12 @@ class VulkanReplayResourceDump
                              uint64_t                     cmdDispatch_index,
                              uint64_t                     CmdTraceRaysKHR_index,
                              uint64_t                     QueueSubmit_index,
+                             bool                         isolate_draw,
                              const VulkanObjectInfoTable& object_info_table) :
         BeginCommandBuffer_Index(begin_command_buffer_index),
         CmdDraw_Index(cmdDraw_index), CmdDispatch_Index(cmdDispatch_index),
         CmdTraceRaysKHR_Index(CmdTraceRaysKHR_index), QueueSubmit_Index(QueueSubmit_index), recording(false),
-        inside_renderpass(false), object_info_table_(object_info_table)
+        inside_renderpass(false), isolate_draw_call(isolate_draw), object_info_table_(object_info_table)
     {}
 
     VkResult CloneCommandBuffer(format::HandleId commandBuffer, PFN_vkAllocateCommandBuffers func);
@@ -116,6 +117,8 @@ class VulkanReplayResourceDump
 
     bool IsRecording() const { return recording; }
 
+    bool IsolateDrawCall() const { return isolate_draw_call; }
+
   private:
     VkCommandBuffer  command_buffer                 = VK_NULL_HANDLE;
     format::HandleId original_command_buffer        = format::kNullHandleId;
@@ -159,6 +162,7 @@ class VulkanReplayResourceDump
 
     bool recording;
     bool inside_renderpass;
+    bool isolate_draw_call;
 
     const VulkanObjectInfoTable& object_info_table_;
 };
