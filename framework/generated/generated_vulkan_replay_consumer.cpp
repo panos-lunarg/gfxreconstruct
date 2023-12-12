@@ -1612,11 +1612,21 @@ void VulkanReplayConsumer::Process_vkCmdDraw(
     // Push command in the command buffer clone
     if (dumper.IsRecording())
     {
-        GetDeviceTable(dumper.GetClonedCommandBuffer())->CmdDraw(dumper.GetClonedCommandBuffer(), vertexCount, instanceCount, firstVertex, firstInstance)/*@@@ABC*/;//@@@HERE
-
-        if (dumper.DumpingDrawCallIndex(call_info.index))
+        if (dumper.IsolateDrawCall())
         {
-            dumper.FinalizeCommandBuffer(*GetDeviceTable(in_commandBuffer));
+            if (dumper.DumpingDrawCallIndex(call_info.index)) {
+                GetDeviceTable(dumper.GetClonedCommandBuffer())->CmdDraw(dumper.GetClonedCommandBuffer(), vertexCount, instanceCount, firstVertex, firstInstance)/*@@@ABC*/;//@@@HERE
+                dumper.FinalizeCommandBuffer(*GetDeviceTable(in_commandBuffer));
+            }
+        }
+        else
+        {
+            GetDeviceTable(dumper.GetClonedCommandBuffer())->CmdDraw(dumper.GetClonedCommandBuffer(), vertexCount, instanceCount, firstVertex, firstInstance)/*@@@ABC*/;//@@@HERE
+
+            if (dumper.DumpingDrawCallIndex(call_info.index))
+            {
+                dumper.FinalizeCommandBuffer(*GetDeviceTable(in_commandBuffer));
+            }
         }
     }
 }
