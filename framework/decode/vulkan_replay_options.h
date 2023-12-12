@@ -41,6 +41,7 @@ typedef std::function<VulkanResourceAllocator*()> CreateResourceAllocator;
 // Default log level to use prior to loading settings.
 const util::Log::Severity kDefaultLogLevel = util::Log::Severity::kInfoSeverity;
 
+
 enum class SkipGetFenceStatus
 {
     NoSkip,
@@ -49,11 +50,21 @@ enum class SkipGetFenceStatus
     COUNT
 };
 
-static constexpr uint64_t g_BeginCommandBuffer_Index = 185;
-static constexpr uint64_t g_CmdDraw_Index            = 0;
-static constexpr uint64_t g_CmdDispatch_Index        = 189;
+// Sascha's Compute ray tracing
+// static constexpr uint64_t g_BeginCommandBuffer_Index = 185;
+// static constexpr uint64_t g_CmdDraw_Index            = 0;
+// static constexpr uint64_t g_CmdDispatch_Index        = 189;
+// static constexpr uint64_t g_CmdTraceRaysKHR_Index    = 0;
+// static constexpr uint64_t g_QueueSubmit_Index        = 1942;
+
+// Modified vkCube
+static constexpr uint64_t g_BeginCommandBuffer_Index = 107;
+static constexpr uint64_t g_CmdDraw_Index            = 114;
+static constexpr uint64_t g_CmdDispatch_Index        = 0;
 static constexpr uint64_t g_CmdTraceRaysKHR_Index    = 0;
-static constexpr uint64_t g_QueueSubmit_Index        = 1942;
+static constexpr uint64_t g_QueueSubmit_Index        = 579;
+
+static constexpr bool     g_isolate_draw             = true;
 
 struct VulkanReplayOptions : public ReplayOptions
 {
@@ -84,6 +95,7 @@ struct VulkanReplayOptions : public ReplayOptions
     uint64_t CmdDispatch_Index{ g_CmdDispatch_Index };
     uint64_t CmdTraceRaysKHR_Index{ g_CmdTraceRaysKHR_Index };
     uint64_t QueueSubmit_Index{ g_QueueSubmit_Index };
+    bool     isolate_draw{ g_isolate_draw };
 };
 
 GFXRECON_END_NAMESPACE(decode)
