@@ -40,32 +40,33 @@ class VulkanReplayResourceDump
   public:
     VulkanReplayResourceDump() = delete;
 
-    VulkanReplayResourceDump(uint64_t                     begin_command_buffer_index,
-                             uint64_t                     cmdDraw_index,
-                             uint64_t                     cmdDispatch_index,
-                             uint64_t                     CmdTraceRaysKHR_index,
-                             uint64_t                     QueueSubmit_index,
-                             bool                         isolate_draw,
-                             const VulkanObjectInfoTable& object_info_table) :
-        BeginCommandBuffer_Index(begin_command_buffer_index),
-        CmdDraw_Index(cmdDraw_index), CmdDispatch_Index(cmdDispatch_index),
-        CmdTraceRaysKHR_Index(CmdTraceRaysKHR_index), QueueSubmit_Index(QueueSubmit_index), recording(false),
-        inside_renderpass(false), isolate_draw_call(isolate_draw), object_info_table_(object_info_table)
-    {}
+    VulkanReplayResourceDump(const std::vector<uint64_t>&              begin_command_buffer_index,
+                             const std::vector<std::vector<uint64_t>>& cmdDraw_index,
+                             uint64_t                                  cmdDispatch_index,
+                             uint64_t                                  CmdTraceRaysKHR_index,
+                             const std::vector<uint64_t>&              QueueSubmit_index,
+                             bool                                      isolate_draw,
+                             const VulkanObjectInfoTable&              object_info_table);
 
-    VkResult CloneCommandBuffer(format::HandleId commandBuffer, PFN_vkAllocateCommandBuffers func);
+    VkResult
+    CloneCommandBuffer(uint64_t bcb_index, format::HandleId commandBuffer, const encode::DeviceTable* device_table);
 
-    void FinalizeCommandBuffer(const encode::DeviceTable& device_table);
+    void FinalizeCommandBuffer(VkCommandBuffer original_command_buffer);
 
-    void ModifyCommandBufferSubmision(std::vector<VkSubmitInfo>& modified_submit_infos);
+    VkResult ModifyAndSubmit(std::vector<VkSubmitInfo>  modified_submit_infos,
+                             const encode::DeviceTable& device_table,
+                             VkQueue                    queue,
+                             VkFence                    fence,
+                             uint64_t                   index);
 
-    VkCommandBuffer GetClonedCommandBuffer() const { return command_buffer; }
+    VkCommandBuffer GetCurrentCommandBuffer(VkCommandBuffer original_command_buffer) const;
 
-    // Call with vkCmdBeginRendering(KHR)
     void SetRenderTargets(const std::vector<const ImageInfo*>&    color_att_imgs,
                           const std::vector<VkAttachmentStoreOp>& color_att_storeOps,
+                          const std::vector<VkImageLayout>&       color_att_final_layouts,
                           const ImageInfo*                        depth_att_img,
-                          VkAttachmentStoreOp                     depth_storeOp);
+                          VkAttachmentStoreOp                     depth_att_storeOp,
+                          VkImageLayout                           depth_att_final_layout);
 
     void SetRenderArea(const VkRect2D& render_area) { render_targets.render_area = render_area; }
 
@@ -75,62 +76,64 @@ class VulkanReplayResourceDump
                            const format::HandleId* descriptor_sets_ids,
                            uint32_t                descriptor_sets_count);
 
-    void DumpAttachments(const encode::DeviceTable* device_table, uint64_t index);
-
-    void DumpResources(const encode::DeviceTable* device_table, uint64_t index);
-
     void EnterRenderPass() { inside_renderpass = true; }
+
     void ExitRenderPass() { inside_renderpass = false; }
 
-    bool DumpingSubmissionIndex(uint64_t index) const
-    {
-        assert(!recording);
+    bool DumpingSubmissionIndex(uint64_t index) const;
 
-        return QueueSubmit_Index == index;
-    }
+    bool DumpingDrawCallIndex(VkCommandBuffer original_command_buffer, uint64_t index) const;
 
-    bool DumpingDrawCallIndex(uint64_t index) const
-    {
-        assert(recording);
-        assert(command_buffer != VK_NULL_HANDLE);
+    bool DumpingDispatchIndex(uint64_t index) const;
 
-        return CmdDraw_Index == index;
-    }
+    bool DumpingTraceRaysIndex(uint64_t index) const;
 
-    bool DumpingDispatchIndex(uint64_t index) const
-    {
-        assert(recording);
-        assert(command_buffer != VK_NULL_HANDLE);
-
-        return CmdDispatch_Index == index;
-    }
-
-    bool DumpingTraceRaysIndex(uint64_t index) const
-    {
-        assert(recording);
-        assert(command_buffer != VK_NULL_HANDLE);
-
-        return CmdTraceRaysKHR_Index == index;
-    }
-
-    bool DumpingBeginCommandBufferIndex(uint64_t index) const { return BeginCommandBuffer_Index == index; }
+    bool DumpingBeginCommandBufferIndex(uint64_t index) const;
 
     bool IsRecording() const { return recording; }
 
     bool IsolateDrawCall() const { return isolate_draw_call; }
 
+    using cmd_buf_it = std::vector<VkCommandBuffer>::const_iterator;
+    void GetActiveCommandBuffers(VkCommandBuffer user_cmd_buffer, cmd_buf_it& first, cmd_buf_it& last);
+
   private:
-    VkCommandBuffer  command_buffer                 = VK_NULL_HANDLE;
-    format::HandleId original_command_buffer        = format::kNullHandleId;
-    VkCommandBuffer  original_command_buffer_handle = VK_NULL_HANDLE;
+    struct CommandBufferStack
+    {
+        CommandBufferStack(const std::vector<uint64_t>& dc_indices) :
+            original_command_buffer_handle(VK_NULL_HANDLE), original_command_buffer_info(nullptr),
+            command_buffers(dc_indices.size(), VK_NULL_HANDLE), current_index(0), dc_indices(std::move(dc_indices)),
+            aux_command_buffer(VK_NULL_HANDLE), device_table(nullptr)
+        {}
+
+        VkCommandBuffer              original_command_buffer_handle;
+        const CommandBufferInfo*     original_command_buffer_info;
+        std::vector<VkCommandBuffer> command_buffers;
+        uint32_t                     current_index;
+        std::vector<uint64_t>        dc_indices;
+
+        VkCommandBuffer aux_command_buffer;
+
+        const encode::DeviceTable* device_table;
+    };
+
+    bool UpdateRecordingStatus();
+
+    void DumpAttachments(const CommandBufferStack& stack, uint64_t dc_index);
+
+    void DumpResources(const CommandBufferStack& stack, uint64_t dc_index);
+
+    VkResult RevertRenderTargetImageLayouts(const CommandBufferStack& stack, VkQueue queue);
 
     struct
     {
         std::vector<const ImageInfo*>    color_att_imgs;
         std::vector<VkAttachmentStoreOp> color_att_storeOps;
+        std::vector<VkImageLayout>       color_att_final_layouts;
 
         const ImageInfo*    depth_att_img{ nullptr };
         VkAttachmentStoreOp depth_att_storeOp;
+        VkImageLayout       depth_att_final_layout;
 
         VkRect2D render_area{ 0 };
     } render_targets;
@@ -154,11 +157,16 @@ class VulkanReplayResourceDump
 
     descriptor_set_t bound_descriptor_sets[BIND_POINT_COUNT];
 
-    uint64_t BeginCommandBuffer_Index;
-    uint64_t CmdDraw_Index;
-    uint64_t CmdDispatch_Index;
-    uint64_t CmdTraceRaysKHR_Index;
-    uint64_t QueueSubmit_Index;
+    uint64_t              CmdDispatch_Index;
+    uint64_t              CmdTraceRaysKHR_Index;
+    std::vector<uint64_t> QueueSubmit_Index;
+    uint32_t              current_draw_call;
+
+    // One per BeginCommandBuffer index
+    std::map<uint64_t, CommandBufferStack> cmd_buf_stacks;
+
+    // Mapping between the original VkCommandBuffer handle and BeginCommandBuffer index
+    std::map<VkCommandBuffer, uint64_t> cmd_buf_begin_map;
 
     bool recording;
     bool inside_renderpass;

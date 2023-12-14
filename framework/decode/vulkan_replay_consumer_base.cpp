@@ -3324,21 +3324,17 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
 
             if (submit_info_data != nullptr && (options_.dumping_resource) && dumper.DumpingSubmissionIndex(index))
             {
-                dumper.ModifyCommandBufferSubmision(modified_submit_infos);
+                dumper.ModifyAndSubmit(
+                    modified_submit_infos, *GetDeviceTable(queue_info->handle), queue_info->handle, fence, index);
             }
-
-            result = func(queue_info->handle,
-                          static_cast<uint32_t>(modified_submit_infos.size()),
-                          modified_submit_infos.data(),
-                          fence);
+            else
+            {
+                result = func(queue_info->handle,
+                              static_cast<uint32_t>(modified_submit_infos.size()),
+                              modified_submit_infos.data(),
+                              fence);
+            }
         }
-    }
-
-    if (dumper.DumpingSubmissionIndex(index))
-    {
-        GetDeviceTable(queue_info->handle)->QueueWaitIdle(queue_info->handle);
-        dumper.DumpAttachments(GetDeviceTable(queue_info->handle), index);
-        dumper.DumpResources(GetDeviceTable(queue_info->handle), index);
     }
 
     if ((options_.sync_queue_submissions) && (result == VK_SUCCESS))
@@ -6926,6 +6922,7 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass(
 
         std::vector<const ImageInfo*>    color_att_imgs;
         std::vector<VkAttachmentStoreOp> color_att_storeOps;
+        std::vector<VkImageLayout>       color_att_final_layouts;
 
         // Parse color attachments
         for (const auto& att_ref : render_pass_info->subpass_refs[0].color_att_refs)
@@ -6940,6 +6937,7 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass(
 
             color_att_imgs.push_back(img_info);
             color_att_storeOps.push_back(render_pass_info->attachment_descs[att_idx].storeOp);
+            color_att_final_layouts.push_back(render_pass_info->attachment_descs[att_idx].finalLayout);
         }
 
         const uint32_t       depth_att_idx = render_pass_info->subpass_refs[0].depth_att_ref.attachment;
@@ -6952,7 +6950,12 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass(
 
         VkAttachmentStoreOp depth_att_storeOp = render_pass_info->attachment_descs[depth_att_idx].storeOp;
 
-        dumper.SetRenderTargets(color_att_imgs, color_att_storeOps, depth_img_info, depth_att_storeOp);
+        dumper.SetRenderTargets(color_att_imgs,
+                                color_att_storeOps,
+                                color_att_final_layouts,
+                                depth_img_info,
+                                depth_att_storeOp,
+                                render_pass_info->attachment_descs[depth_att_idx].finalLayout);
         dumper.SetRenderArea(render_pass_begin_info_decoder->GetPointer()->renderArea);
     }
 
