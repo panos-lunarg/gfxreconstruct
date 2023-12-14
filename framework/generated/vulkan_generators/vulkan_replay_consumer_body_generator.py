@@ -381,7 +381,7 @@ class VulkanReplayConsumerBodyGenerator(
                 body += '    // Push command in the command buffer clone\n'
                 body += '    if (dumper.IsRecording())\n'
                 body += '    {\n'
-                body += '        {};//@@@HERE\n'.format(dr_call_expr.replace("in_commandBuffer", "dumper.GetClonedCommandBuffer()"))
+                body += '        {};//@@@HERE\n'.format(dr_call_expr.replace("in_commandBuffer", "dumper.GetCurrentCommandBuffer()"))
                 body += '    }\n'
         else:
         # drFuncExcludeList=['vkBeginCommandBuffer','vkResetCommandBuffer']
