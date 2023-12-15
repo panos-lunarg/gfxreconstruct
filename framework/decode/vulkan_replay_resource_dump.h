@@ -41,10 +41,10 @@ class VulkanReplayResourceDump
     VulkanReplayResourceDump() = delete;
 
     VulkanReplayResourceDump(const std::vector<uint64_t>&              begin_command_buffer_index,
-                             const std::vector<std::vector<uint64_t>>& cmdDraw_index,
-                             uint64_t                                  cmdDispatch_index,
-                             uint64_t                                  CmdTraceRaysKHR_index,
-                             const std::vector<uint64_t>&              QueueSubmit_index,
+                             const std::vector<std::vector<uint64_t>>& draw_indices,
+                             const std::vector<std::vector<uint64_t>>& dispatch_indices,
+                             const std::vector<std::vector<uint64_t>>& traceRays_indices,
+                             const std::vector<uint64_t>&              queueSubmit_indices,
                              bool                                      isolate_draw,
                              const VulkanObjectInfoTable&              object_info_table);
 
@@ -84,9 +84,9 @@ class VulkanReplayResourceDump
 
     bool DumpingDrawCallIndex(VkCommandBuffer original_command_buffer, uint64_t index) const;
 
-    bool DumpingDispatchIndex(uint64_t index) const;
+    bool DumpingDispatchIndex(VkCommandBuffer original_command_buffer, uint64_t index) const;
 
-    bool DumpingTraceRaysIndex(uint64_t index) const;
+    bool DumpingTraceRaysIndex(VkCommandBuffer original_command_buffer, uint64_t index) const;
 
     bool DumpingBeginCommandBufferIndex(uint64_t index) const;
 
@@ -95,15 +95,18 @@ class VulkanReplayResourceDump
     bool IsolateDrawCall() const { return isolate_draw_call; }
 
     using cmd_buf_it = std::vector<VkCommandBuffer>::const_iterator;
-    void GetActiveCommandBuffers(VkCommandBuffer user_cmd_buffer, cmd_buf_it& first, cmd_buf_it& last);
+    void GetActiveCommandBuffers(VkCommandBuffer user_cmd_buffer, cmd_buf_it& first, cmd_buf_it& last) const;
 
   private:
     struct CommandBufferStack
     {
-        CommandBufferStack(const std::vector<uint64_t>& dc_indices) :
-            original_command_buffer_handle(VK_NULL_HANDLE), original_command_buffer_info(nullptr),
-            command_buffers(dc_indices.size(), VK_NULL_HANDLE), current_index(0), dc_indices(std::move(dc_indices)),
-            aux_command_buffer(VK_NULL_HANDLE), device_table(nullptr)
+        CommandBufferStack(const std::vector<uint64_t>& dc_indices,
+                           const std::vector<uint64_t>& dispatch_indices,
+                           const std::vector<uint64_t>& traceRays_indices) :
+            original_command_buffer_handle(VK_NULL_HANDLE),
+            original_command_buffer_info(nullptr), command_buffers(dc_indices.size(), VK_NULL_HANDLE), current_index(0),
+            dc_indices(std::move(dc_indices)), dispatch_indices(std::move(dispatch_indices)),
+            traceRays_indices(std::move(traceRays_indices)), aux_command_buffer(VK_NULL_HANDLE), device_table(nullptr)
         {}
 
         VkCommandBuffer              original_command_buffer_handle;
@@ -111,12 +114,23 @@ class VulkanReplayResourceDump
         std::vector<VkCommandBuffer> command_buffers;
         uint32_t                     current_index;
         std::vector<uint64_t>        dc_indices;
+        std::vector<uint64_t>        dispatch_indices;
+        std::vector<uint64_t>        traceRays_indices;
 
         VkCommandBuffer aux_command_buffer;
 
         const encode::DeviceTable* device_table;
     };
 
+    std::vector<uint64_t> QueueSubmit_indices;
+
+    // One per BeginCommandBuffer index
+    std::map<uint64_t, CommandBufferStack> cmd_buf_stacks;
+
+    // Mapping between the original VkCommandBuffer handle and BeginCommandBuffer index
+    std::map<VkCommandBuffer, uint64_t> cmd_buf_begin_map;
+
+  private:
     bool UpdateRecordingStatus();
 
     void DumpAttachments(const CommandBufferStack& stack, uint64_t dc_index);
@@ -148,25 +162,14 @@ class VulkanReplayResourceDump
 
     enum DescriptorSetBindPoints
     {
-        BIND_POINT_GRAPHICS = 0,
-        BIND_POINT_COMPUTE,
-        BIND_POINT_RAY_TRACING,
+        kBindPoint_graphics = 0,
+        kBindPoint_compute,
+        kBindPoint_ray_tracing,
 
-        BIND_POINT_COUNT = 3
+        kBindPoint_count = 3
     };
 
-    descriptor_set_t bound_descriptor_sets[BIND_POINT_COUNT];
-
-    uint64_t              CmdDispatch_Index;
-    uint64_t              CmdTraceRaysKHR_Index;
-    std::vector<uint64_t> QueueSubmit_Index;
-    uint32_t              current_draw_call;
-
-    // One per BeginCommandBuffer index
-    std::map<uint64_t, CommandBufferStack> cmd_buf_stacks;
-
-    // Mapping between the original VkCommandBuffer handle and BeginCommandBuffer index
-    std::map<VkCommandBuffer, uint64_t> cmd_buf_begin_map;
+    descriptor_set_t bound_descriptor_sets[kBindPoint_count];
 
     bool recording;
     bool inside_renderpass;

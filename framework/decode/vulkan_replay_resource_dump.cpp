@@ -73,23 +73,25 @@ static util::imagewriter::DataFormats VkFormatToImageWriterDataFormat(VkFormat f
 }
 
 VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>&              begin_command_buffer_index,
-                                                   const std::vector<std::vector<uint64_t>>& cmdDraw_index,
-                                                   uint64_t                                  cmdDispatch_index,
-                                                   uint64_t                                  CmdTraceRaysKHR_index,
-                                                   const std::vector<uint64_t>&              QueueSubmit_index,
+                                                   const std::vector<std::vector<uint64_t>>& draw_indices,
+                                                   const std::vector<std::vector<uint64_t>>& dispatch_indices,
+                                                   const std::vector<std::vector<uint64_t>>& traceRays_indices,
+                                                   const std::vector<uint64_t>&              queueSubmit_indices,
                                                    bool                                      isolate_draw,
                                                    const VulkanObjectInfoTable&              object_info_table) :
-    CmdDispatch_Index(cmdDispatch_index),
-    CmdTraceRaysKHR_Index(CmdTraceRaysKHR_index), QueueSubmit_Index(std::move(QueueSubmit_index)), current_draw_call(0),
+    QueueSubmit_indices(std::move(queueSubmit_indices)),
     recording(false), inside_renderpass(false), isolate_draw_call(isolate_draw), object_info_table_(object_info_table)
 {
     // These should match
-    assert(begin_command_buffer_index.size() == cmdDraw_index.size());
+    assert(begin_command_buffer_index.size() == draw_indices.size());
 
     for (size_t i = 0; i < begin_command_buffer_index.size(); ++i)
     {
         const uint64_t bcb_index = begin_command_buffer_index[i];
-        cmd_buf_stacks.emplace(bcb_index, CommandBufferStack(std::move(cmdDraw_index[i])));
+        cmd_buf_stacks.emplace(bcb_index,
+                               CommandBufferStack(std::move(draw_indices[i]),
+                                                  std::move(dispatch_indices[i]),
+                                                  std::move(traceRays_indices[i])));
     }
 }
 
@@ -551,9 +553,9 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
     }
     else
     {
-        assert(index == QueueSubmit_Index[0]);
-        QueueSubmit_Index.erase(QueueSubmit_Index.begin());
-        if (QueueSubmit_Index.size() == 0)
+        assert(index == QueueSubmit_indices[0]);
+        QueueSubmit_indices.erase(QueueSubmit_indices.begin());
+        if (QueueSubmit_indices.size() == 0)
         {
             exit(0);
         }
@@ -588,15 +590,15 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkPipelineBindPoint     pipelin
     switch (pipeline_bind_point)
     {
         case VK_PIPELINE_BIND_POINT_GRAPHICS:
-            bind_point = BIND_POINT_GRAPHICS;
+            bind_point = kBindPoint_graphics;
             break;
 
         case VK_PIPELINE_BIND_POINT_COMPUTE:
-            bind_point = BIND_POINT_COMPUTE;
+            bind_point = kBindPoint_compute;
             break;
 
         case VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR:
-            bind_point = BIND_POINT_RAY_TRACING;
+            bind_point = kBindPoint_ray_tracing;
             break;
 
         default:
@@ -767,7 +769,7 @@ bool VulkanReplayResourceDump::DumpingBeginCommandBufferIndex(uint64_t index) co
 
 void VulkanReplayResourceDump::GetActiveCommandBuffers(VkCommandBuffer user_cmd_buffer,
                                                        cmd_buf_it&     first,
-                                                       cmd_buf_it&     last)
+                                                       cmd_buf_it&     last) const
 {
     auto begin_cmd_entry = cmd_buf_begin_map.find(user_cmd_buffer);
     assert(begin_cmd_entry != cmd_buf_begin_map.end());
@@ -775,7 +777,7 @@ void VulkanReplayResourceDump::GetActiveCommandBuffers(VkCommandBuffer user_cmd_
     auto stack_entry = cmd_buf_stacks.find(begin_cmd_entry->second);
     assert(stack_entry != cmd_buf_stacks.end());
 
-    CommandBufferStack& stack = stack_entry->second;
+    const CommandBufferStack& stack = stack_entry->second;
     assert(stack_entry->second.original_command_buffer_handle == user_cmd_buffer);
 
     assert(stack.current_index <= stack.command_buffers.size());
@@ -804,15 +806,15 @@ bool VulkanReplayResourceDump::DumpingSubmissionIndex(uint64_t index) const
 {
     assert(!recording);
 
-    for (size_t i = 0; i < QueueSubmit_Index.size(); ++i)
+    for (size_t i = 0; i < QueueSubmit_indices.size(); ++i)
     {
         // Indices should be sorted
-        if (!IsInsideRange(QueueSubmit_Index, index))
+        if (!IsInsideRange(QueueSubmit_indices, index))
         {
             return false;
         }
 
-        if (index == QueueSubmit_Index[i])
+        if (index == QueueSubmit_indices[i])
         {
             return true;
         }
@@ -840,35 +842,112 @@ bool VulkanReplayResourceDump::DumpingDrawCallIndex(VkCommandBuffer original_com
 
     const CommandBufferStack& stack = stack_entry->second;
     assert(stack.current_index < stack.dc_indices.size());
+
+    // Indices should be sorted
+    if (!IsInsideRange(stack.dc_indices, index))
+    {
+        return false;
+    }
+
     for (size_t i = stack.current_index; i < stack.dc_indices.size(); ++i)
     {
-        // Indices should be sorted
-        if (!IsInsideRange(stack.dc_indices, index))
-        {
-            return false;
-        }
 
         if (index == stack.dc_indices[i])
         {
             return true;
+        }
+        else if (index > stack.dc_indices[i])
+        {
+            // Indices should be sorted
+            return false;
         }
     }
 
     return false;
 }
 
-bool VulkanReplayResourceDump::DumpingDispatchIndex(uint64_t index) const
+bool VulkanReplayResourceDump::DumpingDispatchIndex(VkCommandBuffer original_command_buffer, uint64_t index) const
 {
     assert(recording);
+    assert(original_command_buffer != VK_NULL_HANDLE);
 
-    return CmdDispatch_Index == index;
+    const auto bcb_entry = cmd_buf_begin_map.find(original_command_buffer);
+    if (bcb_entry == cmd_buf_begin_map.end())
+    {
+        return false;
+    }
+
+    const auto stack_entry = cmd_buf_stacks.find(bcb_entry->second);
+    if (stack_entry == cmd_buf_stacks.end())
+    {
+        return false;
+    }
+
+    const CommandBufferStack& stack = stack_entry->second;
+    assert(stack.current_index < stack.dispatch_indices.size());
+
+    // Indices should be sorted
+    if (!IsInsideRange(stack.dispatch_indices, index))
+    {
+        return false;
+    }
+
+    for (size_t i = stack.current_index; i < stack.dispatch_indices.size(); ++i)
+    {
+        if (index == stack.dispatch_indices[i])
+        {
+            return true;
+        }
+        else if (index > stack.dispatch_indices[i])
+        {
+            // Indices should be sorted
+            return false;
+        }
+    }
+
+    return false;
 }
 
-bool VulkanReplayResourceDump::DumpingTraceRaysIndex(uint64_t index) const
+bool VulkanReplayResourceDump::DumpingTraceRaysIndex(VkCommandBuffer original_command_buffer, uint64_t index) const
 {
     assert(recording);
+    assert(original_command_buffer != VK_NULL_HANDLE);
 
-    return CmdTraceRaysKHR_Index == index;
+    const auto bcb_entry = cmd_buf_begin_map.find(original_command_buffer);
+    if (bcb_entry == cmd_buf_begin_map.end())
+    {
+        return false;
+    }
+
+    const auto stack_entry = cmd_buf_stacks.find(bcb_entry->second);
+    if (stack_entry == cmd_buf_stacks.end())
+    {
+        return false;
+    }
+
+    const CommandBufferStack& stack = stack_entry->second;
+    assert(stack.current_index < stack.traceRays_indices.size());
+
+    // Indices should be sorted
+    if (!IsInsideRange(stack.traceRays_indices, index))
+    {
+        return false;
+    }
+
+    for (size_t i = stack.current_index; i < stack.traceRays_indices.size(); ++i)
+    {
+        if (index == stack.traceRays_indices[i])
+        {
+            return true;
+        }
+        else if (index > stack.traceRays_indices[i])
+        {
+            // Indices should be sorted
+            return false;
+        }
+    }
+
+    return false;
 }
 
 GFXRECON_END_NAMESPACE(gfxrecon)
