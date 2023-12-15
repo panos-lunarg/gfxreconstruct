@@ -30,7 +30,7 @@
 #include "vulkan/vulkan.h"
 
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)
@@ -125,10 +125,10 @@ class VulkanReplayResourceDump
     std::vector<uint64_t> QueueSubmit_indices_;
 
     // One per BeginCommandBuffer index
-    std::map<uint64_t, CommandBufferStack> cmd_buf_stacks_;
+    std::unordered_map<uint64_t, CommandBufferStack> cmd_buf_stacks_;
 
     // Mapping between the original VkCommandBuffer handle and BeginCommandBuffer index
-    std::map<VkCommandBuffer, uint64_t> cmd_buf_begin_map_;
+    std::unordered_map<VkCommandBuffer, uint64_t> cmd_buf_begin_map_;
 
   private:
     bool UpdateRecordingStatus();
@@ -154,11 +154,11 @@ class VulkanReplayResourceDump
 
     struct descriptor_set_bindings
     {
-        std::map<uint32_t, const ImageInfo*>  image_infos;
-        std::map<uint32_t, const BufferInfo*> buffer_infos;
+        std::unordered_map<uint32_t, const ImageInfo*>  image_infos;
+        std::unordered_map<uint32_t, const BufferInfo*> buffer_infos;
     };
 
-    using descriptor_set_t = std::map<uint32_t, descriptor_set_bindings>;
+    using descriptor_set_t = std::unordered_map<uint32_t, descriptor_set_bindings>;
 
     enum DescriptorSetBindPoints
     {
@@ -166,7 +166,7 @@ class VulkanReplayResourceDump
         kBindPoint_compute,
         kBindPoint_ray_tracing,
 
-        kBindPoint_count = 3
+        kBindPoint_count
     };
 
     descriptor_set_t bound_descriptor_sets_[kBindPoint_count];

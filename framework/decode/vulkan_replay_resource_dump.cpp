@@ -28,7 +28,6 @@
 
 #include "Vulkan-Utility-Libraries/vk_format_utils.h"
 
-#include <algorithm>
 #include <sstream>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
