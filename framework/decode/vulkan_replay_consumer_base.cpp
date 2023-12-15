@@ -160,7 +160,7 @@ VulkanReplayConsumerBase::VulkanReplayConsumerBase(std::shared_ptr<application::
            options.CmdDraw_Index,
            options.CmdDispatch_Index,
            options.CmdTraceRaysKHR_Index,
-           options.QueueSubmit_Index,
+           options.QueueSubmit_indices,
            options.isolate_draw,
            object_info_table_),
     loader_handle_(nullptr), get_instance_proc_addr_(nullptr), create_instance_proc_(nullptr),
