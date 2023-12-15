@@ -1824,7 +1824,7 @@ void VulkanReplayConsumer::Process_vkCmdDispatch(
             GetDeviceTable(*it)->CmdDispatch(*it, groupCountX, groupCountY, groupCountZ)/*@@@ABC*/;//@@@HERE
         }
 
-        if (dumper.DumpingDispatchIndex(call_info.index))
+        if (dumper.DumpingDispatchIndex(in_commandBuffer, call_info.index))
         {
             dumper.FinalizeCommandBuffer(in_commandBuffer);
         }
@@ -6297,7 +6297,7 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysIndirect2KHR(
             GetDeviceTable(*it)->CmdTraceRaysIndirect2KHR(*it, indirectDeviceAddress)/*@@@ABC*/;//@@@HERE
         }
 
-        if (dumper.DumpingTraceRaysIndex(call_info.index))
+        if (dumper.DumpingTraceRaysIndex(in_commandBuffer, call_info.index))
         {
             dumper.FinalizeCommandBuffer(in_commandBuffer);
         }
@@ -11285,7 +11285,7 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysKHR(
             GetDeviceTable(*it)->CmdTraceRaysKHR(*it, in_pRaygenShaderBindingTable, in_pMissShaderBindingTable, in_pHitShaderBindingTable, in_pCallableShaderBindingTable, width, height, depth)/*@@@ABC*/;//@@@HERE
         }
 
-        if (dumper.DumpingTraceRaysIndex(call_info.index))
+        if (dumper.DumpingTraceRaysIndex(in_commandBuffer, call_info.index))
         {
             dumper.FinalizeCommandBuffer(in_commandBuffer);
         }
@@ -11335,7 +11335,7 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysIndirectKHR(
             GetDeviceTable(*it)->CmdTraceRaysIndirectKHR(*it, in_pRaygenShaderBindingTable, in_pMissShaderBindingTable, in_pHitShaderBindingTable, in_pCallableShaderBindingTable, indirectDeviceAddress)/*@@@ABC*/;//@@@HERE
         }
 
-        if (dumper.DumpingTraceRaysIndex(call_info.index))
+        if (dumper.DumpingTraceRaysIndex(in_commandBuffer, call_info.index))
         {
             dumper.FinalizeCommandBuffer(in_commandBuffer);
         }
