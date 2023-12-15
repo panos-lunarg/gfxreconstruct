@@ -49,11 +49,11 @@ const util::Log::Severity kDefaultLogLevel = util::Log::Severity::kInfoSeverity;
 // static constexpr uint64_t g_QueueSubmit_Index        = 1942;
 
 // Modified vkCube
-static constexpr uint64_t                 g_BeginCommandBuffer_Index = { 107 };
-static std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = { { 113, 114, 115, 116, 117 } };
-static constexpr uint64_t                 g_CmdDispatch_Index        = 0;
-static constexpr uint64_t                 g_CmdTraceRaysKHR_Index    = 0;
-static constexpr uint64_t                 g_QueueSubmit_Index        = { 579 };
+static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 107 };
+static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = { { 113, 114, 115, 116, 117 } };
+static const std::vector<std::vector<uint64_t>> g_CmdDispatch_Index        = { { 0 } };
+static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_Index    = { { 0 } };
+static const std::vector<uint64_t>              g_QueueSubmit_Index        = { 579 };
 
 static constexpr bool g_isolate_draw = false;
 
@@ -80,9 +80,9 @@ struct VulkanReplayOptions : public ReplayOptions
 
     std::vector<uint64_t>              BeginCommandBuffer_Index{ std::move(g_BeginCommandBuffer_Index) };
     std::vector<std::vector<uint64_t>> CmdDraw_Index{ std::move(g_CmdDraw_Index) };
-    uint64_t                           CmdDispatch_Index{ g_CmdDispatch_Index };
-    uint64_t                           CmdTraceRaysKHR_Index{ g_CmdTraceRaysKHR_Index };
-    std::vector<uint64_t>              QueueSubmit_Index{ std::move(g_QueueSubmit_Index) };
+    std::vector<std::vector<uint64_t>> CmdDispatch_Index{ g_CmdDispatch_Index };
+    std::vector<std::vector<uint64_t>> CmdTraceRaysKHR_Index{ g_CmdTraceRaysKHR_Index };
+    std::vector<uint64_t>              QueueSubmit_indices{ std::move(g_QueueSubmit_Index) };
     bool                               isolate_draw{ g_isolate_draw };
 };
 
