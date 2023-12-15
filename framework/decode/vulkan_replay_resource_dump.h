@@ -68,7 +68,7 @@ class VulkanReplayResourceDump
                           VkAttachmentStoreOp                     depth_att_storeOp,
                           VkImageLayout                           depth_att_final_layout);
 
-    void SetRenderArea(const VkRect2D& render_area) { render_targets.render_area = render_area; }
+    void SetRenderArea(const VkRect2D& render_area) { render_targets_.render_area = render_area; }
 
     // Call with vkCmdBindDescriptorSets to scan for dumpable resources
     void UpdateDescriptors(VkPipelineBindPoint     pipeline_bind_point,
@@ -76,9 +76,9 @@ class VulkanReplayResourceDump
                            const format::HandleId* descriptor_sets_ids,
                            uint32_t                descriptor_sets_count);
 
-    void EnterRenderPass() { inside_renderpass = true; }
+    void EnterRenderPass() { inside_renderpass_ = true; }
 
-    void ExitRenderPass() { inside_renderpass = false; }
+    void ExitRenderPass() { inside_renderpass_ = false; }
 
     bool DumpingSubmissionIndex(uint64_t index) const;
 
@@ -90,9 +90,9 @@ class VulkanReplayResourceDump
 
     bool DumpingBeginCommandBufferIndex(uint64_t index) const;
 
-    bool IsRecording() const { return recording; }
+    bool IsRecording() const { return recording_; }
 
-    bool IsolateDrawCall() const { return isolate_draw_call; }
+    bool IsolateDrawCall() const { return isolate_draw_call_; }
 
     using cmd_buf_it = std::vector<VkCommandBuffer>::const_iterator;
     void GetActiveCommandBuffers(VkCommandBuffer user_cmd_buffer, cmd_buf_it& first, cmd_buf_it& last) const;
@@ -122,13 +122,13 @@ class VulkanReplayResourceDump
         const encode::DeviceTable* device_table;
     };
 
-    std::vector<uint64_t> QueueSubmit_indices;
+    std::vector<uint64_t> QueueSubmit_indices_;
 
     // One per BeginCommandBuffer index
-    std::map<uint64_t, CommandBufferStack> cmd_buf_stacks;
+    std::map<uint64_t, CommandBufferStack> cmd_buf_stacks_;
 
     // Mapping between the original VkCommandBuffer handle and BeginCommandBuffer index
-    std::map<VkCommandBuffer, uint64_t> cmd_buf_begin_map;
+    std::map<VkCommandBuffer, uint64_t> cmd_buf_begin_map_;
 
   private:
     bool UpdateRecordingStatus();
@@ -150,7 +150,7 @@ class VulkanReplayResourceDump
         VkImageLayout       depth_att_final_layout;
 
         VkRect2D render_area{ 0 };
-    } render_targets;
+    } render_targets_;
 
     struct descriptor_set_bindings
     {
@@ -169,11 +169,11 @@ class VulkanReplayResourceDump
         kBindPoint_count = 3
     };
 
-    descriptor_set_t bound_descriptor_sets[kBindPoint_count];
+    descriptor_set_t bound_descriptor_sets_[kBindPoint_count];
 
-    bool recording;
-    bool inside_renderpass;
-    bool isolate_draw_call;
+    bool recording_;
+    bool inside_renderpass_;
+    bool isolate_draw_call_;
 
     const VulkanObjectInfoTable& object_info_table_;
 };
