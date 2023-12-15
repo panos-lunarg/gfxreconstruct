@@ -79,8 +79,9 @@ VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>& 
                                                    const std::vector<uint64_t>&              queueSubmit_indices,
                                                    bool                                      isolate_draw,
                                                    const VulkanObjectInfoTable&              object_info_table) :
-    QueueSubmit_indices(std::move(queueSubmit_indices)),
-    recording(false), inside_renderpass(false), isolate_draw_call(isolate_draw), object_info_table_(object_info_table)
+    QueueSubmit_indices_(std::move(queueSubmit_indices)),
+    recording_(false), inside_renderpass_(false), isolate_draw_call_(isolate_draw),
+    object_info_table_(object_info_table)
 {
     // These should match
     assert(begin_command_buffer_index.size() == draw_indices.size());
@@ -88,10 +89,10 @@ VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>& 
     for (size_t i = 0; i < begin_command_buffer_index.size(); ++i)
     {
         const uint64_t bcb_index = begin_command_buffer_index[i];
-        cmd_buf_stacks.emplace(bcb_index,
-                               CommandBufferStack(std::move(draw_indices[i]),
-                                                  std::move(dispatch_indices[i]),
-                                                  std::move(traceRays_indices[i])));
+        cmd_buf_stacks_.emplace(bcb_index,
+                                CommandBufferStack(std::move(draw_indices[i]),
+                                                   std::move(dispatch_indices[i]),
+                                                   std::move(traceRays_indices[i])));
     }
 }
 
@@ -101,8 +102,8 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
 {
     assert(device_table);
 
-    auto entry = cmd_buf_stacks.find(bcb_index);
-    if (entry == cmd_buf_stacks.end())
+    auto entry = cmd_buf_stacks_.find(bcb_index);
+    if (entry == cmd_buf_stacks_.end())
     {
         GFXRECON_LOG_ERROR("Couldn't find vkBeginCommandBuffer with index %" PRIx64, bcb_index);
         assert(0);
@@ -128,7 +129,7 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
 
         if (res == VK_SUCCESS)
         {
-            recording = true;
+            recording_ = true;
         }
         else
         {
@@ -145,8 +146,8 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
     assert(stack.device_table == nullptr);
     stack.device_table = device_table;
 
-    assert(cmd_buf_begin_map.find(cb_info->handle) == cmd_buf_begin_map.end());
-    cmd_buf_begin_map[cb_info->handle] = bcb_index;
+    assert(cmd_buf_begin_map_.find(cb_info->handle) == cmd_buf_begin_map_.end());
+    cmd_buf_begin_map_[cb_info->handle] = bcb_index;
 
     // Allocate auxiliary command buffer
     VkResult res = device_table->AllocateCommandBuffers(dev_info->handle, &ai, &stack.aux_command_buffer);
@@ -159,11 +160,11 @@ void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_co
 {
     std::vector<VkImageMemoryBarrier> img_barriers;
 
-    for (size_t i = 0; i < render_targets.color_att_imgs.size(); ++i)
+    for (size_t i = 0; i < render_targets_.color_att_imgs.size(); ++i)
     {
-        if (render_targets.color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE)
+        if (render_targets_.color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE)
         {
-            const ImageInfo* image_info = render_targets.color_att_imgs[i];
+            const ImageInfo* image_info = render_targets_.color_att_imgs[i];
 
             std::vector<VkImageAspectFlagBits> aspects;
             bool                               combined_depth_stencil;
@@ -174,7 +175,7 @@ void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_co
             img_barrier.pNext                           = nullptr;
             img_barrier.srcAccessMask                   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
             img_barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
-            img_barrier.oldLayout                       = render_targets.color_att_final_layouts[i];
+            img_barrier.oldLayout                       = render_targets_.color_att_final_layouts[i];
             img_barrier.newLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
             img_barrier.srcQueueFamilyIndex             = 0;
             img_barrier.dstQueueFamilyIndex             = 0;
@@ -188,9 +189,9 @@ void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_co
         }
     }
 
-    if (render_targets.depth_att_img)
+    if (render_targets_.depth_att_img)
     {
-        const ImageInfo* image_info = render_targets.depth_att_img;
+        const ImageInfo* image_info = render_targets_.depth_att_img;
 
         std::vector<VkImageAspectFlagBits> aspects;
         bool                               combined_depth_stencil;
@@ -201,7 +202,7 @@ void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_co
         img_barrier.pNext                           = nullptr;
         img_barrier.srcAccessMask                   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         img_barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
-        img_barrier.oldLayout                       = render_targets.depth_att_final_layout;
+        img_barrier.oldLayout                       = render_targets_.depth_att_final_layout;
         img_barrier.newLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
         img_barrier.srcQueueFamilyIndex             = 0;
         img_barrier.dstQueueFamilyIndex             = 0;
@@ -214,17 +215,17 @@ void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_co
         img_barriers.push_back(std::move(img_barrier));
     }
 
-    auto begin_entry = cmd_buf_begin_map.find(original_command_buffer);
-    assert(begin_entry != cmd_buf_begin_map.end());
+    auto begin_entry = cmd_buf_begin_map_.find(original_command_buffer);
+    assert(begin_entry != cmd_buf_begin_map_.end());
 
-    auto stack_entry = cmd_buf_stacks.find(begin_entry->second);
-    assert(stack_entry != cmd_buf_stacks.end());
+    auto stack_entry = cmd_buf_stacks_.find(begin_entry->second);
+    assert(stack_entry != cmd_buf_stacks_.end());
 
     CommandBufferStack& stack         = stack_entry->second;
     VkCommandBuffer     current_clone = stack.command_buffers[stack.current_index];
     assert(stack.device_table != nullptr);
 
-    if (inside_renderpass)
+    if (inside_renderpass_)
     {
         stack.device_table->CmdEndRenderPass(current_clone);
     }
@@ -256,11 +257,11 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
 {
     std::vector<VkImageMemoryBarrier> img_barriers;
 
-    for (size_t i = 0; i < render_targets.color_att_imgs.size(); ++i)
+    for (size_t i = 0; i < render_targets_.color_att_imgs.size(); ++i)
     {
-        if (render_targets.color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE)
+        if (render_targets_.color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE)
         {
-            const ImageInfo* image_info = render_targets.color_att_imgs[i];
+            const ImageInfo* image_info = render_targets_.color_att_imgs[i];
 
             std::vector<VkImageAspectFlagBits> aspects;
             bool                               combined_depth_stencil;
@@ -272,7 +273,7 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
             img_barrier.srcAccessMask                   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
             img_barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
             img_barrier.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-            img_barrier.newLayout                       = render_targets.color_att_final_layouts[i];
+            img_barrier.newLayout                       = render_targets_.color_att_final_layouts[i];
             img_barrier.srcQueueFamilyIndex             = 0;
             img_barrier.dstQueueFamilyIndex             = 0;
             img_barrier.image                           = image_info->handle;
@@ -285,9 +286,9 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
         }
     }
 
-    if (render_targets.depth_att_img)
+    if (render_targets_.depth_att_img)
     {
-        const ImageInfo* image_info = render_targets.depth_att_img;
+        const ImageInfo* image_info = render_targets_.depth_att_img;
 
         std::vector<VkImageAspectFlagBits> aspects;
         bool                               combined_depth_stencil;
@@ -299,7 +300,7 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
         img_barrier.srcAccessMask                   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         img_barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
         img_barrier.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        img_barrier.newLayout                       = render_targets.depth_att_final_layout;
+        img_barrier.newLayout                       = render_targets_.depth_att_final_layout;
         img_barrier.srcQueueFamilyIndex             = 0;
         img_barrier.dstQueueFamilyIndex             = 0;
         img_barrier.image                           = image_info->handle;
@@ -363,9 +364,9 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
 {
     assert(stack.device_table != nullptr);
 
-    if (!render_targets.color_att_imgs.size() && render_targets.depth_att_img == nullptr)
+    if (!render_targets_.color_att_imgs.size() && render_targets_.depth_att_img == nullptr)
     {
-        assert(render_targets.color_att_storeOps.size() == 0);
+        assert(render_targets_.color_att_storeOps.size() == 0);
         return;
     }
 
@@ -380,12 +381,12 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
     graphics::VulkanResourcesUtil resource_util(
         device_info->handle, *stack.device_table, *phys_dev_info->replay_device_info->memory_properties);
 
-    assert(render_targets.color_att_imgs.size() == render_targets.color_att_storeOps.size());
-    for (size_t i = 0; i < render_targets.color_att_imgs.size(); ++i)
+    assert(render_targets_.color_att_imgs.size() == render_targets_.color_att_storeOps.size());
+    for (size_t i = 0; i < render_targets_.color_att_imgs.size(); ++i)
     {
-        if (render_targets.color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE)
+        if (render_targets_.color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE)
         {
-            const ImageInfo* image_info = render_targets.color_att_imgs[i];
+            const ImageInfo* image_info = render_targets_.color_att_imgs[i];
 
             std::vector<uint8_t>  data;
             std::vector<uint64_t> subresource_offsets;
@@ -395,7 +396,7 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
                 image_info->handle,
                 image_info->format,
                 image_info->type,
-                VkExtent3D{ render_targets.render_area.extent.width, render_targets.render_area.extent.height, 1 },
+                VkExtent3D{ render_targets_.render_area.extent.width, render_targets_.render_area.extent.height, 1 },
                 image_info->level_count,
                 image_info->layer_count,
                 image_info->tiling,
@@ -425,14 +426,14 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
         }
     }
 
-    if (render_targets.depth_att_img != nullptr)
+    if (render_targets_.depth_att_img != nullptr)
     {
-        if (render_targets.depth_att_storeOp != VK_ATTACHMENT_STORE_OP_STORE)
+        if (render_targets_.depth_att_storeOp != VK_ATTACHMENT_STORE_OP_STORE)
         {
             GFXRECON_LOG_WARNING("Dumping depth attachment with a storeOp different than VK_ATTACHMENT_STORE_OP_STORE");
         }
 
-        const ImageInfo* image_info = render_targets.depth_att_img;
+        const ImageInfo* image_info = render_targets_.depth_att_img;
 
         std::vector<uint8_t>  data;
         std::vector<uint64_t> subresource_offsets;
@@ -442,7 +443,7 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
             image_info->handle,
             image_info->format,
             image_info->type,
-            VkExtent3D{ render_targets.render_area.extent.width, render_targets.render_area.extent.height, 1 },
+            VkExtent3D{ render_targets_.render_area.extent.width, render_targets_.render_area.extent.height, 1 },
             image_info->level_count,
             image_info->layer_count,
             image_info->tiling,
@@ -496,11 +497,11 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
 
         for (uint32_t o = 0; o < command_buffer_count; ++o)
         {
-            auto bcb_entry = cmd_buf_begin_map.find(command_buffer_handles[o]);
-            if (bcb_entry != cmd_buf_begin_map.end())
+            auto bcb_entry = cmd_buf_begin_map_.find(command_buffer_handles[o]);
+            if (bcb_entry != cmd_buf_begin_map_.end())
             {
-                auto stack_entry = cmd_buf_stacks.find(bcb_entry->second);
-                assert(stack_entry != cmd_buf_stacks.end());
+                auto stack_entry = cmd_buf_stacks_.find(bcb_entry->second);
+                assert(stack_entry != cmd_buf_stacks_.end());
                 const CommandBufferStack& stack = stack_entry->second;
 
                 for (size_t cb = 0; cb < stack.command_buffers.size(); ++cb)
@@ -553,9 +554,9 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
     }
     else
     {
-        assert(index == QueueSubmit_indices[0]);
-        QueueSubmit_indices.erase(QueueSubmit_indices.begin());
-        if (QueueSubmit_indices.size() == 0)
+        assert(index == QueueSubmit_indices_[0]);
+        QueueSubmit_indices_.erase(QueueSubmit_indices_.begin());
+        if (QueueSubmit_indices_.size() == 0)
         {
             exit(0);
         }
@@ -571,12 +572,12 @@ void VulkanReplayResourceDump::SetRenderTargets(const std::vector<const ImageInf
                                                 VkAttachmentStoreOp                     depth_att_storeOp,
                                                 VkImageLayout                           depth_att_final_layout)
 {
-    render_targets.color_att_imgs          = color_att_imgs;
-    render_targets.color_att_storeOps      = color_att_storeOps;
-    render_targets.color_att_final_layouts = final_layouts;
-    render_targets.depth_att_img           = depth_att_img;
-    render_targets.depth_att_storeOp       = depth_att_storeOp;
-    render_targets.depth_att_final_layout  = depth_att_final_layout;
+    render_targets_.color_att_imgs          = color_att_imgs;
+    render_targets_.color_att_storeOps      = color_att_storeOps;
+    render_targets_.color_att_final_layouts = final_layouts;
+    render_targets_.depth_att_img           = depth_att_img;
+    render_targets_.depth_att_storeOp       = depth_att_storeOp;
+    render_targets_.depth_att_final_layout  = depth_att_final_layout;
 }
 
 void VulkanReplayResourceDump::UpdateDescriptors(VkPipelineBindPoint     pipeline_bind_point,
@@ -626,7 +627,7 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkPipelineBindPoint     pipelin
                     const ImageInfo* img_info = object_info_table_.GetImageInfo(img_view_info->image_id);
                     assert(img_info);
 
-                    bound_descriptor_sets[bind_point][first_set + i].image_infos[binding.first] = img_info;
+                    bound_descriptor_sets_[bind_point][first_set + i].image_infos[binding.first] = img_info;
                 }
                 break;
 
@@ -637,7 +638,7 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkPipelineBindPoint     pipelin
                         object_info_table_.GetBufferInfo(binding.second.buffer_info.buffer_id);
                     assert(buffer_info);
 
-                    bound_descriptor_sets[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
+                    bound_descriptor_sets_[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
                 }
                 break;
 
@@ -650,7 +651,7 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkPipelineBindPoint     pipelin
                     const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(buffer_view_info->buffer_id);
                     assert(buffer_info);
 
-                    bound_descriptor_sets[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
+                    bound_descriptor_sets_[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
                 }
                 break;
 
@@ -700,7 +701,7 @@ void VulkanReplayResourceDump::DumpResources(const CommandBufferStack& stack, ui
     //     bind_point = BIND_POINT_RAY_TRACING;
     // }
 
-    // for (auto desc_set : bound_descriptor_sets[bind_point])
+    // for (auto desc_set : bound_descriptor_sets_[bind_point])
     // {
     //     for (const auto storage_image : desc_set.second.image_infos)
     //     {
@@ -762,20 +763,20 @@ void VulkanReplayResourceDump::DumpResources(const CommandBufferStack& stack, ui
 
 bool VulkanReplayResourceDump::DumpingBeginCommandBufferIndex(uint64_t index) const
 {
-    const auto entry = cmd_buf_stacks.find(index);
+    const auto entry = cmd_buf_stacks_.find(index);
 
-    return entry != cmd_buf_stacks.end();
+    return entry != cmd_buf_stacks_.end();
 }
 
 void VulkanReplayResourceDump::GetActiveCommandBuffers(VkCommandBuffer user_cmd_buffer,
                                                        cmd_buf_it&     first,
                                                        cmd_buf_it&     last) const
 {
-    auto begin_cmd_entry = cmd_buf_begin_map.find(user_cmd_buffer);
-    assert(begin_cmd_entry != cmd_buf_begin_map.end());
+    auto begin_cmd_entry = cmd_buf_begin_map_.find(user_cmd_buffer);
+    assert(begin_cmd_entry != cmd_buf_begin_map_.end());
 
-    auto stack_entry = cmd_buf_stacks.find(begin_cmd_entry->second);
-    assert(stack_entry != cmd_buf_stacks.end());
+    auto stack_entry = cmd_buf_stacks_.find(begin_cmd_entry->second);
+    assert(stack_entry != cmd_buf_stacks_.end());
 
     const CommandBufferStack& stack = stack_entry->second;
     assert(stack_entry->second.original_command_buffer_handle == user_cmd_buffer);
@@ -788,9 +789,9 @@ void VulkanReplayResourceDump::GetActiveCommandBuffers(VkCommandBuffer user_cmd_
 
 bool VulkanReplayResourceDump::UpdateRecordingStatus()
 {
-    assert(recording);
+    assert(recording_);
 
-    for (const auto& entry : cmd_buf_stacks)
+    for (const auto& entry : cmd_buf_stacks_)
     {
         const CommandBufferStack& stack = entry.second;
         if (stack.current_index < stack.command_buffers.size())
@@ -799,22 +800,22 @@ bool VulkanReplayResourceDump::UpdateRecordingStatus()
         }
     }
 
-    return (recording = false);
+    return (recording_ = false);
 }
 
 bool VulkanReplayResourceDump::DumpingSubmissionIndex(uint64_t index) const
 {
-    assert(!recording);
+    assert(!recording_);
 
-    for (size_t i = 0; i < QueueSubmit_indices.size(); ++i)
+    for (size_t i = 0; i < QueueSubmit_indices_.size(); ++i)
     {
         // Indices should be sorted
-        if (!IsInsideRange(QueueSubmit_indices, index))
+        if (!IsInsideRange(QueueSubmit_indices_, index))
         {
             return false;
         }
 
-        if (index == QueueSubmit_indices[i])
+        if (index == QueueSubmit_indices_[i])
         {
             return true;
         }
@@ -825,17 +826,17 @@ bool VulkanReplayResourceDump::DumpingSubmissionIndex(uint64_t index) const
 
 bool VulkanReplayResourceDump::DumpingDrawCallIndex(VkCommandBuffer original_command_buffer, uint64_t index) const
 {
-    assert(recording);
+    assert(recording_);
     assert(original_command_buffer != VK_NULL_HANDLE);
 
-    const auto bcb_entry = cmd_buf_begin_map.find(original_command_buffer);
-    if (bcb_entry == cmd_buf_begin_map.end())
+    const auto bcb_entry = cmd_buf_begin_map_.find(original_command_buffer);
+    if (bcb_entry == cmd_buf_begin_map_.end())
     {
         return false;
     }
 
-    const auto stack_entry = cmd_buf_stacks.find(bcb_entry->second);
-    if (stack_entry == cmd_buf_stacks.end())
+    const auto stack_entry = cmd_buf_stacks_.find(bcb_entry->second);
+    if (stack_entry == cmd_buf_stacks_.end())
     {
         return false;
     }
@@ -868,17 +869,17 @@ bool VulkanReplayResourceDump::DumpingDrawCallIndex(VkCommandBuffer original_com
 
 bool VulkanReplayResourceDump::DumpingDispatchIndex(VkCommandBuffer original_command_buffer, uint64_t index) const
 {
-    assert(recording);
+    assert(recording_);
     assert(original_command_buffer != VK_NULL_HANDLE);
 
-    const auto bcb_entry = cmd_buf_begin_map.find(original_command_buffer);
-    if (bcb_entry == cmd_buf_begin_map.end())
+    const auto bcb_entry = cmd_buf_begin_map_.find(original_command_buffer);
+    if (bcb_entry == cmd_buf_begin_map_.end())
     {
         return false;
     }
 
-    const auto stack_entry = cmd_buf_stacks.find(bcb_entry->second);
-    if (stack_entry == cmd_buf_stacks.end())
+    const auto stack_entry = cmd_buf_stacks_.find(bcb_entry->second);
+    if (stack_entry == cmd_buf_stacks_.end())
     {
         return false;
     }
@@ -910,17 +911,17 @@ bool VulkanReplayResourceDump::DumpingDispatchIndex(VkCommandBuffer original_com
 
 bool VulkanReplayResourceDump::DumpingTraceRaysIndex(VkCommandBuffer original_command_buffer, uint64_t index) const
 {
-    assert(recording);
+    assert(recording_);
     assert(original_command_buffer != VK_NULL_HANDLE);
 
-    const auto bcb_entry = cmd_buf_begin_map.find(original_command_buffer);
-    if (bcb_entry == cmd_buf_begin_map.end())
+    const auto bcb_entry = cmd_buf_begin_map_.find(original_command_buffer);
+    if (bcb_entry == cmd_buf_begin_map_.end())
     {
         return false;
     }
 
-    const auto stack_entry = cmd_buf_stacks.find(bcb_entry->second);
-    if (stack_entry == cmd_buf_stacks.end())
+    const auto stack_entry = cmd_buf_stacks_.find(bcb_entry->second);
+    if (stack_entry == cmd_buf_stacks_.end())
     {
         return false;
     }
