@@ -133,6 +133,7 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
         }
         else
         {
+            GFXRECON_LOG_ERROR("AllocateCommandBuffers failed with %s", util::ToString<VkResult>(res));
             return res;
         }
     }
@@ -151,9 +152,14 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
 
     // Allocate auxiliary command buffer
     VkResult res = device_table->AllocateCommandBuffers(dev_info->handle, &ai, &stack.aux_command_buffer);
-    assert(res == VK_SUCCESS);
 
-    return VK_SUCCESS;
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("AllocateCommandBuffers failed with %s", util::ToString<VkResult>(res));
+        assert(0);
+    }
+
+    return res;
 }
 
 void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_command_buffer)
@@ -227,6 +233,7 @@ void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_co
 
     if (inside_renderpass_)
     {
+        // TODO: Handle multiple sub passes
         stack.device_table->CmdEndRenderPass(current_clone);
     }
 
@@ -351,11 +358,16 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
     assert(res == VK_SUCCESS);
     if (res != VK_SUCCESS)
     {
+        GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res));
         return res;
     }
 
     res = stack.device_table->QueueWaitIdle(queue);
     assert(res == VK_SUCCESS);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("QueueWaitIdle failed with %s", util::ToString<VkResult>(res));
+    }
 
     return res;
 }
@@ -517,6 +529,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                     assert(res == VK_SUCCESS);
                     if (res != VK_SUCCESS)
                     {
+                        GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res));
                         return res;
                     }
                     submitted = true;
@@ -526,6 +539,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                     assert(res == VK_SUCCESS);
                     if (res != VK_SUCCESS)
                     {
+                        GFXRECON_LOG_ERROR("QueueWaitIdle failed with %s", util::ToString<VkResult>(res));
                         return res;
                     }
 
@@ -551,11 +565,17 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
     if (!submitted)
     {
         res = device_table.QueueSubmit(queue, modified_submit_infos.size(), modified_submit_infos.data(), fence);
+        if (res != VK_SUCCESS)
+        {
+            GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res));
+        }
     }
     else
     {
         assert(index == QueueSubmit_indices_[0]);
         QueueSubmit_indices_.erase(QueueSubmit_indices_.begin());
+
+        // Once all submissions are complete terminate process
         if (QueueSubmit_indices_.size() == 0)
         {
             exit(0);
@@ -606,7 +626,6 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkPipelineBindPoint     pipelin
             GFXRECON_LOG_ERROR("Unrecognized pipeline bind point (%d)", pipeline_bind_point);
             assert(0);
             return;
-            break;
     }
 
     for (uint32_t i = 0; i < descriptor_sets_count; ++i)
@@ -805,8 +824,6 @@ bool VulkanReplayResourceDump::UpdateRecordingStatus()
 
 bool VulkanReplayResourceDump::DumpingSubmissionIndex(uint64_t index) const
 {
-    assert(!recording_);
-
     for (size_t i = 0; i < QueueSubmit_indices_.size(); ++i)
     {
         // Indices should be sorted
@@ -818,6 +835,10 @@ bool VulkanReplayResourceDump::DumpingSubmissionIndex(uint64_t index) const
         if (index == QueueSubmit_indices_[i])
         {
             return true;
+        }
+        else if (index > QueueSubmit_indices_[i])
+        {
+            return false;
         }
     }
 
