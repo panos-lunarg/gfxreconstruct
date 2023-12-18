@@ -484,7 +484,10 @@ struct RenderPassInfo : public VulkanObjectInfo<VkRenderPass>
 
     struct SubpassReferences
     {
+        std::vector<VkAttachmentReference> input_att_refs;
         std::vector<VkAttachmentReference> color_att_refs;
+
+        bool has_depth;
         VkAttachmentReference              depth_att_ref;
     };
 

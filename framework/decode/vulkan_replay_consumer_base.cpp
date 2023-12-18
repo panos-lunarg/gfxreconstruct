@@ -2669,6 +2669,7 @@ VulkanReplayConsumerBase::OverrideCreateDevice(VkResult            original_resu
             device_info->replay_device_group = std::move(replay_device_group);
             device_info->extensions          = std::move(extensions);
             device_info->parent              = physical_device;
+            // device_info->parent_id           = physical_device_info->capture_id;
 
             // Create the memory allocator for the selected physical device.
             auto replay_device_info = physical_device_info->replay_device_info;
@@ -4756,20 +4757,37 @@ VkResult VulkanReplayConsumerBase::OverrideCreateRenderPass(
     auto                          render_pass_info = reinterpret_cast<RenderPassInfo*>(pRenderPass->GetConsumerData(0));
     assert(render_pass_info);
 
+    render_pass_info->attachment_descs.reserve(create_info->attachmentCount);
     for (uint32_t i = 0; i < create_info->attachmentCount; ++i)
     {
         render_pass_info->attachment_descs.push_back(create_info->pAttachments[i]);
     }
 
+    render_pass_info->subpass_refs.reserve(create_info->subpassCount);
     for (uint32_t i = 0; i < create_info->subpassCount; ++i)
     {
         struct RenderPassInfo::SubpassReferences sp_ref;
+        sp_ref.color_att_refs.reserve(create_info->pSubpasses[i].colorAttachmentCount);
         for (uint32_t s = 0; s < create_info->pSubpasses[i].colorAttachmentCount; ++s)
         {
             sp_ref.color_att_refs.push_back(create_info->pSubpasses[i].pColorAttachments[s]);
         }
 
-        sp_ref.depth_att_ref = *create_info->pSubpasses[i].pDepthStencilAttachment;
+        sp_ref.input_att_refs.reserve(create_info->pSubpasses[i].inputAttachmentCount);
+        for (uint32_t s = 0; s < create_info->pSubpasses[i].inputAttachmentCount; ++s)
+        {
+            sp_ref.input_att_refs.push_back(create_info->pSubpasses[i].pInputAttachments[s]);
+        }
+
+        if (create_info->pSubpasses[i].pDepthStencilAttachment)
+        {
+            sp_ref.has_depth     = true;
+            sp_ref.depth_att_ref = *create_info->pSubpasses[i].pDepthStencilAttachment;
+        }
+        else
+        {
+            sp_ref.has_depth = false;
+        }
 
         render_pass_info->subpass_refs.push_back(std::move(sp_ref));
         render_pass_info->current_subpass = 0;
@@ -7292,22 +7310,33 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass(
             color_att_final_layouts.push_back(render_pass_info->attachment_descs[att_idx].finalLayout);
         }
 
-        const uint32_t       depth_att_idx = render_pass_info->subpass_refs[0].depth_att_ref.attachment;
-        const ImageViewInfo* depth_img_view_info =
-            object_info_table_.GetImageViewInfo(framebuffer_info->attachment_image_view_ids[depth_att_idx]);
-        assert(depth_img_view_info);
+        const ImageInfo*    depth_img_info;
+        VkAttachmentStoreOp depth_att_storeOp;
+        VkImageLayout       depth_final_layout;
 
-        const ImageInfo* depth_img_info = object_info_table_.GetImageInfo(depth_img_view_info->image_id);
-        assert(depth_img_info);
+        if (render_pass_info->subpass_refs[0].has_depth)
+        {
+            const uint32_t       depth_att_idx = render_pass_info->subpass_refs[0].depth_att_ref.attachment;
+            const ImageViewInfo* depth_img_view_info =
+                object_info_table_.GetImageViewInfo(framebuffer_info->attachment_image_view_ids[depth_att_idx]);
+            assert(depth_img_view_info);
 
-        VkAttachmentStoreOp depth_att_storeOp = render_pass_info->attachment_descs[depth_att_idx].storeOp;
+            depth_img_info = object_info_table_.GetImageInfo(depth_img_view_info->image_id);
+            assert(depth_img_info);
+            VkAttachmentStoreOp depth_att_storeOp = render_pass_info->attachment_descs[depth_att_idx].storeOp;
+            depth_final_layout                    = render_pass_info->attachment_descs[depth_att_idx].finalLayout;
+        }
+        else
+        {
+            depth_img_info = nullptr;
+        }
 
         dumper.SetRenderTargets(color_att_imgs,
                                 color_att_storeOps,
                                 color_att_final_layouts,
                                 depth_img_info,
                                 depth_att_storeOp,
-                                render_pass_info->attachment_descs[depth_att_idx].finalLayout);
+                                depth_final_layout);
         dumper.SetRenderArea(render_pass_begin_info_decoder->GetPointer()->renderArea);
     }
 
