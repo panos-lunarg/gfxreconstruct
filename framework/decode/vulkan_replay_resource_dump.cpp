@@ -71,6 +71,25 @@ static util::imagewriter::DataFormats VkFormatToImageWriterDataFormat(VkFormat f
     }
 }
 
+static uint32_t GetMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties& memory_properties,
+                                   uint32_t                                type_bits,
+                                   VkMemoryPropertyFlags                   property_flags)
+{
+    uint32_t memory_type_index = std::numeric_limits<uint32_t>::max();
+
+    for (uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i)
+    {
+        if ((type_bits & (1 << i)) &&
+            ((memory_properties.memoryTypes[i].propertyFlags & property_flags) == property_flags))
+        {
+            memory_type_index = i;
+            break;
+        }
+    }
+
+    return memory_type_index;
+}
+
 VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>&              begin_command_buffer_index,
                                                    const std::vector<std::vector<uint64_t>>& draw_indices,
                                                    const std::vector<std::vector<uint64_t>>& dispatch_indices,
@@ -88,10 +107,12 @@ VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>& 
     for (size_t i = 0; i < begin_command_buffer_index.size(); ++i)
     {
         const uint64_t bcb_index = begin_command_buffer_index[i];
-        cmd_buf_stacks_.emplace(bcb_index,
-                                CommandBufferStack(std::move(draw_indices[i]),
-                                                   std::move(dispatch_indices[i]),
-                                                   std::move(traceRays_indices[i])));
+        cmd_buf_stacks_.emplace(std::piecewise_construct,
+                                std::forward_as_tuple(bcb_index),
+                                std::forward_as_tuple(std::move(draw_indices[i]),
+                                                      std::move(dispatch_indices[i]),
+                                                      std::move(traceRays_indices[i]),
+                                                      object_info_table));
     }
 }
 
@@ -135,6 +156,9 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
             GFXRECON_LOG_ERROR("AllocateCommandBuffers failed with %s", util::ToString<VkResult>(res));
             return res;
         }
+
+        const VkCommandBufferBeginInfo bi{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, nullptr, 0, nullptr };
+        device_table->BeginCommandBuffer(stack.command_buffers[i], &bi);
     }
 
     assert(stack.original_command_buffer_info == nullptr);
@@ -149,16 +173,34 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
     assert(cmd_buf_begin_map_.find(cb_info->handle) == cmd_buf_begin_map_.end());
     cmd_buf_begin_map_[cb_info->handle] = bcb_index;
 
+    const DeviceInfo* device_info = object_info_table_.GetDeviceInfo(cb_info->parent_id);
+    assert(device_info->parent_id != format::kNullHandleId);
+    const PhysicalDeviceInfo* phys_dev_info = object_info_table_.GetPhysicalDeviceInfo(device_info->parent_id);
+    assert(phys_dev_info);
+
+    assert(phys_dev_info->replay_device_info);
+    assert(phys_dev_info->replay_device_info->memory_properties.get());
+    stack.replay_device_phys_mem_props = phys_dev_info->replay_device_info->memory_properties.get();
+
     // Allocate auxiliary command buffer
     VkResult res = device_table->AllocateCommandBuffers(dev_info->handle, &ai, &stack.aux_command_buffer);
-
     if (res != VK_SUCCESS)
     {
         GFXRECON_LOG_ERROR("AllocateCommandBuffers failed with %s", util::ToString<VkResult>(res));
         assert(0);
+        return res;
     }
 
-    return res;
+    const VkFenceCreateInfo ci = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO, nullptr, 0 };
+    res                        = device_table->CreateFence(dev_info->handle, &ci, nullptr, &stack.aux_fence);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("CreateFence failed with %s", util::ToString<VkResult>(res));
+        assert(0);
+        return res;
+    }
+
+    return VK_SUCCESS;
 }
 
 void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_command_buffer)
@@ -490,13 +532,72 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                                                    VkFence                    fence,
                                                    uint64_t                   index)
 {
-    bool submitted = false;
+    bool pre_submit = false;
 
+    // First do a submission with all command buffer except the ones we are interested in
+    std::vector<VkSubmitInfo>                 submit_infos_copy = modified_submit_infos;
+    std::vector<std::vector<VkCommandBuffer>> modified_command_buffer_handles(submit_infos_copy.size());
+    for (size_t s = 0; s < submit_infos_copy.size(); s++)
+    {
+        size_t     command_buffer_count   = submit_infos_copy[s].commandBufferCount;
+        const auto command_buffer_handles = submit_infos_copy[s].pCommandBuffers;
+
+        for (uint32_t o = 0; o < command_buffer_count; ++o)
+        {
+            auto bcb_entry = cmd_buf_begin_map_.find(command_buffer_handles[o]);
+            if (bcb_entry != cmd_buf_begin_map_.end())
+            {
+                continue;
+            }
+            else
+            {
+                pre_submit = true;
+                modified_command_buffer_handles[s].push_back(command_buffer_handles[o]);
+            }
+        }
+
+        if (modified_command_buffer_handles[s].size())
+        {
+            submit_infos_copy[s].commandBufferCount = modified_command_buffer_handles[s].size();
+            submit_infos_copy[s].pCommandBuffers    = modified_command_buffer_handles[s].data();
+        }
+        else
+        {
+            submit_infos_copy.erase(submit_infos_copy.begin() + s);
+        }
+    }
+
+    if (pre_submit)
+    {
+        assert(submit_infos_copy.size());
+
+        VkResult res =
+            device_table.QueueSubmit(queue, submit_infos_copy.size(), submit_infos_copy.data(), VK_NULL_HANDLE);
+
+        assert(res == VK_SUCCESS);
+        if (res != VK_SUCCESS)
+        {
+            GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res));
+            return res;
+        }
+
+        // Wait
+        res = device_table.QueueWaitIdle(queue);
+        assert(res == VK_SUCCESS);
+        if (res != VK_SUCCESS)
+        {
+            GFXRECON_LOG_ERROR("QueueWaitIdle failed with %s", util::ToString<VkResult>(res));
+            return res;
+        }
+    }
+
+    bool submitted = false;
     for (size_t s = 0; s < modified_submit_infos.size(); s++)
     {
         size_t     command_buffer_count   = modified_submit_infos[s].commandBufferCount;
         const auto command_buffer_handles = modified_submit_infos[s].pCommandBuffers;
 
+        // Don't wait and don't signal any semaphores
         if (command_buffer_count)
         {
             modified_submit_infos[s].waitSemaphoreCount   = 0;
@@ -513,18 +614,33 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
             {
                 auto stack_entry = cmd_buf_stacks_.find(bcb_entry->second);
                 assert(stack_entry != cmd_buf_stacks_.end());
-                const CommandBufferStack& stack = stack_entry->second;
+                CommandBufferStack& stack = stack_entry->second;
+
+                if (stack.must_backup_resources)
+                {
+                    stack.BackUpMutableResources(queue);
+                }
 
                 for (size_t cb = 0; cb < stack.command_buffers.size(); ++cb)
                 {
-                    VkCommandBuffer clone_buffer = stack.command_buffers[cb];
+                    // VkCommandBuffer* pCommandBuffers =
+                    //     const_cast<VkCommandBuffer*>(modified_submit_infos[s].pCommandBuffers);
+                    // pCommandBuffers[o] = clone_buffer;
+                    VkSubmitInfo new_submit_info         = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr };
+                    new_submit_info.waitSemaphoreCount   = 0;
+                    new_submit_info.pWaitSemaphores      = nullptr;
+                    new_submit_info.pWaitDstStageMask    = nullptr;
+                    new_submit_info.commandBufferCount   = 1;
+                    new_submit_info.pCommandBuffers      = &stack.command_buffers[cb];
+                    new_submit_info.signalSemaphoreCount = 0;
+                    new_submit_info.pSignalSemaphores    = nullptr;
 
-                    VkCommandBuffer* pCommandBuffers =
-                        const_cast<VkCommandBuffer*>(modified_submit_infos[s].pCommandBuffers);
-                    pCommandBuffers[o] = clone_buffer;
+                    if (stack.must_backup_resources)
+                    {
+                        stack.RevertMutableResources(queue);
+                    }
 
-                    VkResult res = stack.device_table->QueueSubmit(
-                        queue, modified_submit_infos.size(), modified_submit_infos.data(), VK_NULL_HANDLE);
+                    VkResult res = stack.device_table->QueueSubmit(queue, 1, &new_submit_info, VK_NULL_HANDLE);
                     assert(res == VK_SUCCESS);
                     if (res != VK_SUCCESS)
                     {
@@ -546,7 +662,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                     DumpAttachments(stack, stack.dc_indices[cb]);
 
                     // Revert render attachments layouts
-                    res = RevertRenderTargetImageLayouts(stack, queue);
+                    // res = RevertRenderTargetImageLayouts(stack, queue);
                     assert(res == VK_SUCCESS);
                     if (res != VK_SUCCESS)
                     {
@@ -599,12 +715,21 @@ void VulkanReplayResourceDump::SetRenderTargets(const std::vector<const ImageInf
     render_targets_.depth_att_final_layout  = depth_att_final_layout;
 }
 
-void VulkanReplayResourceDump::UpdateDescriptors(VkPipelineBindPoint     pipeline_bind_point,
+void VulkanReplayResourceDump::UpdateDescriptors(VkCommandBuffer         original_command_buffer,
+                                                 VkPipelineBindPoint     pipeline_bind_point,
                                                  uint32_t                first_set,
                                                  const format::HandleId* descriptor_sets_ids,
                                                  uint32_t                descriptor_sets_count)
 {
     assert(descriptor_sets_ids);
+
+    auto begin_entry = cmd_buf_begin_map_.find(original_command_buffer);
+    assert(begin_entry != cmd_buf_begin_map_.end());
+
+    auto stack_entry = cmd_buf_stacks_.find(begin_entry->second);
+    assert(stack_entry != cmd_buf_stacks_.end());
+
+    CommandBufferStack& stack = stack_entry->second;
 
     DescriptorSetBindPoints bind_point;
     switch (pipeline_bind_point)
@@ -645,7 +770,11 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkPipelineBindPoint     pipelin
                     const ImageInfo* img_info = object_info_table_.GetImageInfo(img_view_info->image_id);
                     assert(img_info);
 
-                    bound_descriptor_sets_[bind_point][first_set + i].image_infos[binding.first] = img_info;
+                    stack.bound_descriptor_sets[bind_point][first_set + i].image_infos[binding.first] = img_info;
+                    if (stack.must_backup_resources)
+                    {
+                        stack.CloneImage(img_info);
+                    }
                 }
                 break;
 
@@ -656,7 +785,11 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkPipelineBindPoint     pipelin
                         object_info_table_.GetBufferInfo(binding.second.buffer_info.buffer_id);
                     assert(buffer_info);
 
-                    bound_descriptor_sets_[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
+                    stack.bound_descriptor_sets[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
+                    if (stack.must_backup_resources)
+                    {
+                        stack.CloneBuffer(buffer_info);
+                    }
                 }
                 break;
 
@@ -669,7 +802,11 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkPipelineBindPoint     pipelin
                     const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(buffer_view_info->buffer_id);
                     assert(buffer_info);
 
-                    bound_descriptor_sets_[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
+                    stack.bound_descriptor_sets[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
+                    if (stack.must_backup_resources)
+                    {
+                        stack.CloneBuffer(buffer_info);
+                    }
                 }
                 break;
 
@@ -689,6 +826,22 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkPipelineBindPoint     pipelin
                     GFXRECON_LOG_WARNING_ONCE("Descriptor type not handled")
             }
         }
+    }
+}
+
+void VulkanReplayResourceDump::ResetDescriptors(VkCommandBuffer original_command_buffer)
+{
+    auto begin_entry = cmd_buf_begin_map_.find(original_command_buffer);
+    assert(begin_entry != cmd_buf_begin_map_.end());
+
+    auto stack_entry = cmd_buf_stacks_.find(begin_entry->second);
+    assert(stack_entry != cmd_buf_stacks_.end());
+
+    CommandBufferStack& stack = stack_entry->second;
+
+    for (uint32_t i = 0; i < static_cast<uint32_t>(kBindPoint_count); ++i)
+    {
+        stack.bound_descriptor_sets[i].clear();
     }
 }
 
@@ -969,6 +1122,528 @@ bool VulkanReplayResourceDump::DumpingTraceRaysIndex(VkCommandBuffer original_co
     }
 
     return false;
+}
+
+VulkanReplayResourceDump::CommandBufferStack::CommandBufferStack(const std::vector<uint64_t>& dc_indices,
+                                                                 const std::vector<uint64_t>& dispatch_indices,
+                                                                 const std::vector<uint64_t>& traceRays_indices,
+                                                                 const VulkanObjectInfoTable& object_info_table) :
+    original_command_buffer_handle(VK_NULL_HANDLE),
+    original_command_buffer_info(nullptr), command_buffers(dc_indices.size(), VK_NULL_HANDLE), current_index(0),
+    dc_indices(std::move(dc_indices)), dispatch_indices(std::move(dispatch_indices)),
+    traceRays_indices(std::move(traceRays_indices)), aux_command_buffer(VK_NULL_HANDLE), aux_fence(VK_NULL_HANDLE),
+    device_table(nullptr), object_info_table(object_info_table), replay_device_phys_mem_props(nullptr)
+{
+    must_backup_resources = dc_indices.size() > 1;
+}
+
+VulkanReplayResourceDump::CommandBufferStack::~CommandBufferStack()
+{
+    assert(original_command_buffer_info);
+
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+    VkDevice          device      = device_info->handle;
+
+    assert(device_table);
+
+    if (aux_command_buffer != VK_NULL_HANDLE)
+    {
+        const CommandPoolInfo* pool_info = object_info_table.GetCommandPoolInfo(original_command_buffer_info->pool_id);
+        assert(pool_info);
+
+        device_table->FreeCommandBuffers(device, pool_info->handle, 1, &aux_command_buffer);
+        aux_command_buffer = VK_NULL_HANDLE;
+    }
+
+    DestroyMutableResourceBackups();
+}
+
+VkResult VulkanReplayResourceDump::CommandBufferStack::CloneImage(const ImageInfo* image_info)
+{
+    assert(must_backup_resources);
+
+    VkImageCreateInfo ci;
+    ci.sType                 = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    ci.pNext                 = nullptr;
+    ci.flags                 = VkImageCreateFlags(0);
+    ci.imageType             = image_info->type;
+    ci.format                = image_info->format;
+    ci.extent                = image_info->extent;
+    ci.mipLevels             = image_info->level_count;
+    ci.arrayLayers           = image_info->layer_count;
+    ci.samples               = image_info->sample_count;
+    ci.tiling                = image_info->tiling;
+    ci.usage                 = image_info->usage | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+    ci.sharingMode           = VK_SHARING_MODE_EXCLUSIVE;
+    ci.queueFamilyIndexCount = 0;
+    ci.pQueueFamilyIndices   = nullptr;
+    ci.initialLayout         = VK_IMAGE_LAYOUT_UNDEFINED;
+
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+    VkDevice          device      = device_info->handle;
+
+    assert(device_table);
+    VkImage  new_image;
+    VkResult res = device_table->CreateImage(device, &ci, nullptr, &new_image);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("CreateImage failed with %s", util::ToString<VkResult>(res));
+        return res;
+    }
+
+    mutable_resource_backups.images.push_back(new_image);
+
+    VkMemoryRequirements mem_reqs       = {};
+    VkMemoryAllocateInfo mem_alloc_info = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO, nullptr };
+
+    device_table->GetImageMemoryRequirements(device, new_image, &mem_reqs);
+    mem_alloc_info.allocationSize = mem_reqs.size;
+    uint32_t index =
+        GetMemoryTypeIndex(*replay_device_phys_mem_props, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    if (index == std::numeric_limits<uint32_t>::max())
+    {
+        GFXRECON_LOG_ERROR("%s failed to find an appropriate memory type", __func__)
+        return VK_ERROR_INITIALIZATION_FAILED;
+    }
+
+    mem_alloc_info.memoryTypeIndex = index;
+    VkDeviceMemory image_memory;
+    res = device_table->AllocateMemory(device, &mem_alloc_info, nullptr, &image_memory);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("AllocateMemory failed with %s", util::ToString<VkResult>(res));
+        return res;
+    }
+    mutable_resource_backups.image_memories.push_back(image_memory);
+
+    res = device_table->BindImageMemory(device, new_image, image_memory, 0);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("BindImageMemory failed with %s", util::ToString<VkResult>(res));
+        return res;
+    }
+
+    mutable_resource_backups.original_images.push_back(image_info);
+
+    return VK_SUCCESS;
+}
+
+VkResult VulkanReplayResourceDump::CommandBufferStack::CloneBuffer(const BufferInfo* buffer_info)
+{
+    assert(must_backup_resources);
+
+    VkBufferCreateInfo ci;
+    ci.sType                 = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    ci.pNext                 = nullptr;
+    ci.flags                 = VkBufferCreateFlags(0);
+    ci.size                  = buffer_info->size;
+    ci.usage                 = buffer_info->usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    ci.sharingMode           = VK_SHARING_MODE_EXCLUSIVE;
+    ci.queueFamilyIndexCount = 0;
+    ci.pQueueFamilyIndices   = nullptr;
+
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+    VkDevice          device      = device_info->handle;
+
+    assert(device_table);
+
+    VkBuffer new_buffer;
+    VkResult res = device_table->CreateBuffer(device, &ci, nullptr, &new_buffer);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("CreateBuffer failed with %s", util::ToString<VkResult>(res));
+        return res;
+    }
+
+    mutable_resource_backups.buffers.push_back(new_buffer);
+
+    VkMemoryRequirements mem_reqs       = {};
+    VkMemoryAllocateInfo mem_alloc_info = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO, nullptr };
+
+    device_table->GetBufferMemoryRequirements(device, new_buffer, &mem_reqs);
+    mem_alloc_info.allocationSize = mem_reqs.size;
+    uint32_t index =
+        GetMemoryTypeIndex(*replay_device_phys_mem_props, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    if (index == std::numeric_limits<uint32_t>::max())
+    {
+        GFXRECON_LOG_ERROR("%s failed to find an appropriate memory type", __func__)
+        return VK_ERROR_INITIALIZATION_FAILED;
+    }
+
+    VkDeviceMemory buffer_memory;
+    mem_alloc_info.memoryTypeIndex = index;
+    res                            = device_table->AllocateMemory(device, &mem_alloc_info, nullptr, &buffer_memory);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("AllocateMemory failed with %s", util::ToString<VkResult>(res));
+        return res;
+    }
+    mutable_resource_backups.buffer_memories.push_back(buffer_memory);
+
+    res = device_table->BindBufferMemory(device, new_buffer, buffer_memory, 0);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("BindBufferMemory failed with %s", util::ToString<VkResult>(res));
+        return res;
+    }
+
+    mutable_resource_backups.original_buffers.push_back(buffer_info);
+
+    return VK_SUCCESS;
+}
+
+void VulkanReplayResourceDump::CommandBufferStack::DestroyMutableResourceBackups()
+{
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+    VkDevice          device      = device_info->handle;
+
+    for (size_t i = 0; i < mutable_resource_backups.images.size(); ++i)
+    {
+        device_table->DestroyImage(device, mutable_resource_backups.images[i], nullptr);
+    }
+
+    for (size_t i = 0; i < mutable_resource_backups.image_memories.size(); ++i)
+    {
+        device_table->FreeMemory(device, mutable_resource_backups.image_memories[i], nullptr);
+    }
+
+    mutable_resource_backups.images.clear();
+    mutable_resource_backups.image_memories.clear();
+    mutable_resource_backups.original_images.clear();
+
+    for (size_t i = 0; i < mutable_resource_backups.buffers.size(); ++i)
+    {
+        device_table->DestroyBuffer(device, mutable_resource_backups.buffers[i], nullptr);
+    }
+
+    for (size_t i = 0; i < mutable_resource_backups.buffer_memories.size(); ++i)
+    {
+        device_table->FreeMemory(device, mutable_resource_backups.buffer_memories[i], nullptr);
+    }
+
+    mutable_resource_backups.buffers.clear();
+    mutable_resource_backups.buffer_memories.clear();
+    mutable_resource_backups.original_buffers.clear();
+}
+
+VkResult VulkanReplayResourceDump::CommandBufferStack::RevertMutableResources(VkQueue queue)
+{
+    if (!mutable_resource_backups.images.size() && !mutable_resource_backups.buffers.size())
+    {
+        return VK_SUCCESS;
+    }
+
+    assert(aux_command_buffer);
+
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+    VkDevice          device      = device_info->handle;
+
+    device_table->ResetCommandBuffer(aux_command_buffer, 0);
+
+    const VkCommandBufferBeginInfo bi = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, nullptr, 0, nullptr };
+    device_table->BeginCommandBuffer(aux_command_buffer, &bi);
+
+    VkImageMemoryBarrier img_barrier            = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, nullptr };
+    img_barrier.subresourceRange.baseMipLevel   = 0;
+    img_barrier.subresourceRange.levelCount     = VK_REMAINING_MIP_LEVELS;
+    img_barrier.subresourceRange.baseArrayLayer = 0;
+    img_barrier.subresourceRange.layerCount     = VK_REMAINING_ARRAY_LAYERS;
+
+    assert(mutable_resource_backups.images.size() == mutable_resource_backups.original_images.size());
+    for (size_t i = 0; i < mutable_resource_backups.images.size(); ++i)
+    {
+        const VkImageAspectFlags aspect_mask =
+            graphics::GetFormatAspectMask(mutable_resource_backups.original_images[i]->format);
+        img_barrier.subresourceRange.aspectMask = aspect_mask;
+
+        // Flush gpu caches and transition original image to appropriate layout
+        img_barrier.srcAccessMask       = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+        img_barrier.dstAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
+        img_barrier.oldLayout           = VK_IMAGE_LAYOUT_GENERAL;
+        img_barrier.newLayout           = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        img_barrier.srcQueueFamilyIndex = 0;
+        img_barrier.dstQueueFamilyIndex = 0;
+        img_barrier.image               = mutable_resource_backups.original_images[i]->handle;
+
+        device_table->CmdPipelineBarrier(aux_command_buffer,
+                                         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                         VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                         0,
+                                         0,
+                                         nullptr,
+                                         0,
+                                         nullptr,
+                                         1,
+                                         &img_barrier);
+
+        // Transition back up image to appropriate layout
+        img_barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        img_barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        img_barrier.oldLayout     = VK_IMAGE_LAYOUT_UNDEFINED;
+        img_barrier.newLayout     = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        img_barrier.image         = mutable_resource_backups.images[i];
+
+        device_table->CmdPipelineBarrier(aux_command_buffer,
+                                         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                         VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                         0,
+                                         0,
+                                         nullptr,
+                                         0,
+                                         nullptr,
+                                         1,
+                                         &img_barrier);
+
+        // Copy
+        VkImageCopy copy_region                   = {};
+        copy_region.srcSubresource.aspectMask     = aspect_mask;
+        copy_region.srcSubresource.baseArrayLayer = 0;
+        copy_region.srcSubresource.layerCount     = mutable_resource_backups.original_images[i]->layer_count;
+        copy_region.srcSubresource.mipLevel       = 0;
+        copy_region.dstSubresource                = copy_region.srcSubresource;
+
+        std::vector<VkImageCopy> copy_regions(mutable_resource_backups.original_images[i]->level_count);
+
+        for (uint32_t j = 0; j < mutable_resource_backups.original_images[i]->level_count; ++j)
+        {
+            copy_region.extent.width  = std::max(1u, (mutable_resource_backups.original_images[i]->extent.width >> j));
+            copy_region.extent.height = std::max(1u, (mutable_resource_backups.original_images[i]->extent.height >> j));
+            copy_region.extent.depth  = std::max(1u, (mutable_resource_backups.original_images[i]->extent.depth >> j));
+
+            copy_regions[j] = copy_region;
+        }
+
+        device_table->CmdCopyImage(aux_command_buffer,
+                                   mutable_resource_backups.images[i],
+                                   VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                                   mutable_resource_backups.original_images[i]->handle,
+                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                   copy_regions.size(),
+                                   copy_regions.data());
+    }
+
+    VkBufferMemoryBarrier buffer_barrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER, nullptr };
+    VkBufferCopy          copy_region    = { 0, 0 };
+
+    assert(mutable_resource_backups.buffers.size() == mutable_resource_backups.original_buffers.size());
+    for (size_t i = 0; i < mutable_resource_backups.buffers.size(); ++i)
+    {
+        buffer_barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+        buffer_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        buffer_barrier.buffer        = mutable_resource_backups.original_buffers[i]->handle;
+
+        device_table->CmdPipelineBarrier(aux_command_buffer,
+                                         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                         VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                         0,
+                                         0,
+                                         nullptr,
+                                         1,
+                                         &buffer_barrier,
+                                         0,
+                                         nullptr);
+
+        copy_region.size = mutable_resource_backups.original_buffers[i]->size;
+        device_table->CmdCopyBuffer(aux_command_buffer,
+                                    mutable_resource_backups.buffers[i],
+                                    mutable_resource_backups.original_buffers[i]->handle,
+                                    1,
+                                    &copy_region);
+    }
+
+    device_table->EndCommandBuffer(aux_command_buffer);
+
+    VkSubmitInfo si         = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr };
+    si.waitSemaphoreCount   = 0;
+    si.pWaitSemaphores      = nullptr;
+    si.pWaitDstStageMask    = nullptr;
+    si.signalSemaphoreCount = 0;
+    si.pSignalSemaphores    = nullptr;
+    si.commandBufferCount   = 1;
+    si.pCommandBuffers      = &aux_command_buffer;
+
+    VkResult res = device_table->ResetFences(device, 1, &aux_fence);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("ResetFences failed with %s", util::ToString<VkResult>(res));
+        return res;
+    }
+
+    res = device_table->QueueSubmit(queue, 1, &si, aux_fence);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res));
+        return res;
+    }
+
+    res = device_table->WaitForFences(device, 1, &aux_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("WaitForFences failed with %s", util::ToString<VkResult>(res));
+        return res;
+    }
+
+    return VK_SUCCESS;
+}
+
+VkResult VulkanReplayResourceDump::CommandBufferStack::BackUpMutableResources(VkQueue queue)
+{
+    if (!mutable_resource_backups.images.size() && !mutable_resource_backups.buffers.size())
+    {
+        return VK_SUCCESS;
+    }
+
+    assert(aux_command_buffer);
+
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+    VkDevice          device      = device_info->handle;
+
+    device_table->ResetCommandBuffer(aux_command_buffer, 0);
+
+    const VkCommandBufferBeginInfo bi = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, nullptr, 0, nullptr };
+    device_table->BeginCommandBuffer(aux_command_buffer, &bi);
+
+    VkImageMemoryBarrier img_barrier            = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER, nullptr };
+    img_barrier.subresourceRange.baseMipLevel   = 0;
+    img_barrier.subresourceRange.levelCount     = VK_REMAINING_MIP_LEVELS;
+    img_barrier.subresourceRange.baseArrayLayer = 0;
+    img_barrier.subresourceRange.layerCount     = VK_REMAINING_ARRAY_LAYERS;
+
+    assert(mutable_resource_backups.images.size() == mutable_resource_backups.original_images.size());
+    for (size_t i = 0; i < mutable_resource_backups.images.size(); ++i)
+    {
+        const VkImageAspectFlags aspect_mask =
+            graphics::GetFormatAspectMask(mutable_resource_backups.original_images[i]->format);
+        img_barrier.subresourceRange.aspectMask = aspect_mask;
+
+        // Flush gpu caches and transition original image to appropriate layout
+        img_barrier.srcAccessMask       = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+        img_barrier.dstAccessMask       = VK_ACCESS_TRANSFER_READ_BIT;
+        img_barrier.oldLayout           = VK_IMAGE_LAYOUT_GENERAL;
+        img_barrier.newLayout           = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        img_barrier.srcQueueFamilyIndex = 0;
+        img_barrier.dstQueueFamilyIndex = 0;
+        img_barrier.image               = mutable_resource_backups.original_images[i]->handle;
+
+        device_table->CmdPipelineBarrier(aux_command_buffer,
+                                         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                         VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                         0,
+                                         0,
+                                         nullptr,
+                                         0,
+                                         nullptr,
+                                         1,
+                                         &img_barrier);
+
+        // Transition back up image to appropriate layout
+        img_barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+        img_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        img_barrier.oldLayout     = VK_IMAGE_LAYOUT_UNDEFINED;
+        img_barrier.newLayout     = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        img_barrier.image         = mutable_resource_backups.images[i];
+
+        device_table->CmdPipelineBarrier(aux_command_buffer,
+                                         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                         VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                         0,
+                                         0,
+                                         nullptr,
+                                         0,
+                                         nullptr,
+                                         1,
+                                         &img_barrier);
+
+        // Copy
+        VkImageCopy copy_region                   = {};
+        copy_region.srcSubresource.aspectMask     = aspect_mask;
+        copy_region.srcSubresource.baseArrayLayer = 0;
+        copy_region.srcSubresource.layerCount     = mutable_resource_backups.original_images[i]->layer_count;
+        copy_region.srcSubresource.mipLevel       = 0;
+        copy_region.dstSubresource                = copy_region.srcSubresource;
+
+        std::vector<VkImageCopy> copy_regions(mutable_resource_backups.original_images[i]->level_count);
+
+        for (uint32_t j = 0; j < mutable_resource_backups.original_images[i]->level_count; ++j)
+        {
+            copy_region.extent.width  = std::max(1u, (mutable_resource_backups.original_images[i]->extent.width >> j));
+            copy_region.extent.height = std::max(1u, (mutable_resource_backups.original_images[i]->extent.height >> j));
+            copy_region.extent.depth  = std::max(1u, (mutable_resource_backups.original_images[i]->extent.depth >> j));
+
+            copy_regions[j] = copy_region;
+        }
+
+        device_table->CmdCopyImage(aux_command_buffer,
+                                   mutable_resource_backups.original_images[i]->handle,
+                                   VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                                   mutable_resource_backups.images[i],
+                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                   copy_regions.size(),
+                                   copy_regions.data());
+    }
+
+    VkBufferMemoryBarrier buffer_barrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER, nullptr };
+    VkBufferCopy          copy_region    = { 0, 0 };
+
+    assert(mutable_resource_backups.buffers.size() == mutable_resource_backups.original_buffers.size());
+    for (size_t i = 0; i < mutable_resource_backups.buffers.size(); ++i)
+    {
+        buffer_barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+        buffer_barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        buffer_barrier.buffer        = mutable_resource_backups.original_buffers[i]->handle;
+
+        device_table->CmdPipelineBarrier(aux_command_buffer,
+                                         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                         VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                         0,
+                                         0,
+                                         nullptr,
+                                         1,
+                                         &buffer_barrier,
+                                         0,
+                                         nullptr);
+
+        copy_region.size = mutable_resource_backups.original_buffers[i]->size;
+        device_table->CmdCopyBuffer(aux_command_buffer,
+                                    mutable_resource_backups.original_buffers[i]->handle,
+                                    mutable_resource_backups.buffers[i],
+                                    1,
+                                    &copy_region);
+    }
+
+    device_table->EndCommandBuffer(aux_command_buffer);
+
+    VkSubmitInfo si         = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr };
+    si.waitSemaphoreCount   = 0;
+    si.pWaitSemaphores      = nullptr;
+    si.pWaitDstStageMask    = nullptr;
+    si.signalSemaphoreCount = 0;
+    si.pSignalSemaphores    = nullptr;
+    si.commandBufferCount   = 1;
+    si.pCommandBuffers      = &aux_command_buffer;
+
+    VkResult res = device_table->ResetFences(device, 1, &aux_fence);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("ResetFences failed with %s", util::ToString<VkResult>(res));
+        return res;
+    }
+
+    res = device_table->QueueSubmit(queue, 1, &si, aux_fence);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res));
+        return res;
+    }
+
+    res = device_table->WaitForFences(device, 1, &aux_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("WaitForFences failed with %s", util::ToString<VkResult>(res));
+        return res;
+    }
+
+    return VK_SUCCESS;
 }
 
 GFXRECON_END_NAMESPACE(gfxrecon)

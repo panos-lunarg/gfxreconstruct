@@ -71,10 +71,13 @@ class VulkanReplayResourceDump
     void SetRenderArea(const VkRect2D& render_area) { render_targets_.render_area = render_area; }
 
     // Call with vkCmdBindDescriptorSets to scan for dumpable resources
-    void UpdateDescriptors(VkPipelineBindPoint     pipeline_bind_point,
+    void UpdateDescriptors(VkCommandBuffer         original_command_buffer,
+                           VkPipelineBindPoint     pipeline_bind_point,
                            uint32_t                first_set,
                            const format::HandleId* descriptor_sets_ids,
                            uint32_t                descriptor_sets_count);
+
+    void ResetDescriptors(VkCommandBuffer original_command_buffer);
 
     void EnterRenderPass() { inside_renderpass_ = true; }
 
@@ -98,16 +101,34 @@ class VulkanReplayResourceDump
     void GetActiveCommandBuffers(VkCommandBuffer user_cmd_buffer, cmd_buf_it& first, cmd_buf_it& last) const;
 
   private:
+    struct descriptor_set_bindings
+    {
+        // storage images
+        std::unordered_map<uint32_t, const ImageInfo*> image_infos;
+
+        // storage and texel buffers
+        std::unordered_map<uint32_t, const BufferInfo*> buffer_infos;
+    };
+
+    using descriptor_set_t = std::unordered_map<uint32_t, descriptor_set_bindings>;
+
+    enum DescriptorSetBindPoints
+    {
+        kBindPoint_graphics = 0,
+        kBindPoint_compute,
+        kBindPoint_ray_tracing,
+
+        kBindPoint_count
+    };
+
     struct CommandBufferStack
     {
         CommandBufferStack(const std::vector<uint64_t>& dc_indices,
                            const std::vector<uint64_t>& dispatch_indices,
-                           const std::vector<uint64_t>& traceRays_indices) :
-            original_command_buffer_handle(VK_NULL_HANDLE),
-            original_command_buffer_info(nullptr), command_buffers(dc_indices.size(), VK_NULL_HANDLE), current_index(0),
-            dc_indices(std::move(dc_indices)), dispatch_indices(std::move(dispatch_indices)),
-            traceRays_indices(std::move(traceRays_indices)), aux_command_buffer(VK_NULL_HANDLE), device_table(nullptr)
-        {}
+                           const std::vector<uint64_t>& traceRays_indices,
+                           const VulkanObjectInfoTable& object_info_table);
+
+        ~CommandBufferStack();
 
         VkCommandBuffer              original_command_buffer_handle;
         const CommandBufferInfo*     original_command_buffer_info;
@@ -117,9 +138,35 @@ class VulkanReplayResourceDump
         std::vector<uint64_t>        dispatch_indices;
         std::vector<uint64_t>        traceRays_indices;
 
-        VkCommandBuffer aux_command_buffer;
+        descriptor_set_t bound_descriptor_sets[kBindPoint_count];
 
-        const encode::DeviceTable* device_table;
+        struct
+        {
+            std::vector<const ImageInfo*> original_images;
+            std::vector<VkImage>          images;
+            std::vector<VkDeviceMemory>   image_memories;
+
+            std::vector<const BufferInfo*> original_buffers;
+            std::vector<VkBuffer>          buffers;
+            std::vector<VkDeviceMemory>    buffer_memories;
+        } mutable_resource_backups;
+
+        VkResult CloneImage(const ImageInfo* image_info);
+
+        VkResult CloneBuffer(const BufferInfo* buffer_info);
+
+        void DestroyMutableResourceBackups();
+
+        VkResult BackUpMutableResources(VkQueue queue);
+        VkResult RevertMutableResources(VkQueue queue);
+
+        VkCommandBuffer aux_command_buffer;
+        VkFence         aux_fence;
+        bool            must_backup_resources;
+
+        const encode::DeviceTable*              device_table;
+        const VulkanObjectInfoTable&            object_info_table;
+        const VkPhysicalDeviceMemoryProperties* replay_device_phys_mem_props;
     };
 
     std::vector<uint64_t> QueueSubmit_indices_;
@@ -151,25 +198,6 @@ class VulkanReplayResourceDump
 
         VkRect2D render_area{ 0 };
     } render_targets_;
-
-    struct descriptor_set_bindings
-    {
-        std::unordered_map<uint32_t, const ImageInfo*>  image_infos;
-        std::unordered_map<uint32_t, const BufferInfo*> buffer_infos;
-    };
-
-    using descriptor_set_t = std::unordered_map<uint32_t, descriptor_set_bindings>;
-
-    enum DescriptorSetBindPoints
-    {
-        kBindPoint_graphics = 0,
-        kBindPoint_compute,
-        kBindPoint_ray_tracing,
-
-        kBindPoint_count
-    };
-
-    descriptor_set_t bound_descriptor_sets_[kBindPoint_count];
 
     bool recording_;
     bool inside_renderpass_;
