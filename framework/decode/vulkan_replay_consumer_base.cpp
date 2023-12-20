@@ -7331,7 +7331,8 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass(
             depth_img_info = nullptr;
         }
 
-        dumper.SetRenderTargets(color_att_imgs,
+        dumper.SetRenderTargets(command_buffer_info->handle,
+                                color_att_imgs,
                                 color_att_storeOps,
                                 color_att_final_layouts,
                                 depth_img_info,

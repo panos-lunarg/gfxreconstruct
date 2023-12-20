@@ -61,14 +61,15 @@ class VulkanReplayResourceDump
 
     VkCommandBuffer GetCurrentCommandBuffer(VkCommandBuffer original_command_buffer) const;
 
-    void SetRenderTargets(const std::vector<const ImageInfo*>&    color_att_imgs,
+    void SetRenderTargets(VkCommandBuffer                         original_command_buffer,
+                          const std::vector<const ImageInfo*>&    color_att_imgs,
                           const std::vector<VkAttachmentStoreOp>& color_att_storeOps,
                           const std::vector<VkImageLayout>&       color_att_final_layouts,
                           const ImageInfo*                        depth_att_img,
                           VkAttachmentStoreOp                     depth_att_storeOp,
                           VkImageLayout                           depth_att_final_layout);
 
-    void SetRenderArea(const VkRect2D& render_area) { render_targets_.render_area = render_area; }
+    void SetRenderArea(const VkRect2D& render_area);
 
     // Call with vkCmdBindDescriptorSets to scan for dumpable resources
     void UpdateDescriptors(VkCommandBuffer         original_command_buffer,
@@ -137,6 +138,9 @@ class VulkanReplayResourceDump
         std::vector<uint64_t>        dc_indices;
         std::vector<uint64_t>        dispatch_indices;
         std::vector<uint64_t>        traceRays_indices;
+        std::vector<uint64_t>        RT_indices;
+
+        uint64_t Get_RT_index(uint64_t dc_index) const;
 
         descriptor_set_t bound_descriptor_sets[kBindPoint_count];
 
@@ -184,20 +188,27 @@ class VulkanReplayResourceDump
 
     void DumpResources(const CommandBufferStack& stack, uint64_t dc_index);
 
-    VkResult RevertRenderTargetImageLayouts(const CommandBufferStack& stack, VkQueue queue);
+    VkResult RevertRenderTargetImageLayouts(const CommandBufferStack& stack, VkQueue queue, uint64_t dc_index);
 
-    struct
+    struct RenderTargets
     {
+        RenderTargets() :
+            depth_att_img(nullptr), depth_att_storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE),
+            depth_att_final_layout(VK_IMAGE_LAYOUT_UNDEFINED), render_area({ 0 })
+        {}
+
         std::vector<const ImageInfo*>    color_att_imgs;
         std::vector<VkAttachmentStoreOp> color_att_storeOps;
         std::vector<VkImageLayout>       color_att_final_layouts;
 
-        const ImageInfo*    depth_att_img{ nullptr };
+        const ImageInfo*    depth_att_img;
         VkAttachmentStoreOp depth_att_storeOp;
         VkImageLayout       depth_att_final_layout;
 
-        VkRect2D render_area{ 0 };
-    } render_targets_;
+        VkRect2D render_area;
+    };
+
+    std::vector<RenderTargets> render_targets_;
 
     bool recording_;
     bool inside_renderpass_;
