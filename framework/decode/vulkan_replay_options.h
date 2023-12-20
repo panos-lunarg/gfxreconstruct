@@ -66,19 +66,28 @@ const util::Log::Severity kDefaultLogLevel = util::Log::Severity::kInfoSeverity;
 // static const std::vector<uint64_t>              g_QueueSubmit_Index     = { 10143 };
 
 // oit
-static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 307 };
+// static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 307 };
+// static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = {
+//     { 319, 321, 323, 325, 327, 329, 331, 333, 335, 337, 339, 341, 343, 345, 347, 349, 351, 353, 355, 357, 359, 361,
+//       363, 365, 367, 369, 371, 373, 375, 377, 379, 381, 383, 385, 387, 389, 391, 393, 395, 397, 399, 401, 403, 405,
+//       407, 409, 411, 413, 415, 417, 419, 421, 423, 425, 427, 429, 431, 433, 435, 437, 439, 441, 443, 445, 447, 449,
+//       451, 453, 455, 457, 459, 461, 463, 465, 467, 469, 471, 473, 475, 477, 479, 481, 483, 485, 487, 489, 491, 493,
+//       495, 497, 499, 501, 503, 505, 507, 509, 511, 513, 515, 517, 519, 521, 523, 525, 527, 529, 531, 533, 535, 537,
+//       539, 541, 543, 545, 547, 549, 551, 553, 555, 557, 559, 561, 563, 565, 567, 571, 573, 580 }
+// };
+// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_Index     = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_Index = { { 0 } };
+// static const std::vector<uint64_t>              g_QueueSubmit_Index     = { 13353 };
+
+// ssao
+static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 1792 };
 static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = {
-    { 319, 321, 323, 325, 327, 329, 331, 333, 335, 337, 339, 341, 343, 345, 347, 349, 351, 353, 355, 357, 359, 361,
-      363, 365, 367, 369, 371, 373, 375, 377, 379, 381, 383, 385, 387, 389, 391, 393, 395, 397, 399, 401, 403, 405,
-      407, 409, 411, 413, 415, 417, 419, 421, 423, 425, 427, 429, 431, 433, 435, 437, 439, 441, 443, 445, 447, 449,
-      451, 453, 455, 457, 459, 461, 463, 465, 467, 469, 471, 473, 475, 477, 479, 481, 483, 485, 487, 489, 491, 493,
-      495, 497, 499, 501, 503, 505, 507, 509, 511, 513, 515, 517, 519, 521, 523, 525, 527, 529, 531, 533, 535, 537,
-      539, 541, 543, 545, 547, 549, 551, 553, 555, 557, 559, 561, 563, 565, 567, 571, 573, 580 }
+    { 1801, 1803, 1805, 1807, 1809, 1811, 1813, 1815, 1817, 1819, 1821, 1823, 1825, 1827,
+      1829, 1831, 1833, 1835, 1837, 1839, 1841, 1843, 1845, 1847, 1849, 1856, 1863, 1870 }
 };
 static const std::vector<std::vector<uint64_t>> g_CmdDispatch_Index     = { { 0 } };
 static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_Index = { { 0 } };
-static const std::vector<uint64_t>              g_QueueSubmit_Index     = { 13353 };
-
+static const std::vector<uint64_t>              g_QueueSubmit_Index     = { 6527 };
 
 static constexpr bool g_isolate_draw = false;
 
