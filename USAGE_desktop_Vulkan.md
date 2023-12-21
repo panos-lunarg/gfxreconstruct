@@ -540,6 +540,11 @@ Optional arguments:
               Swap the swapchain color space if unsupported by replay device.
               Check if color space is not supported by replay device and
               fallback to VK_COLOR_SPACE_SRGB_NONLINEAR_KHR.
+  --dump-resources <vulkan-begincommandbuffercall-index>,<vulkan-drawcall-index>,<vulkan-queuesubmitcall-index>
+              Dump gpu resources for the specified draw call in the specific
+              command buffer, during the specific queuesubmit call.
+              This option can be repeated to initiate multple dumps of
+              gpu resources.
 ```
 
 ### Key Controls
