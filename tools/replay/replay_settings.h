@@ -39,7 +39,7 @@ const char kArguments[] =
     "screenshot-dir,--screenshot-prefix,--screenshot-size,--screenshot-scale,--mfr|--measurement-frame-range,--fw|--"
     "force-windowed,--fwo|--force-windowed-origin,--batching-memory-usage,--measurement-file,--swapchain,--sgfs|--skip-"
     "get-fence-status,--sgfr|--"
-    "skip-get-fence-ranges";
+    "skip-get-fence-ranges,--dump-resources";
 
 static void PrintUsage(const char* exe_name)
 {
@@ -80,6 +80,7 @@ static void PrintUsage(const char* exe_name)
     GFXRECON_WRITE_CONSOLE("\t\t\t[--fwo <x,y> | --force-windowed-origin <x,y>]");
     GFXRECON_WRITE_CONSOLE("\t\t\t[--log-level <level>] [--log-file <file>] [--log-debugview]");
     GFXRECON_WRITE_CONSOLE("\t\t\t[--batching-memory-usage <pct>]");
+    GFXRECON_WRITE_CONSOLE("\t\t\t[--dump-resources <drawcall-index>]");
 #if defined(_DEBUG)
     GFXRECON_WRITE_CONSOLE("\t\t\t[--no-debug-popup] <file>\n");
 #endif
@@ -278,8 +279,17 @@ static void PrintUsage(const char* exe_name)
     GFXRECON_WRITE_CONSOLE("          \t\tAcceptable values range from 0 to 100 (default: 80)");
     GFXRECON_WRITE_CONSOLE("          \t\t0 means no batching at all");
     GFXRECON_WRITE_CONSOLE("          \t\t100 means use all available system and GPU memory");
-
+    GFXRECON_WRITE_CONSOLE("  --dump-resources <drawcall-index>");
+    GFXRECON_WRITE_CONSOLE("          \t\tOutput binaray resources for a DX12 specific drawcall.");
+    GFXRECON_WRITE_CONSOLE("          \t\tInclude vertex, index, const buffer, shader resource, render target,");
+    GFXRECON_WRITE_CONSOLE("          \t\tand depth stencil. And for before and after drawcall.");
 #endif
+    GFXRECON_WRITE_CONSOLE("  --dump-resources <vulkan-begincommandbuffercall-index>,<vulkan-drawcall-index>,<vulkan-queuesubmitcall-index>");
+    GFXRECON_WRITE_CONSOLE("          \t\tOutput gpu resources before the specified draw call in the specific command buffer, during");
+    GFXRECON_WRITE_CONSOLE("          \t\tthe specific queuesubmit call. Can use index of vulkan api call following the draw call");
+    GFXRECON_WRITE_CONSOLE("          \t\tto dump resources after the draw call. Option can be repeated to initiate multiple dumps.");
+    GFXRECON_WRITE_CONSOLE("  --dump-resources <filename>");
+    GFXRECON_WRITE_CONSOLE("          \t\tExtract --dump-resources args from the specified file.");
 
 #if defined(_DEBUG)
     GFXRECON_WRITE_CONSOLE("  --no-debug-popup\tDisable the 'Abort, Retry, Ignore' message box");
