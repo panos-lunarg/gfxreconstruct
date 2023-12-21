@@ -549,6 +549,11 @@ Optional arguments:
               was called in the original capture.
               This allows preserving frames when capturing a replay that uses.
               offscreen swapchain.
+  --dump-resources <vulkan-begincommandbuffercall-index>,<vulkan-drawcall-index>,<vulkan-queuesubmitcall-index>
+              Dump gpu resources for the specified draw call in the specific
+              command buffer, during the specific queuesubmit call.
+              This option can be repeated to initiate multple dumps of
+              gpu resources.
 ```
 
 ### Key Controls
