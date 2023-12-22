@@ -152,7 +152,7 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
         }
         else
         {
-            GFXRECON_LOG_ERROR("AllocateCommandBuffers failed with %s", util::ToString<VkResult>(res));
+            GFXRECON_LOG_ERROR("AllocateCommandBuffers failed with %s", util::ToString<VkResult>(res).c_str());
             return res;
         }
 
@@ -185,7 +185,7 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
     VkResult res = device_table->AllocateCommandBuffers(dev_info->handle, &ai, &stack.aux_command_buffer);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("AllocateCommandBuffers failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("AllocateCommandBuffers failed with %s", util::ToString<VkResult>(res).c_str());
         assert(0);
         return res;
     }
@@ -194,7 +194,7 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
     res                        = device_table->CreateFence(dev_info->handle, &ci, nullptr, &stack.aux_fence);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("CreateFence failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("CreateFence failed with %s", util::ToString<VkResult>(res).c_str());
         assert(0);
         return res;
     }
@@ -405,7 +405,7 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
     assert(res == VK_SUCCESS);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res).c_str());
         return res;
     }
 
@@ -413,7 +413,7 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
     assert(res == VK_SUCCESS);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("QueueWaitIdle failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("QueueWaitIdle failed with %s", util::ToString<VkResult>(res).c_str());
     }
 
     return res;
@@ -616,7 +616,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
         assert(res == VK_SUCCESS);
         if (res != VK_SUCCESS)
         {
-            GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res));
+            GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res).c_str());
             return res;
         }
 
@@ -625,7 +625,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
         assert(res == VK_SUCCESS);
         if (res != VK_SUCCESS)
         {
-            GFXRECON_LOG_ERROR("QueueWaitIdle failed with %s", util::ToString<VkResult>(res));
+            GFXRECON_LOG_ERROR("QueueWaitIdle failed with %s", util::ToString<VkResult>(res).c_str());
             return res;
         }
     }
@@ -683,7 +683,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                     assert(res == VK_SUCCESS);
                     if (res != VK_SUCCESS)
                     {
-                        GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res));
+                        GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res).c_str());
                         return res;
                     }
                     submitted = true;
@@ -693,7 +693,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                     assert(res == VK_SUCCESS);
                     if (res != VK_SUCCESS)
                     {
-                        GFXRECON_LOG_ERROR("QueueWaitIdle failed with %s", util::ToString<VkResult>(res));
+                        GFXRECON_LOG_ERROR("QueueWaitIdle failed with %s", util::ToString<VkResult>(res).c_str());
                         return res;
                     }
 
@@ -721,7 +721,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
         res = device_table.QueueSubmit(queue, modified_submit_infos.size(), modified_submit_infos.data(), fence);
         if (res != VK_SUCCESS)
         {
-            GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res));
+            GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res).c_str());
         }
     }
     else
@@ -1415,7 +1415,7 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::CloneImage(const ImageInf
     VkResult res = device_table->CreateImage(device, &ci, nullptr, &new_image);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("CreateImage failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("CreateImage failed with %s", util::ToString<VkResult>(res).c_str());
         return res;
     }
 
@@ -1439,7 +1439,7 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::CloneImage(const ImageInf
     res = device_table->AllocateMemory(device, &mem_alloc_info, nullptr, &image_memory);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("AllocateMemory failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("AllocateMemory failed with %s", util::ToString<VkResult>(res).c_str());
         return res;
     }
     mutable_resource_backups.image_memories.push_back(image_memory);
@@ -1447,7 +1447,7 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::CloneImage(const ImageInf
     res = device_table->BindImageMemory(device, new_image, image_memory, 0);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("BindImageMemory failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("BindImageMemory failed with %s", util::ToString<VkResult>(res).c_str());
         return res;
     }
 
@@ -1479,7 +1479,7 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::CloneBuffer(const BufferI
     VkResult res = device_table->CreateBuffer(device, &ci, nullptr, &new_buffer);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("CreateBuffer failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("CreateBuffer failed with %s", util::ToString<VkResult>(res).c_str());
         return res;
     }
 
@@ -1503,7 +1503,7 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::CloneBuffer(const BufferI
     res                            = device_table->AllocateMemory(device, &mem_alloc_info, nullptr, &buffer_memory);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("AllocateMemory failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("AllocateMemory failed with %s", util::ToString<VkResult>(res).c_str());
         return res;
     }
     mutable_resource_backups.buffer_memories.push_back(buffer_memory);
@@ -1511,7 +1511,7 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::CloneBuffer(const BufferI
     res = device_table->BindBufferMemory(device, new_buffer, buffer_memory, 0);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("BindBufferMemory failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("BindBufferMemory failed with %s", util::ToString<VkResult>(res).c_str());
         return res;
     }
 
@@ -1693,21 +1693,21 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::RevertMutableResources(Vk
     VkResult res = device_table->ResetFences(device, 1, &aux_fence);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("ResetFences failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("ResetFences failed with %s", util::ToString<VkResult>(res).c_str());
         return res;
     }
 
     res = device_table->QueueSubmit(queue, 1, &si, aux_fence);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res).c_str());
         return res;
     }
 
     res = device_table->WaitForFences(device, 1, &aux_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("WaitForFences failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("WaitForFences failed with %s", util::ToString<VkResult>(res).c_str());
         return res;
     }
 
@@ -1853,21 +1853,21 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::BackUpMutableResources(Vk
     VkResult res = device_table->ResetFences(device, 1, &aux_fence);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("ResetFences failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("ResetFences failed with %s", util::ToString<VkResult>(res).c_str());
         return res;
     }
 
     res = device_table->QueueSubmit(queue, 1, &si, aux_fence);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("QueueSubmit failed with %s", util::ToString<VkResult>(res).c_str());
         return res;
     }
 
     res = device_table->WaitForFences(device, 1, &aux_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("WaitForFences failed with %s", util::ToString<VkResult>(res));
+        GFXRECON_LOG_ERROR("WaitForFences failed with %s", util::ToString<VkResult>(res).c_str());
         return res;
     }
 
