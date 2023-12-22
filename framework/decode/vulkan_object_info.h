@@ -481,7 +481,6 @@ struct RenderPassInfo : public VulkanObjectInfo<VkRenderPass>
 
     // The attachment references per subpass
     std::vector<SubpassReferences> subpass_refs;
-    uint32_t                       current_subpass;
 };
 
 struct descriptor_type_image_info
