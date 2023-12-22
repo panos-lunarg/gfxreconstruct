@@ -484,15 +484,21 @@ struct RenderPassInfo : public VulkanObjectInfo<VkRenderPass>
 
     struct SubpassReferences
     {
+        VkSubpassDescriptionFlags          flags;
+        VkPipelineBindPoint                pipeline_bind_point;
         std::vector<VkAttachmentReference> input_att_refs;
         std::vector<VkAttachmentReference> color_att_refs;
+        std::vector<VkAttachmentReference> resolve_att_refs;
+        std::vector<uint32_t>              preserve_att_refs;
 
-        bool has_depth;
-        VkAttachmentReference              depth_att_ref;
+        bool                  has_depth;
+        VkAttachmentReference depth_att_ref;
     };
 
     // The attachment references per subpass
     std::vector<SubpassReferences> subpass_refs;
+
+    std::vector<VkSubpassDependency> dependencies;
 };
 
 struct descriptor_type_image_info
