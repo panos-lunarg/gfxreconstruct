@@ -160,6 +160,7 @@ VulkanReplayConsumerBase::VulkanReplayConsumerBase(std::shared_ptr<application::
                                                    const VulkanReplayOptions&                options) :
     dumper(options.BeginCommandBuffer_Index,
            options.CmdDraw_Index,
+           options.RenderPass_Indices,
            options.CmdDispatch_Index,
            options.CmdTraceRaysKHR_Index,
            options.QueueSubmit_indices,
@@ -3905,13 +3906,11 @@ VkResult VulkanReplayConsumerBase::OverrideAllocateDescriptorSets(
 
             if (result == VK_SUCCESS)
             {
-                GFXRECON_LOG_INFO(
-                    "A new VkDescriptorPool object (handle = 0x%" PRIx64
-                    ") has been created to replace a VkDescriptorPool object (ID = %" PRIu64 ", handle = 0x%" PRIx64
-                    ") that has run our of pool memory (vkAllocateDescriptorSets returned VK_ERROR_OUT_OF_POOL_MEMORY)",
-                    new_pool,
-                    pool_info->capture_id,
-                    pool_info->handle);
+                // GFXRECON_LOG_INFO(
+                //     "A new VkDescriptorPool object (handle = 0x%" PRIx64
+                //     ") has been created to replace a VkDescriptorPool object (ID = %" PRIu64 ", handle = 0x%" PRIx64
+                //     ") that has run our of pool memory (vkAllocateDescriptorSets returned
+                //     VK_ERROR_OUT_OF_POOL_MEMORY)", new_pool, pool_info->capture_id, pool_info->handle);
 
                 // Retire old pool and swap it with the new pool.
                 pool_info->retired_pools.push_back(pool_info->handle);
@@ -4771,28 +4770,51 @@ VkResult VulkanReplayConsumerBase::OverrideCreateRenderPass(
     auto                          render_pass_info = reinterpret_cast<RenderPassInfo*>(pRenderPass->GetConsumerData(0));
     assert(render_pass_info);
 
+    // Copy attachments
     render_pass_info->attachment_descs.reserve(create_info->attachmentCount);
     for (uint32_t i = 0; i < create_info->attachmentCount; ++i)
     {
         render_pass_info->attachment_descs.push_back(create_info->pAttachments[i]);
     }
 
+    // Copy subpass attachment references
     render_pass_info->subpass_refs.reserve(create_info->subpassCount);
     for (uint32_t i = 0; i < create_info->subpassCount; ++i)
     {
         struct RenderPassInfo::SubpassReferences sp_ref;
-        sp_ref.color_att_refs.reserve(create_info->pSubpasses[i].colorAttachmentCount);
-        for (uint32_t s = 0; s < create_info->pSubpasses[i].colorAttachmentCount; ++s)
-        {
-            sp_ref.color_att_refs.push_back(create_info->pSubpasses[i].pColorAttachments[s]);
-        }
 
+        // Copy input attachment refs
         sp_ref.input_att_refs.reserve(create_info->pSubpasses[i].inputAttachmentCount);
         for (uint32_t s = 0; s < create_info->pSubpasses[i].inputAttachmentCount; ++s)
         {
             sp_ref.input_att_refs.push_back(create_info->pSubpasses[i].pInputAttachments[s]);
         }
 
+        // Copy color attachment refs
+        sp_ref.color_att_refs.reserve(create_info->pSubpasses[i].colorAttachmentCount);
+        for (uint32_t s = 0; s < create_info->pSubpasses[i].colorAttachmentCount; ++s)
+        {
+            sp_ref.color_att_refs.push_back(create_info->pSubpasses[i].pColorAttachments[s]);
+        }
+
+        // Copy resolve attachment refs
+        if (create_info->pSubpasses[i].pResolveAttachments)
+        {
+            sp_ref.resolve_att_refs.reserve(create_info->pSubpasses[i].colorAttachmentCount);
+            for (uint32_t s = 0; s < create_info->pSubpasses[i].colorAttachmentCount; ++s)
+            {
+                sp_ref.resolve_att_refs.push_back(create_info->pSubpasses[i].pResolveAttachments[s]);
+            }
+        }
+
+        // Copy preserve attachment indices
+        sp_ref.preserve_att_refs.reserve(create_info->pSubpasses[i].preserveAttachmentCount);
+        for (uint32_t s = 0; s < create_info->pSubpasses[i].preserveAttachmentCount; ++s)
+        {
+            sp_ref.preserve_att_refs.push_back(create_info->pSubpasses[i].pPreserveAttachments[s]);
+        }
+
+        // Copy depth attachment ref
         if (create_info->pSubpasses[i].pDepthStencilAttachment)
         {
             sp_ref.has_depth     = true;
@@ -4803,7 +4825,16 @@ VkResult VulkanReplayConsumerBase::OverrideCreateRenderPass(
             sp_ref.has_depth = false;
         }
 
+        sp_ref.flags = create_info->pSubpasses[i].flags;
+
         render_pass_info->subpass_refs.push_back(std::move(sp_ref));
+    }
+
+    // Copy dependencies
+    render_pass_info->dependencies.resize(create_info->dependencyCount);
+    for (uint32_t i = 0; i < create_info->dependencyCount; ++i)
+    {
+        render_pass_info->dependencies[i] = create_info->pDependencies[i];
     }
 
     return result;
@@ -4829,6 +4860,56 @@ VkResult VulkanReplayConsumerBase::OverrideCreateRenderPass2(
     if ((result == VK_SUCCESS) && (pCreateInfo->GetPointer() != nullptr))
     {
         StoreAttachmentDescriptionFinalLayouts(pCreateInfo, pRenderPass);
+    }
+
+    const VkRenderPassCreateInfo2* create_info = pCreateInfo->GetPointer();
+    auto render_pass_info                      = reinterpret_cast<RenderPassInfo*>(pRenderPass->GetConsumerData(0));
+    assert(render_pass_info);
+
+    render_pass_info->attachment_descs.resize(create_info->attachmentCount);
+    for (uint32_t i = 0; i < create_info->attachmentCount; ++i)
+    {
+        render_pass_info->attachment_descs[i].flags          = create_info->pAttachments[i].flags;
+        render_pass_info->attachment_descs[i].format         = create_info->pAttachments[i].format;
+        render_pass_info->attachment_descs[i].samples        = create_info->pAttachments[i].samples;
+        render_pass_info->attachment_descs[i].loadOp         = create_info->pAttachments[i].loadOp;
+        render_pass_info->attachment_descs[i].storeOp        = create_info->pAttachments[i].storeOp;
+        render_pass_info->attachment_descs[i].stencilLoadOp  = create_info->pAttachments[i].stencilLoadOp;
+        render_pass_info->attachment_descs[i].stencilStoreOp = create_info->pAttachments[i].stencilStoreOp;
+        render_pass_info->attachment_descs[i].initialLayout  = create_info->pAttachments[i].initialLayout;
+        render_pass_info->attachment_descs[i].finalLayout    = create_info->pAttachments[i].finalLayout;
+    }
+
+    render_pass_info->subpass_refs.reserve(create_info->subpassCount);
+    for (uint32_t i = 0; i < create_info->subpassCount; ++i)
+    {
+        struct RenderPassInfo::SubpassReferences sp_ref;
+        sp_ref.color_att_refs.resize(create_info->pSubpasses[i].colorAttachmentCount);
+        for (uint32_t s = 0; s < create_info->pSubpasses[i].colorAttachmentCount; ++s)
+        {
+            sp_ref.color_att_refs[s].attachment = create_info->pSubpasses[i].pColorAttachments[s].attachment;
+            sp_ref.color_att_refs[s].layout     = create_info->pSubpasses[i].pColorAttachments[s].layout;
+        }
+
+        sp_ref.input_att_refs.resize(create_info->pSubpasses[i].inputAttachmentCount);
+        for (uint32_t s = 0; s < create_info->pSubpasses[i].inputAttachmentCount; ++s)
+        {
+            sp_ref.input_att_refs[s].attachment = create_info->pSubpasses[i].pInputAttachments[s].attachment;
+            sp_ref.input_att_refs[s].layout     = create_info->pSubpasses[i].pInputAttachments[s].layout;
+        }
+
+        if (create_info->pSubpasses[i].pDepthStencilAttachment)
+        {
+            sp_ref.has_depth                = true;
+            sp_ref.depth_att_ref.attachment = create_info->pSubpasses[i].pDepthStencilAttachment->attachment;
+            sp_ref.depth_att_ref.layout     = create_info->pSubpasses[i].pDepthStencilAttachment->layout;
+        }
+        else
+        {
+            sp_ref.has_depth = false;
+        }
+
+        render_pass_info->subpass_refs.push_back(std::move(sp_ref));
     }
 
     return result;
@@ -7099,11 +7180,62 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass(
 
         dumper.BeginRenderPass(command_buffer,
                                render_pass_info,
+                               render_pass_begin_info_decoder->GetPointer()->clearValueCount,
+                               render_pass_begin_info_decoder->GetPointer()->pClearValues,
                                framebuffer_info,
-                               render_pass_begin_info_decoder->GetPointer()->renderArea);
+                               render_pass_begin_info_decoder->GetPointer()->renderArea,
+                               contents);
     }
 
-    return func(command_buffer, render_pass_begin_info_decoder->GetPointer(), contents);
+    func(command_buffer, render_pass_begin_info_decoder->GetPointer(), contents);
+}
+
+void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass2(
+    PFN_vkCmdBeginRenderPass2                            func,
+    CommandBufferInfo*                                   command_buffer_info,
+    StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* render_pass_begin_info_decoder,
+    StructPointerDecoder<Decoded_VkSubpassBeginInfo>*    subpass_begin_info_decode)
+{
+    const auto render_pass_info_meta = render_pass_begin_info_decoder->GetMetaStructPointer();
+    auto       framebuffer_id        = render_pass_info_meta->framebuffer;
+    auto       render_pass_id        = render_pass_info_meta->renderPass;
+    command_buffer_info->frame_buffer_ids.push_back(framebuffer_id);
+
+    auto framebuffer_info = object_info_table_.GetFramebufferInfo(framebuffer_id);
+    auto render_pass_info = object_info_table_.GetRenderPassInfo(render_pass_id);
+    if ((render_pass_info != nullptr) && (framebuffer_info != nullptr))
+    {
+        GFXRECON_ASSERT(framebuffer_info->attachment_image_view_ids.size() ==
+                        render_pass_info->attachment_description_final_layouts.size());
+
+        for (size_t i = 0; i < render_pass_info->attachment_description_final_layouts.size(); ++i)
+        {
+            auto image_view_id   = framebuffer_info->attachment_image_view_ids[i];
+            auto image_view_info = object_info_table_.GetImageViewInfo(image_view_id);
+            command_buffer_info->image_layout_barriers[image_view_info->image_id] =
+                render_pass_info->attachment_description_final_layouts[i];
+        }
+    }
+
+    VkCommandBuffer command_buffer = command_buffer_info->handle;
+
+    // Update render targets
+    if (dumper.IsRecording())
+    {
+        const RenderPassInfo* render_pass_info =
+            object_info_table_.GetRenderPassInfo(render_pass_info_meta->renderPass);
+        assert(render_pass_begin_info_decoder->GetPointer());
+
+        dumper.BeginRenderPass(command_buffer,
+                               render_pass_info,
+                               render_pass_begin_info_decoder->GetPointer()->clearValueCount,
+                               render_pass_begin_info_decoder->GetPointer()->pClearValues,
+                               framebuffer_info,
+                               render_pass_begin_info_decoder->GetPointer()->renderArea,
+                               subpass_begin_info_decode->GetPointer()->contents);
+    }
+
+    func(command_buffer, render_pass_begin_info_decoder->GetPointer(), subpass_begin_info_decode->GetPointer());
 }
 
 VkResult VulkanReplayConsumerBase::OverrideCreateImageView(

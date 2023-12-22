@@ -1332,6 +1332,8 @@ void VulkanReplayConsumer::Process_vkBeginCommandBuffer(
 
     if (dumper.DumpingBeginCommandBufferIndex(call_info.index))
     {
+        GFXRECON_WRITE_CONSOLE("Reached BeginCommandBuffer %" PRIu64, call_info.index);
+
         const CommandBufferInfo* cmd_buf_info = GetObjectInfoTable().GetCommandBufferInfo(commandBuffer);
         const DeviceInfo* device = GetObjectInfoTable().GetDeviceInfo(cmd_buf_info->parent_id);
         dumper.CloneCommandBuffer(call_info.index, commandBuffer, GetDeviceTable(device->handle));
@@ -2459,16 +2461,16 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass(
     OverrideCmdBeginRenderPass(GetDeviceTable(in_commandBuffer->handle)->CmdBeginRenderPass, in_commandBuffer, pRenderPassBegin, contents);//@@@HQA
 
     // Push command in the command buffer clone
-    if (dumper.IsRecording())
-    {
-        VulkanReplayResourceDump::cmd_buf_it first, last;
-        dumper.GetActiveCommandBuffers(in_commandBuffer->handle, first, last);
-        for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
-        {
-            GetDeviceTable(*it)->CmdBeginRenderPass(*it, pRenderPassBegin->GetPointer(), contents)/*@@@ABC*/;//@@@HERE
-        }
-        dumper.EnterRenderPass();
-    }
+    // if (dumper.IsRecording())
+    // {
+    //     VulkanReplayResourceDump::cmd_buf_it first, last;
+    //     dumper.GetActiveCommandBuffers(in_commandBuffer->handle, first, last);
+    //     for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+    //     {
+    //         GetDeviceTable(*it)->CmdBeginRenderPass(*it, pRenderPassBegin->GetPointer(), contents)/*@@@ABC*/;//@@@HERE
+    //     }
+    //     dumper.EnterRenderPass();
+    // }
 }
 
 void VulkanReplayConsumer::Process_vkCmdNextSubpass(
@@ -2509,7 +2511,8 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderPass(
         {
             GetDeviceTable(*it)->CmdEndRenderPass(*it)/*@@@ABC*/;//@@@HERE
         }
-        dumper.ExitRenderPass();
+
+        dumper.ExitRenderPass(in_commandBuffer);
     }
 }
 
@@ -3035,24 +3038,19 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass2(
     StructPointerDecoder<Decoded_VkRenderPassBeginInfo>/*@@@PLQ*/* pRenderPassBegin,
     StructPointerDecoder<Decoded_VkSubpassBeginInfo>/*@@@PLQ*/* pSubpassBeginInfo)
 {
-    VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
-    const VkRenderPassBeginInfo* in_pRenderPassBegin = pRenderPassBegin->GetPointer();
-    MapStructHandles(pRenderPassBegin->GetMetaStructPointer(), GetObjectInfoTable());
-    const VkSubpassBeginInfo* in_pSubpassBeginInfo = pSubpassBeginInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBeginRenderPass2(in_commandBuffer, in_pRenderPassBegin, in_pSubpassBeginInfo);//@@@HQA
+auto in_commandBuffer = GetObjectInfoTable().GetCommandBufferInfo(commandBuffer);
+
+    MapStructHandles(pRenderPassBegin->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
+    OverrideCmdBeginRenderPass2(GetDeviceTable(in_commandBuffer->handle)->CmdBeginRenderPass2, in_commandBuffer, pRenderPassBegin, pSubpassBeginInfo);//@@@HQA
 
     // Push command in the command buffer clone
     if (dumper.IsRecording())
     {
-        // XXX: vkCmdBeginRenderPass2 is not handled in the same way as vkCmdBeginRenderPass
-
-        // const auto* rp_begin_info_meta = pRenderPassBegin->GetMetaStructPointer();
-        // dumper.SetRenderTargets (rp_begin_info_meta->renderPass, rp_begin_info_meta->framebuffer, *rp_begin_info_meta->renderArea->decoded_value);
         VulkanReplayResourceDump::cmd_buf_it first, last;
-        dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
+        dumper.GetActiveCommandBuffers(in_commandBuffer->handle, first, last);
         for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
         {
-            GetDeviceTable(*it)->CmdBeginRenderPass2(*it, in_pRenderPassBegin, in_pSubpassBeginInfo)/*@@@ABC*/;//@@@HERE
+            GetDeviceTable(*it)->CmdBeginRenderPass2(*it, pRenderPassBegin->GetPointer(), pSubpassBeginInfo->GetPointer())/*@@@ABC*/;//@@@HERE
         }
     }
 }
@@ -5186,20 +5184,19 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass2KHR(
     StructPointerDecoder<Decoded_VkRenderPassBeginInfo>/*@@@PLQ*/* pRenderPassBegin,
     StructPointerDecoder<Decoded_VkSubpassBeginInfo>/*@@@PLQ*/* pSubpassBeginInfo)
 {
-    VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
-    const VkRenderPassBeginInfo* in_pRenderPassBegin = pRenderPassBegin->GetPointer();
-    MapStructHandles(pRenderPassBegin->GetMetaStructPointer(), GetObjectInfoTable());
-    const VkSubpassBeginInfo* in_pSubpassBeginInfo = pSubpassBeginInfo->GetPointer();//@@@DFK
-    GetDeviceTable(in_commandBuffer)->CmdBeginRenderPass2KHR(in_commandBuffer, in_pRenderPassBegin, in_pSubpassBeginInfo);//@@@HQA
+    auto in_commandBuffer = GetObjectInfoTable().GetCommandBufferInfo(commandBuffer);
+
+    MapStructHandles(pRenderPassBegin->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
+    OverrideCmdBeginRenderPass2(GetDeviceTable(in_commandBuffer->handle)->CmdBeginRenderPass2KHR, in_commandBuffer, pRenderPassBegin, pSubpassBeginInfo);//@@@HQA
 
     // Push command in the command buffer clone
     if (dumper.IsRecording())
     {
         VulkanReplayResourceDump::cmd_buf_it first, last;
-        dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
+        dumper.GetActiveCommandBuffers(in_commandBuffer->handle, first, last);
         for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
         {
-            GetDeviceTable(*it)->CmdBeginRenderPass2KHR(*it, in_pRenderPassBegin, in_pSubpassBeginInfo)/*@@@ABC*/;//@@@HERE
+            GetDeviceTable(*it)->CmdBeginRenderPass2KHR(*it, pRenderPassBegin->GetPointer(), pSubpassBeginInfo->GetPointer())/*@@@ABC*/;//@@@HERE
         }
     }
 }
