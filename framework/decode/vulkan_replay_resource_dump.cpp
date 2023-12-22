@@ -91,14 +91,14 @@ static uint32_t GetMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties& memor
 
 VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>&              begin_command_buffer_index,
                                                    const std::vector<std::vector<uint64_t>>& draw_indices,
+                                                   const std::vector<std::vector<uint64_t>>& rt_indices,
                                                    const std::vector<std::vector<uint64_t>>& dispatch_indices,
                                                    const std::vector<std::vector<uint64_t>>& traceRays_indices,
                                                    const std::vector<uint64_t>&              queueSubmit_indices,
                                                    bool                                      isolate_draw,
                                                    const VulkanObjectInfoTable&              object_info_table) :
     QueueSubmit_indices_(std::move(queueSubmit_indices)),
-    recording_(false), inside_renderpass_(false), isolate_draw_call_(isolate_draw),
-    object_info_table_(object_info_table), ignore_storeOps_(true)
+    recording_(false), isolate_draw_call_(isolate_draw), object_info_table_(object_info_table), ignore_storeOps_(true)
 {
     // These should match
     assert(begin_command_buffer_index.size() == draw_indices.size());
@@ -109,10 +109,61 @@ VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>& 
         cmd_buf_stacks_.emplace(std::piecewise_construct,
                                 std::forward_as_tuple(bcb_index),
                                 std::forward_as_tuple(std::move(draw_indices[i]),
+                                                      std::move(rt_indices[i]),
                                                       std::move(dispatch_indices[i]),
                                                       std::move(traceRays_indices[i]),
                                                       object_info_table));
     }
+}
+
+VulkanReplayResourceDump::CommandBufferStack*
+VulkanReplayResourceDump::FindCommandBufferStack(VkCommandBuffer original_command_buffer)
+{
+    auto begin_entry = cmd_buf_begin_map_.find(original_command_buffer);
+    if (begin_entry == cmd_buf_begin_map_.end())
+    {
+        assert(0);
+        return nullptr;
+    }
+
+    auto stack_entry = cmd_buf_stacks_.find(begin_entry->second);
+    assert(stack_entry != cmd_buf_stacks_.end());
+    if (stack_entry == cmd_buf_stacks_.end())
+    {
+        assert(0);
+        return nullptr;
+    }
+
+    CommandBufferStack* stack = &stack_entry->second;
+    return stack;
+}
+
+const VulkanReplayResourceDump::CommandBufferStack*
+VulkanReplayResourceDump::FindCommandBufferStack(VkCommandBuffer original_command_buffer) const
+{
+    auto begin_entry = cmd_buf_begin_map_.find(original_command_buffer);
+    if (begin_entry == cmd_buf_begin_map_.end())
+    {
+        assert(0);
+        return nullptr;
+    }
+
+    const auto stack_entry = cmd_buf_stacks_.find(begin_entry->second);
+    assert(stack_entry != cmd_buf_stacks_.end());
+    if (stack_entry == cmd_buf_stacks_.end())
+    {
+        assert(0);
+        return nullptr;
+    }
+
+    const CommandBufferStack* stack = &stack_entry->second;
+    return stack;
+}
+
+void VulkanReplayResourceDump::ExitRenderPass(VkCommandBuffer original_command_buffer)
+{
+    CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
+    stack->EndRenderPass();
 }
 
 VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                   bcb_index,
@@ -120,6 +171,9 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
                                                       const encode::DeviceTable* device_table)
 {
     assert(device_table);
+
+    GFXRECON_WRITE_CONSOLE(
+        "%s(bcb_index: %" PRIu64 ", commandBuffer: %" PRIu64 ")", __func__, bcb_index, commandBuffer);
 
     auto entry = cmd_buf_stacks_.find(bcb_index);
     if (entry == cmd_buf_stacks_.end())
@@ -141,6 +195,7 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
     CommandBufferStack& stack    = entry->second;
     const DeviceInfo*   dev_info = object_info_table_.GetDeviceInfo(cb_info->parent_id);
 
+    GFXRECON_WRITE_CONSOLE("  Allocating %zu command buffers:", stack.command_buffers.size())
     for (size_t i = 0; i < stack.command_buffers.size(); ++i)
     {
         assert(stack.command_buffers[i] == VK_NULL_HANDLE);
@@ -159,6 +214,8 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
         const VkCommandBufferBeginInfo bi{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, nullptr, 0, nullptr };
         device_table->BeginCommandBuffer(stack.command_buffers[i], &bi);
     }
+
+    GFXRECON_WRITE_CONSOLE("  Done")
 
     assert(stack.original_command_buffer_info == nullptr);
     stack.original_command_buffer_info = cb_info;
@@ -204,101 +261,108 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
 
 void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_command_buffer)
 {
-    auto begin_entry = cmd_buf_begin_map_.find(original_command_buffer);
-    assert(begin_entry != cmd_buf_begin_map_.end());
+    GFXRECON_WRITE_CONSOLE("%s(original_command_buffer: %p)", __func__);
 
-    auto stack_entry = cmd_buf_stacks_.find(begin_entry->second);
-    assert(stack_entry != cmd_buf_stacks_.end());
+    CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
 
-    CommandBufferStack& stack = stack_entry->second;
+    GFXRECON_WRITE_CONSOLE("  Finalizing command buffer %u (out of %zu) dc: %" PRIu64,
+                           stack->current_index,
+                           stack->command_buffers.size(),
+                           stack->dc_indices[stack->current_index]);
+    GFXRECON_WRITE_CONSOLE(
+        "  stack->current_index: %u stack->dc_indices.size(): %zu", stack->current_index, stack->dc_indices.size());
 
-    const uint64_t RT_index = stack.Get_RT_index(stack.dc_indices[stack.current_index]);
+    // assert(stack->current_index < stack->dc_indices.size());
+    // const uint64_t RT_index = stack->GetRTIndex(stack->dc_indices[stack->current_index]);
 
-    std::vector<VkImageMemoryBarrier> img_barriers;
+    // std::vector<VkImageMemoryBarrier> img_barriers;
 
-    for (size_t i = 0; i < stack.render_targets_[RT_index].color_att_imgs.size(); ++i)
+    // for (size_t i = 0; i < stack->render_targets_[RT_index].color_att_imgs.size(); ++i)
+    // {
+    //     if (stack->render_targets_[RT_index].color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE ||
+    //     ignore_storeOps_)
+    //     {
+    //         const ImageInfo* image_info = stack->render_targets_[RT_index].color_att_imgs[i];
+
+    //         std::vector<VkImageAspectFlagBits> aspects;
+    //         bool                               combined_depth_stencil;
+    //         graphics::GetFormatAspects(image_info->format, &aspects, &combined_depth_stencil);
+
+    //         // assert(stack->render_targets_[RT_index].color_att_final_layouts[i] ==
+    //         //        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+    //         VkImageMemoryBarrier img_barrier;
+    //         img_barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    //         img_barrier.pNext                           = nullptr;
+    //         img_barrier.srcAccessMask                   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    //         img_barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
+    //         img_barrier.oldLayout                       =
+    //         stack->render_targets_[RT_index].color_att_final_layouts[i]; img_barrier.newLayout =
+    //         VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL; img_barrier.srcQueueFamilyIndex             = 0;
+    //         img_barrier.dstQueueFamilyIndex             = 0;
+    //         img_barrier.image                           = image_info->handle;
+    //         img_barrier.subresourceRange.aspectMask     = aspects[0];
+    //         img_barrier.subresourceRange.baseArrayLayer = 0;
+    //         img_barrier.subresourceRange.baseMipLevel   = 0;
+    //         img_barrier.subresourceRange.layerCount     = VK_REMAINING_ARRAY_LAYERS;
+    //         img_barrier.subresourceRange.levelCount     = VK_REMAINING_MIP_LEVELS;
+    //         img_barriers.push_back(std::move(img_barrier));
+    //     }
+    // }
+
+    // if (stack->render_targets_[RT_index].depth_att_img)
+    // {
+    //     const ImageInfo* image_info = stack->render_targets_[RT_index].depth_att_img;
+
+    //     std::vector<VkImageAspectFlagBits> aspects;
+    //     bool                               combined_depth_stencil;
+    //     graphics::GetFormatAspects(image_info->format, &aspects, &combined_depth_stencil);
+
+    //     VkImageMemoryBarrier img_barrier;
+    //     img_barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    //     img_barrier.pNext                           = nullptr;
+    //     img_barrier.srcAccessMask                   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    //     img_barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
+    //     img_barrier.oldLayout                       = stack->render_targets_[RT_index].depth_att_final_layout;
+    //     img_barrier.newLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    //     img_barrier.srcQueueFamilyIndex             = 0;
+    //     img_barrier.dstQueueFamilyIndex             = 0;
+    //     img_barrier.image                           = image_info->handle;
+    //     img_barrier.subresourceRange.aspectMask     = aspects[0];
+    //     img_barrier.subresourceRange.baseArrayLayer = 0;
+    //     img_barrier.subresourceRange.baseMipLevel   = 0;
+    //     img_barrier.subresourceRange.layerCount     = VK_REMAINING_ARRAY_LAYERS;
+    //     img_barrier.subresourceRange.levelCount     = VK_REMAINING_MIP_LEVELS;
+    //     img_barriers.push_back(std::move(img_barrier));
+    // }
+
+    VkCommandBuffer current_clone = stack->command_buffers[stack->current_index];
+    assert(stack->device_table != nullptr);
+
+    if (stack->inside_renderpass)
     {
-        if (stack.render_targets_[RT_index].color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE)
-        {
-            const ImageInfo* image_info = stack.render_targets_[RT_index].color_att_imgs[i];
-
-            std::vector<VkImageAspectFlagBits> aspects;
-            bool                               combined_depth_stencil;
-            graphics::GetFormatAspects(image_info->format, &aspects, &combined_depth_stencil);
-
-            VkImageMemoryBarrier img_barrier;
-            img_barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-            img_barrier.pNext                           = nullptr;
-            img_barrier.srcAccessMask                   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-            img_barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
-            img_barrier.oldLayout                       = stack.render_targets_[RT_index].color_att_final_layouts[i];
-            img_barrier.newLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-            img_barrier.srcQueueFamilyIndex             = 0;
-            img_barrier.dstQueueFamilyIndex             = 0;
-            img_barrier.image                           = image_info->handle;
-            img_barrier.subresourceRange.aspectMask     = aspects[0];
-            img_barrier.subresourceRange.baseArrayLayer = 0;
-            img_barrier.subresourceRange.baseMipLevel   = 0;
-            img_barrier.subresourceRange.layerCount     = VK_REMAINING_ARRAY_LAYERS;
-            img_barrier.subresourceRange.levelCount     = VK_REMAINING_MIP_LEVELS;
-            img_barriers.push_back(std::move(img_barrier));
-        }
-    }
-
-    if (stack.render_targets_[RT_index].depth_att_img)
-    {
-        const ImageInfo* image_info = stack.render_targets_[RT_index].depth_att_img;
-
-        std::vector<VkImageAspectFlagBits> aspects;
-        bool                               combined_depth_stencil;
-        graphics::GetFormatAspects(image_info->format, &aspects, &combined_depth_stencil);
-
-        VkImageMemoryBarrier img_barrier;
-        img_barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        img_barrier.pNext                           = nullptr;
-        img_barrier.srcAccessMask                   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        img_barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
-        img_barrier.oldLayout                       = stack.render_targets_[RT_index].depth_att_final_layout;
-        img_barrier.newLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        img_barrier.srcQueueFamilyIndex             = 0;
-        img_barrier.dstQueueFamilyIndex             = 0;
-        img_barrier.image                           = image_info->handle;
-        img_barrier.subresourceRange.aspectMask     = aspects[0];
-        img_barrier.subresourceRange.baseArrayLayer = 0;
-        img_barrier.subresourceRange.baseMipLevel   = 0;
-        img_barrier.subresourceRange.layerCount     = VK_REMAINING_ARRAY_LAYERS;
-        img_barrier.subresourceRange.levelCount     = VK_REMAINING_MIP_LEVELS;
-        img_barriers.push_back(std::move(img_barrier));
-    }
-
-    VkCommandBuffer current_clone = stack.command_buffers[stack.current_index];
-    assert(stack.device_table != nullptr);
-
-    if (inside_renderpass_)
-    {
-        // TODO: Handle multiple sub passes
-        stack.device_table->CmdEndRenderPass(current_clone);
+        stack->device_table->CmdEndRenderPass(current_clone);
     }
 
     // Inset pipeline barrier after EndRenderPass
-    if (img_barriers.size())
-    {
-        stack.device_table->CmdPipelineBarrier(current_clone,
-                                               VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                                               VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                                               0,
-                                               0,
-                                               nullptr,
-                                               0,
-                                               nullptr,
-                                               img_barriers.size(),
-                                               img_barriers.data());
-    }
+    // if (img_barriers.size())
+    // {
+    //     stack->device_table->CmdPipelineBarrier(current_clone,
+    //                                             VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+    //                                             VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+    //                                             0,
+    //                                             0,
+    //                                             nullptr,
+    //                                             0,
+    //                                             nullptr,
+    //                                             img_barriers.size(),
+    //                                             img_barriers.data());
+    // }
 
-    stack.device_table->EndCommandBuffer(current_clone);
+    stack->device_table->EndCommandBuffer(current_clone);
 
     // Increment pointer to clone that is going to be finalized next
-    ++stack.current_index;
+    ++stack->current_index;
 
     UpdateRecordingStatus();
 }
@@ -307,13 +371,13 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
                                                                   VkQueue                   queue,
                                                                   uint64_t                  dc_index)
 {
-    const uint64_t RT_index = stack.Get_RT_index(dc_index);
+    const uint64_t RT_index = stack.GetRTIndex(dc_index);
 
     std::vector<VkImageMemoryBarrier> img_barriers;
 
     for (size_t i = 0; i < stack.render_targets_[RT_index].color_att_imgs.size(); ++i)
     {
-        if (stack.render_targets_[RT_index].color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE)
+        if (stack.render_targets_[RT_index].color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE || ignore_storeOps_)
         {
             const ImageInfo* image_info = stack.render_targets_[RT_index].color_att_imgs[i];
 
@@ -334,8 +398,8 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
             img_barrier.subresourceRange.aspectMask     = aspects[0];
             img_barrier.subresourceRange.baseArrayLayer = 0;
             img_barrier.subresourceRange.baseMipLevel   = 0;
-            img_barrier.subresourceRange.layerCount     = VK_REMAINING_ARRAY_LAYERS;
-            img_barrier.subresourceRange.levelCount     = VK_REMAINING_MIP_LEVELS;
+            img_barrier.subresourceRange.layerCount     = image_info->layer_count;
+            img_barrier.subresourceRange.levelCount     = image_info->level_count;
             img_barriers.push_back(std::move(img_barrier));
         }
     }
@@ -361,8 +425,8 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
         img_barrier.subresourceRange.aspectMask     = aspects[0];
         img_barrier.subresourceRange.baseArrayLayer = 0;
         img_barrier.subresourceRange.baseMipLevel   = 0;
-        img_barrier.subresourceRange.layerCount     = VK_REMAINING_ARRAY_LAYERS;
-        img_barrier.subresourceRange.levelCount     = VK_REMAINING_MIP_LEVELS;
+        img_barrier.subresourceRange.layerCount     = image_info->layer_count;
+        img_barrier.subresourceRange.levelCount     = image_info->level_count;
         img_barriers.push_back(std::move(img_barrier));
     }
 
@@ -423,7 +487,11 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
 {
     assert(stack.device_table != nullptr);
 
-    const uint64_t RT_index = stack.Get_RT_index(dc_index);
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
+
+    // GFXRECON_WRITE_CONSOLE("  Dumping attachments for DC %" PRIu64, dc_index);
+
+    const uint64_t RT_index = stack.GetRTIndex(dc_index);
 
     if (!stack.render_targets_[RT_index].color_att_imgs.size() &&
         stack.render_targets_[RT_index].depth_att_img == nullptr)
@@ -484,9 +552,15 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
             if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
             {
                 std::stringstream filename;
+#if defined(__ANDROID__)
+                filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
+                         << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
+                         << 0 << ".bmp";
+#else
                 filename << "vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
                          << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
                          << 0 << ".bmp";
+#endif
 
                 const uint32_t texel_size =
                     vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
@@ -500,15 +574,16 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
                                                  stride,
                                                  output_image_format);
             }
-            else
-            {
-                std::stringstream filename;
-                filename << "vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
-                         << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
-                         << 0 << ".bin";
+            // else
+            // {
+            //     std::stringstream filename;
+            //     filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_att_" << i <<
+            //     "_aspect_"
+            //              << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
+            //              << 0 << ".bin";
 
-                util::bufferwriter::WriteBuffer(filename.str(), data.data(), data.size());
-            }
+            //     util::bufferwriter::WriteBuffer(filename.str(), data.data(), data.size());
+            // }
         }
     }
 
@@ -546,11 +621,17 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
                 subresource_offsets,
                 subresource_sizes);
 
+#if defined(__ANDROID__)
+            std::stringstream filename;
+            filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_aspect_"
+                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
+                     << ".bmp";
+#else
             std::stringstream filename;
             filename << "vkCmdDraw_" << dc_index << "_aspect_"
                      << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
                      << ".bmp";
-
+#endif
             const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_DEPTH_BIT);
             const uint32_t stride     = texel_size * image_info->extent.width;
 
@@ -701,12 +782,12 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                     DumpAttachments(stack, stack.dc_indices[cb]);
 
                     // Revert render attachments layouts
-                    res = RevertRenderTargetImageLayouts(stack, queue, stack.dc_indices[cb]);
-                    assert(res == VK_SUCCESS);
-                    if (res != VK_SUCCESS)
-                    {
-                        return res;
-                    }
+                    // res = RevertRenderTargetImageLayouts(stack, queue, stack.dc_indices[cb]);
+                    // assert(res == VK_SUCCESS);
+                    // if (res != VK_SUCCESS)
+                    // {
+                    //     return res;
+                    // }
                 }
             }
         }
@@ -739,25 +820,162 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
     return res;
 }
 
-void VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const RenderPassInfo*  render_pass_info,
-                                                                   const FramebufferInfo* framebuffer_info,
-                                                                   const VkRect2D&        render_area)
+VkResult VulkanReplayResourceDump::CommandBufferStack::CloneRenderPass(const RenderPassInfo* original_render_pass)
+{
+    std::vector<VkAttachmentDescription> modified_attachemnts = original_render_pass->attachment_descs;
+
+    // Fix storeOps and final layouts
+    for (auto& att : modified_attachemnts)
+    {
+        att.storeOp     = VK_ATTACHMENT_STORE_OP_STORE;
+        att.finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+
+        if (vkuFormatHasStencil(att.format))
+        {
+            att.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+        }
+    }
+
+    // Create new render passes
+    render_pass_clones.resize(original_render_pass->subpass_refs.size());
+
+    std::vector<VkSubpassDescription> subpass_descs;
+    for (uint32_t sub = 0; sub < original_render_pass->subpass_refs.size(); ++sub)
+    {
+        std::vector<VkSubpassDependency> modified_dependencies;
+        for (uint32_t d = 0; d < original_render_pass->dependencies.size(); ++d)
+        {
+            const VkSubpassDependency& original_dep = original_render_pass->dependencies[d];
+
+            if ((original_dep.srcSubpass != VK_SUBPASS_EXTERNAL && original_dep.srcSubpass > sub) ||
+                (original_dep.dstSubpass != VK_SUBPASS_EXTERNAL && original_dep.dstSubpass > sub))
+            {
+                continue;
+            }
+
+            auto new_dep = modified_dependencies.insert(modified_dependencies.end(), original_dep);
+            // if (new_dep->srcSubpass == VK_SUBPASS_EXTERNAL)
+            // {
+            //     new_dep->srcStageMask |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            // //     new_dep->srcAccessMask |= VK_ACCESS_TRANSFER_READ_BIT;
+            // }
+
+            if (new_dep->dstSubpass == VK_SUBPASS_EXTERNAL)
+            {
+                new_dep->dstStageMask  = VK_PIPELINE_STAGE_TRANSFER_BIT;
+                new_dep->dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            }
+        }
+
+        const RenderPassInfo::SubpassReferences& original_subp_ref = original_render_pass->subpass_refs[sub];
+
+#if defined(GFXRECON_DEBUG_BUILD)
+        // A few sanity checks: Check that the color and depth attachments used in each render pass is of an appropriate
+        // format. If not generate a warning just as a heads up
+        for (uint32_t r = 0; r < original_subp_ref.color_att_refs.size(); ++r)
+        {
+            const auto col_ref = original_subp_ref.color_att_refs[r];
+            if (!vkuFormatIsColor(modified_attachemnts[col_ref.attachment].format))
+            {
+                GFXRECON_LOG_WARNING("%s(): In subpass %u color attachment reference %u refering to attachment %u is "
+                                     "not of a color format (%s)",
+                                     __func__,
+                                     sub,
+                                     r,
+                                     col_ref.attachment,
+                                     util::ToString<VkFormat>(modified_attachemnts[col_ref.attachment].format));
+            }
+        }
+
+        if (original_subp_ref.has_depth)
+        {
+            const VkAttachmentReference& depth_ref = original_subp_ref.depth_att_ref;
+            if (!vkuFormatIsDepthAndStencil(original_render_pass->attachment_descs[depth_ref.attachment].format))
+            {
+                GFXRECON_LOG_WARNING("%s(): In subpass %u depth attachment reference refering to attachment %u is "
+                                     "not of a color format (%s)",
+                                     __func__,
+                                     sub,
+                                     depth_ref.attachment,
+                                     util::ToString<VkFormat>(modified_attachemnts[depth_ref.attachment].format));
+            }
+        }
+#endif
+
+        auto new_subp_desc = subpass_descs.insert(subpass_descs.end(), VkSubpassDescription());
+
+        new_subp_desc->flags                = original_subp_ref.flags;
+        new_subp_desc->pipelineBindPoint    = original_subp_ref.pipeline_bind_point;
+        new_subp_desc->inputAttachmentCount = original_subp_ref.input_att_refs.size();
+        new_subp_desc->pInputAttachments =
+            original_subp_ref.input_att_refs.size() ? original_subp_ref.input_att_refs.data() : nullptr;
+        new_subp_desc->colorAttachmentCount = original_subp_ref.color_att_refs.size();
+        new_subp_desc->pColorAttachments =
+            original_subp_ref.color_att_refs.size() ? original_subp_ref.color_att_refs.data() : nullptr;
+        new_subp_desc->pResolveAttachments =
+            original_subp_ref.resolve_att_refs.size() ? original_subp_ref.resolve_att_refs.data() : nullptr;
+        new_subp_desc->pDepthStencilAttachment =
+            original_subp_ref.has_depth ? &original_subp_ref.depth_att_ref : nullptr;
+        new_subp_desc->preserveAttachmentCount = original_subp_ref.preserve_att_refs.size();
+        new_subp_desc->pPreserveAttachments =
+            original_subp_ref.preserve_att_refs.size() ? original_subp_ref.preserve_att_refs.data() : nullptr;
+
+        VkRenderPassCreateInfo ci = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO, nullptr, VkRenderPassCreateFlags(0) };
+
+        ci.attachmentCount = modified_attachemnts.size();
+        ci.pAttachments    = modified_attachemnts.size() ? modified_attachemnts.data() : nullptr;
+
+        GFXRECON_WRITE_CONSOLE("  render pass %u has %u subpasses", sub, sub + 1);
+        assert(subpass_descs.size() == sub + 1);
+        ci.subpassCount = sub + 1;
+        ci.pSubpasses   = subpass_descs.data();
+
+        ci.dependencyCount = modified_dependencies.size();
+        ci.pDependencies   = modified_dependencies.size() ? modified_dependencies.data() : nullptr;
+
+        const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+        VkDevice          device      = device_info->handle;
+
+        VkResult res = device_table->CreateRenderPass(device, &ci, nullptr, &render_pass_clones[sub]);
+        if (res != VK_SUCCESS)
+        {
+            GFXRECON_LOG_ERROR("CreateRenderPass failed with %s", util::ToString<VkResult>(res).c_str());
+            return res;
+        }
+    }
+
+    return VK_SUCCESS;
+}
+
+VkResult VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const RenderPassInfo*  render_pass_info,
+                                                                       uint32_t               clear_value_count,
+                                                                       const VkClearValue*    p_clear_values,
+                                                                       const FramebufferInfo* framebuffer_info,
+                                                                       const VkRect2D&        render_area,
+                                                                       VkSubpassContents      contents)
 {
     assert(render_pass_info);
     assert(framebuffer_info);
+
+    // GFXRECON_WRITE_CONSOLE("%s()", __func__);
 
     std::vector<const ImageInfo*>    color_att_imgs;
     std::vector<VkAttachmentStoreOp> color_att_storeOps;
     std::vector<VkImageLayout>       color_att_final_layouts;
 
+    inside_renderpass  = true;
     current_subpass    = 0;
+    subpass_contents   = contents;
+    n_subpasses        = render_pass_info->subpass_refs.size();
     active_renderpass  = render_pass_info;
     active_framebuffer = framebuffer_info;
 
     // Parse color attachments
+    uint32_t i = 0;
     for (const auto& att_ref : active_renderpass->subpass_refs[current_subpass].color_att_refs)
     {
-        const uint32_t       att_idx = att_ref.attachment;
+        const uint32_t att_idx = att_ref.attachment;
+
         const ImageViewInfo* img_view_info =
             object_info_table.GetImageViewInfo(framebuffer_info->attachment_image_view_ids[att_idx]);
         assert(img_view_info);
@@ -766,6 +984,8 @@ void VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const RenderP
         assert(img_info);
 
         color_att_imgs.push_back(img_info);
+
+        assert(att_idx < active_renderpass->attachment_descs.size());
         color_att_storeOps.push_back(active_renderpass->attachment_descs[att_idx].storeOp);
         color_att_final_layouts.push_back(active_renderpass->attachment_descs[att_idx].finalLayout);
     }
@@ -791,8 +1011,6 @@ void VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const RenderP
         depth_img_info = nullptr;
     }
 
-    current_subpass = 0;
-
     SetRenderTargets(std::move(color_att_imgs),
                      std::move(color_att_storeOps),
                      std::move(color_att_final_layouts),
@@ -801,6 +1019,42 @@ void VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const RenderP
                      depth_final_layout);
 
     SetRenderArea(render_area);
+
+    VkResult res = CloneRenderPass(render_pass_info);
+    if (res != VK_SUCCESS)
+    {
+        return res;
+    }
+
+    // Add vkCmdBeginRenderPass into the cloned command buffers using the modified render pass
+    VulkanReplayResourceDump::cmd_buf_it first, last;
+    GetActiveCommandBuffers(first, last);
+    size_t cmb_buf_idx = 0;
+    for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it, ++cmb_buf_idx)
+    {
+        VkRenderPassBeginInfo bi = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO, nullptr };
+
+        bi.clearValueCount = clear_value_count;
+        bi.pClearValues    = p_clear_values;
+        bi.framebuffer     = framebuffer_info->handle;
+        bi.renderArea      = render_area;
+
+        // GetRTIndex will tell us which render pass each cloned command buffer should use depending on the assigned
+        // draw call index
+        const uint32_t RT_index = GetRTIndex(dc_indices[cmb_buf_idx]);
+        assert(RT_index < render_pass_clones.size());
+
+        GFXRECON_WRITE_CONSOLE("  cmd_buf_idx: %zu with dc index: %" PRIu64 " gets render pass: %u",
+                               cmb_buf_idx,
+                               dc_indices[cmb_buf_idx],
+                               RT_index);
+
+        bi.renderPass = render_pass_clones[RT_index];
+
+        device_table->CmdBeginRenderPass(*it, &bi, contents);
+    }
+
+    return VK_SUCCESS;
 }
 
 void VulkanReplayResourceDump::CommandBufferStack::NextSubpass()
@@ -864,6 +1118,13 @@ void VulkanReplayResourceDump::CommandBufferStack::NextSubpass()
                      depth_final_layout);
 }
 
+void VulkanReplayResourceDump::CommandBufferStack::EndRenderPass()
+{
+    assert(inside_renderpass);
+
+    inside_renderpass = false;
+}
+
 void VulkanReplayResourceDump::CommandBufferStack::SetRenderTargets(
     const std::vector<const ImageInfo*>&    color_att_imgs,
     const std::vector<VkAttachmentStoreOp>& color_att_storeOps,
@@ -882,8 +1143,6 @@ void VulkanReplayResourceDump::CommandBufferStack::SetRenderTargets(
     new_rts->depth_att_img           = depth_att_img;
     new_rts->depth_att_storeOp       = depth_att_storeOp;
     new_rts->depth_att_final_layout  = depth_att_final_layout;
-
-    RT_indices.push_back(dc_indices[current_index]);
 }
 
 void VulkanReplayResourceDump::CommandBufferStack::SetRenderArea(const VkRect2D& render_area)
@@ -1130,10 +1389,7 @@ void VulkanReplayResourceDump::GetActiveCommandBuffers(VkCommandBuffer user_cmd_
     const CommandBufferStack& stack = stack_entry->second;
     assert(stack_entry->second.original_command_buffer_handle == user_cmd_buffer);
 
-    assert(stack.current_index <= stack.command_buffers.size());
-
-    first = stack.command_buffers.begin() + stack.current_index;
-    last  = stack.command_buffers.end();
+    stack.GetActiveCommandBuffers(first, last);
 }
 
 bool VulkanReplayResourceDump::UpdateRecordingStatus()
@@ -1302,30 +1558,20 @@ bool VulkanReplayResourceDump::DumpingTraceRaysIndex(VkCommandBuffer original_co
     return false;
 }
 
-void VulkanReplayResourceDump::BeginRenderPass(VkCommandBuffer        original_command_buffer,
-                                               const RenderPassInfo*  render_pass_info,
-                                               const FramebufferInfo* framebuffer_info,
-                                               const VkRect2D&        render_area)
+VkResult VulkanReplayResourceDump::BeginRenderPass(VkCommandBuffer        original_command_buffer,
+                                                   const RenderPassInfo*  render_pass_info,
+                                                   uint32_t               clear_value_count,
+                                                   const VkClearValue*    p_clear_values,
+                                                   const FramebufferInfo* framebuffer_info,
+                                                   const VkRect2D&        render_area,
+                                                   VkSubpassContents      contents)
 {
     assert(recording_);
     assert(original_command_buffer != VK_NULL_HANDLE);
 
-    const auto bcb_entry = cmd_buf_begin_map_.find(original_command_buffer);
-    if (bcb_entry == cmd_buf_begin_map_.end())
-    {
-        assert(0);
-        return;
-    }
-
-    const auto stack_entry = cmd_buf_stacks_.find(bcb_entry->second);
-    if (stack_entry == cmd_buf_stacks_.end())
-    {
-        assert(0);
-        return;
-    }
-
-    CommandBufferStack& stack = stack_entry->second;
-    stack.BeginRenderPass(render_pass_info, framebuffer_info, render_area);
+    CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
+    return stack->BeginRenderPass(
+        render_pass_info, clear_value_count, p_clear_values, framebuffer_info, render_area, contents);
 }
 
 void VulkanReplayResourceDump::NextSubpass(VkCommandBuffer original_command_buffer)
@@ -1333,34 +1579,22 @@ void VulkanReplayResourceDump::NextSubpass(VkCommandBuffer original_command_buff
     assert(recording_);
     assert(original_command_buffer != VK_NULL_HANDLE);
 
-    const auto bcb_entry = cmd_buf_begin_map_.find(original_command_buffer);
-    if (bcb_entry == cmd_buf_begin_map_.end())
-    {
-        assert(0);
-        return;
-    }
-
-    const auto stack_entry = cmd_buf_stacks_.find(bcb_entry->second);
-    if (stack_entry == cmd_buf_stacks_.end())
-    {
-        assert(0);
-        return;
-    }
-
-    CommandBufferStack& stack = stack_entry->second;
-    stack.NextSubpass();
+    CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
+    stack->NextSubpass();
 }
 
 VulkanReplayResourceDump::CommandBufferStack::CommandBufferStack(const std::vector<uint64_t>& dc_indices,
+                                                                 const std::vector<uint64_t>& rt_indices,
                                                                  const std::vector<uint64_t>& dispatch_indices,
                                                                  const std::vector<uint64_t>& traceRays_indices,
                                                                  const VulkanObjectInfoTable& object_info_table) :
     original_command_buffer_handle(VK_NULL_HANDLE),
     original_command_buffer_info(nullptr), command_buffers(dc_indices.size(), VK_NULL_HANDLE), current_index(0),
-    dc_indices(std::move(dc_indices)), dispatch_indices(std::move(dispatch_indices)),
+    dc_indices(std::move(dc_indices)), RT_indices(std::move(rt_indices)), dispatch_indices(std::move(dispatch_indices)),
     traceRays_indices(std::move(traceRays_indices)), active_renderpass(nullptr), active_framebuffer(nullptr),
-    current_subpass(0), aux_command_buffer(VK_NULL_HANDLE), aux_fence(VK_NULL_HANDLE), device_table(nullptr),
-    object_info_table(object_info_table), replay_device_phys_mem_props(nullptr)
+    current_subpass(0), subpass_contents(VK_SUBPASS_CONTENTS_INLINE), aux_command_buffer(VK_NULL_HANDLE),
+    aux_fence(VK_NULL_HANDLE), device_table(nullptr), object_info_table(object_info_table),
+    replay_device_phys_mem_props(nullptr)
 {
     must_backup_resources = dc_indices.size() > 1;
 }
@@ -1874,26 +2108,29 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::BackUpMutableResources(Vk
     return VK_SUCCESS;
 }
 
-uint64_t VulkanReplayResourceDump::CommandBufferStack::Get_RT_index(uint64_t dc_index) const
+uint64_t VulkanReplayResourceDump::CommandBufferStack::GetRTIndex(uint64_t dc_index) const
 {
-    uint64_t rt_index = 0;
+    // GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    // GFXRECON_WRITE_CONSOLE("  RT_indices.size(): %zu", RT_indices.size());
 
-    size_t i;
-    for (i = 0; i < RT_indices.size() - 1; ++i)
+    size_t i = 0;
+    for (; i < RT_indices.size() - 1; ++i)
     {
-        if (dc_index < RT_indices[i + 1])
+        if (dc_index > RT_indices[i] && dc_index < RT_indices[i + 1])
         {
-            rt_index = i;
-            break;
+            return i;
         }
     }
 
-    if (dc_index == RT_indices[i])
-    {
-        rt_index = i;
-    }
+    return i;
+}
 
-    return rt_index;
+void VulkanReplayResourceDump::CommandBufferStack::GetActiveCommandBuffers(cmd_buf_it& first, cmd_buf_it& last) const
+{
+    assert(current_index <= command_buffers.size());
+
+    first = command_buffers.begin() + current_index;
+    last  = command_buffers.end();
 }
 
 GFXRECON_END_NAMESPACE(gfxrecon)
