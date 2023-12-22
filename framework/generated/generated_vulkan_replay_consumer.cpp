@@ -2458,6 +2458,8 @@ void VulkanReplayConsumer::Process_vkCmdNextSubpass(
         {
             GetDeviceTable(*it)->CmdNextSubpass(*it, contents)/*@@@ABC*/;//@@@HERE
         }
+
+        dumper.NextSubpass(in_commandBuffer);
     }
 }
 
@@ -3518,7 +3520,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginRendering(
         assert(depth_img_info);
 
         // dumper.SetRenderTargets(color_att_img_infos, color_att_storeOps, depth_img_info, in_pRenderingInfo->pDepthAttachment->storeOp);
-        dumper.SetRenderArea(in_pRenderingInfo->renderArea);
+        // dumper.SetRenderArea(in_pRenderingInfo->renderArea);
     }
 }
 
