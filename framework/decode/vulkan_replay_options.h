@@ -80,14 +80,27 @@ const util::Log::Severity kDefaultLogLevel = util::Log::Severity::kInfoSeverity;
 // static const std::vector<uint64_t>              g_QueueSubmit_Index     = { 13353 };
 
 // ssao
-static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 1792 };
+// static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 1792 };
+// static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = {
+//     { 1801, 1803, 1805, 1807, 1809, 1811, 1813, 1815, 1817, 1819, 1821, 1823, 1825, 1827,
+//       1829, 1831, 1833, 1835, 1837, 1839, 1841, 1843, 1845, 1847, 1849, 1856, 1863, 1870 }
+// };
+// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_Index     = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_Index = { { 0 } };
+// static const std::vector<uint64_t>              g_QueueSubmit_Index     = { 6527 };
+
+// inputattachments
+static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 960 };
 static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = {
-    { 1801, 1803, 1805, 1807, 1809, 1811, 1813, 1815, 1817, 1819, 1821, 1823, 1825, 1827,
-      1829, 1831, 1833, 1835, 1837, 1839, 1841, 1843, 1845, 1847, 1849, 1856, 1863, 1870 }
+    { 969,  970,  971,  972,  973,  974,  975,  976,  977,  978,  979,  980,  981,  982,  983,  984,  985,  986,
+      987,  988,  989,  990,  991,  992,  993,  994,  995,  996,  997,  998,  999,  1000, 1001, 1002, 1003, 1004,
+      1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022,
+      1023, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039, 1040,
+      1041, 1042, 1043, 1044, 1045, 1046, 1047, 1048, 1049, 1050, 1051, 1052, 1053, 1054, 1060 }
 };
 static const std::vector<std::vector<uint64_t>> g_CmdDispatch_Index     = { { 0 } };
 static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_Index = { { 0 } };
-static const std::vector<uint64_t>              g_QueueSubmit_Index     = { 6527 };
+static const std::vector<uint64_t>              g_QueueSubmit_Index     = { 26292 };
 
 static constexpr bool g_isolate_draw = false;
 
