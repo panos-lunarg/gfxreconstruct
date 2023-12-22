@@ -42,6 +42,7 @@ class VulkanReplayResourceDump
 
     VulkanReplayResourceDump(const std::vector<uint64_t>&              begin_command_buffer_index,
                              const std::vector<std::vector<uint64_t>>& draw_indices,
+                             const std::vector<std::vector<uint64_t>>& rt_indices,
                              const std::vector<std::vector<uint64_t>>& dispatch_indices,
                              const std::vector<std::vector<uint64_t>>& traceRays_indices,
                              const std::vector<uint64_t>&              queueSubmit_indices,
@@ -61,10 +62,15 @@ class VulkanReplayResourceDump
 
     VkCommandBuffer GetCurrentCommandBuffer(VkCommandBuffer original_command_buffer) const;
 
-    void BeginRenderPass(VkCommandBuffer        original_command_buffer,
-                         const RenderPassInfo*  render_pass_info,
-                         const FramebufferInfo* framebuffer_info,
-                         const VkRect2D&        render_area);
+    VkResult BeginRenderPass(VkCommandBuffer        original_command_buffer,
+                             const RenderPassInfo*  render_pass_info,
+                             uint32_t               clear_value_count,
+                             const VkClearValue*    p_clear_values,
+                             const FramebufferInfo* framebuffer_info,
+                             const VkRect2D&        render_area,
+                             VkSubpassContents      contents);
+
+    void ExitRenderPass(VkCommandBuffer original_command_buffer);
 
     void NextSubpass(VkCommandBuffer original_command_buffer);
 
@@ -76,10 +82,6 @@ class VulkanReplayResourceDump
                            uint32_t                descriptor_sets_count);
 
     void ResetDescriptors(VkCommandBuffer original_command_buffer);
-
-    void EnterRenderPass() { inside_renderpass_ = true; }
-
-    void ExitRenderPass() { inside_renderpass_ = false; }
 
     bool DumpingSubmissionIndex(uint64_t index) const;
 
@@ -122,6 +124,7 @@ class VulkanReplayResourceDump
     struct CommandBufferStack
     {
         CommandBufferStack(const std::vector<uint64_t>& dc_indices,
+                           const std::vector<uint64_t>& rt_indices,
                            const std::vector<uint64_t>& dispatch_indices,
                            const std::vector<uint64_t>& traceRays_indices,
                            const VulkanObjectInfoTable& object_info_table);
@@ -139,6 +142,11 @@ class VulkanReplayResourceDump
         const RenderPassInfo*        active_renderpass;
         const FramebufferInfo*       active_framebuffer;
         uint32_t                     current_subpass;
+        uint32_t                     n_subpasses;
+        VkSubpassContents            subpass_contents;
+
+        std::vector<VkRenderPass> render_pass_clones;
+        bool                      inside_renderpass;
 
         struct RenderTargets
         {
@@ -160,13 +168,20 @@ class VulkanReplayResourceDump
 
         std::vector<RenderTargets> render_targets_;
 
-        uint64_t Get_RT_index(uint64_t dc_index) const;
+        uint64_t GetRTIndex(uint64_t dc_index) const;
 
-        void BeginRenderPass(const RenderPassInfo*  render_pass_info,
-                             const FramebufferInfo* framebuffer_info,
-                             const VkRect2D&        render_area);
+        VkResult CloneRenderPass(const RenderPassInfo* original_render_pass);
+
+        VkResult BeginRenderPass(const RenderPassInfo*  render_pass_info,
+                                 uint32_t               clear_value_count,
+                                 const VkClearValue*    p_clear_values,
+                                 const FramebufferInfo* framebuffer_info,
+                                 const VkRect2D&        render_area,
+                                 VkSubpassContents      contents);
 
         void NextSubpass();
+
+        void EndRenderPass();
 
         void SetRenderTargets(const std::vector<const ImageInfo*>&    color_att_imgs,
                               const std::vector<VkAttachmentStoreOp>& color_att_storeOps,
@@ -176,6 +191,8 @@ class VulkanReplayResourceDump
                               VkImageLayout                           depth_att_final_layout);
 
         void SetRenderArea(const VkRect2D& render_area);
+
+        void GetActiveCommandBuffers(cmd_buf_it& first, cmd_buf_it& last) const;
 
         descriptor_set_t bound_descriptor_sets[kBindPoint_count];
 
@@ -226,8 +243,12 @@ class VulkanReplayResourceDump
 
     VkResult RevertRenderTargetImageLayouts(const CommandBufferStack& stack, VkQueue queue, uint64_t dc_index);
 
+    VulkanReplayResourceDump::CommandBufferStack* FindCommandBufferStack(VkCommandBuffer original_command_buffer);
+
+    const VulkanReplayResourceDump::CommandBufferStack*
+    FindCommandBufferStack(VkCommandBuffer original_command_buffer) const;
+
     bool recording_;
-    bool inside_renderpass_;
     bool isolate_draw_call_;
     bool ignore_storeOps_;
 
