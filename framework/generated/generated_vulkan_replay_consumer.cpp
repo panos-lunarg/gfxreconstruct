@@ -1729,7 +1729,7 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexed(
     VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);//@@@DFK
     GetDeviceTable(in_commandBuffer)->CmdDrawIndexed(in_commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);//@@@HQA
 
-        // Push command in the command buffer clone
+    // Push command in the command buffer clone
     if (dumper.IsRecording())
     {
         if (dumper.IsolateDrawCall())
@@ -1776,16 +1776,31 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirect(
     // Push command in the command buffer clone
     if (dumper.IsRecording())
     {
-        VulkanReplayResourceDump::cmd_buf_it first, last;
-        dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
-        for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+        if (dumper.IsolateDrawCall())
         {
-            GetDeviceTable(*it)->CmdDrawIndirect(*it, in_buffer, offset, drawCount, stride)/*@@@ABC*/;//@@@HERE
-        }
+            if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+            {
+                VulkanReplayResourceDump::cmd_buf_it first, last;
+                dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
 
-        if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+                // Record the command only in one command buffer
+                GetDeviceTable(*first)->CmdDrawIndirect(*first, in_buffer, offset, drawCount, stride);//@@@HQA
+                dumper.FinalizeCommandBuffer(in_commandBuffer);
+            }
+        }
+        else
         {
-            dumper.FinalizeCommandBuffer(in_commandBuffer);
+            VulkanReplayResourceDump::cmd_buf_it first, last;
+            dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
+            for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+            {
+                GetDeviceTable(*it)->CmdDrawIndirect(*it, in_buffer, offset, drawCount, stride);//@@@HQA
+            }
+
+            if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+            {
+                dumper.FinalizeCommandBuffer(in_commandBuffer);
+            }
         }
     }
 }
@@ -1805,16 +1820,31 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirect(
     // Push command in the command buffer clone
     if (dumper.IsRecording())
     {
-        VulkanReplayResourceDump::cmd_buf_it first, last;
-        dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
-        for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+        if (dumper.IsolateDrawCall())
         {
-            GetDeviceTable(*it)->CmdDrawIndexedIndirect(*it, in_buffer, offset, drawCount, stride)/*@@@ABC*/;//@@@HERE
-        }
+            if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+            {
+                VulkanReplayResourceDump::cmd_buf_it first, last;
+                dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
 
-        if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+                // Record the command only in one command buffer
+                GetDeviceTable(*first)->CmdDrawIndexedIndirect(*first, in_buffer, offset, drawCount, stride);//@@@HQA
+                dumper.FinalizeCommandBuffer(in_commandBuffer);
+            }
+        }
+        else
         {
-            dumper.FinalizeCommandBuffer(in_commandBuffer);
+            VulkanReplayResourceDump::cmd_buf_it first, last;
+            dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
+            for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+            {
+                GetDeviceTable(*it)->CmdDrawIndexedIndirect(*it, in_buffer, offset, drawCount, stride);//@@@HQA
+            }
+
+            if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+            {
+                dumper.FinalizeCommandBuffer(in_commandBuffer);
+            }
         }
     }
 }
@@ -2905,16 +2935,31 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCount(
     // Push command in the command buffer clone
     if (dumper.IsRecording())
     {
-        VulkanReplayResourceDump::cmd_buf_it first, last;
-        dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
-        for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+        if (dumper.IsolateDrawCall())
         {
-            GetDeviceTable(*it)->CmdDrawIndirectCount(*it, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HERE
-        }
+            if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+            {
+                VulkanReplayResourceDump::cmd_buf_it first, last;
+                dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
 
-        if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+                // Record the command only in one command buffer
+                GetDeviceTable(*first)->CmdDrawIndirectCount(*first, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);//@@@HQA
+                dumper.FinalizeCommandBuffer(in_commandBuffer);
+            }
+        }
+        else
         {
-            dumper.FinalizeCommandBuffer(in_commandBuffer);
+            VulkanReplayResourceDump::cmd_buf_it first, last;
+            dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
+            for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+            {
+                GetDeviceTable(*it)->CmdDrawIndirectCount(*it, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);//@@@HQA
+            }
+
+            if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+            {
+                dumper.FinalizeCommandBuffer(in_commandBuffer);
+            }
         }
     }
 }
@@ -2937,16 +2982,31 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCount(
     // Push command in the command buffer clone
     if (dumper.IsRecording())
     {
-        VulkanReplayResourceDump::cmd_buf_it first, last;
-        dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
-        for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+        if (dumper.IsolateDrawCall())
         {
-            GetDeviceTable(*it)->CmdDrawIndexedIndirectCount(*it, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HERE
-        }
+            if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+            {
+                VulkanReplayResourceDump::cmd_buf_it first, last;
+                dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
 
-        if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+                // Record the command only in one command buffer
+                GetDeviceTable(*first)->CmdDrawIndexedIndirectCount(*first, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);//@@@HQA
+                dumper.FinalizeCommandBuffer(in_commandBuffer);
+            }
+        }
+        else
         {
-            dumper.FinalizeCommandBuffer(in_commandBuffer);
+            VulkanReplayResourceDump::cmd_buf_it first, last;
+            dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
+            for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+            {
+                GetDeviceTable(*it)->CmdDrawIndexedIndirectCount(*it, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);//@@@HQA
+            }
+
+            if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+            {
+                dumper.FinalizeCommandBuffer(in_commandBuffer);
+            }
         }
     }
 }
@@ -5585,16 +5645,31 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndirectCountKHR(
     // Push command in the command buffer clone
     if (dumper.IsRecording())
     {
-        VulkanReplayResourceDump::cmd_buf_it first, last;
-        dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
-        for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+        if (dumper.IsolateDrawCall())
         {
-            GetDeviceTable(*it)->CmdDrawIndirectCountKHR(*it, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HERE
-        }
+            if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+            {
+                VulkanReplayResourceDump::cmd_buf_it first, last;
+                dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
 
-        if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+                // Record the command only in one command buffer
+                GetDeviceTable(*first)->CmdDrawIndirectCountKHR(*first, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);//@@@HQA
+                dumper.FinalizeCommandBuffer(in_commandBuffer);
+            }
+        }
+        else
         {
-            dumper.FinalizeCommandBuffer(in_commandBuffer);
+            VulkanReplayResourceDump::cmd_buf_it first, last;
+            dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
+            for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+            {
+                GetDeviceTable(*it)->CmdDrawIndirectCountKHR(*it, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);//@@@HQA
+            }
+
+            if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+            {
+                dumper.FinalizeCommandBuffer(in_commandBuffer);
+            }
         }
     }
 }
@@ -5617,16 +5692,31 @@ void VulkanReplayConsumer::Process_vkCmdDrawIndexedIndirectCountKHR(
     // Push command in the command buffer clone
     if (dumper.IsRecording())
     {
-        VulkanReplayResourceDump::cmd_buf_it first, last;
-        dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
-        for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+        if (dumper.IsolateDrawCall())
         {
-            GetDeviceTable(*it)->CmdDrawIndexedIndirectCountKHR(*it, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride)/*@@@ABC*/;//@@@HERE
-        }
+            if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+            {
+                VulkanReplayResourceDump::cmd_buf_it first, last;
+                dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
 
-        if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+                // Record the command only in one command buffer
+                GetDeviceTable(*first)->CmdDrawIndexedIndirectCountKHR(*first, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);//@@@HQA
+                dumper.FinalizeCommandBuffer(in_commandBuffer);
+            }
+        }
+        else
         {
-            dumper.FinalizeCommandBuffer(in_commandBuffer);
+            VulkanReplayResourceDump::cmd_buf_it first, last;
+            dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
+            for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+            {
+                GetDeviceTable(*it)->CmdDrawIndexedIndirectCountKHR(*it, in_buffer, offset, in_countBuffer, countBufferOffset, maxDrawCount, stride);//@@@HQA
+            }
+
+            if (dumper.DumpingDrawCallIndex(in_commandBuffer, call_info.index))
+            {
+                dumper.FinalizeCommandBuffer(in_commandBuffer);
+            }
         }
     }
 }
