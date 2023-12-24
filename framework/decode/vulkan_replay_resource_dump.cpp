@@ -273,22 +273,22 @@ void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_co
         "  stack->current_index: %u stack->dc_indices.size(): %zu", stack->current_index, stack->dc_indices.size());
 
     // assert(stack->current_index < stack->dc_indices.size());
-    // const uint64_t RT_index = stack->GetRTIndex(stack->dc_indices[stack->current_index]);
+    // const uint64_t RP_index = stack->GetRenderPassIndex(stack->dc_indices[stack->current_index]);
 
     // std::vector<VkImageMemoryBarrier> img_barriers;
 
-    // for (size_t i = 0; i < stack->render_targets_[RT_index].color_att_imgs.size(); ++i)
+    // for (size_t i = 0; i < stack->render_targets_[RP_index].color_att_imgs.size(); ++i)
     // {
-    //     if (stack->render_targets_[RT_index].color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE ||
+    //     if (stack->render_targets_[RP_index].color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE ||
     //     ignore_storeOps_)
     //     {
-    //         const ImageInfo* image_info = stack->render_targets_[RT_index].color_att_imgs[i];
+    //         const ImageInfo* image_info = stack->render_targets_[RP_index].color_att_imgs[i];
 
     //         std::vector<VkImageAspectFlagBits> aspects;
     //         bool                               combined_depth_stencil;
     //         graphics::GetFormatAspects(image_info->format, &aspects, &combined_depth_stencil);
 
-    //         // assert(stack->render_targets_[RT_index].color_att_final_layouts[i] ==
+    //         // assert(stack->render_targets_[RP_index].color_att_final_layouts[i] ==
     //         //        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
     //         VkImageMemoryBarrier img_barrier;
@@ -297,7 +297,7 @@ void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_co
     //         img_barrier.srcAccessMask                   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
     //         img_barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
     //         img_barrier.oldLayout                       =
-    //         stack->render_targets_[RT_index].color_att_final_layouts[i]; img_barrier.newLayout =
+    //         stack->render_targets_[RP_index].color_att_final_layouts[i]; img_barrier.newLayout =
     //         VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL; img_barrier.srcQueueFamilyIndex             = 0;
     //         img_barrier.dstQueueFamilyIndex             = 0;
     //         img_barrier.image                           = image_info->handle;
@@ -310,9 +310,9 @@ void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_co
     //     }
     // }
 
-    // if (stack->render_targets_[RT_index].depth_att_img)
+    // if (stack->render_targets_[RP_index].depth_att_img)
     // {
-    //     const ImageInfo* image_info = stack->render_targets_[RT_index].depth_att_img;
+    //     const ImageInfo* image_info = stack->render_targets_[RP_index].depth_att_img;
 
     //     std::vector<VkImageAspectFlagBits> aspects;
     //     bool                               combined_depth_stencil;
@@ -323,7 +323,7 @@ void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_co
     //     img_barrier.pNext                           = nullptr;
     //     img_barrier.srcAccessMask                   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
     //     img_barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
-    //     img_barrier.oldLayout                       = stack->render_targets_[RT_index].depth_att_final_layout;
+    //     img_barrier.oldLayout                       = stack->render_targets_[RP_index].depth_att_final_layout;
     //     img_barrier.newLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
     //     img_barrier.srcQueueFamilyIndex             = 0;
     //     img_barrier.dstQueueFamilyIndex             = 0;
@@ -371,15 +371,15 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
                                                                   VkQueue                   queue,
                                                                   uint64_t                  dc_index)
 {
-    const uint64_t RT_index = stack.GetRTIndex(dc_index);
+    const uint64_t RP_index = stack.GetRenderPassIndex(dc_index);
 
     std::vector<VkImageMemoryBarrier> img_barriers;
 
-    for (size_t i = 0; i < stack.render_targets_[RT_index].color_att_imgs.size(); ++i)
+    for (size_t i = 0; i < stack.render_targets_[RP_index].color_att_imgs.size(); ++i)
     {
-        if (stack.render_targets_[RT_index].color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE || ignore_storeOps_)
+        if (stack.render_targets_[RP_index].color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE || ignore_storeOps_)
         {
-            const ImageInfo* image_info = stack.render_targets_[RT_index].color_att_imgs[i];
+            const ImageInfo* image_info = stack.render_targets_[RP_index].color_att_imgs[i];
 
             std::vector<VkImageAspectFlagBits> aspects;
             bool                               combined_depth_stencil;
@@ -391,7 +391,7 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
             img_barrier.srcAccessMask                   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
             img_barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
             img_barrier.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-            img_barrier.newLayout                       = stack.render_targets_[RT_index].color_att_final_layouts[i];
+            img_barrier.newLayout                       = stack.render_targets_[RP_index].color_att_final_layouts[i];
             img_barrier.srcQueueFamilyIndex             = 0;
             img_barrier.dstQueueFamilyIndex             = 0;
             img_barrier.image                           = image_info->handle;
@@ -404,9 +404,9 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
         }
     }
 
-    if (stack.render_targets_[RT_index].depth_att_img)
+    if (stack.render_targets_[RP_index].depth_att_img)
     {
-        const ImageInfo* image_info = stack.render_targets_[RT_index].depth_att_img;
+        const ImageInfo* image_info = stack.render_targets_[RP_index].depth_att_img;
 
         std::vector<VkImageAspectFlagBits> aspects;
         bool                               combined_depth_stencil;
@@ -418,7 +418,7 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
         img_barrier.srcAccessMask                   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         img_barrier.dstAccessMask                   = VK_ACCESS_TRANSFER_READ_BIT;
         img_barrier.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        img_barrier.newLayout                       = stack.render_targets_[RT_index].depth_att_final_layout;
+        img_barrier.newLayout                       = stack.render_targets_[RP_index].depth_att_final_layout;
         img_barrier.srcQueueFamilyIndex             = 0;
         img_barrier.dstQueueFamilyIndex             = 0;
         img_barrier.image                           = image_info->handle;
@@ -487,16 +487,15 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
 {
     assert(stack.device_table != nullptr);
 
-    GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    if (dc_index == 1319)
+        GFXRECON_WRITE_CONSOLE("  Dumping attachments for DC %" PRIu64, dc_index);
 
-    // GFXRECON_WRITE_CONSOLE("  Dumping attachments for DC %" PRIu64, dc_index);
+    const uint64_t RP_index = stack.GetRenderPassIndex(dc_index);
 
-    const uint64_t RT_index = stack.GetRTIndex(dc_index);
-
-    if (!stack.render_targets_[RT_index].color_att_imgs.size() &&
-        stack.render_targets_[RT_index].depth_att_img == nullptr)
+    if (!stack.render_targets_[RP_index].color_att_imgs.size() &&
+        stack.render_targets_[RP_index].depth_att_img == nullptr)
     {
-        assert(stack.render_targets_[RT_index].color_att_storeOps.size() == 0);
+        assert(stack.render_targets_[RP_index].color_att_storeOps.size() == 0);
         return;
     }
 
@@ -511,19 +510,13 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
     graphics::VulkanResourcesUtil resource_util(
         device_info->handle, *stack.device_table, *phys_dev_info->replay_device_info->memory_properties);
 
-    assert(stack.render_targets_[RT_index].color_att_imgs.size() ==
-           stack.render_targets_[RT_index].color_att_storeOps.size());
-    for (size_t i = 0; i < stack.render_targets_[RT_index].color_att_imgs.size(); ++i)
+    assert(stack.render_targets_[RP_index].color_att_imgs.size() ==
+           stack.render_targets_[RP_index].color_att_storeOps.size());
+    for (size_t i = 0; i < stack.render_targets_[RP_index].color_att_imgs.size(); ++i)
     {
-        if (stack.render_targets_[RT_index].color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE || ignore_storeOps_)
+        if (stack.render_targets_[RP_index].color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE || ignore_storeOps_)
         {
-            if (stack.render_targets_[RT_index].color_att_storeOps[i] != VK_ATTACHMENT_STORE_OP_STORE)
-            {
-                GFXRECON_LOG_WARNING(
-                    "Dumping color attachment with a storeOp different than VK_ATTACHMENT_STORE_OP_STORE");
-            }
-
-            const ImageInfo* image_info = stack.render_targets_[RT_index].color_att_imgs[i];
+            const ImageInfo* image_info = stack.render_targets_[RP_index].color_att_imgs[i];
 
             std::vector<uint8_t>  data;
             std::vector<uint64_t> subresource_offsets;
@@ -533,9 +526,7 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
                 image_info->handle,
                 image_info->format,
                 image_info->type,
-                VkExtent3D{ stack.render_targets_[RT_index].render_area.extent.width,
-                            stack.render_targets_[RT_index].render_area.extent.height,
-                            1 },
+                VkExtent3D{ stack.render_area_.extent.width, stack.render_area_.extent.height, 1 },
                 image_info->level_count,
                 image_info->layer_count,
                 image_info->tiling,
@@ -587,17 +578,11 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
         }
     }
 
-    if (stack.render_targets_[RT_index].depth_att_img != nullptr)
+    if (stack.render_targets_[RP_index].depth_att_img != nullptr)
     {
-        if (stack.render_targets_[RT_index].depth_att_storeOp == VK_ATTACHMENT_STORE_OP_STORE || ignore_storeOps_)
+        if (stack.render_targets_[RP_index].depth_att_storeOp == VK_ATTACHMENT_STORE_OP_STORE || ignore_storeOps_)
         {
-            if (stack.render_targets_[RT_index].depth_att_storeOp != VK_ATTACHMENT_STORE_OP_STORE)
-            {
-                GFXRECON_LOG_WARNING(
-                    "Dumping depth attachment with a storeOp different than VK_ATTACHMENT_STORE_OP_STORE");
-            }
-
-            const ImageInfo* image_info = stack.render_targets_[RT_index].depth_att_img;
+            const ImageInfo* image_info = stack.render_targets_[RP_index].depth_att_img;
 
             std::vector<uint8_t>  data;
             std::vector<uint64_t> subresource_offsets;
@@ -607,9 +592,7 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
                 image_info->handle,
                 image_info->format,
                 image_info->type,
-                VkExtent3D{ stack.render_targets_[RT_index].render_area.extent.width,
-                            stack.render_targets_[RT_index].render_area.extent.height,
-                            1 },
+                VkExtent3D{ stack.render_area_.extent.width, stack.render_area_.extent.height, 1 },
                 image_info->level_count,
                 image_info->layer_count,
                 image_info->tiling,
@@ -741,11 +724,12 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                     stack.BackUpMutableResources(queue);
                 }
 
-                for (size_t cb = 0; cb < stack.command_buffers.size(); ++cb)
+                const size_t n_drawcalls = stack.command_buffers.size();
+                for (size_t cb = 0; cb < n_drawcalls; ++cb)
                 {
-                    // VkCommandBuffer* pCommandBuffers =
-                    //     const_cast<VkCommandBuffer*>(modified_submit_infos[s].pCommandBuffers);
-                    // pCommandBuffers[o] = clone_buffer;
+                    GFXRECON_WRITE_CONSOLE(
+                        "Dumping DrawCall %u of %zu (idx: %" PRIu64 ")", cb, n_drawcalls, stack.dc_indices[cb]);
+
                     VkSubmitInfo new_submit_info         = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr };
                     new_submit_info.waitSemaphoreCount   = 0;
                     new_submit_info.pWaitSemaphores      = nullptr;
@@ -1039,17 +1023,17 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const Ren
         bi.framebuffer     = framebuffer_info->handle;
         bi.renderArea      = render_area;
 
-        // GetRTIndex will tell us which render pass each cloned command buffer should use depending on the assigned
-        // draw call index
-        const uint32_t RT_index = GetRTIndex(dc_indices[cmb_buf_idx]);
-        assert(RT_index < render_pass_clones.size());
+        // GetRenderPassIndex will tell us which render pass each cloned command buffer should use depending on the
+        // assigned draw call index
+        const uint32_t RP_index = GetRenderPassIndex(dc_indices[cmb_buf_idx]);
+        assert(RP_index < render_pass_clones.size());
 
         GFXRECON_WRITE_CONSOLE("  cmd_buf_idx: %zu with dc index: %" PRIu64 " gets render pass: %u",
                                cmb_buf_idx,
                                dc_indices[cmb_buf_idx],
-                               RT_index);
+                               RP_index);
 
-        bi.renderPass = render_pass_clones[RT_index];
+        bi.renderPass = render_pass_clones[RP_index];
 
         device_table->CmdBeginRenderPass(*it, &bi, contents);
     }
@@ -1147,9 +1131,7 @@ void VulkanReplayResourceDump::CommandBufferStack::SetRenderTargets(
 
 void VulkanReplayResourceDump::CommandBufferStack::SetRenderArea(const VkRect2D& render_area)
 {
-    assert(render_targets_.size());
-    auto last_rts         = render_targets_.end() - 1;
-    last_rts->render_area = render_area;
+    render_area_ = render_area;
 }
 
 void VulkanReplayResourceDump::UpdateDescriptors(VkCommandBuffer         original_command_buffer,
@@ -2108,10 +2090,12 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::BackUpMutableResources(Vk
     return VK_SUCCESS;
 }
 
-uint64_t VulkanReplayResourceDump::CommandBufferStack::GetRTIndex(uint64_t dc_index) const
+uint64_t VulkanReplayResourceDump::CommandBufferStack::GetRenderPassIndex(uint64_t dc_index) const
 {
-    // GFXRECON_WRITE_CONSOLE("%s()", __func__);
-    // GFXRECON_WRITE_CONSOLE("  RT_indices.size(): %zu", RT_indices.size());
+    if (RT_indices.size() == 0)
+    {
+        return 0;
+    }
 
     size_t i = 0;
     for (; i < RT_indices.size() - 1; ++i)
