@@ -29,6 +29,9 @@
 #include "Vulkan-Utility-Libraries/vk_format_utils.h"
 
 #include <sstream>
+#include <sys/time.h>
+
+#define TIME_DUMPING
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)
@@ -65,7 +68,8 @@ static util::imagewriter::DataFormats VkFormatToImageWriterDataFormat(VkFormat f
             return util::imagewriter::DataFormats::kFormat_D16;
 
         default:
-            GFXRECON_LOG_ERROR("%s() failed to handle format: %s", __func__, util::ToString<VkFormat>(format).c_str());
+            // GFXRECON_LOG_ERROR("%s() failed to handle format: %s", __func__,
+            // util::ToString<VkFormat>(format).c_str());
             return util::imagewriter::DataFormats::kFormat_UNSPECIFIED;
     }
 }
@@ -487,9 +491,6 @@ void VulkanReplayResourceDump::CommandBufferStack::DumpAttachments(uint64_t dc_i
 {
     assert(device_table != nullptr);
 
-    if (dc_index == 1319)
-        GFXRECON_WRITE_CONSOLE("  Dumping attachments for DC %" PRIu64, dc_index);
-
     const uint64_t RP_index = GetRenderPassIndex(dc_index);
 
     if (!render_targets_[RP_index].color_att_imgs.size() && render_targets_[RP_index].depth_att_img == nullptr)
@@ -712,11 +713,15 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
 
                 stack.BackUpMutableResources(queue);
 
+                double t0, t1, t;
+                double total_submission_time = 0;
+                double total_dumping_time    = 0;
+
                 const size_t n_drawcalls = stack.command_buffers.size();
                 for (size_t cb = 0; cb < n_drawcalls; ++cb)
                 {
                     GFXRECON_WRITE_CONSOLE(
-                        "Dumping DrawCall %u of %zu (idx: %" PRIu64 ")", cb, n_drawcalls, stack.dc_indices[cb]);
+                        "Submitting CB/DC %u of %zu (idx: %" PRIu64 ")", cb, n_drawcalls, stack.dc_indices[cb]);
 
                     VkSubmitInfo new_submit_info         = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr };
                     new_submit_info.waitSemaphoreCount   = 0;
@@ -729,6 +734,11 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
 
                     stack.RevertMutableResources(queue);
 
+#ifdef TIME_DUMPING
+                    struct timeval tim;
+                    gettimeofday(&tim, NULL);
+                    t0 = tim.tv_sec + (tim.tv_usec / 1000.0);
+#endif
                     VkResult res = stack.device_table->QueueSubmit(queue, 1, &new_submit_info, VK_NULL_HANDLE);
                     assert(res == VK_SUCCESS);
                     if (res != VK_SUCCESS)
@@ -747,8 +757,29 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                         return res;
                     }
 
+#ifdef TIME_DUMPING
+                    gettimeofday(&tim, NULL);
+                    t1 = tim.tv_sec + (tim.tv_usec / 1000.0);
+                    t  = t1 > t0 ? t1 - t0 : 0;
+                    total_submission_time += t;
+                    GFXRECON_WRITE_CONSOLE("Submittion %u took %g ms", cb, t);
+#endif
+
+#ifdef TIME_DUMPING
+                    GFXRECON_WRITE_CONSOLE("Dumping attachments for DC %u", cb)
+                    gettimeofday(&tim, NULL);
+                    t0 = tim.tv_sec + (tim.tv_usec / 1000.0);
+#endif
                     // Dump resources
                     stack.DumpAttachments(stack.dc_indices[cb]);
+
+#ifdef TIME_DUMPING
+                    gettimeofday(&tim, NULL);
+                    t1 = tim.tv_sec + (tim.tv_usec / 1000.0);
+                    t  = t1 > t0 ? t1 - t0 : 0;
+                    total_dumping_time += t;
+                    GFXRECON_WRITE_CONSOLE("Dumping %u took %g ms", cb, t);
+#endif
 
                     // Revert render attachments layouts
                     // res = RevertRenderTargetImageLayouts(stack, queue, stack.dc_indices[cb]);
@@ -758,6 +789,11 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                     //     return res;
                     // }
                 }
+
+#ifdef TIME_DUMPING
+                GFXRECON_WRITE_CONSOLE("Total submission time: %g ms", total_submission_time);
+                GFXRECON_WRITE_CONSOLE("Total dumping time: %g ms", total_dumping_time);
+#endif
             }
         }
     }
@@ -852,7 +888,7 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::CloneRenderPass(const Ren
                                      sub,
                                      r,
                                      col_ref.attachment,
-                                     util::ToString<VkFormat>(modified_attachemnts[col_ref.attachment].format));
+                                     util::ToString<VkFormat>(modified_attachemnts[col_ref.attachment].format).c_str());
             }
         }
 
@@ -861,12 +897,13 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::CloneRenderPass(const Ren
             const VkAttachmentReference& depth_ref = original_subp_ref.depth_att_ref;
             if (!vkuFormatIsDepthAndStencil(original_render_pass->attachment_descs[depth_ref.attachment].format))
             {
-                GFXRECON_LOG_WARNING("%s(): In subpass %u depth attachment reference refering to attachment %u is "
-                                     "not of a color format (%s)",
-                                     __func__,
-                                     sub,
-                                     depth_ref.attachment,
-                                     util::ToString<VkFormat>(modified_attachemnts[depth_ref.attachment].format));
+                GFXRECON_LOG_WARNING(
+                    "%s(): In subpass %u depth attachment reference refering to attachment %u is "
+                    "not of a color format (%s)",
+                    __func__,
+                    sub,
+                    depth_ref.attachment,
+                    util::ToString<VkFormat>(modified_attachemnts[depth_ref.attachment].format).c_str());
             }
         }
 #endif
@@ -1761,6 +1798,8 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::RevertMutableResources(Vk
     {
         return VK_SUCCESS;
     }
+
+    assert(0);
 
     assert(aux_command_buffer);
 
