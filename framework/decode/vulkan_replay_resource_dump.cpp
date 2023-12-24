@@ -483,139 +483,73 @@ VkResult VulkanReplayResourceDump::RevertRenderTargetImageLayouts(const CommandB
     return res;
 }
 
-void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, uint64_t dc_index)
+void VulkanReplayResourceDump::CommandBufferStack::DumpAttachments(uint64_t dc_index) const
 {
-    assert(stack.device_table != nullptr);
+    assert(device_table != nullptr);
 
     if (dc_index == 1319)
         GFXRECON_WRITE_CONSOLE("  Dumping attachments for DC %" PRIu64, dc_index);
 
-    const uint64_t RP_index = stack.GetRenderPassIndex(dc_index);
+    const uint64_t RP_index = GetRenderPassIndex(dc_index);
 
-    if (!stack.render_targets_[RP_index].color_att_imgs.size() &&
-        stack.render_targets_[RP_index].depth_att_img == nullptr)
+    if (!render_targets_[RP_index].color_att_imgs.size() && render_targets_[RP_index].depth_att_img == nullptr)
     {
-        assert(stack.render_targets_[RP_index].color_att_storeOps.size() == 0);
+        assert(render_targets_[RP_index].color_att_storeOps.size() == 0);
         return;
     }
 
-    assert(stack.original_command_buffer_info);
-    assert(stack.original_command_buffer_info->parent_id != format::kNullHandleId);
-    const DeviceInfo* device_info = object_info_table_.GetDeviceInfo(stack.original_command_buffer_info->parent_id);
+    assert(original_command_buffer_info);
+    assert(original_command_buffer_info->parent_id != format::kNullHandleId);
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
     assert(device_info);
 
-    const PhysicalDeviceInfo* phys_dev_info = object_info_table_.GetPhysicalDeviceInfo(device_info->parent_id);
+    const PhysicalDeviceInfo* phys_dev_info = object_info_table.GetPhysicalDeviceInfo(device_info->parent_id);
     assert(phys_dev_info);
 
     graphics::VulkanResourcesUtil resource_util(
-        device_info->handle, *stack.device_table, *phys_dev_info->replay_device_info->memory_properties);
+        device_info->handle, *device_table, *phys_dev_info->replay_device_info->memory_properties);
 
-    assert(stack.render_targets_[RP_index].color_att_imgs.size() ==
-           stack.render_targets_[RP_index].color_att_storeOps.size());
-    for (size_t i = 0; i < stack.render_targets_[RP_index].color_att_imgs.size(); ++i)
+    assert(render_targets_[RP_index].color_att_imgs.size() == render_targets_[RP_index].color_att_storeOps.size());
+    for (size_t i = 0; i < render_targets_[RP_index].color_att_imgs.size(); ++i)
     {
-        if (stack.render_targets_[RP_index].color_att_storeOps[i] == VK_ATTACHMENT_STORE_OP_STORE || ignore_storeOps_)
+        const ImageInfo* image_info = render_targets_[RP_index].color_att_imgs[i];
+
+        std::vector<uint8_t>  data;
+        std::vector<uint64_t> subresource_offsets;
+        std::vector<uint64_t> subresource_sizes;
+
+        resource_util.ReadFromImageResourceStaging(
+            image_info->handle,
+            image_info->format,
+            image_info->type,
+            VkExtent3D{ render_area_.extent.width, render_area_.extent.height, 1 },
+            image_info->level_count,
+            image_info->layer_count,
+            image_info->tiling,
+            image_info->sample_count,
+            image_info->current_layout,
+            0,
+            VK_IMAGE_ASPECT_COLOR_BIT,
+            data,
+            subresource_offsets,
+            subresource_sizes);
+
+        util::imagewriter::DataFormats output_image_format = VkFormatToImageWriterDataFormat(image_info->format);
+
+        if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
         {
-            const ImageInfo* image_info = stack.render_targets_[RP_index].color_att_imgs[i];
-
-            std::vector<uint8_t>  data;
-            std::vector<uint64_t> subresource_offsets;
-            std::vector<uint64_t> subresource_sizes;
-
-            resource_util.ReadFromImageResourceStaging(
-                image_info->handle,
-                image_info->format,
-                image_info->type,
-                VkExtent3D{ stack.render_area_.extent.width, stack.render_area_.extent.height, 1 },
-                image_info->level_count,
-                image_info->layer_count,
-                image_info->tiling,
-                image_info->sample_count,
-                image_info->current_layout,
-                0,
-                VK_IMAGE_ASPECT_COLOR_BIT,
-                data,
-                subresource_offsets,
-                subresource_sizes);
-
-            util::imagewriter::DataFormats output_image_format = VkFormatToImageWriterDataFormat(image_info->format);
-
-            if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
-            {
-                std::stringstream filename;
-#if defined(__ANDROID__)
-                filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
-                         << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
-                         << 0 << ".bmp";
-#else
-                filename << "vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
-                         << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
-                         << 0 << ".bmp";
-#endif
-
-                const uint32_t texel_size =
-                    vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
-                const uint32_t stride = texel_size * image_info->extent.width;
-
-                util::imagewriter::WriteBmpImage(filename.str(),
-                                                 image_info->extent.width,
-                                                 image_info->extent.height,
-                                                 subresource_sizes[0],
-                                                 data.data(),
-                                                 stride,
-                                                 output_image_format);
-            }
-            // else
-            // {
-            //     std::stringstream filename;
-            //     filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_att_" << i <<
-            //     "_aspect_"
-            //              << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
-            //              << 0 << ".bin";
-
-            //     util::bufferwriter::WriteBuffer(filename.str(), data.data(), data.size());
-            // }
-        }
-    }
-
-    if (stack.render_targets_[RP_index].depth_att_img != nullptr)
-    {
-        if (stack.render_targets_[RP_index].depth_att_storeOp == VK_ATTACHMENT_STORE_OP_STORE || ignore_storeOps_)
-        {
-            const ImageInfo* image_info = stack.render_targets_[RP_index].depth_att_img;
-
-            std::vector<uint8_t>  data;
-            std::vector<uint64_t> subresource_offsets;
-            std::vector<uint64_t> subresource_sizes;
-
-            resource_util.ReadFromImageResourceStaging(
-                image_info->handle,
-                image_info->format,
-                image_info->type,
-                VkExtent3D{ stack.render_area_.extent.width, stack.render_area_.extent.height, 1 },
-                image_info->level_count,
-                image_info->layer_count,
-                image_info->tiling,
-                image_info->sample_count,
-                image_info->current_layout,
-                0,
-                VK_IMAGE_ASPECT_DEPTH_BIT,
-                data,
-                subresource_offsets,
-                subresource_sizes);
-
-#if defined(__ANDROID__)
             std::stringstream filename;
-            filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_aspect_"
-                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
+#if defined(__ANDROID__)
+            filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
+                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_" << 0
                      << ".bmp";
 #else
-            std::stringstream filename;
-            filename << "vkCmdDraw_" << dc_index << "_aspect_"
-                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
+            filename << "vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
+                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_" << 0
                      << ".bmp";
 #endif
-            const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+            const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
             const uint32_t stride     = texel_size * image_info->extent.width;
 
             util::imagewriter::WriteBmpImage(filename.str(),
@@ -624,8 +558,65 @@ void VulkanReplayResourceDump::DumpAttachments(const CommandBufferStack& stack, 
                                              subresource_sizes[0],
                                              data.data(),
                                              stride,
-                                             VkFormatToImageWriterDataFormat(image_info->format));
+                                             output_image_format);
         }
+        // else
+        // {
+        //     std::stringstream filename;
+        //     filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_att_" << i <<
+        //     "_aspect_"
+        //              << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
+        //              << 0 << ".bin";
+
+        //     util::bufferwriter::WriteBuffer(filename.str(), data.data(), data.size());
+        // }
+    }
+
+    if (render_targets_[RP_index].depth_att_img != nullptr)
+    {
+        const ImageInfo* image_info = render_targets_[RP_index].depth_att_img;
+
+        std::vector<uint8_t>  data;
+        std::vector<uint64_t> subresource_offsets;
+        std::vector<uint64_t> subresource_sizes;
+
+        resource_util.ReadFromImageResourceStaging(
+            image_info->handle,
+            image_info->format,
+            image_info->type,
+            VkExtent3D{ render_area_.extent.width, render_area_.extent.height, 1 },
+            image_info->level_count,
+            image_info->layer_count,
+            image_info->tiling,
+            image_info->sample_count,
+            image_info->current_layout,
+            0,
+            VK_IMAGE_ASPECT_DEPTH_BIT,
+            data,
+            subresource_offsets,
+            subresource_sizes);
+
+#if defined(__ANDROID__)
+        std::stringstream filename;
+        filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_aspect_"
+                 << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
+                 << ".bmp";
+#else
+        std::stringstream filename;
+        filename << "vkCmdDraw_" << dc_index << "_aspect_"
+                 << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
+                 << ".bmp";
+#endif
+        const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_DEPTH_BIT);
+        const uint32_t stride     = texel_size * image_info->extent.width;
+
+        util::imagewriter::WriteBmpImage(filename.str(),
+                                         image_info->extent.width,
+                                         image_info->extent.height,
+                                         subresource_sizes[0],
+                                         data.data(),
+                                         stride,
+                                         VkFormatToImageWriterDataFormat(image_info->format));
     }
 }
 
@@ -719,10 +710,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                 assert(stack_entry != cmd_buf_stacks_.end());
                 CommandBufferStack& stack = stack_entry->second;
 
-                if (stack.must_backup_resources)
-                {
-                    stack.BackUpMutableResources(queue);
-                }
+                stack.BackUpMutableResources(queue);
 
                 const size_t n_drawcalls = stack.command_buffers.size();
                 for (size_t cb = 0; cb < n_drawcalls; ++cb)
@@ -739,10 +727,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                     new_submit_info.signalSemaphoreCount = 0;
                     new_submit_info.pSignalSemaphores    = nullptr;
 
-                    if (stack.must_backup_resources)
-                    {
-                        stack.RevertMutableResources(queue);
-                    }
+                    stack.RevertMutableResources(queue);
 
                     VkResult res = stack.device_table->QueueSubmit(queue, 1, &new_submit_info, VK_NULL_HANDLE);
                     assert(res == VK_SUCCESS);
@@ -763,7 +748,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                     }
 
                     // Dump resources
-                    DumpAttachments(stack, stack.dc_indices[cb]);
+                    stack.DumpAttachments(stack.dc_indices[cb]);
 
                     // Revert render attachments layouts
                     // res = RevertRenderTargetImageLayouts(stack, queue, stack.dc_indices[cb]);
@@ -1772,7 +1757,7 @@ void VulkanReplayResourceDump::CommandBufferStack::DestroyMutableResourceBackups
 
 VkResult VulkanReplayResourceDump::CommandBufferStack::RevertMutableResources(VkQueue queue)
 {
-    if (!mutable_resource_backups.images.size() && !mutable_resource_backups.buffers.size())
+    if (!must_backup_resources || (!mutable_resource_backups.images.size() && !mutable_resource_backups.buffers.size()))
     {
         return VK_SUCCESS;
     }
@@ -1932,7 +1917,7 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::RevertMutableResources(Vk
 
 VkResult VulkanReplayResourceDump::CommandBufferStack::BackUpMutableResources(VkQueue queue)
 {
-    if (!mutable_resource_backups.images.size() && !mutable_resource_backups.buffers.size())
+    if (!must_backup_resources || (!mutable_resource_backups.images.size() && !mutable_resource_backups.buffers.size()))
     {
         return VK_SUCCESS;
     }
