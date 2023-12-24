@@ -193,6 +193,8 @@ class VulkanReplayResourceDump
 
         void GetActiveCommandBuffers(cmd_buf_it& first, cmd_buf_it& last) const;
 
+        void DumpAttachments(uint64_t dc_index) const;
+
         descriptor_set_t bound_descriptor_sets[kBindPoint_count];
 
         struct
@@ -235,8 +237,6 @@ class VulkanReplayResourceDump
 
   private:
     bool UpdateRecordingStatus();
-
-    void DumpAttachments(const CommandBufferStack& stack, uint64_t dc_index);
 
     void DumpResources(const CommandBufferStack& stack, uint64_t dc_index);
 
