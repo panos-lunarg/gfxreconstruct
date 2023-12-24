@@ -152,7 +152,7 @@ class VulkanReplayResourceDump
         {
             RenderTargets() :
                 depth_att_img(nullptr), depth_att_storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE),
-                depth_att_final_layout(VK_IMAGE_LAYOUT_UNDEFINED), render_area({ 0 })
+                depth_att_final_layout(VK_IMAGE_LAYOUT_UNDEFINED)
             {}
 
             std::vector<const ImageInfo*>    color_att_imgs;
@@ -162,13 +162,12 @@ class VulkanReplayResourceDump
             const ImageInfo*    depth_att_img;
             VkAttachmentStoreOp depth_att_storeOp;
             VkImageLayout       depth_att_final_layout;
-
-            VkRect2D render_area;
         };
 
         std::vector<RenderTargets> render_targets_;
+        VkRect2D                   render_area_;
 
-        uint64_t GetRTIndex(uint64_t dc_index) const;
+        uint64_t GetRenderPassIndex(uint64_t dc_index) const;
 
         VkResult CloneRenderPass(const RenderPassInfo* original_render_pass);
 
