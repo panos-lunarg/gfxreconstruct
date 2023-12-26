@@ -31,6 +31,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <utility> // std::pair
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)
@@ -42,7 +43,7 @@ class VulkanReplayResourceDump
 
     VulkanReplayResourceDump(const std::vector<uint64_t>&              begin_command_buffer_index,
                              const std::vector<std::vector<uint64_t>>& draw_indices,
-                             const std::vector<std::vector<uint64_t>>& rt_indices,
+                             const std::vector<std::vector<uint64_t>>& rp_indices,
                              const std::vector<std::vector<uint64_t>>& dispatch_indices,
                              const std::vector<std::vector<uint64_t>>& traceRays_indices,
                              const std::vector<uint64_t>&              queueSubmit_indices,
@@ -70,7 +71,7 @@ class VulkanReplayResourceDump
                              const VkRect2D&        render_area,
                              VkSubpassContents      contents);
 
-    void ExitRenderPass(VkCommandBuffer original_command_buffer);
+    void EndRenderPass(VkCommandBuffer original_command_buffer);
 
     void NextSubpass(VkCommandBuffer original_command_buffer);
 
@@ -123,30 +124,31 @@ class VulkanReplayResourceDump
 
     struct CommandBufferStack
     {
-        CommandBufferStack(const std::vector<uint64_t>& dc_indices,
-                           const std::vector<uint64_t>& rt_indices,
-                           const std::vector<uint64_t>& dispatch_indices,
-                           const std::vector<uint64_t>& traceRays_indices,
-                           const VulkanObjectInfoTable& object_info_table);
+        CommandBufferStack(const std::vector<uint64_t>&              dc_indices,
+                           const std::vector<std::vector<uint64_t>>& rp_indices,
+                           const std::vector<uint64_t>&              dispatch_indices,
+                           const std::vector<uint64_t>&              traceRays_indices,
+                           const VulkanObjectInfoTable&              object_info_table);
 
         ~CommandBufferStack();
 
-        VkCommandBuffer              original_command_buffer_handle;
-        const CommandBufferInfo*     original_command_buffer_info;
-        std::vector<VkCommandBuffer> command_buffers;
-        uint32_t                     current_index;
-        std::vector<uint64_t>        dc_indices;
-        std::vector<uint64_t>        dispatch_indices;
-        std::vector<uint64_t>        traceRays_indices;
-        std::vector<uint64_t>        RT_indices;
-        const RenderPassInfo*        active_renderpass;
-        const FramebufferInfo*       active_framebuffer;
-        uint32_t                     current_subpass;
-        uint32_t                     n_subpasses;
-        VkSubpassContents            subpass_contents;
+        VkCommandBuffer                    original_command_buffer_handle;
+        const CommandBufferInfo*           original_command_buffer_info;
+        std::vector<VkCommandBuffer>       command_buffers;
+        uint32_t                           current_index;
+        std::vector<uint64_t>              dc_indices;
+        std::vector<uint64_t>              dispatch_indices;
+        std::vector<uint64_t>              traceRays_indices;
+        std::vector<std::vector<uint64_t>> RP_indices;
+        const RenderPassInfo*              active_renderpass;
+        const FramebufferInfo*             active_framebuffer;
+        uint32_t                           current_renderpass;
+        uint32_t                           current_subpass;
+        uint32_t                           n_subpasses;
+        VkSubpassContents                  subpass_contents;
 
-        std::vector<VkRenderPass> render_pass_clones;
-        bool                      inside_renderpass;
+        std::vector<std::vector<VkRenderPass>> render_pass_clones;
+        bool                                   inside_renderpass;
 
         struct RenderTargets
         {
@@ -164,10 +166,11 @@ class VulkanReplayResourceDump
             VkImageLayout       depth_att_final_layout;
         };
 
-        std::vector<RenderTargets> render_targets_;
-        VkRect2D                   render_area_;
+        std::vector<std::vector<RenderTargets>> render_targets_;
+        std::vector<VkRect2D>                   render_area_;
 
-        uint64_t GetRenderPassIndex(uint64_t dc_index) const;
+        using RenderPassSubpassPair = std::pair<uint64_t, uint64_t>;
+        RenderPassSubpassPair GetRenderPassIndex(uint64_t dc_index) const;
 
         VkResult CloneRenderPass(const RenderPassInfo* original_render_pass);
 
@@ -191,7 +194,7 @@ class VulkanReplayResourceDump
 
         void SetRenderArea(const VkRect2D& render_area);
 
-        void GetActiveCommandBuffers(cmd_buf_it& first, cmd_buf_it& last) const;
+        uint32_t GetActiveCommandBuffers(cmd_buf_it& first, cmd_buf_it& last) const;
 
         void DumpAttachments(uint64_t dc_index) const;
 
@@ -240,7 +243,7 @@ class VulkanReplayResourceDump
 
     void DumpResources(const CommandBufferStack& stack, uint64_t dc_index);
 
-    VkResult RevertRenderTargetImageLayouts(const CommandBufferStack& stack, VkQueue queue, uint64_t dc_index);
+    // VkResult RevertRenderTargetImageLayouts(const CommandBufferStack& stack, VkQueue queue, uint64_t dc_index);
 
     VulkanReplayResourceDump::CommandBufferStack* FindCommandBufferStack(VkCommandBuffer original_command_buffer);
 
