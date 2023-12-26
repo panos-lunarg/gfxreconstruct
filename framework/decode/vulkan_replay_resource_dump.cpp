@@ -62,14 +62,16 @@ static util::imagewriter::DataFormats VkFormatToImageWriterDataFormat(VkFormat f
 
         case VK_FORMAT_D32_SFLOAT:
         case VK_FORMAT_D32_SFLOAT_S8_UINT:
-            return util::imagewriter::DataFormats::kFormat_D32;
+            return util::imagewriter::DataFormats::kFormat_D32_FLOAT;
+
+        case VK_FORMAT_X8_D24_UNORM_PACK32:
+            return util::imagewriter::DataFormats::kFormat_D24_UNORM;
 
         case VK_FORMAT_D16_UNORM:
-            return util::imagewriter::DataFormats::kFormat_D16;
+            return util::imagewriter::DataFormats::kFormat_D16_UNORM;
 
         default:
-            // GFXRECON_LOG_ERROR("%s() failed to handle format: %s", __func__,
-            // util::ToString<VkFormat>(format).c_str());
+            GFXRECON_LOG_ERROR("%s() failed to handle format: %s", __func__, util::ToString<VkFormat>(format).c_str());
             return util::imagewriter::DataFormats::kFormat_UNSPECIFIED;
     }
 }
@@ -608,8 +610,12 @@ void VulkanReplayResourceDump::CommandBufferStack::DumpAttachments(uint64_t dc_i
                  << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
                  << ".bmp";
 #endif
-        const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_DEPTH_BIT);
-        const uint32_t stride     = texel_size * image_info->extent.width;
+
+        // This is a bit awkward
+        const uint32_t texel_size = image_info->format != VK_FORMAT_X8_D24_UNORM_PACK32
+                                        ? vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_DEPTH_BIT)
+                                        : 4;
+        const uint32_t stride = texel_size * image_info->extent.width;
 
         util::imagewriter::WriteBmpImage(filename.str(),
                                          image_info->extent.width,
