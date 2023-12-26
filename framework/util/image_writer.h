@@ -68,8 +68,9 @@ enum DataFormats
     kFormat_RGBA,
     kFormat_BGR,
     kFormat_BGRA,
-    kFormat_D32,
-    kFormat_D16
+    kFormat_D32_FLOAT,
+    kFormat_D24_UNORM,
+    kFormat_D16_UNORM
 };
 
 bool WriteBmpImage(const std::string& filename,
