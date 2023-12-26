@@ -2504,14 +2504,14 @@ void VulkanReplayConsumer::Process_vkCmdEndRenderPass(
     // Push command in the command buffer clone
     if (dumper.IsRecording())
     {
-        VulkanReplayResourceDump::cmd_buf_it first, last;
-        dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
-        for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
-        {
-            GetDeviceTable(*it)->CmdEndRenderPass(*it)/*@@@ABC*/;//@@@HERE
-        }
+        // VulkanReplayResourceDump::cmd_buf_it first, last;
+        // dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
+        // for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+        // {
+        //     GetDeviceTable(*it)->CmdEndRenderPass(*it)/*@@@ABC*/;//@@@HERE
+        // }
 
-        dumper.ExitRenderPass(in_commandBuffer);
+        dumper.EndRenderPass(in_commandBuffer);
     }
 }
 
