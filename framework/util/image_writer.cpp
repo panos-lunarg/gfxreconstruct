@@ -121,7 +121,7 @@ bool WriteBmpImage(const std::string& filename,
 
             for (uint32_t y = 0; y < height; ++y)
             {
-                if (format == kFormat_D16)
+                if (format == kFormat_D16_UNORM)
                 {
                     assert(pitch);
 
@@ -135,7 +135,7 @@ bool WriteBmpImage(const std::string& filename,
                         util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
                     }
                 }
-                else if (format == kFormat_D32)
+                else if (format == kFormat_D32_FLOAT)
                 {
                     assert(pitch);
 
@@ -145,6 +145,20 @@ bool WriteBmpImage(const std::string& filename,
                         const float   float_depth = bytes_float[(height_1 - y) * width + x];
                         const uint8_t depth       = static_cast<uint8_t>(float_depth * 255.0f);
                         uint32_t      rgba        = (0xff << 24) | (depth << 16) | (depth << 8) | depth;
+                        util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                    }
+                }
+                else if (format == kFormat_D24_UNORM)
+                {
+                    assert(pitch);
+
+                    const uint32_t* bytes_u32 = reinterpret_cast<const uint32_t*>(data);
+                    for (uint32_t x = 0; x < width; ++x)
+                    {
+                        const uint32_t normalized_depth = bytes_u32[(height_1 - y) * width + x] & 0x00FFFFFF;
+                        const float    float_depth      = static_cast<float>(normalized_depth) / 8388607.0f;
+                        const uint8_t  depth            = static_cast<uint8_t>(float_depth * 255.0f);
+                        uint32_t       rgba             = (0xff << 24) | (depth << 16) | (depth << 8) | depth;
                         util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
                     }
                 }
