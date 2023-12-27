@@ -41,14 +41,14 @@ class VulkanReplayResourceDump
   public:
     VulkanReplayResourceDump() = delete;
 
-    VulkanReplayResourceDump(const std::vector<uint64_t>&              begin_command_buffer_index,
-                             const std::vector<std::vector<uint64_t>>& draw_indices,
-                             const std::vector<std::vector<uint64_t>>& rp_indices,
-                             const std::vector<std::vector<uint64_t>>& dispatch_indices,
-                             const std::vector<std::vector<uint64_t>>& traceRays_indices,
-                             const std::vector<uint64_t>&              queueSubmit_indices,
-                             bool                                      isolate_draw,
-                             const VulkanObjectInfoTable&              object_info_table);
+    VulkanReplayResourceDump(const std::vector<uint64_t>&                           begin_command_buffer_index,
+                             const std::vector<std::vector<uint64_t>>&              draw_indices,
+                             const std::vector<std::vector<std::vector<uint64_t>>>& rp_indices,
+                             const std::vector<std::vector<uint64_t>>&              dispatch_indices,
+                             const std::vector<std::vector<uint64_t>>&              traceRays_indices,
+                             const std::vector<uint64_t>&                           queueSubmit_indices,
+                             bool                                                   isolate_draw,
+                             const VulkanObjectInfoTable&                           object_info_table);
 
     VkResult
     CloneCommandBuffer(uint64_t bcb_index, format::HandleId commandBuffer, const encode::DeviceTable* device_table);
@@ -73,7 +73,7 @@ class VulkanReplayResourceDump
 
     void EndRenderPass(VkCommandBuffer original_command_buffer);
 
-    void NextSubpass(VkCommandBuffer original_command_buffer);
+    void NextSubpass(VkCommandBuffer original_command_buffer, VkSubpassContents contents);
 
     // Call with vkCmdBindDescriptorSets to scan for dumpable resources
     void UpdateDescriptors(VkCommandBuffer         original_command_buffer,
@@ -181,7 +181,7 @@ class VulkanReplayResourceDump
                                  const VkRect2D&        render_area,
                                  VkSubpassContents      contents);
 
-        void NextSubpass();
+        void NextSubpass(VkSubpassContents contents);
 
         void EndRenderPass();
 
