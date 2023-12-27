@@ -7012,7 +7012,7 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass(
     VkCommandBuffer command_buffer = command_buffer_info->handle;
 
     // Update render targets
-    if (dumper.IsRecording())
+    if (dumper.IsRecording(command_buffer))
     {
         const RenderPassInfo* render_pass_info =
             object_info_table_.GetRenderPassInfo(render_pass_info_meta->renderPass);
@@ -7060,7 +7060,7 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass2(
     VkCommandBuffer command_buffer = command_buffer_info->handle;
 
     // Update render targets
-    if (dumper.IsRecording())
+    if (dumper.IsRecording(command_buffer))
     {
         const RenderPassInfo* render_pass_info =
             object_info_table_.GetRenderPassInfo(render_pass_info_meta->renderPass);

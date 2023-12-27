@@ -103,7 +103,7 @@ VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>& 
                                                    const std::vector<uint64_t>&              queueSubmit_indices,
                                                    bool                                      isolate_draw,
                                                    const VulkanObjectInfoTable&              object_info_table) :
-    QueueSubmit_indices_(std::move(queueSubmit_indices)),
+    QueueSubmit_indices_(queueSubmit_indices),
     recording_(false), isolate_draw_call_(isolate_draw), object_info_table_(object_info_table), ignore_storeOps_(true)
 {
     // These should match
@@ -112,13 +112,10 @@ VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>& 
     for (size_t i = 0; i < begin_command_buffer_index.size(); ++i)
     {
         const uint64_t bcb_index = begin_command_buffer_index[i];
-        cmd_buf_stacks_.emplace(std::piecewise_construct,
-                                std::forward_as_tuple(bcb_index),
-                                std::forward_as_tuple(std::move(draw_indices[i]),
-                                                      std::move(rp_indices[i]),
-                                                      std::move(dispatch_indices[i]),
-                                                      std::move(traceRays_indices[i]),
-                                                      object_info_table));
+        cmd_buf_stacks_.emplace(
+            bcb_index,
+            CommandBufferStack(
+                draw_indices[i], rp_indices[i], dispatch_indices[i], traceRays_indices[i], object_info_table));
     }
 }
 
@@ -128,7 +125,6 @@ VulkanReplayResourceDump::FindCommandBufferStack(VkCommandBuffer original_comman
     auto begin_entry = cmd_buf_begin_map_.find(original_command_buffer);
     if (begin_entry == cmd_buf_begin_map_.end())
     {
-        assert(0);
         return nullptr;
     }
 
@@ -136,7 +132,6 @@ VulkanReplayResourceDump::FindCommandBufferStack(VkCommandBuffer original_comman
     assert(stack_entry != cmd_buf_stacks_.end());
     if (stack_entry == cmd_buf_stacks_.end())
     {
-        assert(0);
         return nullptr;
     }
 
@@ -150,7 +145,6 @@ VulkanReplayResourceDump::FindCommandBufferStack(VkCommandBuffer original_comman
     auto begin_entry = cmd_buf_begin_map_.find(original_command_buffer);
     if (begin_entry == cmd_buf_begin_map_.end())
     {
-        assert(0);
         return nullptr;
     }
 
@@ -158,7 +152,6 @@ VulkanReplayResourceDump::FindCommandBufferStack(VkCommandBuffer original_comman
     assert(stack_entry != cmd_buf_stacks_.end());
     if (stack_entry == cmd_buf_stacks_.end())
     {
-        assert(0);
         return nullptr;
     }
 
@@ -173,13 +166,15 @@ void VulkanReplayResourceDump::EndRenderPass(VkCommandBuffer original_command_bu
 }
 
 VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                   bcb_index,
-                                                      format::HandleId           commandBuffer,
+                                                      format::HandleId           original_command_buffer_id,
                                                       const encode::DeviceTable* device_table)
 {
     assert(device_table);
 
-    GFXRECON_WRITE_CONSOLE(
-        "%s(bcb_index: %" PRIu64 ", commandBuffer: %" PRIu64 ")", __func__, bcb_index, commandBuffer);
+    GFXRECON_WRITE_CONSOLE("%s(bcb_index: %" PRIu64 ", original_command_buffer_id: %" PRIu64 ")",
+                           __func__,
+                           bcb_index,
+                           original_command_buffer_id);
 
     auto entry = cmd_buf_stacks_.find(bcb_index);
     if (entry == cmd_buf_stacks_.end())
@@ -189,7 +184,7 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
         return VK_ERROR_INITIALIZATION_FAILED;
     }
 
-    const CommandBufferInfo* cb_info      = object_info_table_.GetCommandBufferInfo(commandBuffer);
+    const CommandBufferInfo* cb_info      = object_info_table_.GetCommandBufferInfo(original_command_buffer_id);
     const CommandPoolInfo*   cb_pool_info = object_info_table_.GetCommandPoolInfo(cb_info->pool_id);
 
     const VkCommandBufferAllocateInfo ai{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -1658,8 +1653,8 @@ VulkanReplayResourceDump::CommandBufferStack::CommandBufferStack(const std::vect
                                                                  const VulkanObjectInfoTable& object_info_table) :
     original_command_buffer_handle(VK_NULL_HANDLE),
     original_command_buffer_info(nullptr), command_buffers(dc_indices.size(), VK_NULL_HANDLE), current_index(0),
-    dc_indices(std::move(dc_indices)), RP_indices(std::move(rp_indices)), dispatch_indices(std::move(dispatch_indices)),
-    traceRays_indices(std::move(traceRays_indices)), active_renderpass(nullptr), active_framebuffer(nullptr),
+    dc_indices(dc_indices), RP_indices(rp_indices), dispatch_indices(dispatch_indices),
+    traceRays_indices(traceRays_indices), active_renderpass(nullptr), active_framebuffer(nullptr),
     current_renderpass(0), current_subpass(0), subpass_contents(VK_SUBPASS_CONTENTS_INLINE),
     aux_command_buffer(VK_NULL_HANDLE), aux_fence(VK_NULL_HANDLE), device_table(nullptr),
     object_info_table(object_info_table), replay_device_phys_mem_props(nullptr)
@@ -1669,23 +1664,25 @@ VulkanReplayResourceDump::CommandBufferStack::CommandBufferStack(const std::vect
 
 VulkanReplayResourceDump::CommandBufferStack::~CommandBufferStack()
 {
-    assert(original_command_buffer_info);
-
-    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
-    VkDevice          device      = device_info->handle;
-
-    assert(device_table);
-
-    if (aux_command_buffer != VK_NULL_HANDLE)
+    if (original_command_buffer_info)
     {
-        const CommandPoolInfo* pool_info = object_info_table.GetCommandPoolInfo(original_command_buffer_info->pool_id);
-        assert(pool_info);
+        if (aux_command_buffer != VK_NULL_HANDLE)
+        {
+            const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+            VkDevice          device      = device_info->handle;
 
-        device_table->FreeCommandBuffers(device, pool_info->handle, 1, &aux_command_buffer);
-        aux_command_buffer = VK_NULL_HANDLE;
+            assert(device_table);
+
+            const CommandPoolInfo* pool_info =
+                object_info_table.GetCommandPoolInfo(original_command_buffer_info->pool_id);
+            assert(pool_info);
+
+            device_table->FreeCommandBuffers(device, pool_info->handle, 1, &aux_command_buffer);
+            aux_command_buffer = VK_NULL_HANDLE;
+        }
+
+        DestroyMutableResourceBackups();
     }
-
-    DestroyMutableResourceBackups();
 }
 
 VkResult VulkanReplayResourceDump::CommandBufferStack::CloneImage(const ImageInfo* image_info)
@@ -1824,6 +1821,8 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::CloneBuffer(const BufferI
 
 void VulkanReplayResourceDump::CommandBufferStack::DestroyMutableResourceBackups()
 {
+    assert(original_command_buffer_info);
+
     const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
     VkDevice          device      = device_info->handle;
 
@@ -2216,6 +2215,18 @@ uint32_t VulkanReplayResourceDump::CommandBufferStack::GetActiveCommandBuffers(c
     last  = command_buffers.end();
 
     return current_index;
+}
+
+bool VulkanReplayResourceDump::IsRecording(VkCommandBuffer original_command_buffer) const
+{
+    if (!recording_)
+    {
+        return false;
+    }
+
+    const CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
+
+    return stack != nullptr;
 }
 
 GFXRECON_END_NAMESPACE(gfxrecon)
