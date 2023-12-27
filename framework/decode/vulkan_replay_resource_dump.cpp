@@ -97,7 +97,7 @@ static uint32_t GetMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties& memor
 
 VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>&              begin_command_buffer_index,
                                                    const std::vector<std::vector<uint64_t>>& draw_indices,
-                                                   const std::vector<std::vector<uint64_t>>& rp_indices,
+                                                   const std::vector<std::vector<std::vector<uint64_t>>>& rp_indices,
                                                    const std::vector<std::vector<uint64_t>>& dispatch_indices,
                                                    const std::vector<std::vector<uint64_t>>& traceRays_indices,
                                                    const std::vector<uint64_t>&              queueSubmit_indices,
@@ -115,7 +115,7 @@ VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>& 
         cmd_buf_stacks_.emplace(std::piecewise_construct,
                                 std::forward_as_tuple(bcb_index),
                                 std::forward_as_tuple(std::move(draw_indices[i]),
-                                                      std::move(rp_indices),
+                                                      std::move(rp_indices[i]),
                                                       std::move(dispatch_indices[i]),
                                                       std::move(traceRays_indices[i]),
                                                       object_info_table));
@@ -1081,7 +1081,7 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const Ren
     return VK_SUCCESS;
 }
 
-void VulkanReplayResourceDump::CommandBufferStack::NextSubpass()
+void VulkanReplayResourceDump::CommandBufferStack::NextSubpass(VkSubpassContents contents)
 {
     assert(active_renderpass);
     assert(active_framebuffer);
@@ -1091,6 +1091,28 @@ void VulkanReplayResourceDump::CommandBufferStack::NextSubpass()
     std::vector<VkImageLayout>       color_att_final_layouts;
 
     ++current_subpass;
+
+    VulkanReplayResourceDump::cmd_buf_it first, last;
+    GetActiveCommandBuffers(first, last);
+    size_t cmd_buf_idx = current_index;
+    for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it, ++cmd_buf_idx)
+    {
+        const uint64_t              dc_index = dc_indices[cmd_buf_idx];
+        const RenderPassSubpassPair RP_index = GetRenderPassIndex(dc_index);
+        const uint64_t              rp       = RP_index.first;
+        const uint64_t              sp       = RP_index.second;
+
+        if (rp != current_renderpass || sp != current_subpass)
+        {
+            continue;
+        }
+
+        GFXRECON_WRITE_CONSOLE(
+            "  cmd_buf_idx: %zu with dc index: %" PRIu64 " moves to subpass: (%u, %u)", cmd_buf_idx, dc_index, rp, sp);
+
+        device_table->CmdNextSubpass(*it, contents);
+    }
+
     assert(current_subpass < active_renderpass->subpass_refs.size());
 
     // Parse color attachments
@@ -1520,44 +1542,46 @@ bool VulkanReplayResourceDump::DumpingDrawCallIndex(VkCommandBuffer original_com
 
 bool VulkanReplayResourceDump::DumpingDispatchIndex(VkCommandBuffer original_command_buffer, uint64_t index) const
 {
-    assert(recording_);
-    assert(original_command_buffer != VK_NULL_HANDLE);
-
-    const auto bcb_entry = cmd_buf_begin_map_.find(original_command_buffer);
-    if (bcb_entry == cmd_buf_begin_map_.end())
-    {
-        return false;
-    }
-
-    const auto stack_entry = cmd_buf_stacks_.find(bcb_entry->second);
-    if (stack_entry == cmd_buf_stacks_.end())
-    {
-        return false;
-    }
-
-    const CommandBufferStack& stack = stack_entry->second;
-    assert(stack.current_index < stack.dispatch_indices.size());
-
-    // Indices should be sorted
-    if (!IsInsideRange(stack.dispatch_indices, index))
-    {
-        return false;
-    }
-
-    for (size_t i = stack.current_index; i < stack.dispatch_indices.size(); ++i)
-    {
-        if (index == stack.dispatch_indices[i])
-        {
-            return true;
-        }
-        else if (index > stack.dispatch_indices[i])
-        {
-            // Indices should be sorted
-            return false;
-        }
-    }
-
     return false;
+
+    // assert(recording_);
+    // assert(original_command_buffer != VK_NULL_HANDLE);
+
+    // const auto bcb_entry = cmd_buf_begin_map_.find(original_command_buffer);
+    // if (bcb_entry == cmd_buf_begin_map_.end())
+    // {
+    //     return false;
+    // }
+
+    // const auto stack_entry = cmd_buf_stacks_.find(bcb_entry->second);
+    // if (stack_entry == cmd_buf_stacks_.end())
+    // {
+    //     return false;
+    // }
+
+    // const CommandBufferStack& stack = stack_entry->second;
+    // assert(stack.current_index < stack.dispatch_indices.size());
+
+    // // Indices should be sorted
+    // if (!IsInsideRange(stack.dispatch_indices, index))
+    // {
+    //     return false;
+    // }
+
+    // for (size_t i = stack.current_index; i < stack.dispatch_indices.size(); ++i)
+    // {
+    //     if (index == stack.dispatch_indices[i])
+    //     {
+    //         return true;
+    //     }
+    //     else if (index > stack.dispatch_indices[i])
+    //     {
+    //         // Indices should be sorted
+    //         return false;
+    //     }
+    // }
+
+    // return false;
 }
 
 bool VulkanReplayResourceDump::DumpingTraceRaysIndex(VkCommandBuffer original_command_buffer, uint64_t index) const
@@ -1618,13 +1642,13 @@ VkResult VulkanReplayResourceDump::BeginRenderPass(VkCommandBuffer        origin
         render_pass_info, clear_value_count, p_clear_values, framebuffer_info, render_area, contents);
 }
 
-void VulkanReplayResourceDump::NextSubpass(VkCommandBuffer original_command_buffer)
+void VulkanReplayResourceDump::NextSubpass(VkCommandBuffer original_command_buffer, VkSubpassContents contents)
 {
     assert(recording_);
     assert(original_command_buffer != VK_NULL_HANDLE);
 
     CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
-    stack->NextSubpass();
+    stack->NextSubpass(contents);
 }
 
 VulkanReplayResourceDump::CommandBufferStack::CommandBufferStack(const std::vector<uint64_t>&              dc_indices,
@@ -1834,12 +1858,12 @@ void VulkanReplayResourceDump::CommandBufferStack::DestroyMutableResourceBackups
 
 VkResult VulkanReplayResourceDump::CommandBufferStack::RevertMutableResources(VkQueue queue)
 {
+    return VK_SUCCESS;
+
     if (!must_backup_resources || (!mutable_resource_backups.images.size() && !mutable_resource_backups.buffers.size()))
     {
         return VK_SUCCESS;
     }
-
-    assert(0);
 
     assert(aux_command_buffer);
 
