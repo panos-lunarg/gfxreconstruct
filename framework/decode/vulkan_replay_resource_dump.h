@@ -51,7 +51,7 @@ class VulkanReplayResourceDump
                              const VulkanObjectInfoTable&                           object_info_table);
 
     VkResult
-    CloneCommandBuffer(uint64_t bcb_index, format::HandleId commandBuffer, const encode::DeviceTable* device_table);
+    CloneCommandBuffer(uint64_t bcb_index, format::HandleId original_command_buffer_id, const encode::DeviceTable* device_table);
 
     void FinalizeCommandBuffer(VkCommandBuffer original_command_buffer);
 
@@ -94,7 +94,7 @@ class VulkanReplayResourceDump
 
     bool DumpingBeginCommandBufferIndex(uint64_t index) const;
 
-    bool IsRecording() const { return recording_; }
+    bool IsRecording(VkCommandBuffer original_command_buffer) const;
 
     bool IsolateDrawCall() const { return isolate_draw_call_; }
 
