@@ -2459,18 +2459,6 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass(
 
     MapStructHandles(pRenderPassBegin->GetMetaStructPointer(), GetObjectInfoTable());//@@@DFK
     OverrideCmdBeginRenderPass(GetDeviceTable(in_commandBuffer->handle)->CmdBeginRenderPass, in_commandBuffer, pRenderPassBegin, contents);//@@@HQA
-
-    // Push command in the command buffer clone
-    // if (dumper.IsRecording())
-    // {
-    //     VulkanReplayResourceDump::cmd_buf_it first, last;
-    //     dumper.GetActiveCommandBuffers(in_commandBuffer->handle, first, last);
-    //     for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
-    //     {
-    //         GetDeviceTable(*it)->CmdBeginRenderPass(*it, pRenderPassBegin->GetPointer(), contents)/*@@@ABC*/;//@@@HERE
-    //     }
-    //     dumper.EnterRenderPass();
-    // }
 }
 
 void VulkanReplayConsumer::Process_vkCmdNextSubpass(
@@ -2484,14 +2472,7 @@ void VulkanReplayConsumer::Process_vkCmdNextSubpass(
     // Push command in the command buffer clone
     if (dumper.IsRecording())
     {
-        VulkanReplayResourceDump::cmd_buf_it first, last;
-        dumper.GetActiveCommandBuffers(in_commandBuffer, first, last);
-        for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
-        {
-            GetDeviceTable(*it)->CmdNextSubpass(*it, contents)/*@@@ABC*/;//@@@HERE
-        }
-
-        dumper.NextSubpass(in_commandBuffer);
+        dumper.NextSubpass(in_commandBuffer, contents);
     }
 }
 
