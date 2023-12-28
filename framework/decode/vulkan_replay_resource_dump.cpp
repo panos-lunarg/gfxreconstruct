@@ -159,9 +159,38 @@ VulkanReplayResourceDump::FindCommandBufferStack(VkCommandBuffer original_comman
     return stack;
 }
 
+const VulkanReplayResourceDump::CommandBufferStack*
+VulkanReplayResourceDump::FindCommandBufferStack(uint64_t bcb_id) const
+{
+    const auto stack_entry = cmd_buf_stacks_.find(bcb_id);
+    assert(stack_entry != cmd_buf_stacks_.end());
+    if (stack_entry == cmd_buf_stacks_.end())
+    {
+        return nullptr;
+    }
+
+    const CommandBufferStack* stack = &stack_entry->second;
+    return stack;
+}
+
+VulkanReplayResourceDump::CommandBufferStack* VulkanReplayResourceDump::FindCommandBufferStack(uint64_t bcb_id)
+{
+    auto stack_entry = cmd_buf_stacks_.find(bcb_id);
+    assert(stack_entry != cmd_buf_stacks_.end());
+    if (stack_entry == cmd_buf_stacks_.end())
+    {
+        return nullptr;
+    }
+
+    CommandBufferStack* stack = &stack_entry->second;
+    return stack;
+}
+
 void VulkanReplayResourceDump::EndRenderPass(VkCommandBuffer original_command_buffer)
 {
     CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
+    assert(stack);
+
     stack->EndRenderPass();
 }
 
@@ -176,8 +205,8 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
                            bcb_index,
                            original_command_buffer_id);
 
-    auto entry = cmd_buf_stacks_.find(bcb_index);
-    if (entry == cmd_buf_stacks_.end())
+    CommandBufferStack* stack = FindCommandBufferStack(bcb_index);
+    if (stack == nullptr)
     {
         GFXRECON_LOG_ERROR("Couldn't find vkBeginCommandBuffer with index %" PRIx64, bcb_index);
         assert(0);
@@ -193,14 +222,13 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
                                           VK_COMMAND_BUFFER_LEVEL_PRIMARY,
                                           1 };
 
-    CommandBufferStack& stack    = entry->second;
-    const DeviceInfo*   dev_info = object_info_table_.GetDeviceInfo(cb_info->parent_id);
+    const DeviceInfo* dev_info = object_info_table_.GetDeviceInfo(cb_info->parent_id);
 
-    GFXRECON_WRITE_CONSOLE("  Allocating %zu command buffers:", stack.command_buffers.size())
-    for (size_t i = 0; i < stack.command_buffers.size(); ++i)
+    GFXRECON_WRITE_CONSOLE("  Allocating %zu command buffers:", stack->command_buffers.size())
+    for (size_t i = 0; i < stack->command_buffers.size(); ++i)
     {
-        assert(stack.command_buffers[i] == VK_NULL_HANDLE);
-        VkResult res = device_table->AllocateCommandBuffers(dev_info->handle, &ai, &stack.command_buffers[i]);
+        assert(stack->command_buffers[i] == VK_NULL_HANDLE);
+        VkResult res = device_table->AllocateCommandBuffers(dev_info->handle, &ai, &stack->command_buffers[i]);
 
         if (res == VK_SUCCESS)
         {
@@ -213,19 +241,19 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
         }
 
         const VkCommandBufferBeginInfo bi{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, nullptr, 0, nullptr };
-        device_table->BeginCommandBuffer(stack.command_buffers[i], &bi);
+        device_table->BeginCommandBuffer(stack->command_buffers[i], &bi);
     }
 
     GFXRECON_WRITE_CONSOLE("  Done")
 
-    assert(stack.original_command_buffer_info == nullptr);
-    stack.original_command_buffer_info = cb_info;
+    assert(stack->original_command_buffer_info == nullptr);
+    stack->original_command_buffer_info = cb_info;
 
-    assert(stack.original_command_buffer_handle == VK_NULL_HANDLE);
-    stack.original_command_buffer_handle = cb_info->handle;
+    assert(stack->original_command_buffer_handle == VK_NULL_HANDLE);
+    stack->original_command_buffer_handle = cb_info->handle;
 
-    assert(stack.device_table == nullptr);
-    stack.device_table = device_table;
+    assert(stack->device_table == nullptr);
+    stack->device_table = device_table;
 
     assert(cmd_buf_begin_map_.find(cb_info->handle) == cmd_buf_begin_map_.end());
     cmd_buf_begin_map_[cb_info->handle] = bcb_index;
@@ -237,10 +265,10 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
 
     assert(phys_dev_info->replay_device_info);
     assert(phys_dev_info->replay_device_info->memory_properties.get());
-    stack.replay_device_phys_mem_props = phys_dev_info->replay_device_info->memory_properties.get();
+    stack->replay_device_phys_mem_props = phys_dev_info->replay_device_info->memory_properties.get();
 
     // Allocate auxiliary command buffer
-    VkResult res = device_table->AllocateCommandBuffers(dev_info->handle, &ai, &stack.aux_command_buffer);
+    VkResult res = device_table->AllocateCommandBuffers(dev_info->handle, &ai, &stack->aux_command_buffer);
     if (res != VK_SUCCESS)
     {
         GFXRECON_LOG_ERROR("AllocateCommandBuffers failed with %s", util::ToString<VkResult>(res).c_str());
@@ -249,7 +277,7 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
     }
 
     const VkFenceCreateInfo ci = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO, nullptr, 0 };
-    res                        = device_table->CreateFence(dev_info->handle, &ci, nullptr, &stack.aux_fence);
+    res                        = device_table->CreateFence(dev_info->handle, &ci, nullptr, &stack->aux_fence);
     if (res != VK_SUCCESS)
     {
         GFXRECON_LOG_ERROR("CreateFence failed with %s", util::ToString<VkResult>(res).c_str());
@@ -263,6 +291,7 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
 void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_command_buffer)
 {
     CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
+    assert(stack);
 
     GFXRECON_WRITE_CONSOLE("  Finalizing command buffer %u (out of %zu) dc: %" PRIu64,
                            stack->current_index,
@@ -705,42 +734,38 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
 
         for (uint32_t o = 0; o < command_buffer_count; ++o)
         {
-            auto bcb_entry = cmd_buf_begin_map_.find(command_buffer_handles[o]);
-            if (bcb_entry != cmd_buf_begin_map_.end())
+            CommandBufferStack* stack = FindCommandBufferStack(command_buffer_handles[o]);
+            if (stack != nullptr)
             {
-                auto stack_entry = cmd_buf_stacks_.find(bcb_entry->second);
-                assert(stack_entry != cmd_buf_stacks_.end());
-                CommandBufferStack& stack = stack_entry->second;
-
-                stack.BackUpMutableResources(queue);
+                stack->BackUpMutableResources(queue);
 
                 double t0, t1, t;
                 double total_submission_time = 0;
                 double total_dumping_time    = 0;
 
-                const size_t n_drawcalls = stack.command_buffers.size();
+                const size_t n_drawcalls = stack->command_buffers.size();
                 for (size_t cb = 0; cb < n_drawcalls; ++cb)
                 {
                     GFXRECON_WRITE_CONSOLE(
-                        "Submitting CB/DC %u of %zu (idx: %" PRIu64 ")", cb, n_drawcalls, stack.dc_indices[cb]);
+                        "Submitting CB/DC %u of %zu (idx: %" PRIu64 ")", cb, n_drawcalls, stack->dc_indices[cb]);
 
                     VkSubmitInfo new_submit_info         = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr };
                     new_submit_info.waitSemaphoreCount   = 0;
                     new_submit_info.pWaitSemaphores      = nullptr;
                     new_submit_info.pWaitDstStageMask    = nullptr;
                     new_submit_info.commandBufferCount   = 1;
-                    new_submit_info.pCommandBuffers      = &stack.command_buffers[cb];
+                    new_submit_info.pCommandBuffers      = &stack->command_buffers[cb];
                     new_submit_info.signalSemaphoreCount = 0;
                     new_submit_info.pSignalSemaphores    = nullptr;
 
-                    stack.RevertMutableResources(queue);
+                    stack->RevertMutableResources(queue);
 
 #ifdef TIME_DUMPING
                     struct timeval tim;
                     gettimeofday(&tim, NULL);
                     t0 = tim.tv_sec + (tim.tv_usec / 1000.0);
 #endif
-                    VkResult res = stack.device_table->QueueSubmit(queue, 1, &new_submit_info, VK_NULL_HANDLE);
+                    VkResult res = stack->device_table->QueueSubmit(queue, 1, &new_submit_info, VK_NULL_HANDLE);
                     assert(res == VK_SUCCESS);
                     if (res != VK_SUCCESS)
                     {
@@ -750,7 +775,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                     submitted = true;
 
                     // Wait
-                    res = stack.device_table->QueueWaitIdle(queue);
+                    res = stack->device_table->QueueWaitIdle(queue);
                     assert(res == VK_SUCCESS);
                     if (res != VK_SUCCESS)
                     {
@@ -772,7 +797,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                     t0 = tim.tv_sec + (tim.tv_usec / 1000.0);
 #endif
                     // Dump resources
-                    stack.DumpAttachments(stack.dc_indices[cb]);
+                    stack->DumpAttachments(stack->dc_indices[cb]);
 
 #ifdef TIME_DUMPING
                     gettimeofday(&tim, NULL);
@@ -783,7 +808,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
 #endif
 
                     // Revert render attachments layouts
-                    // res = RevertRenderTargetImageLayouts(stack, queue, stack.dc_indices[cb]);
+                    // res = RevertRenderTargetImageLayouts(stack, queue, stack->dc_indices[cb]);
                     // assert(res == VK_SUCCESS);
                     // if (res != VK_SUCCESS)
                     // {
@@ -1229,13 +1254,8 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkCommandBuffer         origina
 {
     assert(descriptor_sets_ids);
 
-    auto begin_entry = cmd_buf_begin_map_.find(original_command_buffer);
-    assert(begin_entry != cmd_buf_begin_map_.end());
-
-    auto stack_entry = cmd_buf_stacks_.find(begin_entry->second);
-    assert(stack_entry != cmd_buf_stacks_.end());
-
-    CommandBufferStack& stack = stack_entry->second;
+    CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
+    assert(stack);
 
     DescriptorSetBindPoints bind_point;
     switch (pipeline_bind_point)
@@ -1276,10 +1296,10 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkCommandBuffer         origina
                     const ImageInfo* img_info = object_info_table_.GetImageInfo(img_view_info->image_id);
                     assert(img_info);
 
-                    stack.bound_descriptor_sets[bind_point][first_set + i].image_infos[binding.first] = img_info;
-                    if (stack.must_backup_resources)
+                    stack->bound_descriptor_sets[bind_point][first_set + i].image_infos[binding.first] = img_info;
+                    if (stack->must_backup_resources)
                     {
-                        stack.CloneImage(img_info);
+                        stack->CloneImage(img_info);
                     }
                 }
                 break;
@@ -1291,10 +1311,10 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkCommandBuffer         origina
                         object_info_table_.GetBufferInfo(binding.second.buffer_info.buffer_id);
                     assert(buffer_info);
 
-                    stack.bound_descriptor_sets[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
-                    if (stack.must_backup_resources)
+                    stack->bound_descriptor_sets[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
+                    if (stack->must_backup_resources)
                     {
-                        stack.CloneBuffer(buffer_info);
+                        stack->CloneBuffer(buffer_info);
                     }
                 }
                 break;
@@ -1308,10 +1328,10 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkCommandBuffer         origina
                     const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(buffer_view_info->buffer_id);
                     assert(buffer_info);
 
-                    stack.bound_descriptor_sets[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
-                    if (stack.must_backup_resources)
+                    stack->bound_descriptor_sets[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
+                    if (stack->must_backup_resources)
                     {
-                        stack.CloneBuffer(buffer_info);
+                        stack->CloneBuffer(buffer_info);
                     }
                 }
                 break;
@@ -1337,17 +1357,12 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkCommandBuffer         origina
 
 void VulkanReplayResourceDump::ResetDescriptors(VkCommandBuffer original_command_buffer)
 {
-    auto begin_entry = cmd_buf_begin_map_.find(original_command_buffer);
-    assert(begin_entry != cmd_buf_begin_map_.end());
-
-    auto stack_entry = cmd_buf_stacks_.find(begin_entry->second);
-    assert(stack_entry != cmd_buf_stacks_.end());
-
-    CommandBufferStack& stack = stack_entry->second;
+    CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
+    assert(stack);
 
     for (uint32_t i = 0; i < static_cast<uint32_t>(kBindPoint_count); ++i)
     {
-        stack.bound_descriptor_sets[i].clear();
+        stack->bound_descriptor_sets[i].clear();
     }
 }
 
@@ -1450,6 +1465,8 @@ void VulkanReplayResourceDump::GetActiveCommandBuffers(VkCommandBuffer user_cmd_
                                                        cmd_buf_it&     last) const
 {
     const CommandBufferStack* stack = FindCommandBufferStack(user_cmd_buffer);
+    assert(stack);
+
     stack->GetActiveCommandBuffers(first, last);
 }
 
@@ -1497,35 +1514,24 @@ bool VulkanReplayResourceDump::DumpingDrawCallIndex(VkCommandBuffer original_com
     assert(recording_);
     assert(original_command_buffer != VK_NULL_HANDLE);
 
-    const auto bcb_entry = cmd_buf_begin_map_.find(original_command_buffer);
-    if (bcb_entry == cmd_buf_begin_map_.end())
-    {
-        return false;
-    }
-
-    const auto stack_entry = cmd_buf_stacks_.find(bcb_entry->second);
-    if (stack_entry == cmd_buf_stacks_.end())
-    {
-        return false;
-    }
-
-    const CommandBufferStack& stack = stack_entry->second;
-    assert(stack.current_index < stack.dc_indices.size());
+    const CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
+    assert(stack);
+    assert(stack->current_index < stack->dc_indices.size());
 
     // Indices should be sorted
-    if (!IsInsideRange(stack.dc_indices, index))
+    if (!IsInsideRange(stack->dc_indices, index))
     {
         return false;
     }
 
-    for (size_t i = stack.current_index; i < stack.dc_indices.size(); ++i)
+    for (size_t i = stack->current_index; i < stack->dc_indices.size(); ++i)
     {
 
-        if (index == stack.dc_indices[i])
+        if (index == stack->dc_indices[i])
         {
             return true;
         }
-        else if (index > stack.dc_indices[i])
+        else if (index > stack->dc_indices[i])
         {
             // Indices should be sorted
             return false;
@@ -1584,34 +1590,23 @@ bool VulkanReplayResourceDump::DumpingTraceRaysIndex(VkCommandBuffer original_co
     assert(recording_);
     assert(original_command_buffer != VK_NULL_HANDLE);
 
-    const auto bcb_entry = cmd_buf_begin_map_.find(original_command_buffer);
-    if (bcb_entry == cmd_buf_begin_map_.end())
-    {
-        return false;
-    }
-
-    const auto stack_entry = cmd_buf_stacks_.find(bcb_entry->second);
-    if (stack_entry == cmd_buf_stacks_.end())
-    {
-        return false;
-    }
-
-    const CommandBufferStack& stack = stack_entry->second;
-    assert(stack.current_index < stack.traceRays_indices.size());
+    const CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
+    assert(stack);
+    assert(stack->current_index < stack->traceRays_indices.size());
 
     // Indices should be sorted
-    if (!IsInsideRange(stack.traceRays_indices, index))
+    if (!IsInsideRange(stack->traceRays_indices, index))
     {
         return false;
     }
 
-    for (size_t i = stack.current_index; i < stack.traceRays_indices.size(); ++i)
+    for (size_t i = stack->current_index; i < stack->traceRays_indices.size(); ++i)
     {
-        if (index == stack.traceRays_indices[i])
+        if (index == stack->traceRays_indices[i])
         {
             return true;
         }
-        else if (index > stack.traceRays_indices[i])
+        else if (index > stack->traceRays_indices[i])
         {
             // Indices should be sorted
             return false;
@@ -1633,6 +1628,7 @@ VkResult VulkanReplayResourceDump::BeginRenderPass(VkCommandBuffer        origin
     assert(original_command_buffer != VK_NULL_HANDLE);
 
     CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
+    assert(stack);
     return stack->BeginRenderPass(
         render_pass_info, clear_value_count, p_clear_values, framebuffer_info, render_area, contents);
 }
@@ -1643,6 +1639,7 @@ void VulkanReplayResourceDump::NextSubpass(VkCommandBuffer original_command_buff
     assert(original_command_buffer != VK_NULL_HANDLE);
 
     CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
+    assert(stack);
     stack->NextSubpass(contents);
 }
 
@@ -2225,7 +2222,6 @@ bool VulkanReplayResourceDump::IsRecording(VkCommandBuffer original_command_buff
     }
 
     const CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
-
     return stack != nullptr;
 }
 
