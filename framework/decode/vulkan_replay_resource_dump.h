@@ -50,8 +50,9 @@ class VulkanReplayResourceDump
                              bool                                                   isolate_draw,
                              const VulkanObjectInfoTable&                           object_info_table);
 
-    VkResult
-    CloneCommandBuffer(uint64_t bcb_index, format::HandleId original_command_buffer_id, const encode::DeviceTable* device_table);
+    VkResult CloneCommandBuffer(uint64_t                   bcb_index,
+                                format::HandleId           original_command_buffer_id,
+                                const encode::DeviceTable* device_table);
 
     void FinalizeCommandBuffer(VkCommandBuffer original_command_buffer);
 
@@ -246,6 +247,10 @@ class VulkanReplayResourceDump
     // VkResult RevertRenderTargetImageLayouts(const CommandBufferStack& stack, VkQueue queue, uint64_t dc_index);
 
     VulkanReplayResourceDump::CommandBufferStack* FindCommandBufferStack(VkCommandBuffer original_command_buffer);
+
+    const VulkanReplayResourceDump::CommandBufferStack* FindCommandBufferStack(uint64_t bcb_id) const;
+
+    VulkanReplayResourceDump::CommandBufferStack* FindCommandBufferStack(uint64_t bcb_id);
 
     const VulkanReplayResourceDump::CommandBufferStack*
     FindCommandBufferStack(VkCommandBuffer original_command_buffer) const;
