@@ -244,8 +244,6 @@ class VulkanReplayResourceDump
 
     void DumpResources(const CommandBufferStack& stack, uint64_t dc_index);
 
-    // VkResult RevertRenderTargetImageLayouts(const CommandBufferStack& stack, VkQueue queue, uint64_t dc_index);
-
     VulkanReplayResourceDump::CommandBufferStack* FindCommandBufferStack(VkCommandBuffer original_command_buffer);
 
     const VulkanReplayResourceDump::CommandBufferStack* FindCommandBufferStack(uint64_t bcb_id) const;
