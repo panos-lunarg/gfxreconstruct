@@ -162,6 +162,7 @@ VulkanReplayConsumerBase::VulkanReplayConsumerBase(std::shared_ptr<application::
            options.CmdDispatch_Index,
            options.CmdTraceRaysKHR_Index,
            options.QueueSubmit_indices,
+           options.dump_rts_before_dc,
            options.isolate_draw,
            object_info_table_),
     loader_handle_(nullptr), get_instance_proc_addr_(nullptr), create_instance_proc_(nullptr),
