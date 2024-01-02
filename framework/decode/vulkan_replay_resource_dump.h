@@ -23,6 +23,7 @@
 #ifndef GFXRECON_DECODE_VULKAN_REPLAY_RESOURCE_DUMPING_H
 #define GFXRECON_DECODE_VULKAN_REPLAY_RESOURCE_DUMPING_H
 
+#include "decode/api_decoder.h"
 #include "decode/vulkan_object_info_table.h"
 #include "generated/generated_vulkan_dispatch_table.h"
 #include "format/format.h"
@@ -47,6 +48,7 @@ class VulkanReplayResourceDump
                              const std::vector<std::vector<uint64_t>>&              dispatch_indices,
                              const std::vector<std::vector<uint64_t>>&              traceRays_indices,
                              const std::vector<uint64_t>&                           queueSubmit_indices,
+                             bool                                                   dump_rts_before_dc,
                              bool                                                   isolate_draw,
                              const VulkanObjectInfoTable&                           object_info_table);
 
@@ -55,6 +57,77 @@ class VulkanReplayResourceDump
                                 const encode::DeviceTable* device_table);
 
     void FinalizeCommandBuffer(VkCommandBuffer original_command_buffer);
+
+    void Process_vkCmdDraw(const ApiCallInfo& call_info,
+                           PFN_vkCmdDraw      func,
+                           VkCommandBuffer    commandBuffer,
+                           uint32_t           vertexCount,
+                           uint32_t           instanceCount,
+                           uint32_t           firstVertex,
+                           uint32_t           firstInstance);
+
+    void Process_vkCmdDrawIndexed(const ApiCallInfo&   call_info,
+                                  PFN_vkCmdDrawIndexed func,
+                                  VkCommandBuffer      commandBuffer,
+                                  uint32_t             indexCount,
+                                  uint32_t             instanceCount,
+                                  uint32_t             firstIndex,
+                                  int32_t              vertexOffset,
+                                  uint32_t             firstInstance);
+
+    void Process_vkCmdDrawIndirect(const ApiCallInfo&    call_info,
+                                   PFN_vkCmdDrawIndirect func,
+                                   VkCommandBuffer       commandBuffer,
+                                   VkBuffer              buffer,
+                                   VkDeviceSize          offset,
+                                   uint32_t              drawCount,
+                                   uint32_t              stride);
+
+    void Process_vkCmdDrawIndexedIndirect(const ApiCallInfo&           call_info,
+                                          PFN_vkCmdDrawIndexedIndirect func,
+                                          VkCommandBuffer              commandBuffer,
+                                          VkBuffer                     buffer,
+                                          VkDeviceSize                 offset,
+                                          uint32_t                     drawCount,
+                                          uint32_t                     stride);
+
+    void Process_vkCmdDrawIndirectCount(const ApiCallInfo&         call_info,
+                                        PFN_vkCmdDrawIndirectCount func,
+                                        VkCommandBuffer            commandBuffer,
+                                        VkBuffer                   buffer,
+                                        VkDeviceSize               offset,
+                                        VkBuffer                   countBuffer,
+                                        VkDeviceSize               countBufferOffset,
+                                        uint32_t                   maxDrawCount,
+                                        uint32_t                   stride);
+
+    void Process_vkCmdDrawIndexedIndirectCount(const ApiCallInfo&                call_info,
+                                               PFN_vkCmdDrawIndexedIndirectCount func,
+                                               VkCommandBuffer                   commandBuffer,
+                                               VkBuffer                          buffer,
+                                               VkDeviceSize                      offset,
+                                               VkBuffer                          countBuffer,
+                                               VkDeviceSize                      countBufferOffset,
+                                               uint32_t                          maxDrawCount,
+                                               uint32_t                          stride);
+
+    void Process_vkCmdDrawIndirectCountKHR(const ApiCallInfo& call_info,
+                                           VkCommandBuffer    commandBuffer,
+                                           VkBuffer           buffer,
+                                           VkDeviceSize       offset,
+                                           VkBuffer           countBuffer,
+                                           VkDeviceSize       countBufferOffset,
+                                           uint32_t           maxDrawCount,
+                                           uint32_t           stride);
+
+    void Process_vkCmdDrawIndexedIndirectCountKHR(const ApiCallInfo& call_info,
+                                                  VkCommandBuffer    commandBuffer,
+                                                  VkBuffer           buffer,
+                                                  VkDeviceSize       offset,
+                                                  VkBuffer           countBuffer,
+                                                  VkDeviceSize       countBufferOffset,
+                                                  uint32_t           maxDrawCount,
+                                                  uint32_t           stride);
 
     VkResult ModifyAndSubmit(std::vector<VkSubmitInfo>  modified_submit_infos,
                              const encode::DeviceTable& device_table,
@@ -87,7 +160,7 @@ class VulkanReplayResourceDump
 
     bool DumpingSubmissionIndex(uint64_t index) const;
 
-    bool DumpingDrawCallIndex(VkCommandBuffer original_command_buffer, uint64_t index) const;
+    bool DumpingDrawCallIndex(VkCommandBuffer original_command_buffer, uint64_t dc_index) const;
 
     bool DumpingDispatchIndex(VkCommandBuffer original_command_buffer, uint64_t index) const;
 
@@ -129,7 +202,8 @@ class VulkanReplayResourceDump
                            const std::vector<std::vector<uint64_t>>& rp_indices,
                            const std::vector<uint64_t>&              dispatch_indices,
                            const std::vector<uint64_t>&              traceRays_indices,
-                           const VulkanObjectInfoTable&              object_info_table);
+                           const VulkanObjectInfoTable&              object_info_table,
+                           bool                                      dump_rts_before_dc);
 
         ~CommandBufferStack();
 
@@ -147,6 +221,7 @@ class VulkanReplayResourceDump
         uint32_t                           current_subpass;
         uint32_t                           n_subpasses;
         VkSubpassContents                  subpass_contents;
+        bool                               dump_rts_before_dc;
 
         std::vector<std::vector<VkRenderPass>> render_pass_clones;
         bool                                   inside_renderpass;
@@ -172,6 +247,7 @@ class VulkanReplayResourceDump
 
         using RenderPassSubpassPair = std::pair<uint64_t, uint64_t>;
         RenderPassSubpassPair GetRenderPassIndex(uint64_t dc_index) const;
+        size_t                CmdBufToDCVectorIndex(size_t cmd_buf_index) const;
 
         VkResult CloneRenderPass(const RenderPassInfo* original_render_pass);
 
@@ -185,6 +261,8 @@ class VulkanReplayResourceDump
         void NextSubpass(VkSubpassContents contents);
 
         void EndRenderPass();
+
+        void FinalizeCommandBuffer();
 
         void SetRenderTargets(const std::vector<const ImageInfo*>&    color_att_imgs,
                               const std::vector<VkAttachmentStoreOp>& color_att_storeOps,
@@ -254,6 +332,7 @@ class VulkanReplayResourceDump
     FindCommandBufferStack(VkCommandBuffer original_command_buffer) const;
 
     bool recording_;
+    bool dump_rts_before_dc_;
     bool isolate_draw_call_;
     bool ignore_storeOps_;
 
