@@ -101,10 +101,12 @@ VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>& 
                                                    const std::vector<std::vector<uint64_t>>& dispatch_indices,
                                                    const std::vector<std::vector<uint64_t>>& traceRays_indices,
                                                    const std::vector<uint64_t>&              queueSubmit_indices,
+                                                   bool                                      dump_rts_before_dc,
                                                    bool                                      isolate_draw,
                                                    const VulkanObjectInfoTable&              object_info_table) :
     QueueSubmit_indices_(queueSubmit_indices),
-    recording_(false), isolate_draw_call_(isolate_draw), object_info_table_(object_info_table), ignore_storeOps_(true)
+    recording_(false), dump_rts_before_dc_(dump_rts_before_dc), isolate_draw_call_(isolate_draw),
+    object_info_table_(object_info_table), ignore_storeOps_(true)
 {
     // These should match
     assert(begin_command_buffer_index.size() == draw_indices.size());
@@ -112,10 +114,13 @@ VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>& 
     for (size_t i = 0; i < begin_command_buffer_index.size(); ++i)
     {
         const uint64_t bcb_index = begin_command_buffer_index[i];
-        cmd_buf_stacks_.emplace(
-            bcb_index,
-            CommandBufferStack(
-                draw_indices[i], rp_indices[i], dispatch_indices[i], traceRays_indices[i], object_info_table));
+        cmd_buf_stacks_.emplace(bcb_index,
+                                CommandBufferStack(draw_indices[i],
+                                                   rp_indices[i],
+                                                   dispatch_indices[i],
+                                                   traceRays_indices[i],
+                                                   object_info_table,
+                                                   dump_rts_before_dc));
     }
 }
 
@@ -288,37 +293,204 @@ VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                  
     return VK_SUCCESS;
 }
 
+void VulkanReplayResourceDump::CommandBufferStack::FinalizeCommandBuffer()
+{
+    GFXRECON_WRITE_CONSOLE("  Finalizing command buffer %u (out of %zu) dc: %" PRIu64,
+                           current_index,
+                           command_buffers.size(),
+                           dc_indices[CmdBufToDCVectorIndex(current_index)]);
+
+    VkCommandBuffer current_clone = command_buffers[current_index];
+    assert(device_table != nullptr);
+
+    assert(inside_renderpass);
+    if (inside_renderpass)
+    {
+        device_table->CmdEndRenderPass(current_clone);
+    }
+
+    device_table->EndCommandBuffer(current_clone);
+
+    // Increment pointer to clone that is going to be finalized next
+    ++current_index;
+}
+
 void VulkanReplayResourceDump::FinalizeCommandBuffer(VkCommandBuffer original_command_buffer)
 {
     CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
     assert(stack);
 
-    GFXRECON_WRITE_CONSOLE("  Finalizing command buffer %u (out of %zu) dc: %" PRIu64,
-                           stack->current_index,
-                           stack->command_buffers.size(),
-                           stack->dc_indices[stack->current_index]);
-
-    VkCommandBuffer current_clone = stack->command_buffers[stack->current_index];
-    assert(stack->device_table != nullptr);
-
-    assert(stack->inside_renderpass);
-    if (stack->inside_renderpass)
-    {
-        stack->device_table->CmdEndRenderPass(current_clone);
-    }
-
-    stack->device_table->EndCommandBuffer(current_clone);
-
-    // Increment pointer to clone that is going to be finalized next
-    ++stack->current_index;
+    stack->FinalizeCommandBuffer();
 
     UpdateRecordingStatus();
 }
 
-void VulkanReplayResourceDump::CommandBufferStack::DumpAttachments(uint64_t dc_index) const
+void VulkanReplayResourceDump::Process_vkCmdDraw(const ApiCallInfo& call_info,
+                                                 PFN_vkCmdDraw      func,
+                                                 VkCommandBuffer    commandBuffer,
+                                                 uint32_t           vertexCount,
+                                                 uint32_t           instanceCount,
+                                                 uint32_t           firstVertex,
+                                                 uint32_t           firstInstance)
+{
+    if (dump_rts_before_dc_ && DumpingDrawCallIndex(commandBuffer, call_info.index))
+    {
+        FinalizeCommandBuffer(commandBuffer);
+    }
+
+    VulkanReplayResourceDump::cmd_buf_it first, last;
+    GetActiveCommandBuffers(commandBuffer, first, last);
+    for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+    {
+        func(*it, vertexCount, instanceCount, firstVertex, firstInstance);
+    }
+
+    if (dump_rts_before_dc_ && DumpingDrawCallIndex(commandBuffer, call_info.index))
+    {
+        FinalizeCommandBuffer(commandBuffer);
+    }
+}
+
+void VulkanReplayResourceDump::Process_vkCmdDrawIndexed(const ApiCallInfo&   call_info,
+                                                        PFN_vkCmdDrawIndexed func,
+                                                        VkCommandBuffer      commandBuffer,
+                                                        uint32_t             indexCount,
+                                                        uint32_t             instanceCount,
+                                                        uint32_t             firstIndex,
+                                                        int32_t              vertexOffset,
+                                                        uint32_t             firstInstance)
+{
+    if (dump_rts_before_dc_ && DumpingDrawCallIndex(commandBuffer, call_info.index))
+    {
+        FinalizeCommandBuffer(commandBuffer);
+    }
+
+    VulkanReplayResourceDump::cmd_buf_it first, last;
+    GetActiveCommandBuffers(commandBuffer, first, last);
+    for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+    {
+        func(*it, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+    }
+
+    if (dump_rts_before_dc_ && DumpingDrawCallIndex(commandBuffer, call_info.index))
+    {
+        FinalizeCommandBuffer(commandBuffer);
+    }
+}
+
+void VulkanReplayResourceDump::Process_vkCmdDrawIndirect(const ApiCallInfo&    call_info,
+                                                         PFN_vkCmdDrawIndirect func,
+                                                         VkCommandBuffer       commandBuffer,
+                                                         VkBuffer              buffer,
+                                                         VkDeviceSize          offset,
+                                                         uint32_t              drawCount,
+                                                         uint32_t              stride)
+{
+    if (dump_rts_before_dc_ && DumpingDrawCallIndex(commandBuffer, call_info.index))
+    {
+        FinalizeCommandBuffer(commandBuffer);
+    }
+
+    VulkanReplayResourceDump::cmd_buf_it first, last;
+    GetActiveCommandBuffers(commandBuffer, first, last);
+    for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+    {
+        func(*it, buffer, offset, drawCount, stride);
+    }
+
+    if (dump_rts_before_dc_ && DumpingDrawCallIndex(commandBuffer, call_info.index))
+    {
+        FinalizeCommandBuffer(commandBuffer);
+    }
+}
+
+void VulkanReplayResourceDump::Process_vkCmdDrawIndexedIndirect(const ApiCallInfo&           call_info,
+                                                                PFN_vkCmdDrawIndexedIndirect func,
+                                                                VkCommandBuffer              commandBuffer,
+                                                                VkBuffer                     buffer,
+                                                                VkDeviceSize                 offset,
+                                                                uint32_t                     drawCount,
+                                                                uint32_t                     stride)
+{
+    if (dump_rts_before_dc_ && DumpingDrawCallIndex(commandBuffer, call_info.index))
+    {
+        FinalizeCommandBuffer(commandBuffer);
+    }
+
+    VulkanReplayResourceDump::cmd_buf_it first, last;
+    GetActiveCommandBuffers(commandBuffer, first, last);
+    for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+    {
+        func(*it, buffer, offset, drawCount, stride);
+    }
+
+    if (dump_rts_before_dc_ && DumpingDrawCallIndex(commandBuffer, call_info.index))
+    {
+        FinalizeCommandBuffer(commandBuffer);
+    }
+}
+
+void VulkanReplayResourceDump::Process_vkCmdDrawIndirectCount(const ApiCallInfo&         call_info,
+                                                              PFN_vkCmdDrawIndirectCount func,
+                                                              VkCommandBuffer            commandBuffer,
+                                                              VkBuffer                   buffer,
+                                                              VkDeviceSize               offset,
+                                                              VkBuffer                   countBuffer,
+                                                              VkDeviceSize               countBufferOffset,
+                                                              uint32_t                   maxDrawCount,
+                                                              uint32_t                   stride)
+{
+    if (dump_rts_before_dc_ && DumpingDrawCallIndex(commandBuffer, call_info.index))
+    {
+        FinalizeCommandBuffer(commandBuffer);
+    }
+
+    VulkanReplayResourceDump::cmd_buf_it first, last;
+    GetActiveCommandBuffers(commandBuffer, first, last);
+    for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+    {
+        func(*it, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
+    }
+
+    if (dump_rts_before_dc_ && DumpingDrawCallIndex(commandBuffer, call_info.index))
+    {
+        FinalizeCommandBuffer(commandBuffer);
+    }
+}
+
+void VulkanReplayResourceDump::Process_vkCmdDrawIndexedIndirectCount(const ApiCallInfo&                call_info,
+                                                                     PFN_vkCmdDrawIndexedIndirectCount func,
+                                                                     VkCommandBuffer                   commandBuffer,
+                                                                     VkBuffer                          buffer,
+                                                                     VkDeviceSize                      offset,
+                                                                     VkBuffer                          countBuffer,
+                                                                     VkDeviceSize countBufferOffset,
+                                                                     uint32_t     maxDrawCount,
+                                                                     uint32_t     stride)
+{
+    if (dump_rts_before_dc_ && DumpingDrawCallIndex(commandBuffer, call_info.index))
+    {
+        FinalizeCommandBuffer(commandBuffer);
+    }
+
+    VulkanReplayResourceDump::cmd_buf_it first, last;
+    GetActiveCommandBuffers(commandBuffer, first, last);
+    for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it)
+    {
+        func(*it, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
+    }
+
+    if (dump_rts_before_dc_ && DumpingDrawCallIndex(commandBuffer, call_info.index))
+    {
+        FinalizeCommandBuffer(commandBuffer);
+    }
+}
+
+void VulkanReplayResourceDump::CommandBufferStack::DumpAttachments(uint64_t cmd_buf_index) const
 {
     assert(device_table != nullptr);
 
+    const size_t                dc_index = dc_indices[CmdBufToDCVectorIndex(cmd_buf_index)];
     const RenderPassSubpassPair RP_index = GetRenderPassIndex(dc_index);
     const uint64_t              rp       = RP_index.first;
     const uint64_t              sp       = RP_index.second;
@@ -371,13 +543,32 @@ void VulkanReplayResourceDump::CommandBufferStack::DumpAttachments(uint64_t dc_i
         {
             std::stringstream filename;
 #if defined(__ANDROID__)
-            filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
-                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_" << 0
-                     << ".bmp";
+            if (dump_rts_before_dc)
+            {
+                filename << "/storage/emulated/0/Download/screens/vkCmdDraw_"
+                         << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << "_att_" << i << "_aspect_"
+                         << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
+                         << 0 << ".bmp";
+            }
+            else
+            {
+                filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
+                         << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
+                         << 0 << ".bmp";
+            }
 #else
-            filename << "vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
-                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_" << 0
-                     << ".bmp";
+            if (dump_rts_before_dc)
+            {
+                filename << "vkCmdDraw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << "_att_" << i
+                         << "_aspect_" << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_"
+                         << 0 << "_al_" << 0 << ".bmp";
+            }
+            else
+            {
+                filename << "vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
+                         << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
+                         << 0 << ".bmp";
+            }
 #endif
 
             const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
@@ -427,16 +618,35 @@ void VulkanReplayResourceDump::CommandBufferStack::DumpAttachments(uint64_t dc_i
             subresource_offsets,
             subresource_sizes);
 
+        std::stringstream filename;
 #if defined(__ANDROID__)
-        std::stringstream filename;
-        filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_aspect_"
-                 << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
-                 << ".bmp";
+        if (dump_rts_before_dc)
+        {
+            filename << "/storage/emulated/0/Download/screens/vkCmdDraw_"
+                     << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << "_aspect_"
+                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
+                     << ".bmp";
+        }
+        else
+        {
+            filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_aspect_"
+                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
+                     << ".bmp";
+        }
 #else
-        std::stringstream filename;
-        filename << "vkCmdDraw_" << dc_index << "_aspect_"
-                 << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
-                 << ".bmp";
+        if (dump_rts_before_dc)
+        {
+            filename << "vkCmdDraw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << "_aspect_"
+                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
+                     << ".bmp";
+        }
+        else
+        {
+
+            filename << "vkCmdDraw_" << dc_index << "_aspect_"
+                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
+                     << ".bmp";
+        }
 #endif
 
         // This is a bit awkward
@@ -550,8 +760,10 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                 const size_t n_drawcalls = stack->command_buffers.size();
                 for (size_t cb = 0; cb < n_drawcalls; ++cb)
                 {
-                    GFXRECON_WRITE_CONSOLE(
-                        "Submitting CB/DC %u of %zu (idx: %" PRIu64 ")", cb, n_drawcalls, stack->dc_indices[cb]);
+                    GFXRECON_WRITE_CONSOLE("Submitting CB/DC %u of %zu (idx: %" PRIu64 ")",
+                                           cb,
+                                           n_drawcalls,
+                                           stack->dc_indices[stack->CmdBufToDCVectorIndex(cb)]);
 
                     VkSubmitInfo new_submit_info         = { VK_STRUCTURE_TYPE_SUBMIT_INFO, nullptr };
                     new_submit_info.waitSemaphoreCount   = 0;
@@ -601,7 +813,7 @@ VkResult VulkanReplayResourceDump::ModifyAndSubmit(std::vector<VkSubmitInfo>  mo
                     t0 = tim.tv_sec + (tim.tv_usec / 1000.0);
 #endif
                     // Dump resources
-                    stack->DumpAttachments(stack->dc_indices[cb]);
+                    stack->DumpAttachments(cb);
 
 #ifdef TIME_DUMPING
                     gettimeofday(&tim, NULL);
@@ -869,7 +1081,7 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const Ren
     size_t cmd_buf_idx = current_index;
     for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it, ++cmd_buf_idx)
     {
-        const uint64_t dc_index = dc_indices[cmd_buf_idx];
+        const uint64_t dc_index = dc_indices[CmdBufToDCVectorIndex(cmd_buf_idx)];
         // GetRenderPassIndex will tell us which render pass each cloned command buffer should use depending on the
         // assigned draw call index
         const RenderPassSubpassPair RP_index = GetRenderPassIndex(dc_index);
@@ -921,7 +1133,7 @@ void VulkanReplayResourceDump::CommandBufferStack::NextSubpass(VkSubpassContents
     size_t cmd_buf_idx = current_index;
     for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it, ++cmd_buf_idx)
     {
-        const uint64_t              dc_index = dc_indices[cmd_buf_idx];
+        const uint64_t              dc_index = dc_indices[CmdBufToDCVectorIndex(cmd_buf_idx)];
         const RenderPassSubpassPair RP_index = GetRenderPassIndex(dc_index);
         const uint64_t              rp       = RP_index.first;
         const uint64_t              sp       = RP_index.second;
@@ -997,7 +1209,7 @@ void VulkanReplayResourceDump::CommandBufferStack::EndRenderPass()
     size_t cmd_buf_idx = current_index;
     for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it, ++cmd_buf_idx)
     {
-        const uint64_t              dc_index = dc_indices[cmd_buf_idx];
+        const uint64_t              dc_index = dc_indices[CmdBufToDCVectorIndex(cmd_buf_idx)];
         const RenderPassSubpassPair RP_index = GetRenderPassIndex(dc_index);
         const uint64_t              rp       = RP_index.first;
         const uint64_t              sp       = RP_index.second;
@@ -1313,29 +1525,28 @@ bool VulkanReplayResourceDump::DumpingSubmissionIndex(uint64_t index) const
     return false;
 }
 
-bool VulkanReplayResourceDump::DumpingDrawCallIndex(VkCommandBuffer original_command_buffer, uint64_t index) const
+bool VulkanReplayResourceDump::DumpingDrawCallIndex(VkCommandBuffer original_command_buffer, uint64_t dc_index) const
 {
     assert(recording_);
     assert(original_command_buffer != VK_NULL_HANDLE);
 
     const CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
     assert(stack);
-    assert(stack->current_index < stack->dc_indices.size());
 
     // Indices should be sorted
-    if (!IsInsideRange(stack->dc_indices, index))
+    if (!IsInsideRange(stack->dc_indices, dc_index))
     {
         return false;
     }
 
-    for (size_t i = stack->current_index; i < stack->dc_indices.size(); ++i)
+    for (size_t i = dump_rts_before_dc_ ? stack->current_index / 2 : stack->current_index; i < stack->dc_indices.size();
+         ++i)
     {
-
-        if (index == stack->dc_indices[i])
+        if (dc_index == stack->dc_indices[i])
         {
             return true;
         }
-        else if (index > stack->dc_indices[i])
+        else if (dc_index > stack->dc_indices[i])
         {
             // Indices should be sorted
             return false;
@@ -1451,16 +1662,20 @@ VulkanReplayResourceDump::CommandBufferStack::CommandBufferStack(const std::vect
                                                                  const std::vector<std::vector<uint64_t>>& rp_indices,
                                                                  const std::vector<uint64_t>& dispatch_indices,
                                                                  const std::vector<uint64_t>& traceRays_indices,
-                                                                 const VulkanObjectInfoTable& object_info_table) :
+                                                                 const VulkanObjectInfoTable& object_info_table,
+                                                                 bool                         dump_rts_before_dc) :
     original_command_buffer_handle(VK_NULL_HANDLE),
-    original_command_buffer_info(nullptr), command_buffers(dc_indices.size(), VK_NULL_HANDLE), current_index(0),
-    dc_indices(dc_indices), RP_indices(rp_indices), dispatch_indices(dispatch_indices),
-    traceRays_indices(traceRays_indices), active_renderpass(nullptr), active_framebuffer(nullptr),
-    current_renderpass(0), current_subpass(0), subpass_contents(VK_SUBPASS_CONTENTS_INLINE),
+    original_command_buffer_info(nullptr), current_index(0), dc_indices(dc_indices), RP_indices(rp_indices),
+    dispatch_indices(dispatch_indices), traceRays_indices(traceRays_indices), active_renderpass(nullptr),
+    active_framebuffer(nullptr), current_renderpass(0), current_subpass(0),
+    subpass_contents(VK_SUBPASS_CONTENTS_INLINE), dump_rts_before_dc(dump_rts_before_dc),
     aux_command_buffer(VK_NULL_HANDLE), aux_fence(VK_NULL_HANDLE), device_table(nullptr),
     object_info_table(object_info_table), replay_device_phys_mem_props(nullptr)
 {
     must_backup_resources = dc_indices.size() > 1;
+
+    const size_t n_cmd_buffs = dump_rts_before_dc ? 2 * dc_indices.size() : dc_indices.size();
+    command_buffers.resize(n_cmd_buffs, VK_NULL_HANDLE);
 }
 
 VulkanReplayResourceDump::CommandBufferStack::~CommandBufferStack()
@@ -2005,6 +2220,24 @@ VulkanReplayResourceDump::CommandBufferStack::GetRenderPassIndex(uint64_t dc_ind
     assert(0);
 
     return RenderPassSubpassPair(0, 0);
+}
+
+size_t VulkanReplayResourceDump::CommandBufferStack::CmdBufToDCVectorIndex(size_t cmd_buf_index) const
+{
+    assert(cmd_buf_index < command_buffers.size());
+
+    if (dump_rts_before_dc)
+    {
+        assert(cmd_buf_index / 2 < dc_indices.size());
+
+        return cmd_buf_index / 2;
+    }
+    else
+    {
+        assert(cmd_buf_index < dc_indices.size());
+
+        return cmd_buf_index;
+    }
 }
 
 uint32_t VulkanReplayResourceDump::CommandBufferStack::GetActiveCommandBuffers(cmd_buf_it& first,
