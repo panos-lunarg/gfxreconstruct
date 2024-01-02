@@ -696,10 +696,17 @@ Optional arguments:
               Frame ranges where --sgfs applies. The format is:
                 <frame-start-1>-<frame-end-1>[,<frame-start-1>-<frame-end-1>]*
   --dump-resources <vulkan-begincommandbuffercall-index>,<vulkan-drawcall-index>,<vulkan-queuesubmitcall-index>
-              Dump gpu resources for the specified draw call in the specific
+              Dump gpu resources after the specified draw call in the specific
               command buffer, during the specific queuesubmit call.
-              This option can be repeated to initiate multple dumps of
+              This option can be repeated to initiate multiple dumps of
               gpu resources.
+  --dump-resources <filename>
+              Extract --dump-resources args from the specified file.
+
+  --dump-resources-before-draw
+              In addition to dumping gpu resources after the Vulkan draw calls specified by the
+              --dump-resources argument, also dump resources before the draw calls.
+
 ```
 
 ### Key Controls
