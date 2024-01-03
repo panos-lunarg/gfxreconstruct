@@ -939,6 +939,7 @@ GetVulkanReplayOptions(const gfxrecon::util::ArgumentParser&           arg_parse
                 {
                     char* endptr;
                     struct gfxrecon::decode::ReplayOptionsTripletStruct triplet;
+                    errno = 0;
                     triplet.opt_BeginCommandBuffer_Index = strtol(values[i + 0].c_str(), &endptr, 10);
                     error |= (errno != 0 || *endptr != 0);
                     triplet.opt_CmdDraw_Index = strtol(values[i + 1].c_str(), &endptr, 10);
@@ -956,7 +957,13 @@ GetVulkanReplayOptions(const gfxrecon::util::ArgumentParser&           arg_parse
             // Ignore dump-resources arg errors if D3D12_SUPPORT is enabled -- args may be for D3D12 replay, so let GetDxReplayOptions generate an error.
             if (error)
             {
-                // replay_options.dump_resources_params.erase();
+                replay_options.OrigReplayOptions.clear();
+                replay_options.BeginCommandBuffer_Index.clear();
+                replay_options.QueueSubmit_indices.clear();
+                replay_options.CmdDraw_Index.clear();
+                replay_options.CmdDispatch_Index.clear();
+                replay_options.CmdTraceRaysKHR_Index.clear();
+                replay_options.RenderPass_Indices.clear();
                 GFXRECON_LOG_ERROR("The parameter to --dump-resources is invalid.");
             }
 #endif
