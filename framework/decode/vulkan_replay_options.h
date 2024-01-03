@@ -432,14 +432,14 @@ struct VulkanReplayOptions : public ReplayOptions
     std::string                  replace_dir;
 
     std::vector<struct ReplayOptionsTripletStruct>  OrigReplayOptions;
-    std::vector<uint64_t>                           BeginCommandBuffer_Index{ g_BeginCommandBuffer_Index };
-    std::vector<std::vector<uint64_t>>              CmdDraw_Index{ g_CmdDraw_Index };
-    std::vector<std::vector<std::vector<uint64_t>>> RenderPass_Indices{ g_RenderPass_Indices };
-    std::vector<std::vector<uint64_t>>              CmdDispatch_Index{ g_CmdDispatch_Index };
-    std::vector<std::vector<uint64_t>>              CmdTraceRaysKHR_Index{ g_CmdTraceRaysKHR_Index };
-    std::vector<uint64_t>                           QueueSubmit_indices{ g_QueueSubmit_indices };
-    bool                                            dump_rts_before_dc{ g_dump_rts_before_dc };
-    bool                                            isolate_draw{ g_isolate_draw };
+    std::vector<uint64_t>                           BeginCommandBuffer_Index;
+    std::vector<std::vector<uint64_t>>              CmdDraw_Index;
+    std::vector<std::vector<std::vector<uint64_t>>> RenderPass_Indices;
+    std::vector<std::vector<uint64_t>>              CmdDispatch_Index;
+    std::vector<std::vector<uint64_t>>              CmdTraceRaysKHR_Index;
+    std::vector<uint64_t>                           QueueSubmit_indices;
+    bool                                            dump_rts_before_dc;
+    bool                                            isolate_draw{ g_isolate_draw }; // How should this be set?
 };
 
 GFXRECON_END_NAMESPACE(decode)
