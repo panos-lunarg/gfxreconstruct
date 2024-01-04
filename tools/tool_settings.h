@@ -944,6 +944,12 @@ GetVulkanReplayOptions(const gfxrecon::util::ArgumentParser&           arg_parse
             if (!error)
             {
                 // Transfer dr args to vectors
+                replay_options.BeginCommandBuffer_Index.clear();
+                replay_options.QueueSubmit_indices.clear();
+                replay_options.CmdDraw_Index.clear();
+                replay_options.CmdDispatch_Index.clear();
+                replay_options.CmdTraceRaysKHR_Index.clear();
+                replay_options.RenderPass_Indices.clear();
                 for (auto it=replay_options.OrigReplayOptions.begin(); it != replay_options.OrigReplayOptions.end(); it++)
                 {
                     replay_options.BeginCommandBuffer_Index.push_back(it->opt_BeginCommandBuffer_Index);
