@@ -41,47 +41,45 @@ typedef std::function<VulkanResourceAllocator*()> CreateResourceAllocator;
 // Default log level to use prior to loading settings.
 const util::Log::Severity kDefaultLogLevel = util::Log::Severity::kInfoSeverity;
 
-static constexpr bool g_isolate_draw = false;
-
 // Indices to --dump-resources args stored in dump_resources_params array below -- NEEDED??
 const uint32_t kdr_BeginCommandBufferIndex = 0;
 const uint32_t kdr_DrawIndex               = 1;
 const uint32_t kdr_QueueSubmintIndex       = 2;
 
 // Sascha's Compute ray tracing
-// static constexpr uint64_t g_BeginCommandBuffer_Index = 185;
-// static constexpr uint64_t g_CmdDraw_Index            = 0;
-// static constexpr uint64_t g_CmdDispatch_Index        = 189;
-// static constexpr uint64_t g_CmdTraceRaysKHR_Index    = 0;
+// static constexpr uint64_t g_BeginCommandBuffer_indices = 185;
+// static constexpr uint64_t g_CmdDraw_indices            = 0;
+// static constexpr uint64_t g_CmdDispatch_indices        = 189;
+// static constexpr uint64_t g_CmdTraceRaysKHR_indices    = 0;
 // static constexpr uint64_t g_QueueSubmit_indices        = 1942;
 
 // Modified vkCube
-static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 107 };
-static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = {
-    { 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124 }
-};
-static const std::vector<std::vector<uint64_t>>              g_CmdDispatch_Index     = { { 0 } };
-static const std::vector<std::vector<uint64_t>>              g_CmdTraceRaysKHR_Index = { { 0 } };
-static const std::vector<uint64_t>                           g_QueueSubmit_indices   = { 579 };
-static const std::vector<std::vector<std::vector<uint64_t>>> g_RenderPass_Indices    = { { { 108, 125 } } };
-static const bool                                            g_dump_rts_before_dc    = false;
+// static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 107 };
+// static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices            = {
+//     { 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124 }
+// };
+// static const std::vector<std::vector<uint64_t>>              g_CmdDispatch_indices     = { { 0 } };
+// static const std::vector<std::vector<uint64_t>>              g_CmdTraceRaysKHR_indices = { { 0 } };
+// static const std::vector<uint64_t>                           g_QueueSubmit_indices   = { 579 };
+// static const std::vector<std::vector<std::vector<uint64_t>>> g_RenderPass_indices    = { { { 108, 125 } } };
+// static const bool                                            g_dump_rts_before_dc    = false;
 // =============================================
 
 // Sponza
-// static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 1546 };
-// static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = {
+// static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 1546 };
+// static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices            = {
 //     { 1556, 1559, 1562, 1565, 1568, 1571, 1574, 1577, 1580, 1584, 1588, 1592, 1595,
 //       1599, 1603, 1606, 1610, 1613, 1617, 1620, 1624, 1628, 1632, 1636, 1640 }
 // };
-// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_Index     = { { 0 } };
-// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_Index = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices     = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_indices = { { 0 } };
 // static const std::vector<uint64_t>              g_QueueSubmit_indices     = { 10143 };
 
 // =============================================
 
 // oit
-// static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 307 };
-// static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = {
+// static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 307 };
+// static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices            = {
 //     { 319, 321, 323, 325, 327, 329, 331, 333, 335, 337, 339, 341, 343, 345, 347, 349, 351, 353, 355, 357, 359, 361,
 //       363, 365, 367, 369, 371, 373, 375, 377, 379, 381, 383, 385, 387, 389, 391, 393, 395, 397, 399, 401, 403, 405,
 //       407, 409, 411, 413, 415, 417, 419, 421, 423, 425, 427, 429, 431, 433, 435, 437, 439, 441, 443, 445, 447, 449,
@@ -89,66 +87,66 @@ static const bool                                            g_dump_rts_before_d
 //       495, 497, 499, 501, 503, 505, 507, 509, 511, 513, 515, 517, 519, 521, 523, 525, 527, 529, 531, 533, 535, 537,
 //       539, 541, 543, 545, 547, 549, 551, 553, 555, 557, 559, 561, 563, 565, 567, 571, 573, 580 }
 // };
-// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_Index     = { { 0 } };
-// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_Index = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices     = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_indices = { { 0 } };
 // static const std::vector<uint64_t>              g_QueueSubmit_indices     = { 13353 };
 
 // =============================================
 
 // ssao
-// static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 1792 };
-// static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = {
+// static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 1792 };
+// static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices            = {
 //     { 1801, 1803, 1805, 1807, 1809, 1811, 1813, 1815, 1817, 1819, 1821, 1823, 1825, 1827,
 //       1829, 1831, 1833, 1835, 1837, 1839, 1841, 1843, 1845, 1847, 1849, 1856, 1863, 1870 }
 // };
-// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_Index     = { { 0 } };
-// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_Index = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices     = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_indices = { { 0 } };
 // static const std::vector<uint64_t>              g_QueueSubmit_indices     = { 6527 };
-// static const std::vector<std::vector<uint64_t>> g_RenderPass_Indices     = {
+// static const std::vector<std::vector<uint64_t>> g_RenderPass_indices     = {
 //     { 1793, 1850 }, { 1851, 1857 }, { 1858, 1864 }, { 1865, 1871 }
 // };
 
 // =============================================
 
 // pixel6 ssao
-// static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 34929 };
-// static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = {
+// static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 34929 };
+// static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices            = {
 //     { 34938, 34940, 34942, 34944, 34946, 34948, 34950, 34952, 34954, 34956, 34958, 34960, 34962, 34964,
 //       34966, 34968, 34970, 34972, 34974, 34976, 34978, 34980, 34982, 34984, 34986, 34993, 35000, 35007 }
 // };
-// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_Index     = { { 0 } };
-// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_Index = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices     = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_indices = { { 0 } };
 // static const std::vector<uint64_t>              g_QueueSubmit_indices     = { 35276 };
 
 // =============================================
 
 // inputattachments
-// static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 960 };
-// static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = {
+// static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 960 };
+// static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices            = {
 //     { 969,  970,  971,  972,  973,  974,  975,  976,  977,  978,  979,  980,  981,  982,  983,  984,  985,  986,
 //       987,  988,  989,  990,  991,  992,  993,  994,  995,  996,  997,  998,  999,  1000, 1001, 1002, 1003, 1004,
 //       1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022,
 //       1023, 1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039, 1040,
 //       1041, 1042, 1043, 1044, 1045, 1046, 1047, 1048, 1049, 1050, 1051, 1052, 1053, 1054, 1060 }
 // };
-// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_Index     = { { 0 } };
-// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_Index = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices     = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_indices = { { 0 } };
 // static const std::vector<uint64_t>              g_QueueSubmit_indices     = { 26292 };
 
 // =============================================
 
 // indirectdraw
-// static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 560 };
-// static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = { { 568, 572, 577 } };
-// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_Index        = { { 0 } };
-// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_Index    = { { 0 } };
+// static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 560 };
+// static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices            = { { 568, 572, 577 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices        = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_indices    = { { 0 } };
 // static const std::vector<uint64_t>              g_QueueSubmit_indices        = { 1198 };
 
 // =============================================
 
 // subpasses
-// static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 1218 };
-// static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = {
+// static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 1218 };
+// static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices            = {
 //     { 1227, 1228, 1229, 1230, 1231, 1232, 1233, 1234, 1235, 1236, 1237, 1238, 1239, 1240, 1241, 1242, 1243,
 //       1244, 1245, 1246, 1247, 1248, 1249, 1250, 1251, 1252, 1253, 1254, 1255, 1256, 1257, 1258, 1259, 1260,
 //       1261, 1262, 1263, 1264, 1265, 1266, 1267, 1268, 1269, 1270, 1271, 1272, 1273, 1274, 1275, 1276, 1277,
@@ -156,34 +154,34 @@ static const bool                                            g_dump_rts_before_d
 //       1295, 1296, 1297, 1298, 1299, 1300, 1301, 1302, 1303, 1304, 1305, 1306, 1307, 1308, 1309, 1310, 1311,
 //       1312, 1313, 1319, 1327, 1328, 1329, 1330, 1331, 1332, 1333, 1334, 1335, 1336, 1337, 1338, 1339 }
 // };
-// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_Index     = { { 0 } };
-// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_Index = { { 0 } };
-// static const std::vector<uint64_t>              g_QueueSubmit_indices     = { 2029 };
-// static const std::vector<std::vector<uint64_t>> g_RenderPass_Indices     = { { 1219, 1316, 1322, 1343 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices     = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_indices = { { 0 } };
+// static const std::vector<uint64_t>              g_QueueSubmit_indices   = { 2029 };
+// static const std::vector<std::vector<uint64_t>> g_RenderPass_indices    = { { 1219, 1316, 1322, 1343 } };
 
 // =============================================
 
 // subpasses pixel 6
-// static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 36150 };
-// static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = {
-//     { 36158, 36159, 36160, 36161, 36162, 36163, 36164, 36165, 36166, 36167, 36168, 36169, 36170, 36171, 36172,
-//       36173, 36174, 36175, 36176, 36177, 36178, 36179, 36180, 36181, 36182, 36183, 36184, 36185, 36186, 36187,
-//       36188, 36189, 36190, 36191, 36192, 36193, 36194, 36195, 36196, 36197, 36198, 36199, 36200, 36201, 36202,
-//       36203, 36204, 36205, 36206, 36207, 36208, 36209, 36210, 36211, 36212, 36213, 36214, 36215, 36216, 36217,
-//       36218, 36219, 36220, 36221, 36222, 36223, 36224, 36225, 36226, 36227, 36228, 36229, 36230, 36231, 36232,
-//       36233, 36234, 36235, 36236, 36237, 36238, 36239, 36240, 36241, 36242, 36243, 36244, 36248, 36254, 36255,
-//       36256, 36257, 36258, 36259, 36260, 36261, 36262, 36263, 36264, 36265, 36266 }
-// };
-// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_Index     = { { 0 } };
-// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_Index = { { 0 } };
-// static const std::vector<uint64_t>              g_QueueSubmit_indices     = { 36649 };
-// static const std::vector<std::vector<uint64_t>> g_RenderPass_Indices     = { { 36151, 36245, 36249, 36267 } };
+static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 36150 };
+static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices            = {
+    { 36158, 36159, 36160, 36161, 36162, 36163, 36164, 36165, 36166, 36167, 36168, 36169, 36170, 36171, 36172,
+      36173, 36174, 36175, 36176, 36177, 36178, 36179, 36180, 36181, 36182, 36183, 36184, 36185, 36186, 36187,
+      36188, 36189, 36190, 36191, 36192, 36193, 36194, 36195, 36196, 36197, 36198, 36199, 36200, 36201, 36202,
+      36203, 36204, 36205, 36206, 36207, 36208, 36209, 36210, 36211, 36212, 36213, 36214, 36215, 36216, 36217,
+      36218, 36219, 36220, 36221, 36222, 36223, 36224, 36225, 36226, 36227, 36228, 36229, 36230, 36231, 36232,
+      36233, 36234, 36235, 36236, 36237, 36238, 36239, 36240, 36241, 36242, 36243, 36244, 36248, 36254, 36255,
+      36256, 36257, 36258, 36259, 36260, 36261, 36262, 36263, 36264, 36265, 36266 }
+};
+static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices     = { { 0 } };
+static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_indices = { { 0 } };
+static const std::vector<uint64_t>              g_QueueSubmit_indices     = { 36649 };
+static const std::vector<std::vector<uint64_t>> g_RenderPass_indices      = { { 36151, 36245, 36249, 36267 } };
 
 // =============================================
 
 // fortnite.skydive2_v2.0
-// static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 6641995 };
-// static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = {
+// static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 6641995 };
+// static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices            = {
 //     { 6642022, 6642028, 6642033, 6642038, 6642043, 6642049, 6642054, 6642057, 6642060, 6642063, 6642066, 6642069,
 //       6642072, 6642075, 6642078, 6642081, 6642084, 6642087, 6642090, 6642093, 6642096, 6642099, 6642102, 6642105,
 //       6642108, 6642111, 6642115, 6642118, 6642121, 6642124, 6642127, 6642130, 6642133, 6642136, 6642139, 6642142,
@@ -274,15 +272,15 @@ static const bool                                            g_dump_rts_before_d
 //       6646787, 6646793, 6646799, 6646805, 6646811, 6646817, 6646823, 6646829, 6646835, 6646841, 6646847, 6646853,
 //       6646859, 6646865, 6646871, 6646877, 6646883, 6646889 }
 // };
-// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_Index     = { { 0 } };
-// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_Index = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices     = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_indices = { { 0 } };
 // static const std::vector<uint64_t>              g_QueueSubmit_indices     = { 6646900 };
 
 // =============================================
 
 // Gfxbench: temple run pixel 6
-// static const std::vector<uint64_t>              g_BeginCommandBuffer_Index = { 2895453, 2897288 };
-// static const std::vector<std::vector<uint64_t>> g_CmdDraw_Index            = {
+// static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 2895453, 2897288 };
+// static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices            = {
 //     { 2895462, 2895466, 2895470, 2895474, 2895478, 2895482, 2895486, 2895490, 2895494, 2895498, 2895502, 2895506,
 //       2895510, 2895514, 2895518, 2895522, 2895526, 2895530, 2895534, 2895538, 2895542, 2895546, 2895550, 2895554,
 //       2895558, 2895562, 2895566, 2895570, 2895575, 2895580, 2895584, 2895589, 2895594, 2895599, 2895604, 2895608,
@@ -369,10 +367,10 @@ static const bool                                            g_dump_rts_before_d
 //       2901085, 2901097, 2901109, 2901121, 2901133, 2901145, 2901156, 2901167, 2901179, 2901191, 2901214, 2901225,
 //       2901236, 2901247, 2901263 }
 // };
-// static const std::vector<std::vector<uint64_t>>              g_CmdDispatch_Index     = { { 0 }, { 0 } };
-// static const std::vector<std::vector<uint64_t>>              g_CmdTraceRaysKHR_Index = { { 0 }, { 0 } };
+// static const std::vector<std::vector<uint64_t>>              g_CmdDispatch_indices     = { { 0 }, { 0 } };
+// static const std::vector<std::vector<uint64_t>>              g_CmdTraceRaysKHR_indices = { { 0 }, { 0 } };
 // static const std::vector<uint64_t>                           g_QueueSubmit_indices     = { 2897133, 2901269 };
-// static const std::vector<std::vector<std::vector<uint64_t>>> g_RenderPass_Indices     = {
+// static const std::vector<std::vector<std::vector<uint64_t>>> g_RenderPass_indices     = {
 //     { { 2895455, 2896476 }, { 2896478, 2896708 }, { 2896710, 2897130 } },
 //     { { 2897290, 2900747, 2900878, 2900926 },
 //       { 2900928, 2900940 },
@@ -430,14 +428,14 @@ struct VulkanReplayOptions : public ReplayOptions
     std::string                  replace_dir;
 
     std::vector<struct ReplayOptionsTripletStruct>  OrigReplayOptions;
-    std::vector<uint64_t>                           BeginCommandBuffer_Index;
-    std::vector<std::vector<uint64_t>>              CmdDraw_Index;
-    std::vector<std::vector<std::vector<uint64_t>>> RenderPass_Indices;
-    std::vector<std::vector<uint64_t>>              CmdDispatch_Index;
-    std::vector<std::vector<uint64_t>>              CmdTraceRaysKHR_Index;
-    std::vector<uint64_t>                           QueueSubmit_indices;
-    bool                                            dump_rts_before_dc;
-    bool                                            isolate_draw{ g_isolate_draw }; // How should this be set?
+    std::vector<uint64_t>                           BeginCommandBuffer_Index{ g_BeginCommandBuffer_indices };
+    std::vector<std::vector<uint64_t>>              CmdDraw_Index{ g_CmdDraw_indices };
+    std::vector<std::vector<std::vector<uint64_t>>> RenderPass_Indices{ g_RenderPass_indices };
+    std::vector<std::vector<uint64_t>>              CmdDispatch_Index{ g_CmdDispatch_indices };
+    std::vector<std::vector<uint64_t>>              CmdTraceRaysKHR_Index{ g_CmdTraceRaysKHR_indices };
+    std::vector<uint64_t>                           QueueSubmit_indices{ g_QueueSubmit_indices };
+    bool                                            dump_rts_before_dc{ false };
+    bool                                            isolate_draw{ false }; // How should this be set?
 };
 
 GFXRECON_END_NAMESPACE(decode)
