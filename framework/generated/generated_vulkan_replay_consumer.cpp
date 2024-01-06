@@ -929,6 +929,28 @@ void VulkanReplayConsumer::Process_vkCreateGraphicsPipelines(
     CheckResult("vkCreateGraphicsPipelines", returnValue, replay_result, call_info);
 
     AddHandles<PipelineInfo>(device, pPipelines->GetPointer(), pPipelines->GetLength(), out_pPipelines, createInfoCount, &VulkanObjectInfoTable::AddPipelineInfo);
+
+    if (replay_result == VK_SUCCESS)
+    {
+        Decoded_VkGraphicsPipelineCreateInfo *ci_meta = pCreateInfos->GetMetaStructPointer();
+
+        for (uint32_t i = 0; i < createInfoCount; ++i)
+        {
+            PipelineInfo *pipeline_info = GetObjectInfoTable().GetPipelineInfo(pPipelines->GetPointer()[i]);
+            assert(pipeline_info);
+
+            Decoded_VkPipelineShaderStageCreateInfo *stages_meta = ci_meta[i].pStages->GetMetaStructPointer();
+
+            for (uint32_t s = 0; s < in_pCreateInfos[i].stageCount; ++s)
+            {
+                ShaderModuleInfo *shader_info = GetObjectInfoTable().GetShaderModuleInfo(stages_meta[s].module);
+                assert(shader_info);
+
+                pipeline_info->shaders.emplace_back(*shader_info);
+            }
+        }
+    }
+
 }
 
 void VulkanReplayConsumer::Process_vkCreateComputePipelines(
