@@ -164,6 +164,9 @@ int main(int argc, const char** argv)
             // the VulkanReplayOptions class won't have to link in the json library.
             if (!vulkan_replay_options.dump_resources.empty())
             {
+                // Enable dump resources
+                vulkan_replay_options.dump_resource_enabled = true;
+
                 // Check to see if dump-resource arg value is a json file.  Do this
                 // by simply checking the file name extenstion.
                 if (ends_with(to_lower(vulkan_replay_options.dump_resources), ".json"))
@@ -355,6 +358,7 @@ int main(int argc, const char** argv)
 
                      if (parse_error)
                      {
+                        vulkan_replay_options.dump_resource_enabled = false;
                         vulkan_replay_options.BeginCommandBuffer_Indices.clear();
                         vulkan_replay_options.CmdDraw_Indices.clear();
                         vulkan_replay_options.RenderPass_Indices.clear();
