@@ -191,7 +191,6 @@ struct VulkanPoolObjectInfo : public VulkanObjectInfo<T>
 
 typedef VulkanObjectInfo<VkEvent>                         EventInfo;
 typedef VulkanObjectInfo<VkQueryPool>                     QueryPoolInfo;
-typedef VulkanObjectInfo<VkShaderModule>                  ShaderModuleInfo;
 typedef VulkanObjectInfo<VkPipelineLayout>                PipelineLayoutInfo;
 typedef VulkanObjectInfo<VkPrivateDataSlot>               PrivateDataSlotInfo;
 typedef VulkanObjectInfo<VkDescriptorSetLayout>           DescriptorSetLayoutInfo;
@@ -362,9 +361,37 @@ struct PipelineCacheInfo : public VulkanObjectInfo<VkPipelineCache>
     std::unordered_map<uint32_t, std::vector<PipelineCacheData>> pipeline_cache_data;
 };
 
+struct ShaderModuleInfo : public VulkanObjectInfo<VkShaderModule>
+{
+    struct DescriptorInfo
+    {
+        DescriptorInfo(VkDescriptorType type, bool readonly) : type(type), readonly(readonly) {}
+        DescriptorInfo(const DescriptorInfo& other) : type(other.type), readonly(other.readonly) {}
+
+        VkDescriptorType type;
+        bool             readonly;
+    };
+
+    ShaderModuleInfo() = default;
+    ShaderModuleInfo(const ShaderModuleInfo& other)
+    {
+        handle                = other.handle;
+        parent_id             = other.parent_id;
+        capture_id            = other.capture_id;
+        used_descriptors_info = other.used_descriptors_info;
+    }
+
+    using DescriptorSetInfo   = std::map<uint32_t, DescriptorInfo>;
+    using DescriptorSetsInfos = std::map<uint32_t, DescriptorSetInfo>;
+
+    DescriptorSetsInfos used_descriptors_info;
+};
+
 struct PipelineInfo : public VulkanObjectInfo<VkPipeline>
 {
     std::unordered_map<uint32_t, size_t> array_counts;
+
+    std::vector<ShaderModuleInfo> shaders;
 };
 
 struct DescriptorPoolInfo : public VulkanPoolInfo<VkDescriptorPool>
@@ -524,7 +551,7 @@ struct descriptor_binding_info
 
 struct DescriptorSetInfo : public VulkanPoolObjectInfo<VkDescriptorSet>
 {
-    std::map<uint32_t, descriptor_binding_info> descriptors;
+    std::unordered_map<uint32_t, descriptor_binding_info> descriptors;
 };
 
 //
