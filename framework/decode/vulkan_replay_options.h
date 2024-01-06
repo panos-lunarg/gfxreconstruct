@@ -145,19 +145,19 @@ const uint32_t kdr_QueueSubmintIndex       = 2;
 // =============================================
 
 // subpasses
-// static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 1218 };
-// static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices            = {
-//     { 1227, 1228, 1229, 1230, 1231, 1232, 1233, 1234, 1235, 1236, 1237, 1238, 1239, 1240, 1241, 1242, 1243,
-//       1244, 1245, 1246, 1247, 1248, 1249, 1250, 1251, 1252, 1253, 1254, 1255, 1256, 1257, 1258, 1259, 1260,
-//       1261, 1262, 1263, 1264, 1265, 1266, 1267, 1268, 1269, 1270, 1271, 1272, 1273, 1274, 1275, 1276, 1277,
-//       1278, 1279, 1280, 1281, 1282, 1283, 1284, 1285, 1286, 1287, 1288, 1289, 1290, 1291, 1292, 1293, 1294,
-//       1295, 1296, 1297, 1298, 1299, 1300, 1301, 1302, 1303, 1304, 1305, 1306, 1307, 1308, 1309, 1310, 1311,
-//       1312, 1313, 1319, 1327, 1328, 1329, 1330, 1331, 1332, 1333, 1334, 1335, 1336, 1337, 1338, 1339 }
-// };
-// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices;
-// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_indices;
-// static const std::vector<uint64_t>              g_QueueSubmit_indices = { 2029 };
-// static const std::vector<std::vector<uint64_t>> g_RenderPass_indices  = { { 1219, 1316, 1322, 1343 } };
+static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 1218 };
+static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices            = {
+    { 1227, 1228, 1229, 1230, 1231, 1232, 1233, 1234, 1235, 1236, 1237, 1238, 1239, 1240, 1241, 1242, 1243,
+      1244, 1245, 1246, 1247, 1248, 1249, 1250, 1251, 1252, 1253, 1254, 1255, 1256, 1257, 1258, 1259, 1260,
+      1261, 1262, 1263, 1264, 1265, 1266, 1267, 1268, 1269, 1270, 1271, 1272, 1273, 1274, 1275, 1276, 1277,
+      1278, 1279, 1280, 1281, 1282, 1283, 1284, 1285, 1286, 1287, 1288, 1289, 1290, 1291, 1292, 1293, 1294,
+      1295, 1296, 1297, 1298, 1299, 1300, 1301, 1302, 1303, 1304, 1305, 1306, 1307, 1308, 1309, 1310, 1311,
+      1312, 1313, 1319, 1327, 1328, 1329, 1330, 1331, 1332, 1333, 1334, 1335, 1336, 1337, 1338, 1339 }
+};
+static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices     = { { 0 } };
+static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_indices = { { 0 } };
+static const std::vector<uint64_t>              g_QueueSubmit_indices   = { 2029 };
+static const std::vector<std::vector<uint64_t>> g_RenderPass_indices    = { { 1219, 1316, 1322, 1343 } };
 
 // =============================================
 
@@ -172,12 +172,10 @@ const uint32_t kdr_QueueSubmintIndex       = 2;
 //       36233, 36234, 36235, 36236, 36237, 36238, 36239, 36240, 36241, 36242, 36243, 36244, 36248, 36254, 36255,
 //       36256, 36257, 36258, 36259, 36260, 36261, 36262, 36263, 36264, 36265, 36266 }
 // };
-// static const std::vector<std::vector<uint64_t>>              g_CmdDispatch_indices;
-// static const std::vector<std::vector<uint64_t>>              g_CmdTraceRaysKHR_indices;
-// static const std::vector<uint64_t>                           g_QueueSubmit_indices = { 36649 };
-// static const std::vector<std::vector<std::vector<uint64_t>>> g_RenderPass_indices  = {
-//     { { 36151, 36245, 36249, 36267 } }
-// };
+// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices     = { { 0 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_indices = { { 0 } };
+// static const std::vector<uint64_t>              g_QueueSubmit_indices     = { 36649 };
+// static const std::vector<std::vector<uint64_t>> g_RenderPass_indices      = { { 36151, 36245, 36249, 36267 } };
 
 // =============================================
 
@@ -477,7 +475,7 @@ struct VulkanReplayOptions : public ReplayOptions
 
     bool                                            dump_rts_before_dc{ false };
     bool                                            isolate_draw{ false }; // How should this be set?
-    bool                                            dump_resource_enabled{ true };
+    bool                                            dump_resource_enable{ false };
 };
 
 GFXRECON_END_NAMESPACE(decode)
