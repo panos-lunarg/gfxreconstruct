@@ -42,6 +42,8 @@
 #include "util/platform.h"
 #include "util/logging.h"
 
+#include "SPIRV-Reflect/spirv_reflect.h"
+
 #include "generated/generated_vulkan_enum_to_string.h"
 
 #include <algorithm>
@@ -4984,6 +4986,90 @@ void VulkanReplayConsumerBase::OverrideDestroyDescriptorUpdateTemplate(
     func(device, descriptor_update_template, GetAllocationCallbacks(pAllocator));
 }
 
+static VkDescriptorType SpvReflectToVkDescriptorType(SpvReflectDescriptorType type)
+{
+    switch (type)
+    {
+        case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLER:
+            return VK_DESCRIPTOR_TYPE_SAMPLER;
+
+        case SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+            return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+
+        case SPV_REFLECT_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+            return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+            return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+
+        case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+            return VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+            return VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+
+        case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+            return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+            return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+
+        case SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+            return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+
+        case SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+            return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+
+        case SPV_REFLECT_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+            return VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+
+        case SPV_REFLECT_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
+            return VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
+
+        default:
+            GFXRECON_LOG_WARNING("%s(): Unrecognised SPIRV-Reflect descriptor type");
+            assert(0);
+            return VK_DESCRIPTOR_TYPE_MAX_ENUM;
+    }
+}
+
+static bool
+PerformReflectionOnShaderModule(ShaderModuleInfo* shader_info, size_t spirv_size, const uint32_t* spirv_code)
+{
+    assert(shader_info != nullptr);
+    assert(spirv_size);
+    assert(spirv_code != nullptr);
+
+    spv_reflect::ShaderModule reflection(spirv_size, spirv_code);
+    if (reflection.GetResult() != SPV_REFLECT_RESULT_SUCCESS)
+    {
+        GFXRECON_LOG_WARNING("Could not generate reflection data about shader module")
+        assert(0);
+        return false;
+    }
+
+    uint32_t         count  = 0;
+    SpvReflectResult result = reflection.EnumerateDescriptorBindings(&count, nullptr);
+    assert(result == SPV_REFLECT_RESULT_SUCCESS);
+
+    std::vector<SpvReflectDescriptorBinding*> bindings;
+    bindings.resize(count);
+    result = reflection.EnumerateDescriptorBindings(&count, bindings.data());
+    assert(result == SPV_REFLECT_RESULT_SUCCESS);
+
+    for (const auto binding : bindings)
+    {
+        VkDescriptorType type = SpvReflectToVkDescriptorType(binding->descriptor_type);
+        bool             readonly =
+            (binding->decoration_flags & SPV_REFLECT_DECORATION_NON_WRITABLE) == SPV_REFLECT_DECORATION_NON_WRITABLE;
+
+        shader_info->used_descriptors_info[binding->set].emplace(binding->binding,
+                                                                 ShaderModuleInfo::DescriptorInfo(type, readonly));
+    }
+
+    return true;
+}
+
 VkResult VulkanReplayConsumerBase::OverrideCreateShaderModule(
     PFN_vkCreateShaderModule                                      func,
     VkResult                                                      original_result,
@@ -5000,16 +5086,24 @@ VkResult VulkanReplayConsumerBase::OverrideCreateShaderModule(
     auto original_info = pCreateInfo->GetPointer();
     if (original_result < 0 || options_.replace_dir.empty())
     {
-        return func(
+        VkResult vk_res = func(
             device_info->handle, original_info, GetAllocationCallbacks(pAllocator), pShaderModule->GetHandlePointer());
+
+        if (vk_res == VK_SUCCESS)
+        {
+            ShaderModuleInfo* shader_info = reinterpret_cast<ShaderModuleInfo*>(pShaderModule->GetConsumerData(0));
+            PerformReflectionOnShaderModule(shader_info, original_info->codeSize, original_info->pCode);
+        }
+
+        return vk_res;
     }
 
     VkShaderModuleCreateInfo override_info = *original_info;
 
     // Replace shader in 'override_info'
     std::unique_ptr<char[]> file_code;
-    const uint32_t*         orig_code = original_info->pCode;
-    size_t                  orig_size = original_info->codeSize;
+    const uint32_t* const   orig_code = original_info->pCode;
+    const size_t            orig_size = original_info->codeSize;
     uint64_t                handle_id = *pShaderModule->GetPointer();
     std::string             file_name = "sh" + std::to_string(handle_id);
     std::string             file_path = util::filepath::Join(options_.replace_dir, file_name);
@@ -5028,8 +5122,16 @@ VkResult VulkanReplayConsumerBase::OverrideCreateShaderModule(
         GFXRECON_LOG_INFO("Replacement shader found: %s", file_path.c_str());
     }
 
-    return func(
+    VkResult vk_res = func(
         device_info->handle, &override_info, GetAllocationCallbacks(pAllocator), pShaderModule->GetHandlePointer());
+
+    if (vk_res == VK_SUCCESS)
+    {
+        ShaderModuleInfo* shader_info = reinterpret_cast<ShaderModuleInfo*>(pShaderModule->GetConsumerData(0));
+        PerformReflectionOnShaderModule(shader_info, override_info.codeSize, override_info.pCode);
+    }
+
+    return vk_res;
 }
 
 VkResult VulkanReplayConsumerBase::OverrideGetPipelineCacheData(PFN_vkGetPipelineCacheData func,
