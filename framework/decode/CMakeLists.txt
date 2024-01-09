@@ -271,7 +271,18 @@ target_include_directories(gfxrecon_decode
                            PUBLIC
                                ${CMAKE_SOURCE_DIR}/framework
                                ${CMAKE_SOURCE_DIR}/external
+                               ${CMAKE_SOURCE_DIR}/external/precompiled/linux/include/
                                $<$<BOOL:${D3D12_SUPPORT}>:${CMAKE_SOURCE_DIR}/external/AgilitySDK/inc>)
+
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+    target_link_directories(gfxrecon_decode
+                            PUBLIC
+                                ${CMAKE_SOURCE_DIR}/external/precompiled/linux/lib/x86_64)
+else (CMAKE_SIZEOF_VOID_P EQUAL 4)
+    target_link_directories(gfxrecon_decode
+                            PUBLIC
+                                ${CMAKE_SOURCE_DIR}/external/precompiled/linux/lib/x86)
+endif()
 
 target_link_libraries(gfxrecon_decode
                         gfxrecon_graphics

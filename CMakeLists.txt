@@ -340,9 +340,6 @@ endif()
 
 add_subdirectory(external/nlohmann)
 
-option(SPIRV_REFLECT_STATIC_LIB "Build static library for SPIRV-Reflect" ON)
-add_subdirectory(external/SPIRV-Reflect)
-
 add_subdirectory(framework)
 if(NOT BUILD_STATIC)
     add_subdirectory(layer)
