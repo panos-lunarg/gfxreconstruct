@@ -36,7 +36,6 @@
 #include <sys/time.h>
 #endif
 
-
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)
 
@@ -504,7 +503,6 @@ void VulkanReplayResourceDump::CommandBufferStack::DumpAttachments(uint64_t cmd_
 
     if (!render_targets_[rp][sp].color_att_imgs.size() && render_targets_[rp][sp].depth_att_img == nullptr)
     {
-        assert(render_targets_[rp][sp].color_att_storeOps.size() == 0);
         return;
     }
 
@@ -519,7 +517,6 @@ void VulkanReplayResourceDump::CommandBufferStack::DumpAttachments(uint64_t cmd_
     graphics::VulkanResourcesUtil resource_util(
         device_info->handle, *device_table, *phys_dev_info->replay_device_info->memory_properties);
 
-    assert(render_targets_[rp][sp].color_att_imgs.size() == render_targets_[rp][sp].color_att_storeOps.size());
     for (size_t i = 0; i < render_targets_[rp][sp].color_att_imgs.size(); ++i)
     {
         const ImageInfo* image_info = render_targets_[rp][sp].color_att_imgs[i];
@@ -1014,9 +1011,7 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const Ren
     assert(render_pass_info);
     assert(framebuffer_info);
 
-    std::vector<const ImageInfo*>    color_att_imgs;
-    std::vector<VkAttachmentStoreOp> color_att_storeOps;
-    std::vector<VkImageLayout>       color_att_final_layouts;
+    std::vector<const ImageInfo*> color_att_imgs;
 
     inside_renderpass  = true;
     current_subpass    = 0;
@@ -1038,15 +1033,9 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const Ren
         assert(img_info);
 
         color_att_imgs.push_back(img_info);
-
-        assert(att_idx < active_renderpass->attachment_descs.size());
-        color_att_storeOps.push_back(active_renderpass->attachment_descs[att_idx].storeOp);
-        color_att_final_layouts.push_back(active_renderpass->attachment_descs[att_idx].finalLayout);
     }
 
-    const ImageInfo*    depth_img_info;
-    VkAttachmentStoreOp depth_att_storeOp;
-    VkImageLayout       depth_final_layout;
+    const ImageInfo* depth_img_info;
 
     if (active_renderpass->subpass_refs[current_subpass].has_depth)
     {
@@ -1057,23 +1046,15 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const Ren
 
         depth_img_info = object_info_table.GetImageInfo(depth_img_view_info->image_id);
         assert(depth_img_info);
-        depth_att_storeOp = active_renderpass->attachment_descs[depth_att_idx].storeOp;
-        depth_final_layout                    = active_renderpass->attachment_descs[depth_att_idx].finalLayout;
     }
     else
     {
         depth_img_info = nullptr;
-        depth_att_storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     }
 
     render_targets_.emplace_back(std::vector<RenderTargets>());
 
-    SetRenderTargets(std::move(color_att_imgs),
-                     std::move(color_att_storeOps),
-                     std::move(color_att_final_layouts),
-                     depth_img_info,
-                     depth_att_storeOp,
-                     depth_final_layout);
+    SetRenderTargets(std::move(color_att_imgs), depth_img_info);
 
     SetRenderArea(render_area);
 
@@ -1192,21 +1173,16 @@ void VulkanReplayResourceDump::CommandBufferStack::NextSubpass(VkSubpassContents
 
         depth_img_info = object_info_table.GetImageInfo(depth_img_view_info->image_id);
         assert(depth_img_info);
-        depth_att_storeOp = active_renderpass->attachment_descs[depth_att_idx].storeOp;
-        depth_final_layout                    = active_renderpass->attachment_descs[depth_att_idx].finalLayout;
+        depth_att_storeOp  = active_renderpass->attachment_descs[depth_att_idx].storeOp;
+        depth_final_layout = active_renderpass->attachment_descs[depth_att_idx].finalLayout;
     }
     else
     {
-        depth_img_info = nullptr;
+        depth_img_info    = nullptr;
         depth_att_storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     }
 
-    SetRenderTargets(std::move(color_att_imgs),
-                     std::move(color_att_storeOps),
-                     std::move(color_att_final_layouts),
-                     depth_img_info,
-                     depth_att_storeOp,
-                     depth_final_layout);
+    SetRenderTargets(std::move(color_att_imgs), depth_img_info);
 }
 
 void VulkanReplayResourceDump::CommandBufferStack::EndRenderPass()
@@ -1243,13 +1219,8 @@ void VulkanReplayResourceDump::CommandBufferStack::EndRenderPass()
     inside_renderpass = false;
 }
 
-void VulkanReplayResourceDump::CommandBufferStack::SetRenderTargets(
-    const std::vector<const ImageInfo*>&    color_att_imgs,
-    const std::vector<VkAttachmentStoreOp>& color_att_storeOps,
-    const std::vector<VkImageLayout>&       final_layouts,
-    const ImageInfo*                        depth_att_img,
-    VkAttachmentStoreOp                     depth_att_storeOp,
-    VkImageLayout                           depth_att_final_layout)
+void VulkanReplayResourceDump::CommandBufferStack::SetRenderTargets(const std::vector<const ImageInfo*>& color_att_imgs,
+                                                                    const ImageInfo*                     depth_att_img)
 {
     assert(render_targets_.size());
 
@@ -1258,12 +1229,8 @@ void VulkanReplayResourceDump::CommandBufferStack::SetRenderTargets(
     render_targets->emplace_back(RenderTargets());
     auto new_rts = render_targets->end() - 1;
 
-    new_rts->color_att_imgs          = color_att_imgs;
-    new_rts->color_att_storeOps      = color_att_storeOps;
-    new_rts->color_att_final_layouts = final_layouts;
-    new_rts->depth_att_img           = depth_att_img;
-    new_rts->depth_att_storeOp       = depth_att_storeOp;
-    new_rts->depth_att_final_layout  = depth_att_final_layout;
+    new_rts->color_att_imgs = color_att_imgs;
+    new_rts->depth_att_img  = depth_att_img;
 }
 
 void VulkanReplayResourceDump::CommandBufferStack::SetRenderArea(const VkRect2D& render_area)
@@ -1282,7 +1249,7 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkCommandBuffer         origina
     CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
     assert(stack);
 
-    DescriptorSetBindPoints bind_point;
+    PipelineBindPoints bind_point;
     switch (pipeline_bind_point)
     {
         case VK_PIPELINE_BIND_POINT_GRAPHICS:
@@ -1402,7 +1369,7 @@ void VulkanReplayResourceDump::DumpResources(const CommandBufferStack& stack, ui
     // graphics::VulkanResourcesUtil resource_util(
     //     device_info->handle, *stack.device_table, *phys_dev_info->replay_device_info->memory_properties);
 
-    // DescriptorSetBindPoints bind_point;
+    // PipelineBindPoints bind_point;
     // if (CmdDraw_Index[current_draw_call])
     // {
     //     bind_point = BIND_POINT_GRAPHICS;
@@ -2226,7 +2193,7 @@ VulkanReplayResourceDump::CommandBufferStack::GetRenderPassIndex(uint64_t dc_ind
         }
     }
 
-    //assert(0);
+    // assert(0);
 
     return RenderPassSubpassPair(0, 0);
 }
