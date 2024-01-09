@@ -1183,6 +1183,16 @@ void VulkanReplayResourceDump::CommandBufferStack::NextSubpass(VkSubpassContents
 
     SetRenderTargets(std::move(color_att_imgs), depth_img_info, false);
 }
+
+void VulkanReplayResourceDump::CommandBufferStack::BindPipeline(const PipelineInfo* pipeline,
+                                                                VkPipelineBindPoint pipeline_bind_point)
+{
+    assert(VkPipelineBindPointToPipelineBindPoint(pipeline_bind_point) != VulkanReplayResourceDump::kBindPoint_count);
+
+    VulkanReplayResourceDump::PipelineBindPoints bind_point =
+        VkPipelineBindPointToPipelineBindPoint(pipeline_bind_point);
+
+    bound_pipelines[bind_point] = pipeline;
 }
 
 void VulkanReplayResourceDump::CommandBufferStack::EndRenderPass()
@@ -1253,26 +1263,7 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkCommandBuffer         origina
     CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
     assert(stack);
 
-    PipelineBindPoints bind_point;
-    switch (pipeline_bind_point)
-    {
-        case VK_PIPELINE_BIND_POINT_GRAPHICS:
-            bind_point = kBindPoint_graphics;
-            break;
-
-        case VK_PIPELINE_BIND_POINT_COMPUTE:
-            bind_point = kBindPoint_compute;
-            break;
-
-        case VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR:
-            bind_point = kBindPoint_ray_tracing;
-            break;
-
-        default:
-            GFXRECON_LOG_ERROR("Unrecognized pipeline bind point (%d)", pipeline_bind_point);
-            assert(0);
-            return;
-    }
+    PipelineBindPoints bind_point = VkPipelineBindPointToPipelineBindPoint(pipeline_bind_point);
 
     for (uint32_t i = 0; i < descriptor_sets_count; ++i)
     {
@@ -1293,10 +1284,6 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkCommandBuffer         origina
                     assert(img_info);
 
                     stack->bound_descriptor_sets[bind_point][first_set + i].image_infos[binding.first] = img_info;
-                    if (stack->must_backup_resources)
-                    {
-                        stack->CloneImage(img_info);
-                    }
                 }
                 break;
 
@@ -1308,10 +1295,6 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkCommandBuffer         origina
                     assert(buffer_info);
 
                     stack->bound_descriptor_sets[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
-                    if (stack->must_backup_resources)
-                    {
-                        stack->CloneBuffer(buffer_info);
-                    }
                 }
                 break;
 
@@ -1325,10 +1308,6 @@ void VulkanReplayResourceDump::UpdateDescriptors(VkCommandBuffer         origina
                     assert(buffer_info);
 
                     stack->bound_descriptor_sets[bind_point][first_set + i].buffer_infos[binding.first] = buffer_info;
-                    if (stack->must_backup_resources)
-                    {
-                        stack->CloneBuffer(buffer_info);
-                    }
                 }
                 break;
 
@@ -1362,7 +1341,7 @@ void VulkanReplayResourceDump::ResetDescriptors(VkCommandBuffer original_command
     }
 }
 
-void VulkanReplayResourceDump::DumpResources(const CommandBufferStack& stack, uint64_t dc_index)
+void VulkanReplayResourceDump::DumpDescriptors(const CommandBufferStack& stack, uint64_t dc_index)
 {
     // const DeviceInfo* device_info =
     // object_info_table_.GetDeviceInfo(stack.original_command_buffer_info->parent_id); assert(device_info);
@@ -1638,6 +1617,18 @@ void VulkanReplayResourceDump::NextSubpass(VkCommandBuffer original_command_buff
     stack->NextSubpass(contents);
 }
 
+void VulkanReplayResourceDump::BindPipeline(VkCommandBuffer     original_command_buffer,
+                                            const PipelineInfo* pipeline,
+                                            VkPipelineBindPoint pipeline_bind_point)
+{
+    assert(recording_);
+    assert(original_command_buffer != VK_NULL_HANDLE);
+
+    CommandBufferStack* stack = FindCommandBufferStack(original_command_buffer);
+    assert(stack);
+    stack->BindPipeline(pipeline, pipeline_bind_point);
+}
+
 VulkanReplayResourceDump::CommandBufferStack::CommandBufferStack(const std::vector<uint64_t>&              dc_indices,
                                                                  const std::vector<std::vector<uint64_t>>& rp_indices,
                                                                  const std::vector<uint64_t>& dispatch_indices,
@@ -1647,7 +1638,7 @@ VulkanReplayResourceDump::CommandBufferStack::CommandBufferStack(const std::vect
     original_command_buffer_handle(VK_NULL_HANDLE),
     original_command_buffer_info(nullptr), current_index(0), dc_indices(dc_indices), RP_indices(rp_indices),
     dispatch_indices(dispatch_indices), traceRays_indices(traceRays_indices), active_renderpass(nullptr),
-    active_framebuffer(nullptr), current_renderpass(0), current_subpass(0),
+    active_framebuffer(nullptr), bound_pipelines{ nullptr }, current_renderpass(0), current_subpass(0),
     subpass_contents(VK_SUBPASS_CONTENTS_INLINE), dump_rts_before_dc(dump_rts_before_dc),
     aux_command_buffer(VK_NULL_HANDLE), aux_fence(VK_NULL_HANDLE), device_table(nullptr),
     object_info_table(object_info_table), replay_device_phys_mem_props(nullptr)
