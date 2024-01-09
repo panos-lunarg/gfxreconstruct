@@ -187,7 +187,7 @@ class VulkanReplayResourceDump
 
     using descriptor_set_t = std::unordered_map<uint32_t, descriptor_set_bindings>;
 
-    enum DescriptorSetBindPoints
+    enum PipelineBindPoints
     {
         kBindPoint_graphics = 0,
         kBindPoint_compute,
@@ -228,18 +228,10 @@ class VulkanReplayResourceDump
 
         struct RenderTargets
         {
-            RenderTargets() :
-                depth_att_img(nullptr), depth_att_storeOp(VK_ATTACHMENT_STORE_OP_DONT_CARE),
-                depth_att_final_layout(VK_IMAGE_LAYOUT_UNDEFINED)
-            {}
+            RenderTargets() : depth_att_img(nullptr) {}
 
-            std::vector<const ImageInfo*>    color_att_imgs;
-            std::vector<VkAttachmentStoreOp> color_att_storeOps;
-            std::vector<VkImageLayout>       color_att_final_layouts;
-
-            const ImageInfo*    depth_att_img;
-            VkAttachmentStoreOp depth_att_storeOp;
-            VkImageLayout       depth_att_final_layout;
+            std::vector<const ImageInfo*> color_att_imgs;
+            const ImageInfo*              depth_att_img;
         };
 
         std::vector<std::vector<RenderTargets>> render_targets_;
@@ -264,12 +256,7 @@ class VulkanReplayResourceDump
 
         void FinalizeCommandBuffer();
 
-        void SetRenderTargets(const std::vector<const ImageInfo*>&    color_att_imgs,
-                              const std::vector<VkAttachmentStoreOp>& color_att_storeOps,
-                              const std::vector<VkImageLayout>&       color_att_final_layouts,
-                              const ImageInfo*                        depth_att_img,
-                              VkAttachmentStoreOp                     depth_att_storeOp,
-                              VkImageLayout                           depth_att_final_layout);
+        void SetRenderTargets(const std::vector<const ImageInfo*>& color_att_imgs, const ImageInfo* depth_att_img);
 
         void SetRenderArea(const VkRect2D& render_area);
 
