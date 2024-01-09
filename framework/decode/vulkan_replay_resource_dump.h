@@ -234,8 +234,12 @@ class VulkanReplayResourceDump
             const ImageInfo*              depth_att_img;
         };
 
+        // render_targets_ is basically a 2d array (vector of vectors). It is indexed like render_targets_[rp][sp]
+        // where rp specifies the render pass and sp the subpass.
         std::vector<std::vector<RenderTargets>> render_targets_;
-        std::vector<VkRect2D>                   render_area_;
+
+        // Render area is constant between subpasses so this array will be single dimension array
+        std::vector<VkRect2D> render_area_;
 
         using RenderPassSubpassPair = std::pair<uint64_t, uint64_t>;
         RenderPassSubpassPair GetRenderPassIndex(uint64_t dc_index) const;
@@ -256,7 +260,9 @@ class VulkanReplayResourceDump
 
         void FinalizeCommandBuffer();
 
-        void SetRenderTargets(const std::vector<const ImageInfo*>& color_att_imgs, const ImageInfo* depth_att_img);
+        void SetRenderTargets(const std::vector<const ImageInfo*>& color_att_imgs,
+                              const ImageInfo*                     depth_att_img,
+                              bool                                 new_renderpass);
 
         void SetRenderArea(const VkRect2D& render_area);
 
