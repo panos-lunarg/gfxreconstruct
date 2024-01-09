@@ -149,6 +149,10 @@ class VulkanReplayResourceDump
 
     void NextSubpass(VkCommandBuffer original_command_buffer, VkSubpassContents contents);
 
+    void BindPipeline(VkCommandBuffer     original_command_buffer,
+                      const PipelineInfo* pipeline,
+                      VkPipelineBindPoint pipeline_bind_point);
+
     // Call with vkCmdBindDescriptorSets to scan for dumpable resources
     void UpdateDescriptors(VkCommandBuffer         original_command_buffer,
                            VkPipelineBindPoint     pipeline_bind_point,
@@ -196,6 +200,23 @@ class VulkanReplayResourceDump
         kBindPoint_count
     };
 
+    static PipelineBindPoints VkPipelineBindPointToPipelineBindPoint(VkPipelineBindPoint bind_point)
+    {
+        switch (bind_point)
+        {
+            case VK_PIPELINE_BIND_POINT_GRAPHICS:
+                return kBindPoint_graphics;
+            case VK_PIPELINE_BIND_POINT_COMPUTE:
+                return kBindPoint_compute;
+            case VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR:
+                return kBindPoint_ray_tracing;
+            default:
+                GFXRECON_LOG_ERROR("Unrecognized pipeline bind point (%d)", bind_point);
+                assert(0);
+                return kBindPoint_count;
+        }
+    }
+
     struct CommandBufferStack
     {
         CommandBufferStack(const std::vector<uint64_t>&              dc_indices,
@@ -217,6 +238,7 @@ class VulkanReplayResourceDump
         std::vector<std::vector<uint64_t>> RP_indices;
         const RenderPassInfo*              active_renderpass;
         const FramebufferInfo*             active_framebuffer;
+        const PipelineInfo*                bound_pipelines[kBindPoint_count];
         uint32_t                           current_renderpass;
         uint32_t                           current_subpass;
         uint32_t                           n_subpasses;
@@ -255,6 +277,8 @@ class VulkanReplayResourceDump
                                  VkSubpassContents      contents);
 
         void NextSubpass(VkSubpassContents contents);
+
+        void BindPipeline(const PipelineInfo* pipeline, VkPipelineBindPoint pipeline_bind_point);
 
         void EndRenderPass();
 
@@ -313,7 +337,7 @@ class VulkanReplayResourceDump
   private:
     bool UpdateRecordingStatus();
 
-    void DumpResources(const CommandBufferStack& stack, uint64_t dc_index);
+    void DumpDescriptors(const CommandBufferStack& stack, uint64_t dc_index);
 
     VulkanReplayResourceDump::CommandBufferStack* FindCommandBufferStack(VkCommandBuffer original_command_buffer);
 
