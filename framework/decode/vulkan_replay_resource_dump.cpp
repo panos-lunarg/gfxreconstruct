@@ -119,13 +119,14 @@ VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>& 
     for (size_t i = 0; i < begin_command_buffer_index.size(); ++i)
     {
         const uint64_t bcb_index = begin_command_buffer_index[i];
-        cmd_buf_stacks_.emplace(bcb_index,
-                                CommandBufferStack(draw_indices[i],
-                                                   rp_indices[i],
-                                                   dispatch_indices[i],
-                                                   traceRays_indices[i],
-                                                   object_info_table,
-                                                   dump_rts_before_dc));
+        cmd_buf_stacks_.emplace(
+            bcb_index,
+            CommandBufferStack(draw_indices.size() ? draw_indices[i] : std::vector<uint64_t>(),
+                               rp_indices.size() ? rp_indices[i] : std::vector<std::vector<uint64_t>>(),
+                               dispatch_indices.size() ? dispatch_indices[i] : std::vector<uint64_t>(),
+                               traceRays_indices.size() ? traceRays_indices[i] : std::vector<uint64_t>(),
+                               object_info_table,
+                               dump_rts_before_dc));
     }
 }
 
