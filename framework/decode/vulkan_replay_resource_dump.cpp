@@ -1053,9 +1053,7 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const Ren
         depth_img_info = nullptr;
     }
 
-    render_targets_.emplace_back(std::vector<RenderTargets>());
-
-    SetRenderTargets(std::move(color_att_imgs), depth_img_info);
+    SetRenderTargets(std::move(color_att_imgs), depth_img_info, true);
 
     SetRenderArea(render_area);
 
@@ -1183,7 +1181,8 @@ void VulkanReplayResourceDump::CommandBufferStack::NextSubpass(VkSubpassContents
         depth_att_storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     }
 
-    SetRenderTargets(std::move(color_att_imgs), depth_img_info);
+    SetRenderTargets(std::move(color_att_imgs), depth_img_info, false);
+}
 }
 
 void VulkanReplayResourceDump::CommandBufferStack::EndRenderPass()
@@ -1221,9 +1220,13 @@ void VulkanReplayResourceDump::CommandBufferStack::EndRenderPass()
 }
 
 void VulkanReplayResourceDump::CommandBufferStack::SetRenderTargets(const std::vector<const ImageInfo*>& color_att_imgs,
-                                                                    const ImageInfo*                     depth_att_img)
+                                                                    const ImageInfo*                     depth_att_img,
+                                                                    bool new_render_pass)
 {
-    assert(render_targets_.size());
+    if (new_render_pass)
+    {
+        render_targets_.emplace_back(std::vector<RenderTargets>());
+    }
 
     auto render_targets = render_targets_.end() - 1;
 
