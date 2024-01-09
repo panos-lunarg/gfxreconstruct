@@ -42,7 +42,7 @@
 #include "util/platform.h"
 #include "util/logging.h"
 
-#include "SPIRV-Reflect/spirv_reflect.h"
+#include "spirv_reflect.h"
 
 #include "generated/generated_vulkan_enum_to_string.h"
 
