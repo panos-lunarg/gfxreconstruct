@@ -1832,7 +1832,8 @@ VulkanReplayResourceDump::CommandBufferStack::CommandBufferStack(const std::vect
     dispatch_indices(dispatch_indices), traceRays_indices(traceRays_indices), active_renderpass(nullptr),
     active_framebuffer(nullptr), bound_pipelines{ nullptr }, current_renderpass(0), current_subpass(0),
     dump_rts_before_dc(dump_rts_before_dc), aux_command_buffer(VK_NULL_HANDLE), aux_fence(VK_NULL_HANDLE),
-    device_table(nullptr), object_info_table(object_info_table), replay_device_phys_mem_props(nullptr)
+    device_table(nullptr), object_info_table(object_info_table), replay_device_phys_mem_props(nullptr),
+    dump_resource_path(dump_resource_path)
 {
     must_backup_resources = dc_indices.size() > 1;
 
