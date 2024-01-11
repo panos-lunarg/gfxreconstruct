@@ -4479,12 +4479,14 @@ VulkanReplayConsumerBase::OverrideCreateImage(PFN_vkCreateImage                 
     auto                                  replay_image = pImage->GetHandlePointer();
     auto                                  capture_id   = (*pImage->GetPointer());
 
-    if (replaying_trimmed_capture_)
+    if (replaying_trimmed_capture_ || options_.dump_resource_enabled)
     {
         // The GFXR trimmed capture process sets VK_IMAGE_USAGE_TRANSFER_SRC_BIT flag for image VkImageCreateInfo.
         // Since image memory requirements can differ when VK_IMAGE_USAGE_TRANSFER_SRC_BIT is set, we sometimes hit
         // vkBindImageMemory failures due to memory requirement mismatch during replay. So here we add
         // VK_IMAGE_USAGE_TRANSFER_SRC_BIT to keep things consistent with capture.
+
+        // In the case of dump resources we also want the TRANSFER_SRC_BIT in order to be able to dump all images
         auto modified_create_info = const_cast<VkImageCreateInfo*>(pCreateInfo->GetPointer());
         modified_create_info->usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     }
@@ -5278,7 +5280,7 @@ VkResult VulkanReplayConsumerBase::OverrideCreateSwapchainKHR(
 
         ProcessSwapchainFullScreenExclusiveInfo(pCreateInfo->GetMetaStructPointer());
 
-        if (screenshot_handler_ == nullptr)
+        if (screenshot_handler_ == nullptr && !options_.dump_resource_enabled)
         {
             result = swapchain_->CreateSwapchainKHR(original_result,
                                                     func,
@@ -5290,7 +5292,8 @@ VkResult VulkanReplayConsumerBase::OverrideCreateSwapchainKHR(
         }
         else
         {
-            // Screenshots are active, so ensure that swapchain images can be used as a transfer source.
+            // Screenshots and/or dump resources are active, so ensure that swapchain images can be used as a transfer
+            // source.
             VkSwapchainCreateInfoKHR modified_create_info = (*replay_create_info);
             modified_create_info.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
             result = swapchain_->CreateSwapchainKHR(original_result,
