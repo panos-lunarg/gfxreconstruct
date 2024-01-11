@@ -242,7 +242,6 @@ class VulkanReplayResourceDump
         uint32_t                           current_renderpass;
         uint32_t                           current_subpass;
         uint32_t                           n_subpasses;
-        VkSubpassContents                  subpass_contents;
         bool                               dump_rts_before_dc;
 
         std::vector<std::vector<VkRenderPass>> render_pass_clones;

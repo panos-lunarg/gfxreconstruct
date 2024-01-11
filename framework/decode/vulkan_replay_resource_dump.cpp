@@ -535,7 +535,9 @@ void VulkanReplayResourceDump::CommandBufferStack::DumpAttachments(uint64_t cmd_
             image_info->layer_count,
             image_info->tiling,
             image_info->sample_count,
-            image_info->current_layout,
+            // All ender targets should be transitioned by the
+            // custom render passes into TRANSFER_SRC_OPTIMAL
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
             0,
             VK_IMAGE_ASPECT_COLOR_BIT,
             data,
@@ -616,7 +618,9 @@ void VulkanReplayResourceDump::CommandBufferStack::DumpAttachments(uint64_t cmd_
             image_info->layer_count,
             image_info->tiling,
             image_info->sample_count,
-            image_info->current_layout,
+            // All ender targets should be transitioned by the
+            // custom render passes into TRANSFER_SRC_OPTIMAL
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
             0,
             VK_IMAGE_ASPECT_DEPTH_BIT,
             data,
@@ -876,6 +880,117 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::CloneRenderPass(const Ren
 {
     std::vector<VkAttachmentDescription> modified_attachemnts = original_render_pass->attachment_descs;
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
+
+    GFXRECON_WRITE_CONSOLE("  frame buffer attachments:")
+    for (size_t i = 0; i < active_framebuffer->attachment_image_view_ids.size(); ++i)
+    {
+        const ImageViewInfo* img_view_info =
+            object_info_table.GetImageViewInfo(active_framebuffer->attachment_image_view_ids[i]);
+        assert(img_view_info);
+
+        const ImageInfo* img_info = object_info_table.GetImageInfo(img_view_info->image_id);
+        assert(img_info);
+
+        GFXRECON_WRITE_CONSOLE("    attachment %zu: %p", i, img_info->handle);
+    }
+
+    GFXRECON_WRITE_CONSOLE("  attachment descs:");
+    for (size_t i = 0; i < modified_attachemnts.size(); ++i)
+    {
+        GFXRECON_WRITE_CONSOLE("    i: %zu", i);
+        GFXRECON_WRITE_CONSOLE("      format: %s", util::ToString<VkFormat>(modified_attachemnts[i].format).c_str());
+        GFXRECON_WRITE_CONSOLE("      loadOp: %s",
+                               util::ToString<VkAttachmentLoadOp>(modified_attachemnts[i].loadOp).c_str());
+        GFXRECON_WRITE_CONSOLE("      storeOp: %s",
+                               util::ToString<VkAttachmentStoreOp>(modified_attachemnts[i].storeOp).c_str());
+        GFXRECON_WRITE_CONSOLE("      stencilLoadOp: %s",
+                               util::ToString<VkAttachmentLoadOp>(modified_attachemnts[i].stencilLoadOp).c_str());
+        GFXRECON_WRITE_CONSOLE("      initialLayout: %s",
+                               util::ToString<VkImageLayout>(modified_attachemnts[i].initialLayout).c_str());
+        GFXRECON_WRITE_CONSOLE("      finalLayout: %s",
+                               util::ToString<VkImageLayout>(modified_attachemnts[i].finalLayout).c_str());
+    }
+
+    GFXRECON_WRITE_CONSOLE("\n");
+    GFXRECON_WRITE_CONSOLE("  Subpass refs:");
+    for (size_t i = 0; i < original_render_pass->subpass_refs.size(); ++i)
+    {
+        GFXRECON_WRITE_CONSOLE("    Subpass: %zu", i);
+
+        GFXRECON_WRITE_CONSOLE("      color:");
+        for (size_t c = 0; c < original_render_pass->subpass_refs[i].color_att_refs.size(); ++c)
+        {
+            GFXRECON_WRITE_CONSOLE("        %zu", c);
+            GFXRECON_WRITE_CONSOLE("          att: %u",
+                                   original_render_pass->subpass_refs[i].color_att_refs[c].attachment);
+            GFXRECON_WRITE_CONSOLE(
+                "          layout: %s",
+                util::ToString<VkImageLayout>(original_render_pass->subpass_refs[i].color_att_refs[c].layout).c_str());
+        }
+
+        GFXRECON_WRITE_CONSOLE("      -----------------------------------------");
+        GFXRECON_WRITE_CONSOLE("      depth:");
+        if (original_render_pass->subpass_refs[i].has_depth)
+        {
+            GFXRECON_WRITE_CONSOLE("          att: %u", original_render_pass->subpass_refs[i].depth_att_ref.attachment);
+            GFXRECON_WRITE_CONSOLE(
+                "          layout: %s",
+                util::ToString<VkImageLayout>(original_render_pass->subpass_refs[i].depth_att_ref.layout).c_str());
+        }
+
+        GFXRECON_WRITE_CONSOLE("      -----------------------------------------");
+        GFXRECON_WRITE_CONSOLE("      input");
+        for (size_t c = 0; c < original_render_pass->subpass_refs[i].input_att_refs.size(); ++c)
+        {
+            GFXRECON_WRITE_CONSOLE("        %zu", c);
+            GFXRECON_WRITE_CONSOLE("          att: %u",
+                                   original_render_pass->subpass_refs[i].input_att_refs[c].attachment);
+            GFXRECON_WRITE_CONSOLE(
+                "          layout: %s",
+                util::ToString<VkImageLayout>(original_render_pass->subpass_refs[i].input_att_refs[c].layout).c_str());
+        }
+
+        GFXRECON_WRITE_CONSOLE("      -----------------------------------------");
+        GFXRECON_WRITE_CONSOLE("      preserve");
+        for (size_t c = 0; c < original_render_pass->subpass_refs[i].preserve_att_refs.size(); ++c)
+        {
+            GFXRECON_WRITE_CONSOLE("      %zu", c);
+            GFXRECON_WRITE_CONSOLE("        att: %u", original_render_pass->subpass_refs[i].preserve_att_refs[c]);
+        }
+        GFXRECON_WRITE_CONSOLE("    *****************************************");
+    }
+
+    GFXRECON_WRITE_CONSOLE("\n");
+    GFXRECON_WRITE_CONSOLE("  Dependencies:");
+    for (size_t i = 0; i < original_render_pass->dependencies.size(); ++i)
+    {
+        GFXRECON_WRITE_CONSOLE("    Dependency: %zu", i);
+
+        GFXRECON_WRITE_CONSOLE("      srcSubpass: %u", original_render_pass->dependencies[i].srcSubpass);
+        GFXRECON_WRITE_CONSOLE("      dstSubpass: %u", original_render_pass->dependencies[i].dstSubpass);
+        GFXRECON_WRITE_CONSOLE(
+            "      srcStageMask: %s",
+            util::VkPipelineStageFlags2ToString(original_render_pass->dependencies[i].srcStageMask).c_str());
+        GFXRECON_WRITE_CONSOLE(
+            "      dstStageMask: %s",
+            util::VkPipelineStageFlags2ToString(original_render_pass->dependencies[i].dstStageMask).c_str());
+        GFXRECON_WRITE_CONSOLE(
+            "      srcAccessMask: %s",
+            util::VkAccessFlags2ToString(original_render_pass->dependencies[i].srcAccessMask).c_str());
+        GFXRECON_WRITE_CONSOLE(
+            "      dstAccessMask: %s",
+            util::VkAccessFlags2ToString(original_render_pass->dependencies[i].dstAccessMask).c_str());
+        GFXRECON_WRITE_CONSOLE(
+            "      dependencyFlags: %s",
+            util::ToString<VkDependencyFlags>(original_render_pass->dependencies[i].dependencyFlags).c_str());
+    }
+
+    GFXRECON_WRITE_CONSOLE("");
+    GFXRECON_WRITE_CONSOLE("");
+    GFXRECON_WRITE_CONSOLE("");
+    GFXRECON_WRITE_CONSOLE("");
+
     // Fix storeOps and final layouts
     for (auto& att : modified_attachemnts)
     {
@@ -893,70 +1008,130 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::CloneRenderPass(const Ren
     auto new_render_pass = render_pass_clones.end() - 1;
     new_render_pass->resize(original_render_pass->subpass_refs.size());
 
+    // Do one quick pass over the subpass references in order to check if the render pass
+    // uses color and/or depth attachments. This information might be necessary when
+    // defining the dependencies of the custom render passes
+    bool has_color = false, has_depth = false;
+    for (uint32_t sub = 0; sub < original_render_pass->subpass_refs.size(); ++sub)
+    {
+        if (original_render_pass->subpass_refs[sub].color_att_refs.size())
+        {
+            has_color = true;
+        }
+
+        if (original_render_pass->subpass_refs[sub].has_depth)
+        {
+            has_depth = true;
+        }
+    }
+
+    // Create new render passes. For each subpass in the original render pass a new render pass will be created.
+    // Each new render pass will progressively contain an additional subpass until all subpasses of the original
+    // renderpass are exhausted.
+    // For example for a render pass with 3 subpasses, 3 new render passes will be created and will contain the
+    // following subpasses:
+    // Renderpass 0: Will contain 1 subpass.
+    // Renderpass 1: Will contain 2 subpass.
+    // Renderpass 2: Will contain 3 subpass.
+    // Each draw call that is marked for dumping will be "assigned" the appropriate render pass depending on which
+    // subpasses it was called from in the original render pass
     std::vector<VkSubpassDescription> subpass_descs;
     for (uint32_t sub = 0; sub < original_render_pass->subpass_refs.size(); ++sub)
     {
+        bool                             has_external_dependencies_post = false;
+        bool                             has_external_dependencies_pre  = false;
         std::vector<VkSubpassDependency> modified_dependencies;
         for (uint32_t d = 0; d < original_render_pass->dependencies.size(); ++d)
         {
             const VkSubpassDependency& original_dep = original_render_pass->dependencies[d];
 
-            if ((original_dep.srcSubpass != VK_SUBPASS_EXTERNAL && original_dep.srcSubpass > sub) ||
-                (original_dep.dstSubpass != VK_SUBPASS_EXTERNAL && original_dep.dstSubpass > sub))
+            if ((original_dep.srcSubpass > sub || original_dep.dstSubpass > sub) &&
+                (original_dep.srcSubpass != VK_SUBPASS_EXTERNAL && original_dep.dstSubpass != VK_SUBPASS_EXTERNAL))
             {
+                GFXRECON_WRITE_CONSOLE("  RP %u skips dep %u (%u -> %u) as out of scope",
+                                       sub,
+                                       d,
+                                       original_dep.srcSubpass,
+                                       original_dep.dstSubpass);
+
+                // Skip this dependency as out of scope
                 continue;
             }
 
             auto new_dep = modified_dependencies.insert(modified_dependencies.end(), original_dep);
-            // if (new_dep->srcSubpass == VK_SUBPASS_EXTERNAL)
-            // {
-            //     new_dep->srcStageMask |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-            // //     new_dep->srcAccessMask |= VK_ACCESS_TRANSFER_READ_BIT;
-            // }
+            if (new_dep->srcSubpass != VK_SUBPASS_EXTERNAL && new_dep->srcSubpass > sub)
+            {
+                new_dep->srcSubpass = sub;
+            }
+            else if (new_dep->dstSubpass != VK_SUBPASS_EXTERNAL && new_dep->dstSubpass > sub)
+            {
+                new_dep->dstSubpass = sub;
+            }
+
+            if (new_dep->srcSubpass == VK_SUBPASS_EXTERNAL)
+            {
+                // new_dep->srcStageMask |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                // new_dep->srcAccessMask |= VK_ACCESS_TRANSFER_READ_BIT;
+
+                has_external_dependencies_pre = true;
+            }
 
             if (new_dep->dstSubpass == VK_SUBPASS_EXTERNAL)
             {
                 new_dep->dstStageMask  = VK_PIPELINE_STAGE_TRANSFER_BIT;
                 new_dep->dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+                has_external_dependencies_post = true;
+            }
+
+            GFXRECON_WRITE_CONSOLE("  RP %u gets a new dependency:", sub)
+            GFXRECON_WRITE_CONSOLE("      srcSubpass: %u", new_dep->srcSubpass);
+            GFXRECON_WRITE_CONSOLE("      dstSubpass: %u", new_dep->dstSubpass);
+            GFXRECON_WRITE_CONSOLE("      srcStageMask: %s",
+                                   util::VkPipelineStageFlags2ToString(new_dep->srcStageMask).c_str());
+            GFXRECON_WRITE_CONSOLE("      dstStageMask: %s",
+                                   util::VkPipelineStageFlags2ToString(new_dep->dstStageMask).c_str());
+            GFXRECON_WRITE_CONSOLE("      srcAccessMask: %s",
+                                   util::VkAccessFlags2ToString(new_dep->srcAccessMask).c_str());
+            GFXRECON_WRITE_CONSOLE("      dstAccessMask: %s",
+                                   util::VkAccessFlags2ToString(new_dep->dstAccessMask).c_str());
+            GFXRECON_WRITE_CONSOLE("      dependencyFlags: %s",
+                                   util::ToString<VkDependencyFlags>(new_dep->dependencyFlags).c_str());
+        }
+
+        if (!has_external_dependencies_post)
+        {
+            GFXRECON_WRITE_CONSOLE("  No post renderpass dependecy was detected")
+
+            VkSubpassDependency post_dependency;
+            post_dependency.srcSubpass    = sub;
+            post_dependency.dstSubpass    = VK_SUBPASS_EXTERNAL;
+            post_dependency.dstStageMask  = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            post_dependency.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+            if (has_color)
+            {
+                GFXRECON_WRITE_CONSOLE("    Injecting one for color")
+
+                post_dependency.srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                post_dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+                modified_dependencies.push_back(post_dependency);
+            }
+
+            if (has_depth)
+            {
+                GFXRECON_WRITE_CONSOLE("    Injecting one for depth")
+
+                post_dependency.srcStageMask =
+                    VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
+                post_dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+                modified_dependencies.push_back(post_dependency);
             }
         }
 
         const RenderPassInfo::SubpassReferences& original_subp_ref = original_render_pass->subpass_refs[sub];
-
-#if defined(GFXRECON_DEBUG_BUILD)
-        // A few sanity checks: Check that the color and depth attachments used in each render pass is of an appropriate
-        // format. If not generate a warning just as a heads up
-        for (uint32_t r = 0; r < original_subp_ref.color_att_refs.size(); ++r)
-        {
-            const auto col_ref = original_subp_ref.color_att_refs[r];
-            if (!vkuFormatIsColor(modified_attachemnts[col_ref.attachment].format))
-            {
-                GFXRECON_LOG_WARNING("%s(): In subpass %u color attachment reference %u refering to attachment %u is "
-                                     "not of a color format (%s)",
-                                     __func__,
-                                     sub,
-                                     r,
-                                     col_ref.attachment,
-                                     util::ToString<VkFormat>(modified_attachemnts[col_ref.attachment].format).c_str());
-            }
-        }
-
-        if (original_subp_ref.has_depth)
-        {
-            const VkAttachmentReference& depth_ref = original_subp_ref.depth_att_ref;
-            if (!vkuFormatIsDepthAndStencil(original_render_pass->attachment_descs[depth_ref.attachment].format))
-            {
-                GFXRECON_LOG_WARNING(
-                    "%s(): In subpass %u depth attachment reference refering to attachment %u is "
-                    "not of a color format (%s)",
-                    __func__,
-                    sub,
-                    depth_ref.attachment,
-                    util::ToString<VkFormat>(modified_attachemnts[depth_ref.attachment].format).c_str());
-            }
-        }
-#endif
-
         auto new_subp_desc = subpass_descs.insert(subpass_descs.end(), VkSubpassDescription());
 
         new_subp_desc->flags                = original_subp_ref.flags;
@@ -975,12 +1150,13 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::CloneRenderPass(const Ren
         new_subp_desc->pPreserveAttachments =
             original_subp_ref.preserve_att_refs.size() ? original_subp_ref.preserve_att_refs.data() : nullptr;
 
-        VkRenderPassCreateInfo ci = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO, nullptr, VkRenderPassCreateFlags(0) };
-
+        VkRenderPassCreateInfo ci;
+        ci.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        ci.pNext           = nullptr;
+        ci.flags           = VkRenderPassCreateFlags(0);
         ci.attachmentCount = modified_attachemnts.size();
         ci.pAttachments    = modified_attachemnts.size() ? modified_attachemnts.data() : nullptr;
 
-        GFXRECON_WRITE_CONSOLE("  render pass %u has %u subpasses", sub, sub + 1);
         assert(subpass_descs.size() == sub + 1);
         ci.subpassCount = sub + 1;
         ci.pSubpasses   = subpass_descs.data();
@@ -1016,7 +1192,6 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const Ren
 
     inside_renderpass  = true;
     current_subpass    = 0;
-    subpass_contents   = contents;
     active_renderpass  = render_pass_info;
     active_framebuffer = framebuffer_info;
 
@@ -1070,6 +1245,7 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const Ren
     for (VulkanReplayResourceDump::cmd_buf_it it = first; it < last; ++it, ++cmd_buf_idx)
     {
         const uint64_t dc_index = dc_indices[CmdBufToDCVectorIndex(cmd_buf_idx)];
+
         // GetRenderPassIndex will tell us which render pass each cloned command buffer should use depending on the
         // assigned draw call index
         const RenderPassSubpassPair RP_index = GetRenderPassIndex(dc_index);
@@ -1085,15 +1261,15 @@ VkResult VulkanReplayResourceDump::CommandBufferStack::BeginRenderPass(const Ren
             break;
         }
 
-        GFXRECON_WRITE_CONSOLE(
-            "  cmd_buf_idx: %zu with dc index: %" PRIu64 " gets render pass: (%u, %u)", cmd_buf_idx, dc_index, rp, sp);
-
         VkRenderPassBeginInfo bi = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO, nullptr };
 
         bi.clearValueCount = clear_value_count;
         bi.pClearValues    = p_clear_values;
         bi.framebuffer     = framebuffer_info->handle;
         bi.renderArea      = render_area;
+
+        GFXRECON_WRITE_CONSOLE(
+            "  cmd_buf_idx: %zu with dc index: %" PRIu64 " gets render pass: (%u, %u)", cmd_buf_idx, dc_index, rp, sp);
 
         assert(rp < render_pass_clones.size());
         assert(sp < render_pass_clones[rp].size());
@@ -1124,15 +1300,17 @@ void VulkanReplayResourceDump::CommandBufferStack::NextSubpass(VkSubpassContents
         const uint64_t              dc_index = dc_indices[CmdBufToDCVectorIndex(cmd_buf_idx)];
         const RenderPassSubpassPair RP_index = GetRenderPassIndex(dc_index);
         const uint64_t              rp       = RP_index.first;
-        const uint64_t              sp       = RP_index.second;
 
         if (rp != current_renderpass)
         {
             continue;
         }
 
-        GFXRECON_WRITE_CONSOLE(
-            "  cmd_buf_idx: %zu with dc index: %" PRIu64 " moves to subpass: (%u, %u)", cmd_buf_idx, dc_index, rp, sp);
+        GFXRECON_WRITE_CONSOLE("  cmd_buf_idx: %zu with dc index: %" PRIu64 " moves to subpass: (%u, %u)",
+                               cmd_buf_idx,
+                               dc_index,
+                               rp,
+                               current_subpass);
 
         device_table->CmdNextSubpass(*it, contents);
     }
@@ -1639,9 +1817,8 @@ VulkanReplayResourceDump::CommandBufferStack::CommandBufferStack(const std::vect
     original_command_buffer_info(nullptr), current_index(0), dc_indices(dc_indices), RP_indices(rp_indices),
     dispatch_indices(dispatch_indices), traceRays_indices(traceRays_indices), active_renderpass(nullptr),
     active_framebuffer(nullptr), bound_pipelines{ nullptr }, current_renderpass(0), current_subpass(0),
-    subpass_contents(VK_SUBPASS_CONTENTS_INLINE), dump_rts_before_dc(dump_rts_before_dc),
-    aux_command_buffer(VK_NULL_HANDLE), aux_fence(VK_NULL_HANDLE), device_table(nullptr),
-    object_info_table(object_info_table), replay_device_phys_mem_props(nullptr)
+    dump_rts_before_dc(dump_rts_before_dc), aux_command_buffer(VK_NULL_HANDLE), aux_fence(VK_NULL_HANDLE),
+    device_table(nullptr), object_info_table(object_info_table), replay_device_phys_mem_props(nullptr)
 {
     must_backup_resources = dc_indices.size() > 1;
 
@@ -2188,7 +2365,8 @@ VulkanReplayResourceDump::CommandBufferStack::GetRenderPassIndex(uint64_t dc_ind
         }
     }
 
-    // assert(0);
+    // If this is hit then probably there's something wrong with the draw call and/or render pass indices
+    assert(0);
 
     return RenderPassSubpassPair(0, 0);
 }
