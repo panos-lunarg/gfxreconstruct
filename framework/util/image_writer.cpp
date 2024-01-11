@@ -25,6 +25,9 @@
 
 #include "platform.h"
 
+#include <limits>
+#include <math.h>
+
 #if defined(GFXRECON_ENABLE_ZLIB_COMPRESSION) && defined(GFXRECON_ENABLE_PNG_SCREENSHOT)
 #include <zlib.h>
 
@@ -65,6 +68,82 @@ GFXRECON_BEGIN_NAMESPACE(imagewriter)
 
 const uint16_t kBmpBitCount = 32; // Expecting 32-bit BGRA bitmap data.
 const uint32_t kImageBpp    = 4;  // Expecting 4 bytes per pixel for 32-bit BGRA bitmap data.
+
+static float Ufloat11ToFloat(uint16_t val)
+{
+    const uint32_t        mantissa = val & 0x3f;
+    const uint32_t        exponent = (val >> 6) & 0x1f;
+    static const uint32_t lead_bit = 0x40;
+
+    if (mantissa == 0 && exponent == 0)
+    {
+        return 0.0f;
+    }
+    else
+    {
+        if (exponent == 0x1f)
+        {
+            if (mantissa == 0)
+            {
+                // +inf
+                return std::numeric_limits<float>::max();
+            }
+            else
+            {
+                // NaN... I don't think we want a Nan in a pixel
+                return 0.0f;
+            }
+        }
+        else if (exponent != 0)
+        {
+            uint32_t combined = lead_bit | mantissa;
+            return (static_cast<float>(combined) / static_cast<float>(lead_bit)) *
+                   pow(2.0f, static_cast<float>(exponent) - 15.0f);
+        }
+        else /* if (exponent == 0) */
+        {
+            return static_cast<float>(mantissa) / static_cast<float>(lead_bit) * pow(2.0f, 1.0f - 15.0f);
+        }
+    }
+}
+
+static float Ufloat10ToFloat(uint16_t val)
+{
+    const uint32_t        mantissa = val & 0x1f;
+    const uint32_t        exponent = (val >> 5) & 0x1f;
+    static const uint32_t lead_bit = 0x20;
+
+    if (mantissa == 0 && exponent == 0)
+    {
+        return 0.0f;
+    }
+    else
+    {
+        if (exponent == 0x1f)
+        {
+            if (mantissa == 0)
+            {
+                // +inf
+                return std::numeric_limits<float>::max();
+            }
+            else
+            {
+                // NaN... I don't think we want a Nan in a pixel
+                return 0.0f;
+            }
+        }
+        else if (exponent != 0)
+        {
+            uint32_t combined = lead_bit | mantissa;
+            return (static_cast<float>(combined) / static_cast<float>(lead_bit)) *
+                   pow(2.0f, static_cast<float>(exponent) - 15.0f);
+        }
+        else /* if (exponent == 0) */
+        {
+            return static_cast<float>(mantissa) / static_cast<float>(lead_bit) * pow(2.0f, 1.0f - 15.0f);
+        }
+    }
+}
 
 bool WriteBmpImage(const std::string& filename,
                    uint32_t           width,
@@ -121,8 +200,6 @@ bool WriteBmpImage(const std::string& filename,
             {
                 if (format == kFormat_D16_UNORM)
                 {
-                    assert(pitch);
-
                     const uint16_t* bytes_u16 = reinterpret_cast<const uint16_t*>(data);
                     for (uint32_t x = 0; x < width; ++x)
                     {
@@ -135,8 +212,6 @@ bool WriteBmpImage(const std::string& filename,
                 }
                 else if (format == kFormat_D32_FLOAT)
                 {
-                    assert(pitch);
-
                     const float* bytes_float = reinterpret_cast<const float*>(data);
                     for (uint32_t x = 0; x < width; ++x)
                     {
@@ -148,8 +223,6 @@ bool WriteBmpImage(const std::string& filename,
                 }
                 else if (format == kFormat_D24_UNORM)
                 {
-                    assert(pitch);
-
                     const uint32_t* bytes_u32 = reinterpret_cast<const uint32_t*>(data);
                     for (uint32_t x = 0; x < width; ++x)
                     {
@@ -162,8 +235,6 @@ bool WriteBmpImage(const std::string& filename,
                 }
                 else if (format == kFormat_RGBA)
                 {
-                    assert(pitch);
-
                     const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
                     for (uint32_t x = 0; x < width; ++x)
                     {
@@ -177,8 +248,6 @@ bool WriteBmpImage(const std::string& filename,
                 }
                 else if (format == kFormat_RGB)
                 {
-                    assert(pitch);
-
                     const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
                     for (uint32_t x = 0; x < width; ++x)
                     {
@@ -186,6 +255,44 @@ bool WriteBmpImage(const std::string& filename,
                         const uint8_t  g    = bytes[(height_1 - y) * 3 * width + (3 * x) + 1];
                         const uint8_t  b    = bytes[(height_1 - y) * 3 * width + (3 * x) + 2];
                         const uint32_t rgba = (0xff << 24) | (r << 16) | (g << 8) | b;
+                        util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                    }
+                }
+                else if (format == kFormat_A2B10G10R10)
+                {
+                    const uint32_t* u32_vals = reinterpret_cast<const uint32_t*>(data);
+                    for (uint32_t x = 0; x < width; ++x)
+                    {
+                        uint8_t r = static_cast<uint8_t>((u32_vals[(height_1 - y) * width + x] & 0x000003FF) >> 0);
+                        uint8_t g = static_cast<uint8_t>((u32_vals[(height_1 - y) * width + x] & 0x000FFC00) >> 10);
+                        uint8_t b = static_cast<uint8_t>((u32_vals[(height_1 - y) * width + x] & 0x3FF00000) >> 20);
+                        uint8_t a = static_cast<uint8_t>((u32_vals[(height_1 - y) * width + x] & 0xC0000000) >> 30);
+
+                        r = static_cast<uint8_t>(static_cast<float>(r) / 1023.0f * 255.0f);
+                        g = static_cast<uint8_t>(static_cast<float>(g) / 1023.0f * 255.0f);
+                        b = static_cast<uint8_t>(static_cast<float>(b) / 1023.0f * 255.0f);
+                        a = static_cast<uint8_t>(static_cast<float>(a) / 3.0f * 255.0f);
+
+                        const uint32_t rgba = (0xff << 24) | (r << 16) | (g << 8) | b;
+                        util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                    }
+                }
+                else if (format == kFormat_B10G11R11_UFLOAT)
+                {
+                    const uint32_t* u32_vals = reinterpret_cast<const uint32_t*>(data);
+                    for (uint32_t x = 0; x < width; ++x)
+                    {
+                        // clang-format off
+                        float b = Ufloat10ToFloat(static_cast<uint16_t>((u32_vals[(height_1 - y) * width + x] & (0xFFC00000)) >> 22));
+                        float g = Ufloat11ToFloat(static_cast<uint16_t>((u32_vals[(height_1 - y) * width + x] & (0x003FF800)) >> 11));
+                        float r = Ufloat11ToFloat(static_cast<uint16_t>((u32_vals[(height_1 - y) * width + x] & (0x000007FF)) >> 0));
+                        // clang-format on
+
+                        const uint8_t  b_u8 = static_cast<uint8_t>(std::min(b, 1.0f) * 255.0f);
+                        const uint8_t  g_u8 = static_cast<uint8_t>(std::min(g, 1.0f) * 255.0f);
+                        const uint8_t  r_u8 = static_cast<uint8_t>(std::min(r, 1.0f) * 255.0f);
+
+                        const uint32_t rgba = (0xff << 24) | (r_u8 << 16) | (g_u8 << 8) | b_u8;
                         util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
                     }
                 }
