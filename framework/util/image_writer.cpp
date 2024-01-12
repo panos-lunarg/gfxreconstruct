@@ -28,6 +28,7 @@
 
 #include <limits>
 #include <math.h>
+#include <unistd.h>
 
 #if defined(GFXRECON_ENABLE_ZLIB_COMPRESSION) && defined(GFXRECON_ENABLE_PNG_SCREENSHOT)
 #include <zlib.h>
@@ -172,6 +173,20 @@ bool WriteBmpImage(const std::string& filename,
     uint32_t row_pitch = width * kImageBpp;
 
     GFXRECON_LOG_INFO("%s(): Writing file \"%s\"", __func__, filename.c_str())
+
+#if defined(__ANDROID__)
+    // In Android there is an issue with files which are manually deleted (for example from adb shell) then fopen with
+    // "wb" will fail with the error that the file already exists. Deleting the file from the code can workaround this
+    // problem
+    if (access(filename.c_str(), F_OK) != -1)
+    {
+        GFXRECON_LOG_INFO("File already exists. Will attempt to delete it");
+        if (remove(filename.c_str()) != -1)
+        {
+            GFXRECON_LOG_ERROR("Failed to delete file %s (%s)", filename.c_str(), strerror(errno));
+        }
+    }
+#endif
 
     if (pitch != 0)
     {
