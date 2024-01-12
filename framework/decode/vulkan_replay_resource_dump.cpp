@@ -29,8 +29,10 @@
 #include "Vulkan-Utility-Libraries/vk_format_utils.h"
 
 #include <sstream>
+#include <dirent.h>
 
 //#define TIME_DUMPING
+#define DELETE_STALE_DUMP_FILES
 
 #ifdef TIME_DUMPING
 #include <sys/time.h>
@@ -115,10 +117,14 @@ VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>& 
                                                    const VulkanObjectInfoTable&              object_info_table) :
     QueueSubmit_indices_(queueSubmit_indices),
     recording_(false), dump_rts_before_dc_(dump_rts_before_dc), isolate_draw_call_(isolate_draw),
-    object_info_table_(object_info_table), ignore_storeOps_(true)
+    object_info_table_(object_info_table), ignore_storeOps_(true), enabled_(begin_command_buffer_index.size()),
+#if defined(__ANDROID__)
+    dump_resource_path_("/storage/emulated/0/Download/dump_resources/")
+#else
+    dump_resource_path_("./")
+#endif
+
 {
-    // Remove this, the values for this initialization should come from the command line
-#if 1
     // These should match
     assert(begin_command_buffer_index.size() == draw_indices.size());
 
@@ -132,8 +138,40 @@ VulkanReplayResourceDump::VulkanReplayResourceDump(const std::vector<uint64_t>& 
                                dispatch_indices.size() ? dispatch_indices[i] : std::vector<uint64_t>(),
                                traceRays_indices.size() ? traceRays_indices[i] : std::vector<uint64_t>(),
                                object_info_table,
-                               dump_rts_before_dc));
+                               dump_rts_before_dc,
+                               dump_resource_path_));
     }
+
+#if defined(__ANDROID__) && defined(DELETE_STALE_DUMP_FILES)
+    // On Android there is an issue with files which are manually deleted (for example from adb shell) then fopen with
+    // "wb" might fail with the error that the file already exists. Deleting the file from code can workaround this
+    if (enabled_)
+    {
+        DIR* dump_resource_dir = opendir(dump_resource_path_.c_str());
+        if (dump_resource_dir != nullptr)
+        {
+            struct dirent* dir;
+            while ((dir = readdir(dump_resource_dir)) != nullptr)
+            {
+                const int len = strlen(dir->d_name);
+                if (len > 3)
+                {
+                    const char* file_extension = &dir->d_name[len - 3];
+
+                    if (!strcmp(file_extension, "bmp") || !strcmp(file_extension, "bin"))
+                    {
+                        std::string full_path = dump_resource_path_ + std::string(dir->d_name);
+                        GFXRECON_LOG_INFO("Deleting file %s", full_path.c_str());
+                        if (remove(full_path.c_str()))
+                        {
+                            GFXRECON_LOG_ERROR(" Failed to delete file %s (%s)", dir->d_name, strerror(errno));
+                        }
+                    }
+                }
+            }
+        }
+    }
+#endif
 }
 
 VulkanReplayResourceDump::CommandBufferStack*
@@ -209,7 +247,6 @@ void VulkanReplayResourceDump::EndRenderPass(VkCommandBuffer original_command_bu
     assert(stack);
 
     stack->EndRenderPass();
-#endif
 }
 
 VkResult VulkanReplayResourceDump::CloneCommandBuffer(uint64_t                   bcb_index,
@@ -555,35 +592,19 @@ void VulkanReplayResourceDump::CommandBufferStack::DumpAttachments(uint64_t cmd_
         if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
         {
             std::stringstream filename;
-#if defined(__ANDROID__)
             if (dump_rts_before_dc)
             {
-                filename << "/storage/emulated/0/Download/screens/vkCmdDraw_"
-                         << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << "_att_" << i << "_aspect_"
+                filename << dump_resource_path << "vkCmdDraw_" << ((cmd_buf_index % 2) ? "after_" : "before_")
+                         << dc_index << "_att_" << i << "_aspect_"
                          << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
                          << 0 << ".bmp";
             }
             else
             {
-                filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
+                filename << dump_resource_path << "vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
                          << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
                          << 0 << ".bmp";
             }
-#else
-            if (dump_rts_before_dc)
-            {
-                filename << "vkCmdDraw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << "_att_" << i
-                         << "_aspect_" << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_"
-                         << 0 << "_al_" << 0 << ".bmp";
-            }
-            else
-            {
-                filename << "vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
-                         << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
-                         << 0 << ".bmp";
-            }
-#endif
-
             const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
             const uint32_t stride     = texel_size * image_info->extent.width;
 
@@ -634,35 +655,19 @@ void VulkanReplayResourceDump::CommandBufferStack::DumpAttachments(uint64_t cmd_
             subresource_sizes);
 
         std::stringstream filename;
-#if defined(__ANDROID__)
         if (dump_rts_before_dc)
         {
-            filename << "/storage/emulated/0/Download/screens/vkCmdDraw_"
-                     << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << "_aspect_"
-                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
-                     << ".bmp";
-        }
-        else
-        {
-            filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_aspect_"
-                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
-                     << ".bmp";
-        }
-#else
-        if (dump_rts_before_dc)
-        {
-            filename << "vkCmdDraw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << "_aspect_"
-                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
-                     << ".bmp";
+            filename << dump_resource_path << "vkCmdDraw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index
+                     << "_aspect_" << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0
+                     << "_al_" << 0 << ".bmp";
         }
         else
         {
 
-            filename << "vkCmdDraw_" << dc_index << "_aspect_"
+            filename << dump_resource_path << "vkCmdDraw_" << dc_index << "_aspect_"
                      << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
                      << ".bmp";
         }
-#endif
 
         // This is a bit awkward
         const uint32_t texel_size = image_info->format != VK_FORMAT_X8_D24_UNORM_PACK32
@@ -1818,13 +1823,15 @@ VulkanReplayResourceDump::CommandBufferStack::CommandBufferStack(const std::vect
                                                                  const std::vector<uint64_t>& dispatch_indices,
                                                                  const std::vector<uint64_t>& traceRays_indices,
                                                                  const VulkanObjectInfoTable& object_info_table,
-                                                                 bool                         dump_rts_before_dc) :
+                                                                 bool                         dump_rts_before_dc,
+                                                                 std::string                  dump_resource_path) :
     original_command_buffer_handle(VK_NULL_HANDLE),
     original_command_buffer_info(nullptr), current_index(0), dc_indices(dc_indices), RP_indices(rp_indices),
     dispatch_indices(dispatch_indices), traceRays_indices(traceRays_indices), active_renderpass(nullptr),
     active_framebuffer(nullptr), bound_pipelines{ nullptr }, current_renderpass(0), current_subpass(0),
     dump_rts_before_dc(dump_rts_before_dc), aux_command_buffer(VK_NULL_HANDLE), aux_fence(VK_NULL_HANDLE),
-    device_table(nullptr), object_info_table(object_info_table), replay_device_phys_mem_props(nullptr)
+    device_table(nullptr), object_info_table(object_info_table), replay_device_phys_mem_props(nullptr),
+    dump_resource_path(dump_resource_path)
 {
     must_backup_resources = dc_indices.size() > 1;
 

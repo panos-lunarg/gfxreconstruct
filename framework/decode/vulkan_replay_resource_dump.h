@@ -224,7 +224,8 @@ class VulkanReplayResourceDump
                            const std::vector<uint64_t>&              dispatch_indices,
                            const std::vector<uint64_t>&              traceRays_indices,
                            const VulkanObjectInfoTable&              object_info_table,
-                           bool                                      dump_rts_before_dc);
+                           bool                                      dump_rts_before_dc,
+                           std::string                               dump_resource_path);
 
         ~CommandBufferStack();
 
@@ -243,6 +244,7 @@ class VulkanReplayResourceDump
         uint32_t                           current_subpass;
         uint32_t                           n_subpasses;
         bool                               dump_rts_before_dc;
+        std::string                        dump_resource_path;
 
         std::vector<std::vector<VkRenderPass>> render_pass_clones;
         bool                                   inside_renderpass;
@@ -347,10 +349,12 @@ class VulkanReplayResourceDump
     const VulkanReplayResourceDump::CommandBufferStack*
     FindCommandBufferStack(VkCommandBuffer original_command_buffer) const;
 
-    bool recording_;
-    bool dump_rts_before_dc_;
-    bool isolate_draw_call_;
-    bool ignore_storeOps_;
+    bool        recording_;
+    bool        dump_rts_before_dc_;
+    bool        isolate_draw_call_;
+    bool        ignore_storeOps_;
+    bool        enabled_;
+    std::string dump_resource_path_;
 
     const VulkanObjectInfoTable& object_info_table_;
 };
