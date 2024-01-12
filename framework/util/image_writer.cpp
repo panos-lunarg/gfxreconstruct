@@ -22,6 +22,7 @@
 */
 
 #include "image_writer.h"
+#include "logging.h"
 
 #include "platform.h"
 
@@ -145,6 +146,17 @@ static float Ufloat10ToFloat(uint16_t val)
     }
 }
 
+#define CheckFwriteRetVal(_val_, _expected_, _file_)                                   \
+    {                                                                                  \
+        if (_val_ != _expected_)                                                       \
+        {                                                                              \
+            GFXRECON_LOG_ERROR("%s(): fwrite failed (%s)", __func__, strerror(errno)); \
+            util::platform::FileClose(_file_);                                         \
+                                                                                       \
+            return false;                                                              \
+        }                                                                              \
+    }
+
 bool WriteBmpImage(const std::string& filename,
                    uint32_t           width,
                    uint32_t           height,
@@ -155,6 +167,8 @@ bool WriteBmpImage(const std::string& filename,
 {
     bool     success   = false;
     uint32_t row_pitch = width * kImageBpp;
+
+    GFXRECON_LOG_INFO("%s(): Writing file \"%s\"", __func__, filename.c_str())
 
     if (pitch != 0)
     {
@@ -192,8 +206,11 @@ bool WriteBmpImage(const std::string& filename,
             info_header.clr_used         = 0;
             info_header.clr_important    = 0;
 
-            util::platform::FileWrite(&file_header, sizeof(file_header), 1, file);
-            util::platform::FileWrite(&info_header, sizeof(info_header), 1, file);
+            size_t ret = util::platform::FileWrite(&file_header, sizeof(file_header), 1, file);
+            CheckFwriteRetVal(ret, 1, file);
+
+            ret = util::platform::FileWrite(&info_header, sizeof(info_header), 1, file);
+            CheckFwriteRetVal(ret, 1, file);
 
             // Y needs to be inverted when writing the bitmap data.
             auto height_1 = height - 1;
@@ -208,8 +225,11 @@ bool WriteBmpImage(const std::string& filename,
                         const uint16_t normalized_depth = bytes_u16[(height_1 - y) * width + x];
                         const float    float_depth      = static_cast<float>(normalized_depth) / 32767.0f;
                         const uint8_t  depth            = static_cast<uint8_t>(float_depth * 255.0f);
-                        uint32_t       rgba             = (0xff << 24) | (depth << 16) | (depth << 8) | depth;
-                        util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+
+                        uint32_t rgba = (0xff << 24) | (depth << 16) | (depth << 8) | depth;
+
+                        ret = util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                        CheckFwriteRetVal(ret, 1, file);
                     }
                 }
                 else if (format == kFormat_D32_FLOAT)
@@ -219,8 +239,11 @@ bool WriteBmpImage(const std::string& filename,
                     {
                         const float   float_depth = bytes_float[(height_1 - y) * width + x];
                         const uint8_t depth       = static_cast<uint8_t>(float_depth * 255.0f);
-                        uint32_t      rgba        = (0xff << 24) | (depth << 16) | (depth << 8) | depth;
-                        util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+
+                        uint32_t rgba = (0xff << 24) | (depth << 16) | (depth << 8) | depth;
+
+                        ret = util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                        CheckFwriteRetVal(ret, 1, file);
                     }
                 }
                 else if (format == kFormat_D24_UNORM)
@@ -231,8 +254,11 @@ bool WriteBmpImage(const std::string& filename,
                         const uint32_t normalized_depth = bytes_u32[(height_1 - y) * width + x] & 0x00FFFFFF;
                         const float    float_depth      = static_cast<float>(normalized_depth) / 8388607.0f;
                         const uint8_t  depth            = static_cast<uint8_t>(float_depth * 255.0f);
-                        uint32_t       rgba             = (0xff << 24) | (depth << 16) | (depth << 8) | depth;
-                        util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+
+                        uint32_t rgba = (0xff << 24) | (depth << 16) | (depth << 8) | depth;
+
+                        ret = util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                        CheckFwriteRetVal(ret, 1, file);
                     }
                 }
                 else if (format == kFormat_RGBA)
@@ -240,12 +266,15 @@ bool WriteBmpImage(const std::string& filename,
                     const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
                     for (uint32_t x = 0; x < width; ++x)
                     {
-                        const uint8_t  r    = bytes[(height_1 - y) * 4 * width + (4 * x) + 0];
-                        const uint8_t  g    = bytes[(height_1 - y) * 4 * width + (4 * x) + 1];
-                        const uint8_t  b    = bytes[(height_1 - y) * 4 * width + (4 * x) + 2];
-                        const uint8_t  a    = bytes[(height_1 - y) * 4 * width + (4 * x) + 3];
+                        const uint8_t r = bytes[(height_1 - y) * 4 * width + (4 * x) + 0];
+                        const uint8_t g = bytes[(height_1 - y) * 4 * width + (4 * x) + 1];
+                        const uint8_t b = bytes[(height_1 - y) * 4 * width + (4 * x) + 2];
+                        const uint8_t a = bytes[(height_1 - y) * 4 * width + (4 * x) + 3];
+
                         const uint32_t rgba = (a << 24) | (r << 16) | (g << 8) | b;
-                        util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+
+                        ret = util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                        CheckFwriteRetVal(ret, 1, file);
                     }
                 }
                 else if (format == kFormat_RGB)
@@ -253,11 +282,14 @@ bool WriteBmpImage(const std::string& filename,
                     const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
                     for (uint32_t x = 0; x < width; ++x)
                     {
-                        const uint8_t  r    = bytes[(height_1 - y) * 3 * width + (3 * x) + 0];
-                        const uint8_t  g    = bytes[(height_1 - y) * 3 * width + (3 * x) + 1];
-                        const uint8_t  b    = bytes[(height_1 - y) * 3 * width + (3 * x) + 2];
+                        const uint8_t r = bytes[(height_1 - y) * 3 * width + (3 * x) + 0];
+                        const uint8_t g = bytes[(height_1 - y) * 3 * width + (3 * x) + 1];
+                        const uint8_t b = bytes[(height_1 - y) * 3 * width + (3 * x) + 2];
+
                         const uint32_t rgba = (0xff << 24) | (r << 16) | (g << 8) | b;
-                        util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+
+                        ret = util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                        CheckFwriteRetVal(ret, 1, file);
                     }
                 }
                 else if (format == kFormat_A2B10G10R10)
@@ -265,18 +297,20 @@ bool WriteBmpImage(const std::string& filename,
                     const uint32_t* u32_vals = reinterpret_cast<const uint32_t*>(data);
                     for (uint32_t x = 0; x < width; ++x)
                     {
-                        uint8_t r = static_cast<uint8_t>((u32_vals[(height_1 - y) * width + x] & 0x000003FF) >> 0);
-                        uint8_t g = static_cast<uint8_t>((u32_vals[(height_1 - y) * width + x] & 0x000FFC00) >> 10);
-                        uint8_t b = static_cast<uint8_t>((u32_vals[(height_1 - y) * width + x] & 0x3FF00000) >> 20);
                         uint8_t a = static_cast<uint8_t>((u32_vals[(height_1 - y) * width + x] & 0xC0000000) >> 30);
+                        uint8_t b = static_cast<uint8_t>((u32_vals[(height_1 - y) * width + x] & 0x3FF00000) >> 20);
+                        uint8_t g = static_cast<uint8_t>((u32_vals[(height_1 - y) * width + x] & 0x000FFC00) >> 10);
+                        uint8_t r = static_cast<uint8_t>((u32_vals[(height_1 - y) * width + x] & 0x000003FF) >> 0);
 
                         r = static_cast<uint8_t>(static_cast<float>(r) / 1023.0f * 255.0f);
                         g = static_cast<uint8_t>(static_cast<float>(g) / 1023.0f * 255.0f);
                         b = static_cast<uint8_t>(static_cast<float>(b) / 1023.0f * 255.0f);
                         a = static_cast<uint8_t>(static_cast<float>(a) / 3.0f * 255.0f);
 
-                        const uint32_t rgba = (0xff << 24) | (r << 16) | (g << 8) | b;
-                        util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                        const uint32_t rgba = (a << 24) | (r << 16) | (g << 8) | b;
+
+                        ret = util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                        CheckFwriteRetVal(ret, 1, file);
                     }
                 }
                 else if (format == kFormat_B10G11R11_UFLOAT)
@@ -285,23 +319,27 @@ bool WriteBmpImage(const std::string& filename,
                     for (uint32_t x = 0; x < width; ++x)
                     {
                         // clang-format off
-                        float b = Ufloat10ToFloat(static_cast<uint16_t>((u32_vals[(height_1 - y) * width + x] & (0xFFC00000)) >> 22));
-                        float g = Ufloat11ToFloat(static_cast<uint16_t>((u32_vals[(height_1 - y) * width + x] & (0x003FF800)) >> 11));
-                        float r = Ufloat11ToFloat(static_cast<uint16_t>((u32_vals[(height_1 - y) * width + x] & (0x000007FF)) >> 0));
+                        const float b = Ufloat10ToFloat(static_cast<uint16_t>((u32_vals[(height_1 - y) * width + x] & (0xFFC00000)) >> 22));
+                        const float g = Ufloat11ToFloat(static_cast<uint16_t>((u32_vals[(height_1 - y) * width + x] & (0x003FF800)) >> 11));
+                        const float r = Ufloat11ToFloat(static_cast<uint16_t>((u32_vals[(height_1 - y) * width + x] & (0x000007FF)) >> 0));
                         // clang-format on
 
-                        const uint8_t  b_u8 = static_cast<uint8_t>(std::min(b, 1.0f) * 255.0f);
-                        const uint8_t  g_u8 = static_cast<uint8_t>(std::min(g, 1.0f) * 255.0f);
-                        const uint8_t  r_u8 = static_cast<uint8_t>(std::min(r, 1.0f) * 255.0f);
+                        const uint8_t b_u8 = static_cast<uint8_t>(std::min(b, 1.0f) * 255.0f);
+                        const uint8_t g_u8 = static_cast<uint8_t>(std::min(g, 1.0f) * 255.0f);
+                        const uint8_t r_u8 = static_cast<uint8_t>(std::min(r, 1.0f) * 255.0f);
 
                         const uint32_t rgba = (0xff << 24) | (r_u8 << 16) | (g_u8 << 8) | b_u8;
-                        util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+
+                        ret = util::platform::FileWrite(&rgba, sizeof(uint32_t), 1, file);
+                        CheckFwriteRetVal(ret, 1, file);
                     }
                 }
                 else
                 {
                     const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
-                    util::platform::FileWrite(&bytes[(height_1 - y) * row_pitch], 1, width * kImageBpp, file);
+                    ret = util::platform::FileWrite(&bytes[(height_1 - y) * row_pitch], 1, width * kImageBpp, file);
+
+                    CheckFwriteRetVal(ret, width * kImageBpp, file);
                 }
             }
 
@@ -311,6 +349,10 @@ bool WriteBmpImage(const std::string& filename,
             }
 
             util::platform::FileClose(file);
+        }
+        else
+        {
+            GFXRECON_LOG_ERROR("%s() Failed to open file (%s)", __func__, strerror(errno));
         }
     }
 
