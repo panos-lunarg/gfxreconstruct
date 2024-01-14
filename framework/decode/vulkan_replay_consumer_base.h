@@ -42,6 +42,7 @@
 #include "format/platform_types.h"
 #include "generated/generated_vulkan_dispatch_table.h"
 #include "generated/generated_vulkan_consumer.h"
+#include "generated/generated_vulkan_replay_dump_resources.h"
 #include "graphics/fps_info.h"
 #include "util/defines.h"
 #include "util/logging.h"
@@ -977,6 +978,7 @@ class VulkanReplayConsumerBase : public VulkanConsumer
     void ClearCommandBufferInfo(CommandBufferInfo* command_buffer_info);
 
     VkResult OverrideBeginCommandBuffer(PFN_vkBeginCommandBuffer                                func,
+                                        uint64_t                                                index,
                                         VkResult                                                original_result,
                                         CommandBufferInfo*                                      command_buffer_info,
                                         StructPointerDecoder<Decoded_VkCommandBufferBeginInfo>* begin_info_decoder);

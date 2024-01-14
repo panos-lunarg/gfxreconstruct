@@ -93,6 +93,8 @@ target_sources(gfxrecon_decode
                    ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_feature_util.cpp
                    ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_replay_consumer.h
                    ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_replay_consumer.cpp
+                   ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_replay_dump_resources.h
+                   ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_replay_dump_resources.cpp
                    ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_struct_decoders_forward.h
                    ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_struct_decoders.h
                    ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_struct_decoders.cpp
