@@ -201,6 +201,8 @@ target_sources(gfxrecon_decode
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_referenced_resource_consumer.cpp
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_replay_consumer.h
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_replay_consumer.cpp
+                    ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_replay_dump_resources.h
+                    ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_replay_dump_resources.cpp
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_struct_decoders_forward.h
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_struct_decoders.h
                     ${CMAKE_SOURCE_DIR}/framework/generated/generated_vulkan_struct_decoders.cpp
