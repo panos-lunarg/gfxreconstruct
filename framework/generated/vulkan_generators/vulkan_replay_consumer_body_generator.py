@@ -33,6 +33,7 @@ class VulkanReplayConsumerBodyGeneratorOptions(BaseGeneratorOptions):
     def __init__(
         self,
         replay_overrides=None,  # Path to JSON file listing Vulkan API calls to override on replay.
+        dump_resources_overrides=None,  # Path to JSON file listing Vulkan API calls to override on replay.
         blacklists=None,  # Path to JSON file listing apicalls and structs to ignore.
         platform_types=None,  # Path to JSON file listing platform (WIN32, X11, etc.) defined types.
         filename=None,
@@ -54,6 +55,7 @@ class VulkanReplayConsumerBodyGeneratorOptions(BaseGeneratorOptions):
             extraVulkanHeaders=extraVulkanHeaders
         )
         self.replay_overrides = replay_overrides
+        self.dump_resources_overrides = dump_resources_overrides
 
 
 class VulkanReplayConsumerBodyGenerator(
@@ -68,6 +70,7 @@ class VulkanReplayConsumerBodyGenerator(
     # Map of Vulkan function names to override function names.  Calls to Vulkan functions in the map
     # will be replaced by the override value.
     REPLAY_OVERRIDES = {}
+    DUMP_RESOURCES_OVERRIDES = {}
 
     # Map of pool object types associating the pool type with the allocated type and the allocated type with the pool type.
     POOL_OBJECT_ASSOCIATIONS = {
@@ -109,7 +112,7 @@ class VulkanReplayConsumerBodyGenerator(
         BaseGenerator.beginFile(self, gen_opts)
 
         if gen_opts.replay_overrides:
-            self.__load_replay_overrides(gen_opts.replay_overrides)
+            self.__load_replay_overrides(gen_opts.replay_overrides, gen_opts.dump_resources_overrides)
 
         write(
             '#include "generated/generated_vulkan_replay_consumer.h"',
@@ -246,7 +249,7 @@ class VulkanReplayConsumerBodyGenerator(
         """Return VulkanReplayConsumer class member function definition."""
         body = ''
         is_override = name in self.REPLAY_OVERRIDES
-        is_cmd_case = values[0].full_type == 'VkCommandBuffer'
+        is_cmd = name[:5] == 'vkCmd'
 
         is_skip_offscreen = True
 
@@ -276,8 +279,6 @@ class VulkanReplayConsumerBodyGenerator(
         arglist = ', '.join(args)
 
         dispatchfunc = ''
-        dr_dispatchfunc = ''
-        dr_call_expr = ''
         if name not in ['vkCreateInstance', 'vkCreateDevice']:
             object_name = args[0]
             if self.use_instance_table(name, values[0].base_type):
@@ -289,16 +290,12 @@ class VulkanReplayConsumerBodyGenerator(
             else:
                 dispatchfunc = 'GetDeviceTable'
 
-            dr_dispatchfunc = 'GetDeviceTable'
-
             if is_override:
                 dispatchfunc += '({}->handle)->{}'.format(object_name, name[2:])
             else:
                 dispatchfunc += '({})->{}'.format(object_name, name[2:])
-            dr_dispatchfunc += '({})->{}'.format(object_name, name[2:])
 
         call_expr = ''
-
         if is_override:
             if name in ['vkCreateInstance', 'vkCreateDevice']:
                 call_expr = '{}(returnValue, {})'.format(
@@ -306,9 +303,14 @@ class VulkanReplayConsumerBodyGenerator(
                 )
             elif return_type == 'VkResult':
                 # Override functions receive the decoded return value in addition to parameters.
-                call_expr = '{}({}, returnValue, {})'.format(
-                    self.REPLAY_OVERRIDES[name], dispatchfunc, arglist
-                )
+                if name not in ['vkQueueSubmit', 'vkBeginCommandBuffer']:
+                    call_expr = '{}({}, returnValue, {})'.format(
+                        self.REPLAY_OVERRIDES[name], dispatchfunc, arglist
+                    )
+                else:
+                    call_expr = '{}({}, call_info.index, returnValue, {})'.format(
+                        self.REPLAY_OVERRIDES[name], dispatchfunc, arglist
+                    )
             else:
                 call_expr = '{}({}, {})'.format(
                     self.REPLAY_OVERRIDES[name], dispatchfunc, arglist
@@ -316,39 +318,65 @@ class VulkanReplayConsumerBodyGenerator(
         else:
             call_expr = '{}({})'.format(dispatchfunc, arglist)
 
-        dr_call_expr = '{}({})/*@@@ABC*/'.format(dr_dispatchfunc, arglist)
-
         if preexpr:
             body += '\n'.join(
                 ['    ' + val if val else val for val in preexpr]
             )
-            body += '//@@@DFK\n'
-
+            body += '\n'
+            body += '\n'
         if return_type == 'VkResult':
-            # if name == 'vkBeginCommandBuffer':
-            #     body += '#if TESTCODE\n'
-            #     body += '    if (call_info.index != BeginCommandBuffer_Index)\n'
-            #     body += '    {\n'
-            #     body += '#endif\n'
-            # if name == 'vkEndCommandBuffer':
-            #     body += '#if TESTCODE\n'
-            #     body += '    if (g_savingCommandBuffer != commandBuffer)\n'
-            #     body += '    {\n'
-            #     body += '#endif\n'
             body += '    VkResult replay_result = {};\n'.format(call_expr)
-            body += '    CheckResult("{}", returnValue, replay_result, call_info);\n'.format(name)
-            # if name == 'vkBeginCommandBuffer' or name == 'vkEndCommandBuffer':
-            #     body += '#if TESTCODE\n'
-            #     body += '    }\n'
-            #     body += '#endif\n'
+            body += '    CheckResult("{}", returnValue, replay_result, call_info);\n'.format(
+                name
+            )
         else:
-            if values[0].full_type == 'VkCommandBuffer':
-                # body += '#if TESTCODE\n'
-                # body += '    if (g_savingCommandBuffer != commandBuffer)\n'
-                # body += '#endif\n'
-                body += '    {};//@@@HQA\n'.format(call_expr)
+            body += '    {};\n'.format(call_expr)
+
+        # Dump resources code generation
+        if is_cmd:
+            is_dr_override = name in self.DUMP_RESOURCES_OVERRIDES
+
+            dump_resource_arglist = ''
+            if is_override:
+                for val in values:
+                    if val.is_pointer and self.is_struct(val.base_type) and not is_dr_override:
+                        dump_resource_arglist += val.name + '->GetPointer()'
+                    elif val.is_pointer and self.is_struct(val.base_type) and is_dr_override:
+                        dump_resource_arglist += val.name
+                    elif self.is_handle(val.base_type):
+                        dump_resource_arglist += 'in_' + val.name + '->handle'
+                    else:
+                        dump_resource_arglist += val.name
+                    dump_resource_arglist += ', '
+                dump_resource_arglist = dump_resource_arglist[:-2]
             else:
-                body += '    {};//@@@HQA\n'.format(call_expr)
+                if is_dr_override:
+                    for val in values:
+                        if val.is_pointer and not self.is_handle(val.base_type):
+                            if self.is_struct(val.base_type):
+                                dump_resource_arglist += val.name
+                            else:
+                                dump_resource_arglist += 'in_' + val.name
+                        elif self.is_handle(val.base_type) and not val.is_pointer:
+                            dump_resource_arglist += 'in_' + val.name
+                        else:
+                            dump_resource_arglist += val.name
+                        dump_resource_arglist += ', '
+                    dump_resource_arglist = dump_resource_arglist[:-2]
+                else:
+                    if return_type == 'VkResult':
+                        dump_resource_arglist = 'returnValue, ' + arglist
+                    else:
+                        dump_resource_arglist = arglist
+
+            body += '\n'
+            if is_override:
+                body += '    if (dumper.IsRecording(in_commandBuffer->handle))\n'
+            else:
+                body += '    if (dumper.IsRecording(in_commandBuffer))\n'
+            body += '    {\n'
+            body += '        dumper.Process_{}(call_info, {}, {});\n'.format(name, dispatchfunc, dump_resource_arglist)
+            body += '    }\n'
 
         if postexpr:
             body += '\n'
@@ -357,44 +385,9 @@ class VulkanReplayConsumerBodyGenerator(
             )
             body += '\n'
 
-        if values[0].full_type == 'VkCommandBuffer':
-            # body += '\n'
-            # body += '    {\n'
-            # body += '        VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);\n'
-            # body += '\n'
-
-            if name =='vkBeginCommandBuffer':
-                body += '\n'
-                body += '    if (dumper.DumpingBeginCommandBufferIndex(call_info.index))\n'
-                body += '    {\n'
-                body += '        dumper.CloneCommandBuffer(commandBuffer, GetDeviceTable(in_commandBuffer)->AllocateCommandBuffers);\n'
-                body += '    }\n'
-            else:
-                body += '\n'
-                body += '    // Push command in the command buffer clone\n'
-                body += '    if (dumper.IsRecording())\n'
-                body += '    {\n'
-                body += '        {};//@@@HERE\n'.format(dr_call_expr.replace("in_commandBuffer", "dumper.GetCurrentCommandBuffer()"))
-                body += '    }\n'
-        else:
-        # drFuncExcludeList=['vkBeginCommandBuffer','vkResetCommandBuffer']
-        # handle_params = self.get_param_list_handles(values)
-        # if values[0].full_type == 'VkCommandBuffer' and len(handle_params) > 1 and (name not in drFuncExcludeList):
-        #     body += '        //@@@XZP Log all handles associated with command buffers\n'
-        #     if name == 'vkCmdPipelineBarrier':
-        #         body += '        const VkBufferMemoryBarrier* in_pBufferMemoryBarriers = pBufferMemoryBarriers->GetPointer();\n'
-        #         body += '        const VkImageMemoryBarrier* in_pImageMemoryBarriers = pImageMemoryBarriers->GetPointer();\n'
-        #     if name == 'vkCmdBeginRenderPass':
-        #         body += '        const VkRenderPassBeginInfo* in_pRenderPassBegin = pRenderPassBegin->GetPointer();\n'
-        #     get_handles_expr = self.make_get_command_handles_expr(name, handle_params[1:])
-        #     body += '        ' + get_handles_expr + '\n'
-        #     body += '\n'
-        # if values[0].full_type == 'VkCommandBuffer':
-        #     body += '    }\n'
-
-            cleanup_expr = self.make_remove_handle_expression(name, values)
-            if cleanup_expr:
-                body += '    {}\n'.format(cleanup_expr)
+        cleanup_expr = self.make_remove_handle_expression(name, values)
+        if cleanup_expr:
+            body += '    {}\n'.format(cleanup_expr)
 
         return body
 
@@ -1001,6 +994,9 @@ class VulkanReplayConsumerBodyGenerator(
 
         return expr
 
-    def __load_replay_overrides(self, filename):
+    def __load_replay_overrides(self, filename, dump_resources_overrides_filename):
         overrides = json.loads(open(filename, 'r').read())
         self.REPLAY_OVERRIDES = overrides['functions']
+
+        dump_resources_overrides = json.loads(open(dump_resources_overrides_filename, 'r').read())
+        self.DUMP_RESOURCES_OVERRIDES = dump_resources_overrides['functions']

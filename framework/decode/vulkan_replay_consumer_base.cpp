@@ -160,15 +160,7 @@ static uint32_t GetHardwareBufferFormatBpp(uint32_t format)
 
 VulkanReplayConsumerBase::VulkanReplayConsumerBase(std::shared_ptr<application::Application> application,
                                                    const VulkanReplayOptions&                options) :
-    dumper(options.BeginCommandBuffer_Index,
-           options.CmdDraw_Index,
-           options.RenderPass_Indices,
-           options.CmdDispatch_Index,
-           options.CmdTraceRaysKHR_Index,
-           options.QueueSubmit_indices,
-           options.dump_rts_before_dc,
-           options.isolate_draw,
-           object_info_table_),
+    dumper(options, object_info_table_),
     loader_handle_(nullptr), get_instance_proc_addr_(nullptr), create_instance_proc_(nullptr),
     application_(application), options_(options), loading_trim_state_(false), replaying_trimmed_capture_(false),
     have_imported_semaphores_(false), fps_info_(nullptr)
@@ -7222,6 +7214,7 @@ void VulkanReplayConsumerBase::ClearCommandBufferInfo(CommandBufferInfo* command
 
 VkResult VulkanReplayConsumerBase::OverrideBeginCommandBuffer(
     PFN_vkBeginCommandBuffer                                func,
+    uint64_t                                                index,
     VkResult                                                original_result,
     CommandBufferInfo*                                      command_buffer_info,
     StructPointerDecoder<Decoded_VkCommandBufferBeginInfo>* begin_info_decoder)
@@ -7230,7 +7223,22 @@ VkResult VulkanReplayConsumerBase::OverrideBeginCommandBuffer(
 
     VkCommandBuffer                 command_buffer = command_buffer_info->handle;
     const VkCommandBufferBeginInfo* begin_info     = begin_info_decoder->GetPointer();
-    return func(command_buffer, begin_info);
+
+    VkResult res = VK_SUCCESS;
+    if (dumper.DumpingBeginCommandBufferIndex(index))
+    {
+        GFXRECON_WRITE_CONSOLE("Reached BeginCommandBuffer %" PRIu64, index);
+
+        const DeviceInfo* device = GetObjectInfoTable().GetDeviceInfo(command_buffer_info->parent_id);
+        res = dumper.CloneCommandBuffer(index, command_buffer_info->capture_id, GetDeviceTable(device->handle));
+    }
+
+    if (res == VK_SUCCESS)
+    {
+        res = func(command_buffer, begin_info);
+    }
+
+    return res;
 }
 
 VkResult VulkanReplayConsumerBase::OverrideResetCommandBuffer(PFN_vkResetCommandBuffer  func,
@@ -7288,22 +7296,6 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass(
 
     VkCommandBuffer command_buffer = command_buffer_info->handle;
 
-    // Update render targets
-    if (dumper.IsRecording(command_buffer))
-    {
-        const RenderPassInfo* render_pass_info =
-            object_info_table_.GetRenderPassInfo(render_pass_info_meta->renderPass);
-        assert(render_pass_info);
-
-        dumper.BeginRenderPass(command_buffer,
-                               render_pass_info,
-                               render_pass_begin_info_decoder->GetPointer()->clearValueCount,
-                               render_pass_begin_info_decoder->GetPointer()->pClearValues,
-                               framebuffer_info,
-                               render_pass_begin_info_decoder->GetPointer()->renderArea,
-                               contents);
-    }
-
     func(command_buffer, render_pass_begin_info_decoder->GetPointer(), contents);
 }
 
@@ -7335,22 +7327,6 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass2(
     }
 
     VkCommandBuffer command_buffer = command_buffer_info->handle;
-
-    // Update render targets
-    if (dumper.IsRecording(command_buffer))
-    {
-        const RenderPassInfo* render_pass_info =
-            object_info_table_.GetRenderPassInfo(render_pass_info_meta->renderPass);
-        assert(render_pass_begin_info_decoder->GetPointer());
-
-        dumper.BeginRenderPass(command_buffer,
-                               render_pass_info,
-                               render_pass_begin_info_decoder->GetPointer()->clearValueCount,
-                               render_pass_begin_info_decoder->GetPointer()->pClearValues,
-                               framebuffer_info,
-                               render_pass_begin_info_decoder->GetPointer()->renderArea,
-                               subpass_begin_info_decode->GetPointer()->contents);
-    }
 
     func(command_buffer, render_pass_begin_info_decoder->GetPointer(), subpass_begin_info_decode->GetPointer());
 }
