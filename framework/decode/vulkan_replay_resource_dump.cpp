@@ -29,7 +29,9 @@
 #include "Vulkan-Utility-Libraries/vk_format_utils.h"
 
 #include <sstream>
+#if !defined(WIN32)
 #include <dirent.h>
+#endif
 
 //#define TIME_DUMPING
 #define DELETE_STALE_DUMP_FILES
