@@ -307,18 +307,6 @@ endif()
 
 add_subdirectory(external/nlohmann)
 
-<<<<<<< HEAD
-option(SPIRV_REFLECT_STATIC_LIB "Build static library for SPIRV-Reflect" ON)
-add_subdirectory(external/SPIRV-Reflect)
-
-=======
-<<<<<<< HEAD
-=======
-option(SPIRV_REFLECT_STATIC_LIB "Build static library for SPIRV-Reflect" ON)
-add_subdirectory(external/SPIRV-Reflect)
-
->>>>>>> Perform shader reflection using SPIRV-Reflect
->>>>>>> Perform shader reflection using SPIRV-Reflect
 add_subdirectory(framework)
 if(NOT BUILD_STATIC)
     add_subdirectory(layer)
