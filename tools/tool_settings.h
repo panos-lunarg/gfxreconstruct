@@ -931,9 +931,9 @@ GetVulkanReplayOptions(const gfxrecon::util::ArgumentParser&           arg_parse
     {
         replay_options.surface_index = std::stoi(surface_index);
     }
-    
+
     replay_options.dump_resources = arg_parser.GetArgumentValue(kDumpResourcesArgument);
-    replay_options.dump_rts_before_dc = arg_parser.IsOptionSet(kDumpResourcesBeforeDrawOption);
+    replay_options.dump_resources_before = arg_parser.IsOptionSet(kDumpResourcesBeforeDrawOption);
 
     return replay_options;
 }
