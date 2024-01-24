@@ -357,6 +357,8 @@ class VulkanReplayConsumerBodyGenerator(
                                 dump_resource_arglist += val.name
                             else:
                                 dump_resource_arglist += 'in_' + val.name
+                        elif val.base_type == 'VkPipeline':
+                            dump_resource_arglist += 'GetObjectInfoTable().GetPipelineInfo(pipeline)'
                         elif self.is_handle(val.base_type) and not val.is_pointer:
                             dump_resource_arglist += 'in_' + val.name
                         else:

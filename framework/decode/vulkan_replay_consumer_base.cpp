@@ -5059,6 +5059,10 @@ PerformReflectionOnShaderModule(ShaderModuleInfo* shader_info, size_t spirv_size
 
         shader_info->used_descriptors_info[binding->set].emplace(binding->binding,
                                                                  ShaderModuleInfo::DescriptorInfo(type, readonly));
+
+        GFXRECON_WRITE_CONSOLE("set: %u binding: %u", binding->set, binding->binding)
+        GFXRECON_WRITE_CONSOLE("  type: %s", util::ToString<VkDescriptorType>(type).c_str());
+        GFXRECON_WRITE_CONSOLE("  readonly: %d", readonly);
     }
 
     return true;
@@ -7070,7 +7074,7 @@ VkResult VulkanReplayConsumerBase::OverrideBeginCommandBuffer(
         GFXRECON_WRITE_CONSOLE("Reached BeginCommandBuffer %" PRIu64, index);
 
         const DeviceInfo* device = GetObjectInfoTable().GetDeviceInfo(command_buffer_info->parent_id);
-        res = dumper.CloneCommandBuffer(index, command_buffer_info->capture_id, GetDeviceTable(device->handle));
+        res = dumper.CloneCommandBuffer(index, command_buffer_info, GetDeviceTable(device->handle));
     }
 
     if (res == VK_SUCCESS)
@@ -7837,11 +7841,16 @@ void VulkanReplayConsumerBase::Process_vkCreateRayTracingPipelinesKHR(
     }
 }
 
-void VulkanReplayConsumerBase::UpdateDescriptorSets(
-    uint32_t descriptor_write_count, StructPointerDecoder<Decoded_VkWriteDescriptorSet>* descriptor_writes_p)
+void VulkanReplayConsumerBase::OverrideUpdateDescriptorSets(
+    PFN_vkUpdateDescriptorSets                          func,
+    const DeviceInfo*                                   device_info,
+    uint32_t                                            descriptor_write_count,
+    StructPointerDecoder<Decoded_VkWriteDescriptorSet>* p_descriptor_writes,
+    uint32_t                                            descriptor_copy_count,
+    StructPointerDecoder<Decoded_VkCopyDescriptorSet>*  p_pescriptor_copies)
 {
-    const VkWriteDescriptorSet* in_pDescriptorWrites = descriptor_writes_p->GetPointer();
-    const auto*                 writes_meta          = descriptor_writes_p->GetMetaStructPointer();
+    const VkWriteDescriptorSet* in_pDescriptorWrites = p_descriptor_writes->GetPointer();
+    const auto*                 writes_meta          = p_descriptor_writes->GetMetaStructPointer();
     for (uint32_t s = 0; s < descriptor_write_count; ++s)
     {
         DescriptorSetInfo* dst_set_info = GetObjectInfoTable().GetDescriptorSetInfo(writes_meta[s].dstSet);
@@ -7878,6 +7887,101 @@ void VulkanReplayConsumerBase::UpdateDescriptorSets(
             }
         }
     }
+
+    const VkCopyDescriptorSet* in_pDescriptorCopies = p_pescriptor_copies->GetPointer();
+
+    func(
+        device_info->handle, descriptor_write_count, in_pDescriptorWrites, descriptor_copy_count, in_pDescriptorCopies);
+}
+
+VkResult VulkanReplayConsumerBase::OverrideCreateGraphicsPipelines(
+    PFN_vkCreateGraphicsPipelines                                     func,
+    VkResult                                                          original_result,
+    const DeviceInfo*                                                 device_info,
+    const PipelineCacheInfo*                                          pipeline_cache_info,
+    uint32_t                                                          create_info_count,
+    const StructPointerDecoder<Decoded_VkGraphicsPipelineCreateInfo>* pCreateInfos,
+    const StructPointerDecoder<Decoded_VkAllocationCallbacks>*        pAllocator,
+    HandlePointerDecoder<VkPipeline>*                                 pPipelines)
+{
+    GFXRECON_UNREFERENCED_PARAMETER(original_result);
+
+    assert((device_info != nullptr) && (pCreateInfos != nullptr) && (pAllocator != nullptr) &&
+           (pPipelines != nullptr) && !pPipelines->IsNull() && (pPipelines->GetHandlePointer() != nullptr));
+
+    VkDevice                            in_device                 = device_info->handle;
+    VkPipelineCache                     in_pipeline_cache         = pipeline_cache_info->handle;
+    const VkGraphicsPipelineCreateInfo* in_p_create_infos         = pCreateInfos->GetPointer();
+    const VkAllocationCallbacks*        in_p_allocation_callbacks = GetAllocationCallbacks(pAllocator);
+    VkPipeline*                         out_pipelines             = pPipelines->GetHandlePointer();
+
+    VkResult replay_result = func(
+        in_device, in_pipeline_cache, create_info_count, in_p_create_infos, in_p_allocation_callbacks, out_pipelines);
+
+    if (replay_result == VK_SUCCESS)
+    {
+        const Decoded_VkGraphicsPipelineCreateInfo* create_info_meta = pCreateInfos->GetMetaStructPointer();
+
+        for (uint32_t i = 0; i < create_info_count; ++i)
+        {
+            PipelineInfo* pipeline_info = reinterpret_cast<PipelineInfo*>(pPipelines->GetConsumerData(i));
+
+            const Decoded_VkPipelineShaderStageCreateInfo* stages_info_meta =
+                create_info_meta[i].pStages->GetMetaStructPointer();
+            const size_t stages_count = create_info_meta->pStages->GetLength();
+
+            for (size_t s = 0; s < stages_count; ++s)
+            {
+                ShaderModuleInfo* module_info = object_info_table_.GetShaderModuleInfo(stages_info_meta[s].module);
+                assert(module_info);
+
+                pipeline_info->shaders.push_back(*module_info);
+            }
+        }
+    }
+
+    return replay_result;
+}
+
+VkResult VulkanReplayConsumerBase::OverrideCreateComputePipelines(
+    PFN_vkCreateComputePipelines                                     func,
+    VkResult                                                         original_result,
+    const DeviceInfo*                                                device_info,
+    const PipelineCacheInfo*                                         pipeline_cache_info,
+    uint32_t                                                         create_info_count,
+    const StructPointerDecoder<Decoded_VkComputePipelineCreateInfo>* pCreateInfos,
+    const StructPointerDecoder<Decoded_VkAllocationCallbacks>*       pAllocator,
+    HandlePointerDecoder<VkPipeline>*                                pPipelines)
+{
+    GFXRECON_UNREFERENCED_PARAMETER(original_result);
+
+    assert((device_info != nullptr) && (pCreateInfos != nullptr) && (pAllocator != nullptr) &&
+           (pPipelines != nullptr) && !pPipelines->IsNull() && (pPipelines->GetHandlePointer() != nullptr));
+
+    VkDevice                           in_device                 = device_info->handle;
+    VkPipelineCache                    in_pipeline_cache         = pipeline_cache_info->handle;
+    const VkComputePipelineCreateInfo* in_p_create_infos         = pCreateInfos->GetPointer();
+    const VkAllocationCallbacks*       in_p_allocation_callbacks = GetAllocationCallbacks(pAllocator);
+    VkPipeline*                        out_pipelines             = pPipelines->GetHandlePointer();
+
+    VkResult replay_result = func(
+        in_device, in_pipeline_cache, create_info_count, in_p_create_infos, in_p_allocation_callbacks, out_pipelines);
+
+    if (replay_result == VK_SUCCESS)
+    {
+        const Decoded_VkComputePipelineCreateInfo* create_info_meta = pCreateInfos->GetMetaStructPointer();
+
+        for (uint32_t i = 0; i < create_info_count; ++i)
+        {
+            ShaderModuleInfo* module_info = object_info_table_.GetShaderModuleInfo(create_info_meta[i].stage->module);
+            assert(module_info);
+
+            PipelineInfo* pipeline_info = reinterpret_cast<PipelineInfo*>(pPipelines->GetConsumerData(i));
+            pipeline_info->shaders.push_back(*module_info);
+        }
+    }
+
+    return replay_result;
 }
 
 GFXRECON_END_NAMESPACE(decode)
