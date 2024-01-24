@@ -57,7 +57,7 @@ void Process_vkCmdBindPipeline(
     PFN_vkCmdBindPipeline                       func,
     VkCommandBuffer                             commandBuffer,
     VkPipelineBindPoint                         pipelineBindPoint,
-    VkPipeline                                  pipeline);
+    const PipelineInfo*                         pipeline);
 
 void Process_vkCmdSetViewport(
     const ApiCallInfo&                          call_info,
