@@ -284,7 +284,10 @@ void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions &vulkan_repl
                 vulkan_replay_options.BeginCommandBuffer_Indices.push_back(BeginCommandBuffer);
 
                 vulkan_replay_options.Draw_Indices.push_back(std::vector<uint64_t>());
-                Draw ? vulkan_replay_options.Draw_Indices[i].push_back(Draw) : 0;
+                if (Draw)
+                {
+                    vulkan_replay_options.Draw_Indices[i].push_back(Draw);
+                }
 
                 vulkan_replay_options.RenderPass_Indices.push_back(std::vector<std::vector<uint64_t>>());
                 vulkan_replay_options.RenderPass_Indices[i].push_back(std::vector<uint64_t>());
@@ -299,10 +302,16 @@ void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions &vulkan_repl
                 }
 
                 vulkan_replay_options.Dispatch_Indices.push_back(std::vector<uint64_t>());
-                Dispatch ? vulkan_replay_options.Dispatch_Indices[i].push_back(Dispatch) : 0;
+                if (Dispatch)
+                {
+                    vulkan_replay_options.Dispatch_Indices[i].push_back(Dispatch);
+                }
 
                 vulkan_replay_options.TraceRays_Indices.push_back(std::vector<uint64_t>());
-                TraceRays ? vulkan_replay_options.TraceRays_Indices[i].push_back(TraceRays) : 0;
+                if (TraceRays)
+                {
+                    vulkan_replay_options.TraceRays_Indices[i].push_back(TraceRays);
+                }
 
                 vulkan_replay_options.QueueSubmit_Indices.push_back(QueueSubmit);
             }
