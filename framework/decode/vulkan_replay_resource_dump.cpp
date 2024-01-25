@@ -3141,16 +3141,9 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CopyImageRe
 {
     assert(src_image_info != nullptr);
     assert(dst_image != VK_NULL_HANDLE);
-    assert(device_table != nullptr);
-
-    // Make sure any potential writes are complete and transition image to TRANSFER_SRC_OPTIMAL layout
-    VkImageMemoryBarrier img_barrier;
-    img_barrier.sType         = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    img_barrier.pNext         = nullptr;
-    img_barrier.srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT;
-    img_barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
     VkImageLayout old_layout;
+    assert(original_command_buffer_info != nullptr);
     const auto img_layout_entry = original_command_buffer_info->image_layout_barriers.find(src_image_info->capture_id);
     if (img_layout_entry != original_command_buffer_info->image_layout_barriers.end())
     {
@@ -3161,6 +3154,12 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CopyImageRe
         old_layout = VK_IMAGE_LAYOUT_GENERAL;
     }
 
+    // Make sure any potential writes are complete and transition image to TRANSFER_SRC_OPTIMAL layout
+    VkImageMemoryBarrier img_barrier;
+    img_barrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    img_barrier.pNext               = nullptr;
+    img_barrier.srcAccessMask       = VK_ACCESS_MEMORY_WRITE_BIT;
+    img_barrier.dstAccessMask       = VK_ACCESS_TRANSFER_READ_BIT;
     img_barrier.oldLayout           = old_layout;
     img_barrier.newLayout           = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
     img_barrier.srcQueueFamilyIndex = src_image_info->queue_family_index;
@@ -3171,7 +3170,8 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CopyImageRe
         graphics::GetFormatAspectMask(src_image_info->format), 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS
     };
 
-    device_table->CmdPipelineBarrier(original_command_buffer_info->handle,
+    assert(device_table != nullptr);
+    device_table->CmdPipelineBarrier(DR_command_buffer,
                                      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
                                      VK_PIPELINE_STAGE_TRANSFER_BIT,
                                      VkDependencyFlags(0),
@@ -3189,7 +3189,7 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CopyImageRe
     img_barrier.newLayout     = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     img_barrier.image         = dst_image;
 
-    device_table->CmdPipelineBarrier(original_command_buffer_info->handle,
+    device_table->CmdPipelineBarrier(DR_command_buffer,
                                      VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
                                      VK_PIPELINE_STAGE_TRANSFER_BIT,
                                      VkDependencyFlags(0),
@@ -3200,17 +3200,27 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CopyImageRe
                                      1,
                                      &img_barrier);
 
+    assert(src_image_info->level_count);
+    assert(src_image_info->layer_count);
+
     std::vector<VkImageCopy> copies(src_image_info->level_count, VkImageCopy());
     VkImageCopy              copy;
     copy.srcSubresource.aspectMask     = graphics::GetFormatAspectMask(src_image_info->format);
     copy.srcSubresource.baseArrayLayer = 0;
-    copy.srcSubresource.baseArrayLayer = VK_REMAINING_ARRAY_LAYERS;
+    copy.srcSubresource.layerCount     = src_image_info->layer_count;
+    copy.srcOffset.x                   = 0;
+    copy.srcOffset.y                   = 0;
+    copy.srcOffset.z                   = 0;
 
     copy.dstSubresource.aspectMask     = graphics::GetFormatAspectMask(src_image_info->format);
     copy.dstSubresource.baseArrayLayer = 0;
-    copy.dstSubresource.baseArrayLayer = VK_REMAINING_ARRAY_LAYERS;
+    copy.dstSubresource.layerCount     = src_image_info->layer_count;
+    copy.dstOffset.x                   = 0;
+    copy.dstOffset.y                   = 0;
+    copy.dstOffset.z                   = 0;
 
     copy.extent = src_image_info->extent;
+
     for (uint32_t i = 0; i < src_image_info->level_count; ++i)
     {
         copy.srcSubresource.mipLevel = i;
@@ -3219,24 +3229,24 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CopyImageRe
         copies[i] = copy;
     }
 
-    device_table->CmdCopyImage(original_command_buffer_info->handle,
+    device_table->CmdCopyImage(DR_command_buffer,
                                src_image_info->handle,
                                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                                dst_image,
-                               VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                copies.size(),
                                copies.data());
 
     // Wait for transfer and transition source image back to previous layout
     img_barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
     img_barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
-    img_barrier.oldLayout     = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    img_barrier.oldLayout     = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
     img_barrier.newLayout     = old_layout;
     img_barrier.image         = src_image_info->handle;
 
-    device_table->CmdPipelineBarrier(original_command_buffer_info->handle,
-                                     VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+    device_table->CmdPipelineBarrier(DR_command_buffer,
                                      VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                     VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
                                      VkDependencyFlags(0),
                                      0,
                                      nullptr,
@@ -3424,7 +3434,20 @@ VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpDispatchRays
     double t0 = tim.tv_sec + (tim.tv_usec / 1000.0);
 #endif
 
-    VkResult res = device_table->QueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+    assert(device_info);
+
+    const VkFenceCreateInfo ci = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO, nullptr, 0 };
+
+    VkFence  submission_fence;
+    VkResult res = device_table->CreateFence(device_info->handle, &ci, nullptr, &submission_fence);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("CreateFence failed with %s", util::ToString<VkResult>(res).c_str());
+        return res;
+    }
+
+    res = device_table->QueueSubmit(queue, 1, &submit_info, submission_fence);
     assert(res == VK_SUCCESS);
     if (res != VK_SUCCESS)
     {
@@ -3433,13 +3456,15 @@ VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpDispatchRays
     }
 
     // Wait
-    res = device_table->QueueWaitIdle(queue);
+    res = device_table->WaitForFences(device_info->handle, 1, &submission_fence, VK_TRUE, ~0UL);
     assert(res == VK_SUCCESS);
     if (res != VK_SUCCESS)
     {
-        GFXRECON_LOG_ERROR("QueueWaitIdle failed with %s", util::ToString<VkResult>(res).c_str());
+        GFXRECON_LOG_ERROR("WaitForFences failed with %s", util::ToString<VkResult>(res).c_str());
         return res;
     }
+
+    device_table->DestroyFence(device_info->handle, submission_fence, nullptr);
 
 #ifdef TIME_DUMPING
     gettimeofday(&tim, NULL);
