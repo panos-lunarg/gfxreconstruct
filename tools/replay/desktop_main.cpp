@@ -346,7 +346,7 @@ void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions &vulkan_repl
         GFXRECON_LOG_ERROR("ERROR - incomplete --dump-resources parameters");
     }
 
-     vulkan_replay_options.dump_resource_enabled = !parse_error;
+     vulkan_replay_options.dumping_resource = !parse_error;
      if (parse_error)
      {
         vulkan_replay_options.BeginCommandBuffer_Indices.clear();

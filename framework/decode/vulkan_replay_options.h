@@ -472,18 +472,19 @@ struct VulkanReplayOptions : public ReplayOptions
     uint32_t                     screenshot_width, screenshot_height;
     float                        screenshot_scale;
     std::string                  replace_dir;
-    std::string                  dump_resources;
 
+    // Dumping resources related configurable replay options
     std::vector<uint64_t>                           BeginCommandBuffer_Indices{ g_BeginCommandBuffer_indices };
     std::vector<std::vector<uint64_t>>              Draw_Indices{ g_CmdDraw_indices };
     std::vector<std::vector<std::vector<uint64_t>>> RenderPass_Indices{ g_RenderPass_indices };
     std::vector<std::vector<uint64_t>>              Dispatch_Indices{ g_CmdDispatch_indices };
     std::vector<std::vector<uint64_t>>              TraceRays_Indices{ g_CmdTraceRaysKHR_indices };
     std::vector<uint64_t>                           QueueSubmit_Indices{ g_QueueSubmit_indices };
+    std::string                                     dump_resources;
 
+    bool dumping_resource{ true };
     bool dump_resources_before{ false };
     bool isolate_draw{ false }; // How should this be set?
-    bool dump_resource_enabled{ true };
 };
 
 GFXRECON_END_NAMESPACE(decode)
