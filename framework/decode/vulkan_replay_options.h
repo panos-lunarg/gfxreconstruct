@@ -437,12 +437,20 @@ const uint32_t kdr_QueueSubmintIndex       = 2;
 // };
 
 // computeraytracing
-static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 185 };
+// static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 185 };
+// static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices;
+// static const std::vector<std::vector<uint64_t>> g_RenderPass_indices;
+// static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices = { { 189 } };
+// static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_indices;
+// static const std::vector<uint64_t>              g_QueueSubmit_indices = { 3060 };
+
+// computeraytracing S22
+static const std::vector<uint64_t>              g_BeginCommandBuffer_indices = { 382 };
 static const std::vector<std::vector<uint64_t>> g_CmdDraw_indices;
 static const std::vector<std::vector<uint64_t>> g_RenderPass_indices;
-static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices = { { 189 } };
+static const std::vector<std::vector<uint64_t>> g_CmdDispatch_indices = { { 386 } };
 static const std::vector<std::vector<uint64_t>> g_CmdTraceRaysKHR_indices;
-static const std::vector<uint64_t>              g_QueueSubmit_indices = { 3060 };
+static const std::vector<uint64_t>              g_QueueSubmit_indices = { 18621 };
 
 struct VulkanReplayOptions : public ReplayOptions
 {
