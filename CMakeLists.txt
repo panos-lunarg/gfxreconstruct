@@ -320,7 +320,6 @@ if (${RUN_TESTS})
 endif()
 
 add_subdirectory(external/nlohmann)
-
 add_subdirectory(framework)
 if(NOT BUILD_STATIC)
     add_subdirectory(layer)
