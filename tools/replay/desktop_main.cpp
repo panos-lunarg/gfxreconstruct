@@ -108,19 +108,23 @@ static bool ends_with(std::string const &fullString, std::string const &ending)
 
 const char kLayerEnvVar[] = "VK_INSTANCE_LAYERS";
 
-void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions &vulkan_replay_options)
+static void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions &vulkan_replay_options)
 {
      bool parse_error=false;
 
-   // Take out this section once I make sure that we we don't stuff args event when null.
-#if 0
     if (vulkan_replay_options.dump_resources.length() == 0)
     {
-       // arg is null string. Error.
-       parse_error = true;
+        // Arg is null string.
+        // Clear dump resources indices and return.
+        vulkan_replay_options.BeginCommandBuffer_Indices.clear();
+        vulkan_replay_options.Draw_Indices.clear();
+        vulkan_replay_options.RenderPass_Indices.clear();
+        vulkan_replay_options.Dispatch_Indices.clear();
+        vulkan_replay_options.TraceRays_Indices.clear();
+        vulkan_replay_options.QueueSubmit_Indices.clear();
+        return;
     }
-    else
-#endif
+
     if (ends_with(to_lower(vulkan_replay_options.dump_resources), ".json"))
     {
         // dump-resource arg value is a json file. Read and parse the json file.
@@ -335,11 +339,12 @@ void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions &vulkan_repl
     parse_error |= (vulkan_replay_options.Draw_Indices.size() == 0 &&
           vulkan_replay_options.Dispatch_Indices.size() == 0 &&
           vulkan_replay_options.TraceRays_Indices.size() == 0);
-    if (vulkan_replay_options.Draw_Indices.size() > 0)
+    if (vulkan_replay_options.Draw_Indices.size() != 0)
         parse_error |= (vulkan_replay_options.RenderPass_Indices.size() == 0);
     else 
-        if (vulkan_replay_options.Dispatch_Indices.size() == 0)
-            parse_error |= (vulkan_replay_options.TraceRays_Indices.size() == 0);
+        parse_error |= (vulkan_replay_options.Dispatch_Indices.size() == 0 &&
+                        +vulkan_replay_options.TraceRays_Indices.size() == 0);
+
 
     if (parse_error)
     {
