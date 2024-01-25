@@ -41,11 +41,6 @@ typedef std::function<VulkanResourceAllocator*()> CreateResourceAllocator;
 // Default log level to use prior to loading settings.
 const util::Log::Severity kDefaultLogLevel = util::Log::Severity::kInfoSeverity;
 
-// Indices to --dump-resources args stored in dump_resources_params array below -- NEEDED??
-const uint32_t kdr_BeginCommandBufferIndex = 0;
-const uint32_t kdr_DrawIndex               = 1;
-const uint32_t kdr_QueueSubmintIndex       = 2;
-
 // Sascha's Compute ray tracing
 // static constexpr uint64_t g_BeginCommandBuffer_indices = 185;
 // static constexpr uint64_t g_CmdDraw_indices            = 0;
@@ -606,12 +601,12 @@ struct VulkanReplayOptions : public ReplayOptions
     std::string                  replace_dir;
 
     // Dumping resources related configurable replay options
-    std::vector<uint64_t>                           BeginCommandBuffer_Indices{ g_BeginCommandBuffer_indices };
-    std::vector<std::vector<uint64_t>>              Draw_Indices{ g_CmdDraw_indices };
-    std::vector<std::vector<std::vector<uint64_t>>> RenderPass_Indices{ g_RenderPass_indices };
-    std::vector<std::vector<uint64_t>>              Dispatch_Indices{ g_CmdDispatch_indices };
-    std::vector<std::vector<uint64_t>>              TraceRays_Indices{ g_CmdTraceRaysKHR_indices };
-    std::vector<uint64_t>                           QueueSubmit_Indices{ g_QueueSubmit_indices };
+    std::vector<uint64_t>                           BeginCommandBuffer_Indices;
+    std::vector<std::vector<uint64_t>>              Draw_Indices;
+    std::vector<std::vector<std::vector<uint64_t>>> RenderPass_Indices;
+    std::vector<std::vector<uint64_t>>              Dispatch_Indices;
+    std::vector<std::vector<uint64_t>>              TraceRays_Indices;
+    std::vector<uint64_t>                           QueueSubmit_Indices;
     std::string                                     dump_resources;
 
     bool dumping_resource{ true };
