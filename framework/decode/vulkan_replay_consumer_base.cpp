@@ -4498,7 +4498,7 @@ VulkanReplayConsumerBase::OverrideCreateImage(PFN_vkCreateImage                 
     auto                                  replay_image = pImage->GetHandlePointer();
     auto                                  capture_id   = (*pImage->GetPointer());
 
-    if (replaying_trimmed_capture_ || options_.dump_resource_enabled)
+    if (replaying_trimmed_capture_ || options_.dumping_resource)
     {
         // The GFXR trimmed capture process sets VK_IMAGE_USAGE_TRANSFER_SRC_BIT flag for image VkImageCreateInfo.
         // Since image memory requirements can differ when VK_IMAGE_USAGE_TRANSFER_SRC_BIT is set, we sometimes hit
@@ -5306,7 +5306,7 @@ VkResult VulkanReplayConsumerBase::OverrideCreateSwapchainKHR(
         VkSwapchainCreateInfoKHR modified_create_info = (*replay_create_info);
 
         // Screenshots are active, so ensure that swapchain images can be used as a transfer source.
-        if (screenshot_handler_ == nullptr && !options_.dump_resource_enabled)
+        if (screenshot_handler_ == nullptr && !options_.dumping_resource)
         {
             result = swapchain_->CreateSwapchainKHR(original_result,
                                                     func,
@@ -7070,7 +7070,7 @@ VkResult VulkanReplayConsumerBase::OverrideBeginCommandBuffer(
     const VkCommandBufferBeginInfo* begin_info     = begin_info_decoder->GetPointer();
 
     VkResult res = VK_SUCCESS;
-    if (dumper.DumpingBeginCommandBufferIndex(index))
+    if (options_.dumping_resource && dumper.DumpingBeginCommandBufferIndex(index))
     {
         GFXRECON_WRITE_CONSOLE("Reached BeginCommandBuffer %" PRIu64, index);
 
