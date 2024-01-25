@@ -6029,6 +6029,11 @@ void VulkanReplayConsumer::Process_vkCmdBindDescriptorSets2KHR(
     MapStructHandles(pBindDescriptorSetsInfo->GetMetaStructPointer(), GetObjectInfoTable());
 
     GetDeviceTable(in_commandBuffer)->CmdBindDescriptorSets2KHR(in_commandBuffer, in_pBindDescriptorSetsInfo);
+
+    if (dumper.IsRecording(in_commandBuffer))
+    {
+        dumper.Process_vkCmdBindDescriptorSets2KHR(call_info, GetDeviceTable(in_commandBuffer)->CmdBindDescriptorSets2KHR, in_commandBuffer, in_pBindDescriptorSetsInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdPushConstants2KHR(
@@ -6041,6 +6046,11 @@ void VulkanReplayConsumer::Process_vkCmdPushConstants2KHR(
     MapStructHandles(pPushConstantsInfo->GetMetaStructPointer(), GetObjectInfoTable());
 
     GetDeviceTable(in_commandBuffer)->CmdPushConstants2KHR(in_commandBuffer, in_pPushConstantsInfo);
+
+    if (dumper.IsRecording(in_commandBuffer))
+    {
+        dumper.Process_vkCmdPushConstants2KHR(call_info, GetDeviceTable(in_commandBuffer)->CmdPushConstants2KHR, in_commandBuffer, in_pPushConstantsInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdPushDescriptorSet2KHR(
@@ -6053,6 +6063,11 @@ void VulkanReplayConsumer::Process_vkCmdPushDescriptorSet2KHR(
     MapStructHandles(pPushDescriptorSetInfo->GetMetaStructPointer(), GetObjectInfoTable());
 
     GetDeviceTable(in_commandBuffer)->CmdPushDescriptorSet2KHR(in_commandBuffer, in_pPushDescriptorSetInfo);
+
+    if (dumper.IsRecording(in_commandBuffer))
+    {
+        dumper.Process_vkCmdPushDescriptorSet2KHR(call_info, GetDeviceTable(in_commandBuffer)->CmdPushDescriptorSet2KHR, in_commandBuffer, in_pPushDescriptorSetInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdPushDescriptorSetWithTemplate2KHR(
@@ -6065,6 +6080,11 @@ void VulkanReplayConsumer::Process_vkCmdPushDescriptorSetWithTemplate2KHR(
     MapStructHandles(pPushDescriptorSetWithTemplateInfo->GetMetaStructPointer(), GetObjectInfoTable());
 
     GetDeviceTable(in_commandBuffer)->CmdPushDescriptorSetWithTemplate2KHR(in_commandBuffer, in_pPushDescriptorSetWithTemplateInfo);
+
+    if (dumper.IsRecording(in_commandBuffer))
+    {
+        dumper.Process_vkCmdPushDescriptorSetWithTemplate2KHR(call_info, GetDeviceTable(in_commandBuffer)->CmdPushDescriptorSetWithTemplate2KHR, in_commandBuffer, in_pPushDescriptorSetWithTemplateInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdSetDescriptorBufferOffsets2EXT(
@@ -6077,6 +6097,11 @@ void VulkanReplayConsumer::Process_vkCmdSetDescriptorBufferOffsets2EXT(
     MapStructHandles(pSetDescriptorBufferOffsetsInfo->GetMetaStructPointer(), GetObjectInfoTable());
 
     GetDeviceTable(in_commandBuffer)->CmdSetDescriptorBufferOffsets2EXT(in_commandBuffer, in_pSetDescriptorBufferOffsetsInfo);
+
+    if (dumper.IsRecording(in_commandBuffer))
+    {
+        dumper.Process_vkCmdSetDescriptorBufferOffsets2EXT(call_info, GetDeviceTable(in_commandBuffer)->CmdSetDescriptorBufferOffsets2EXT, in_commandBuffer, in_pSetDescriptorBufferOffsetsInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkCmdBindDescriptorBufferEmbeddedSamplers2EXT(
@@ -6089,6 +6114,11 @@ void VulkanReplayConsumer::Process_vkCmdBindDescriptorBufferEmbeddedSamplers2EXT
     MapStructHandles(pBindDescriptorBufferEmbeddedSamplersInfo->GetMetaStructPointer(), GetObjectInfoTable());
 
     GetDeviceTable(in_commandBuffer)->CmdBindDescriptorBufferEmbeddedSamplers2EXT(in_commandBuffer, in_pBindDescriptorBufferEmbeddedSamplersInfo);
+
+    if (dumper.IsRecording(in_commandBuffer))
+    {
+        dumper.Process_vkCmdBindDescriptorBufferEmbeddedSamplers2EXT(call_info, GetDeviceTable(in_commandBuffer)->CmdBindDescriptorBufferEmbeddedSamplers2EXT, in_commandBuffer, in_pBindDescriptorBufferEmbeddedSamplersInfo);
+    }
 }
 
 void VulkanReplayConsumer::Process_vkFrameBoundaryANDROID(
@@ -7524,13 +7554,13 @@ void VulkanReplayConsumer::Process_vkGetPhysicalDeviceCalibrateableTimeDomainsEX
     PointerDecoder<uint32_t>*                   pTimeDomainCount,
     PointerDecoder<VkTimeDomainKHR>*            pTimeDomains)
 {
-
     VkPhysicalDevice in_physicalDevice = MapHandle<PhysicalDeviceInfo>(physicalDevice, &VulkanObjectInfoTable::GetPhysicalDeviceInfo);
     uint32_t* out_pTimeDomainCount = pTimeDomainCount->IsNull() ? nullptr : pTimeDomainCount->AllocateOutputData(1, GetOutputArrayCount<uint32_t, PhysicalDeviceInfo>("vkGetPhysicalDeviceCalibrateableTimeDomainsEXT", returnValue, physicalDevice, kPhysicalDeviceArrayGetPhysicalDeviceCalibrateableTimeDomainsEXT, pTimeDomainCount, pTimeDomains, &VulkanObjectInfoTable::GetPhysicalDeviceInfo));
     VkTimeDomainKHR* out_pTimeDomains = pTimeDomains->IsNull() ? nullptr : pTimeDomains->AllocateOutputData(*out_pTimeDomainCount);
 
     VkResult replay_result = GetInstanceTable(in_physicalDevice)->GetPhysicalDeviceCalibrateableTimeDomainsEXT(in_physicalDevice, out_pTimeDomainCount, out_pTimeDomains);
     CheckResult("vkGetPhysicalDeviceCalibrateableTimeDomainsEXT", returnValue, replay_result, call_info);
+
     if (pTimeDomains->IsNull()) { SetOutputArrayCount<PhysicalDeviceInfo>(physicalDevice, kPhysicalDeviceArrayGetPhysicalDeviceCalibrateableTimeDomainsEXT, *out_pTimeDomainCount, &VulkanObjectInfoTable::GetPhysicalDeviceInfo); }
 }
 
@@ -7542,12 +7572,12 @@ void VulkanReplayConsumer::Process_vkGetCalibratedTimestampsEXT(
     StructPointerDecoder<Decoded_VkCalibratedTimestampInfoKHR>* pTimestampInfos,
     PointerDecoder<uint64_t>*                   pTimestamps,
     PointerDecoder<uint64_t>*                   pMaxDeviation)
-{/*@@@GBN*/
-//@@@START
+{
     VkDevice in_device = MapHandle<DeviceInfo>(device, &VulkanObjectInfoTable::GetDeviceInfo);
     const VkCalibratedTimestampInfoKHR* in_pTimestampInfos = pTimestampInfos->GetPointer();
     uint64_t* out_pTimestamps = pTimestamps->IsNull() ? nullptr : pTimestamps->AllocateOutputData(timestampCount);
     uint64_t* out_pMaxDeviation = pMaxDeviation->IsNull() ? nullptr : pMaxDeviation->AllocateOutputData(1, static_cast<uint64_t>(0));
+
     VkResult replay_result = GetDeviceTable(in_device)->GetCalibratedTimestampsEXT(in_device, timestampCount, in_pTimestampInfos, out_pTimestamps, out_pMaxDeviation);
     CheckResult("vkGetCalibratedTimestampsEXT", returnValue, replay_result, call_info);
 }
