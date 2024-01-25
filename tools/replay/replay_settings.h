@@ -233,8 +233,8 @@ static void PrintUsage(const char* exe_name)
     GFXRECON_WRITE_CONSOLE("          \t\treturned by vkEnumeratePhysicalDeviceGroups.  Replay may fail");
     GFXRECON_WRITE_CONSOLE("          \t\tif the specified device group is not compatible with the");
     GFXRECON_WRITE_CONSOLE("          \t\toriginal capture device group.");
-    GFXRECON_WRITE_CONSOLE("  --dump-resources BeginCommandBuffer=<n>,CmdDraw=<m>,RenderPass=<n>,NextSubpass=<o>,CmdDispatch=<p>,CmdTraceRays=<q>,QueueSubmit=<r>");
-    GFXRECON_WRITE_CONSOLE("          \t\tDump gpu resources after the given vmCmdDraw*, vkCmdDispatch, or vkCmdTraceRaysKHR is replayed.");
+    GFXRECON_WRITE_CONSOLE("  --dump-resources BeginCommandBuffer=<n>,Draw=<m>,RenderPass=<n>,NextSubpass=<o>,Dispatch=<p>,CmdTraceRays=<q>,QueueSubmit=<r>");
+    GFXRECON_WRITE_CONSOLE("          \t\tDump gpu resources after the given vkCmdDraw*, vkCmdDispatch, or vkCmdTraceRaysKHR is replayed.");
     GFXRECON_WRITE_CONSOLE("  --dump-resources <filename>");
     GFXRECON_WRITE_CONSOLE("          \t\tExtract --dump-resources args from the specified file.");
     GFXRECON_WRITE_CONSOLE("  --dump-resources-before-draw");
