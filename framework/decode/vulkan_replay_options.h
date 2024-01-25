@@ -617,12 +617,12 @@ struct VulkanReplayOptions : public ReplayOptions
     std::vector<util::UintRange> skip_get_fence_ranges;
 
     // Dumping resources related configurable replay options
-    std::vector<uint64_t>                           BeginCommandBuffer_Indices{ g_BeginCommandBuffer_indices };
-    std::vector<std::vector<uint64_t>>              Draw_Indices{ g_CmdDraw_indices };
-    std::vector<std::vector<std::vector<uint64_t>>> RenderPass_Indices{ g_RenderPass_indices };
-    std::vector<std::vector<uint64_t>>              Dispatch_Indices{ g_CmdDispatch_indices };
-    std::vector<std::vector<uint64_t>>              TraceRays_Indices{ g_CmdTraceRaysKHR_indices };
-    std::vector<uint64_t>                           QueueSubmit_Indices{ g_QueueSubmit_indices };
+    std::vector<uint64_t>                           BeginCommandBuffer_Indices;
+    std::vector<std::vector<uint64_t>>              Draw_Indices;
+    std::vector<std::vector<std::vector<uint64_t>>> RenderPass_Indices;
+    std::vector<std::vector<uint64_t>>              Dispatch_Indices;
+    std::vector<std::vector<uint64_t>>              TraceRays_Indices;
+    std::vector<uint64_t>                           QueueSubmit_Indices;
     std::string                                     dump_resources;
 
     bool dumping_resource{ true };
