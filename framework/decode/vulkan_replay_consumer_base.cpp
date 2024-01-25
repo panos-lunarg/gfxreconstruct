@@ -2665,7 +2665,6 @@ VulkanReplayConsumerBase::OverrideCreateDevice(VkResult            original_resu
             device_info->replay_device_group = std::move(replay_device_group);
             device_info->extensions          = std::move(extensions);
             device_info->parent              = physical_device;
-            // device_info->parent_id           = physical_device_info->capture_id;
 
             // Create the memory allocator for the selected physical device.
             auto replay_device_info = physical_device_info->replay_device_info;
@@ -3887,11 +3886,13 @@ VkResult VulkanReplayConsumerBase::OverrideAllocateDescriptorSets(
 
             if (result == VK_SUCCESS)
             {
-                // GFXRECON_LOG_INFO(
-                //     "A new VkDescriptorPool object (handle = 0x%" PRIx64
-                //     ") has been created to replace a VkDescriptorPool object (ID = %" PRIu64 ", handle = 0x%" PRIx64
-                //     ") that has run our of pool memory (vkAllocateDescriptorSets returned
-                //     VK_ERROR_OUT_OF_POOL_MEMORY)", new_pool, pool_info->capture_id, pool_info->handle);
+                GFXRECON_LOG_INFO(
+                    "A new VkDescriptorPool object (handle = 0x%" PRIx64
+                    ") has been created to replace a VkDescriptorPool object (ID = %" PRIu64 ", handle = 0x%" PRIx64
+                    ") that has run our of pool memory (vkAllocateDescriptorSets returned VK_ERROR_OUT_OF_POOL_MEMORY)",
+                    new_pool,
+                    pool_info->capture_id,
+                    pool_info->handle);
 
                 // Retire old pool and swap it with the new pool.
                 pool_info->retired_pools.push_back(pool_info->handle);
@@ -4048,9 +4049,9 @@ VkResult VulkanReplayConsumerBase::OverrideAllocateMemory(
 
             VkMemoryAllocateInfo                     modified_allocate_info = (*replay_allocate_info);
             VkMemoryOpaqueCaptureAddressAllocateInfo address_info           = {
-                VK_STRUCTURE_TYPE_MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO,
-                modified_allocate_info.pNext,
-                opaque_address
+                          VK_STRUCTURE_TYPE_MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO,
+                          modified_allocate_info.pNext,
+                          opaque_address
             };
             modified_allocate_info.pNext = &address_info;
 

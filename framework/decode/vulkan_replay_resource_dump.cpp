@@ -3139,8 +3139,9 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CopyBufferR
 void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CopyImageResource(const ImageInfo* src_image_info,
                                                                                        VkImage          dst_image)
 {
-    assert(src_image_info);
+    assert(src_image_info != nullptr);
     assert(dst_image != VK_NULL_HANDLE);
+    assert(device_table != nullptr);
 
     // Make sure any potential writes are complete and transition image to TRANSFER_SRC_OPTIMAL layout
     VkImageMemoryBarrier img_barrier;
