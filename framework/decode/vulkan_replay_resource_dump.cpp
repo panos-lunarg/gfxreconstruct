@@ -697,9 +697,14 @@ bool VulkanReplayResourceDumpBase::ShouldDumpDrawCall(VkCommandBuffer original_c
     assert(IsRecording(original_command_buffer));
 
     const DrawCallCommandBufferContext* context = FindDrawCallCommandBufferContext(original_command_buffer);
-    assert(context);
-
-    return context->ShouldDumpDrawCall(index);
+    if (context != nullptr)
+    {
+        return context->ShouldDumpDrawCall(index);
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool VulkanReplayResourceDumpBase::ShouldDumpDispatch(VkCommandBuffer original_command_buffer, uint64_t index) const
@@ -710,7 +715,14 @@ bool VulkanReplayResourceDumpBase::ShouldDumpDispatch(VkCommandBuffer original_c
     const DispatchRaysCommandBufferContext* context = FindDispatchRaysCommandBufferContext(original_command_buffer);
     assert(context);
 
-    return context->ShouldDumpDispatch(index);
+    if (context != nullptr)
+    {
+        return context->ShouldDumpDispatch(index);
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool VulkanReplayResourceDumpBase::ShouldDumpTraceRays(VkCommandBuffer original_command_buffer, uint64_t index) const
@@ -721,7 +733,14 @@ bool VulkanReplayResourceDumpBase::ShouldDumpTraceRays(VkCommandBuffer original_
     const DispatchRaysCommandBufferContext* context = FindDispatchRaysCommandBufferContext(original_command_buffer);
     assert(context);
 
-    return context->ShouldDumpTraceRays(index);
+    if (context != nullptr)
+    {
+        return context->ShouldDumpTraceRays(index);
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool VulkanReplayResourceDumpBase::DrawCallCommandBufferContext::ShouldDumpDrawCall(uint64_t index) const
@@ -1955,7 +1974,7 @@ bool VulkanReplayResourceDumpBase::DumpingSubmissionIndex(uint64_t index) const
     return false;
 }
 
-VkResult VulkanReplayResourceDumpBase::OverrideCmdBeginRenderPass(
+void VulkanReplayResourceDumpBase::OverrideCmdBeginRenderPass(
     const ApiCallInfo&                                   call_info,
     PFN_vkCmdBeginRenderPass                             func,
     VkCommandBuffer                                      original_command_buffer,
@@ -1983,16 +2002,19 @@ VkResult VulkanReplayResourceDumpBase::OverrideCmdBeginRenderPass(
     // Do not record vkCmdBeginRenderPass commands in current DrawCall context command buffers.
     // It will be handled by DrawCallCommandBufferContext::BeginRenderPass
     DrawCallCommandBufferContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    assert(dc_context);
-    return dc_context->BeginRenderPass(render_pass_info,
-                                       pRenderPassBegin->GetPointer()->clearValueCount,
-                                       pRenderPassBegin->GetPointer()->pClearValues,
-                                       framebuffer_info,
-                                       pRenderPassBegin->GetPointer()->renderArea,
-                                       contents);
+    if (dc_context)
+    {
+        VkResult res = dc_context->BeginRenderPass(render_pass_info,
+                                                   pRenderPassBegin->GetPointer()->clearValueCount,
+                                                   pRenderPassBegin->GetPointer()->pClearValues,
+                                                   framebuffer_info,
+                                                   pRenderPassBegin->GetPointer()->renderArea,
+                                                   contents);
+        assert(res == VK_SUCCESS);
+    }
 }
 
-VkResult VulkanReplayResourceDumpBase::OverrideCmdBeginRenderPass2(
+void VulkanReplayResourceDumpBase::OverrideCmdBeginRenderPass2(
     const ApiCallInfo&                                   call_info,
     PFN_vkCmdBeginRenderPass2                            func,
     VkCommandBuffer                                      original_command_buffer,
@@ -2020,13 +2042,17 @@ VkResult VulkanReplayResourceDumpBase::OverrideCmdBeginRenderPass2(
     // Do not record vkCmdBeginRenderPass commands in current DrawCall context command buffers.
     // It will be handled by DrawCallCommandBufferContext::BeginRenderPass
     DrawCallCommandBufferContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    assert(dc_context);
-    return dc_context->BeginRenderPass(render_pass_info,
-                                       pRenderPassBegin->GetPointer()->clearValueCount,
-                                       pRenderPassBegin->GetPointer()->pClearValues,
-                                       framebuffer_info,
-                                       pRenderPassBegin->GetPointer()->renderArea,
-                                       pSubpassBeginInfo->GetPointer()->contents);
+    if (dc_context)
+    {
+        VkResult res = dc_context->BeginRenderPass(render_pass_info,
+                                                   pRenderPassBegin->GetPointer()->clearValueCount,
+                                                   pRenderPassBegin->GetPointer()->pClearValues,
+                                                   framebuffer_info,
+                                                   pRenderPassBegin->GetPointer()->renderArea,
+                                                   pSubpassBeginInfo->GetPointer()->contents);
+
+        assert(res == VK_SUCCESS);
+    }
 }
 
 void VulkanReplayResourceDumpBase::OverrideCmdNextSubpass(const ApiCallInfo&   call_info,
@@ -2037,9 +2063,13 @@ void VulkanReplayResourceDumpBase::OverrideCmdNextSubpass(const ApiCallInfo&   c
     assert(original_command_buffer != VK_NULL_HANDLE);
     assert(IsRecording(original_command_buffer));
 
+    // Do not record NextSubpass commands in current DrawCall context command buffers.
+    // It will be handled by DrawCallCommandBufferContext::NextSubpass
     DrawCallCommandBufferContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    assert(dc_context);
-    dc_context->NextSubpass(contents);
+    if (dc_context)
+    {
+        dc_context->NextSubpass(contents);
+    }
 
     VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
     if (dr_command_buffer != VK_NULL_HANDLE)
@@ -2058,9 +2088,13 @@ void VulkanReplayResourceDumpBase::OverrideCmdNextSubpass2(
     assert(original_command_buffer != VK_NULL_HANDLE);
     assert(IsRecording(original_command_buffer));
 
+    // Do not record NextSubpass commands in current DrawCall context command buffers.
+    // It will be handled by DrawCallCommandBufferContext::NextSubpass
     DrawCallCommandBufferContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    assert(dc_context);
-    dc_context->NextSubpass(pSubpassBeginInfo->GetPointer()->contents);
+    if (dc_context)
+    {
+        dc_context->NextSubpass(pSubpassBeginInfo->GetPointer()->contents);
+    }
 
     VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
     if (dr_command_buffer != VK_NULL_HANDLE)
@@ -2075,10 +2109,13 @@ void VulkanReplayResourceDumpBase::OverrideCmdEndRenderPass(const ApiCallInfo&  
 {
     assert(IsRecording(original_command_buffer));
 
+    // Do not record EndRenderPass commands in current DrawCall context command buffers.
+    // It will be handled by DrawCallCommandBufferContext::EndRenderPass
     DrawCallCommandBufferContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    assert(dc_context);
-
-    dc_context->EndRenderPass();
+    if (dc_context)
+    {
+        dc_context->EndRenderPass();
+    }
 
     VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
     if (dr_command_buffer != VK_NULL_HANDLE)
@@ -2095,10 +2132,13 @@ void VulkanReplayResourceDumpBase::OverrideCmdEndRenderPass2(
 {
     assert(IsRecording(original_command_buffer));
 
+    // Do not record EndRenderPass commands in current DrawCall context command buffers.
+    // It will be handled by DrawCallCommandBufferContext::EndRenderPass
     DrawCallCommandBufferContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    assert(dc_context);
-
-    dc_context->EndRenderPass();
+    if (dc_context)
+    {
+        dc_context->EndRenderPass();
+    }
 
     VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
     if (dr_command_buffer != VK_NULL_HANDLE)
@@ -2237,7 +2277,7 @@ void VulkanReplayResourceDumpBase::OverrideCmdDispatch(const ApiCallInfo& call_i
     {
         if (dr_context->ShouldDumpDispatch(call_info.index))
         {
-            dr_context->CloneDispatchResources(call_info.index);
+            dr_context->CloneDispatchRaysResources(call_info.index, true);
         }
     }
 }
@@ -2263,6 +2303,73 @@ void VulkanReplayResourceDumpBase::OverrideCmdDispatchIndirect(const ApiCallInfo
     if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
     {
         func(dispatch_rays_command_buffer, buffer, offset);
+    }
+
+    DispatchRaysCommandBufferContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
+    if (dr_context != nullptr)
+    {
+        if (dr_context->ShouldDumpDispatch(call_info.index))
+        {
+            dr_context->CloneDispatchRaysResources(call_info.index, true);
+        }
+    }
+}
+
+void VulkanReplayResourceDumpBase::OverrideCmdTraceRaysKHR(
+    const ApiCallInfo&                                             call_info,
+    PFN_vkCmdTraceRaysKHR                                          func,
+    VkCommandBuffer                                                original_command_buffer,
+    StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pRaygenShaderBindingTable,
+    StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pMissShaderBindingTable,
+    StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pHitShaderBindingTable,
+    StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pCallableShaderBindingTable,
+    uint32_t                                                       width,
+    uint32_t                                                       height,
+    uint32_t                                                       depth)
+{
+    assert(IsRecording(original_command_buffer));
+
+    const VkStridedDeviceAddressRegionKHR* in_pRaygenShaderBindingTable   = pRaygenShaderBindingTable->GetPointer();
+    const VkStridedDeviceAddressRegionKHR* in_pMissShaderBindingTable     = pMissShaderBindingTable->GetPointer();
+    const VkStridedDeviceAddressRegionKHR* in_pHitShaderBindingTable      = pHitShaderBindingTable->GetPointer();
+    const VkStridedDeviceAddressRegionKHR* in_pCallableShaderBindingTable = pCallableShaderBindingTable->GetPointer();
+
+    VulkanReplayResourceDumpBase::cmd_buf_it first, last;
+    if (GetDrawCallActiveCommandBuffers(original_command_buffer, first, last))
+    {
+        for (VulkanReplayResourceDumpBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it,
+                 in_pRaygenShaderBindingTable,
+                 in_pMissShaderBindingTable,
+                 in_pHitShaderBindingTable,
+                 in_pCallableShaderBindingTable,
+                 width,
+                 height,
+                 depth);
+        }
+    }
+
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dispatch_rays_command_buffer,
+             in_pRaygenShaderBindingTable,
+             in_pMissShaderBindingTable,
+             in_pHitShaderBindingTable,
+             in_pCallableShaderBindingTable,
+             width,
+             height,
+             depth);
+    }
+
+    DispatchRaysCommandBufferContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
+    if (dr_context != nullptr)
+    {
+        if (dr_context->ShouldDumpTraceRays(call_info.index))
+        {
+            dr_context->CloneDispatchRaysResources(call_info.index, false);
+        }
     }
 }
 
@@ -3256,16 +3363,19 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CopyImageRe
                                      &img_barrier);
 }
 
-void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CloneDispatchResources(uint64_t index)
+void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CloneDispatchRaysResources(uint64_t index,
+                                                                                                bool     is_dispatch)
 {
     assert(IsRecording());
-    assert(index == dispatch_indices[current_dispatch_index]);
+    assert((is_dispatch && index == dispatch_indices[current_dispatch_index]) ||
+           (!is_dispatch && index == trace_rays_indices[current_trace_rays_index]));
 
     // Scan for mutable resources in the bound pipeline
-    const PipelineInfo* compute_pipeline = bound_pipelines[kBindPoint_compute];
-    assert(compute_pipeline != nullptr);
+    const PipelineBindPoints bind_point = is_dispatch ? kBindPoint_compute : kBindPoint_ray_tracing;
+    const PipelineInfo*      pipeline   = bound_pipelines[bind_point];
+    assert(pipeline != nullptr);
 
-    for (const auto& shader : compute_pipeline->shaders)
+    for (const auto& shader : pipeline->shaders)
     {
         for (const auto& desc_set : shader.used_descriptors_info)
         {
@@ -3281,14 +3391,14 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CloneDispat
                     {
                         case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
                         {
-                            assert(bound_descriptor_sets[kBindPoint_compute].find(set) !=
-                                   bound_descriptor_sets[kBindPoint_compute].end());
+                            assert(bound_descriptor_sets[bind_point].find(set) !=
+                                   bound_descriptor_sets[bind_point].end());
 
-                            assert(bound_descriptor_sets[kBindPoint_compute][set].image_infos.find(binding) !=
-                                   bound_descriptor_sets[kBindPoint_compute][set].image_infos.end());
+                            assert(bound_descriptor_sets[bind_point][set].image_infos.find(binding) !=
+                                   bound_descriptor_sets[bind_point][set].image_infos.end());
 
-                            const ImageInfo* img_info =
-                                bound_descriptor_sets[kBindPoint_compute][set].image_infos[binding];
+                            const ImageInfo* img_info = bound_descriptor_sets[bind_point][set].image_infos[binding];
+                            assert(img_info);
 
                             mutable_resources_clones.insert({ index, DumpableResourceBackup() });
                             mutable_resources_clones[index].original_images.push_back(img_info);
@@ -3317,14 +3427,14 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CloneDispat
                         case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
                         case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
                         {
-                            assert(bound_descriptor_sets[kBindPoint_compute].find(set) !=
-                                   bound_descriptor_sets[kBindPoint_compute].end());
+                            assert(bound_descriptor_sets[bind_point].find(set) !=
+                                   bound_descriptor_sets[bind_point].end());
 
-                            assert(bound_descriptor_sets[kBindPoint_compute][set].buffer_infos.find(binding) !=
-                                   bound_descriptor_sets[kBindPoint_compute][set].buffer_infos.end());
+                            assert(bound_descriptor_sets[bind_point][set].buffer_infos.find(binding) !=
+                                   bound_descriptor_sets[bind_point][set].buffer_infos.end());
 
-                            const BufferInfo* buf_info =
-                                bound_descriptor_sets[kBindPoint_compute][set].buffer_infos[binding];
+                            const BufferInfo* buf_info = bound_descriptor_sets[bind_point][set].buffer_infos[binding];
+                            assert(buf_info);
 
                             mutable_resources_clones.insert({ index, DumpableResourceBackup() });
                             mutable_resources_clones[index].original_buffers.push_back(buf_info);
@@ -3373,7 +3483,15 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CloneDispat
         }
     }
 
-    ++current_dispatch_index;
+    if (is_dispatch)
+    {
+        ++current_dispatch_index;
+    }
+    else
+    {
+        ++current_trace_rays_index;
+    }
+
     if (!IsRecording())
     {
         FinalizeCommandBuffer();
@@ -3487,7 +3605,7 @@ VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpDispatchRays
 
     for (auto index : trace_rays_indices)
     {
-        DumpMutableResources(index, true);
+        DumpMutableResources(index, false);
     }
 
 #ifdef TIME_DUMPING
