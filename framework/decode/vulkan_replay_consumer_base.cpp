@@ -6875,6 +6875,28 @@ VkResult VulkanReplayConsumerBase::OverrideCreateRayTracingPipelinesKHR(
         }
     }
 
+    if (result >= 0)
+    {
+        const Decoded_VkRayTracingPipelineCreateInfoKHR* create_info_meta = pCreateInfos->GetMetaStructPointer();
+
+        for (uint32_t i = 0; i < createInfoCount; ++i)
+        {
+            PipelineInfo* pipeline_info = reinterpret_cast<PipelineInfo*>(pPipelines->GetConsumerData(i));
+
+            const Decoded_VkPipelineShaderStageCreateInfo* stages_info_meta =
+                create_info_meta[i].pStages->GetMetaStructPointer();
+            const size_t stages_count = create_info_meta->pStages->GetLength();
+
+            for (size_t s = 0; s < stages_count; ++s)
+            {
+                ShaderModuleInfo* module_info = object_info_table_.GetShaderModuleInfo(stages_info_meta[s].module);
+                assert(module_info);
+
+                pipeline_info->shaders.push_back(*module_info);
+            }
+        }
+    }
+
     return result;
 }
 
