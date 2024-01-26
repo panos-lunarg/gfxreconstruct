@@ -13,6 +13,7 @@
     "vkCmdBindDescriptorSets": "OverrideCmdBindDescriptorSets",
     "vkCmdDispatch": "OverrideCmdDispatch",
     "vkCmdDispatchIndirect": "OverrideCmdDispatchIndirect",
+    "vkCmdTraceRaysKHR": "OverrideCmdTraceRaysKHR",
     "vkCmdDraw": "OverrideCmdDraw",
     "vkCmdDrawIndexed": "OverrideCmdDrawIndexed",
     "vkCmdDrawIndirect": "OverrideCmdDrawIndirect",

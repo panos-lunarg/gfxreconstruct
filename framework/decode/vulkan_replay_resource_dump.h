@@ -135,17 +135,17 @@ class VulkanReplayResourceDumpBase
 
     VkCommandBuffer GetCurrentCommandBuffer(VkCommandBuffer original_command_buffer) const;
 
-    VkResult OverrideCmdBeginRenderPass(const ApiCallInfo&                                   call_info,
-                                        PFN_vkCmdBeginRenderPass                             func,
-                                        VkCommandBuffer                                      original_command_buffer,
-                                        StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* pRenderPassBegin,
-                                        VkSubpassContents                                    contents);
+    void OverrideCmdBeginRenderPass(const ApiCallInfo&                                   call_info,
+                                    PFN_vkCmdBeginRenderPass                             func,
+                                    VkCommandBuffer                                      original_command_buffer,
+                                    StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* pRenderPassBegin,
+                                    VkSubpassContents                                    contents);
 
-    VkResult OverrideCmdBeginRenderPass2(const ApiCallInfo&                                   call_info,
-                                         PFN_vkCmdBeginRenderPass2                            func,
-                                         VkCommandBuffer                                      original_command_buffer,
-                                         StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* pRenderPassBegin,
-                                         StructPointerDecoder<Decoded_VkSubpassBeginInfo>*    pSubpassBeginInfo);
+    void OverrideCmdBeginRenderPass2(const ApiCallInfo&                                   call_info,
+                                     PFN_vkCmdBeginRenderPass2                            func,
+                                     VkCommandBuffer                                      original_command_buffer,
+                                     StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* pRenderPassBegin,
+                                     StructPointerDecoder<Decoded_VkSubpassBeginInfo>*    pSubpassBeginInfo);
 
     void OverrideCmdEndRenderPass(const ApiCallInfo&     call_info,
                                   PFN_vkCmdEndRenderPass func,
@@ -185,6 +185,18 @@ class VulkanReplayResourceDumpBase
                                      VkCommandBuffer           original_command_buffer,
                                      VkBuffer                  buffer,
                                      VkDeviceSize              offset);
+
+    void
+    OverrideCmdTraceRaysKHR(const ApiCallInfo&                                             call_info,
+                            PFN_vkCmdTraceRaysKHR                                          func,
+                            VkCommandBuffer                                                original_command_buffer,
+                            StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pRaygenShaderBindingTable,
+                            StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pMissShaderBindingTable,
+                            StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pHitShaderBindingTable,
+                            StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pCallableShaderBindingTable,
+                            uint32_t                                                       width,
+                            uint32_t                                                       height,
+                            uint32_t                                                       depth);
 
     void OverrideCmdBindDescriptorSets(const ApiCallInfo&          call_info,
                                        PFN_vkCmdBindDescriptorSets func,
@@ -417,7 +429,7 @@ class VulkanReplayResourceDumpBase
                                 uint32_t                                     dynamicOffsetCount,
                                 const uint32_t*                              pDynamicOffsets);
 
-        void CloneDispatchResources(uint64_t index);
+        void CloneDispatchRaysResources(uint64_t index, bool is_dispatch);
 
         VkResult DumpDispatchRaysMutableResources(VkQueue queue, uint64_t bcb_index);
 
