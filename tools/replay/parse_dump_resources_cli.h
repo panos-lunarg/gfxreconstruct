@@ -29,7 +29,7 @@ namespace gfxrecon
 namespace parse_dump_resources
 {
 
-void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions &vulkan_replay_options);
+void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions& vulkan_replay_options);
 
 } // namespace parse_dump_resources
 } // namespace gfxrecon

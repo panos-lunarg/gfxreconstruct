@@ -37,14 +37,14 @@ namespace parse_dump_resources
 
 static std::string to_lower(std::string s)
 {
-   for (char &c: s)
-   {
-       c = tolower(c);
-   }
-   return s;
+    for (char& c : s)
+    {
+        c = tolower(c);
+    }
+    return s;
 }
 
-static bool ends_with(std::string const &fullString, std::string const &ending)
+static bool ends_with(std::string const& fullString, std::string const& ending)
 {
     bool rval = false;
     if (fullString.length() >= ending.length())
@@ -57,13 +57,13 @@ static bool ends_with(std::string const &fullString, std::string const &ending)
 // Function to parse the --dump-resoures argument, specifically vulkan_replay_options.dump_resources.
 // If the text of the argument looks like it is for DX12 dump resources, it quietly returns.
 
-void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions &vulkan_replay_options)
+void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions& vulkan_replay_options)
 {
-     bool parse_error=false;
-     bool d3d12enabled = false;
+    bool parse_error  = false;
+    bool d3d12enabled = false;
 
 #if defined(D3D12_SUPPORT)
-     d3d12enabled = true;
+    d3d12enabled = true;
 #endif
 
     if (vulkan_replay_options.dump_resources.length() == 0 ||
@@ -89,122 +89,123 @@ void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions &vulkan_repl
             dr_json_file >> jargs;
 
             // Transfer jargs to vectors in vulkan_replay_options
-            for (int idx0=0; idx0 <jargs["BeginCommandBuffer"].size(); idx0++)
+            for (int idx0 = 0; idx0 < jargs["BeginCommandBuffer"].size(); idx0++)
             {
-                vulkan_replay_options.BeginCommandBuffer_Indices.push_back(jargs["BeginCommandBuffer"][idx0].asUInt64());
+                vulkan_replay_options.BeginCommandBuffer_Indices.push_back(
+                    jargs["BeginCommandBuffer"][idx0].asUInt64());
             }
 
-            for (int idx0=0; idx0 <jargs["Draw"].size(); idx0++)
+            for (int idx0 = 0; idx0 < jargs["Draw"].size(); idx0++)
             {
                 vulkan_replay_options.Draw_Indices.push_back(std::vector<uint64_t>());
-                for (int idx1=0; idx1 <jargs["Draw"][idx0].size(); idx1++)
+                for (int idx1 = 0; idx1 < jargs["Draw"][idx0].size(); idx1++)
                 {
                     vulkan_replay_options.Draw_Indices[idx0].push_back(jargs["Draw"][idx0][idx1].asUInt64());
                 }
             }
 
-            for (int idx0=0; idx0 <jargs["RenderPass"].size(); idx0++)
+            for (int idx0 = 0; idx0 < jargs["RenderPass"].size(); idx0++)
             {
                 vulkan_replay_options.RenderPass_Indices.push_back(std::vector<std::vector<uint64_t>>());
-                for (int idx1=0; idx1 <jargs["RenderPass"][idx0].size(); idx1++)
+                for (int idx1 = 0; idx1 < jargs["RenderPass"][idx0].size(); idx1++)
                 {
                     vulkan_replay_options.RenderPass_Indices[idx0].push_back(std::vector<uint64_t>());
-                    for (int idx2=0; idx2 <jargs["RenderPass"][idx0][idx1].size(); idx2++)
+                    for (int idx2 = 0; idx2 < jargs["RenderPass"][idx0][idx1].size(); idx2++)
                     {
-                        vulkan_replay_options.RenderPass_Indices[idx0][idx1].push_back(jargs["RenderPass"][idx0][idx1][idx2].asUInt64());
+                        vulkan_replay_options.RenderPass_Indices[idx0][idx1].push_back(
+                            jargs["RenderPass"][idx0][idx1][idx2].asUInt64());
                     }
                 }
             }
 
-            for (int idx0=0; idx0 <jargs["TraceRays"].size(); idx0++)
+            for (int idx0 = 0; idx0 < jargs["TraceRays"].size(); idx0++)
             {
                 vulkan_replay_options.TraceRays_Indices.push_back(std::vector<uint64_t>());
-                for (int idx1=0; idx1 <jargs["TraceRays"][idx0].size(); idx1++)
+                for (int idx1 = 0; idx1 < jargs["TraceRays"][idx0].size(); idx1++)
                 {
                     vulkan_replay_options.TraceRays_Indices[idx0].push_back(jargs["TraceRays"][idx0][idx1].asUInt64());
                 }
             }
 
-            for (int idx0=0; idx0 <jargs["Dispatch"].size(); idx0++)
+            for (int idx0 = 0; idx0 < jargs["Dispatch"].size(); idx0++)
             {
                 vulkan_replay_options.Dispatch_Indices.push_back(std::vector<uint64_t>());
-                for (int idx1=0; idx1 <jargs["Dispatch"][idx0].size(); idx1++)
+                for (int idx1 = 0; idx1 < jargs["Dispatch"][idx0].size(); idx1++)
                 {
                     vulkan_replay_options.Dispatch_Indices[idx0].push_back(jargs["Dispatch"][idx0][idx1].asUInt64());
                 }
             }
 
-            for (int idx0=0; idx0 <jargs["QueueSubmit"].size(); idx0++)
+            for (int idx0 = 0; idx0 < jargs["QueueSubmit"].size(); idx0++)
             {
                 vulkan_replay_options.QueueSubmit_Indices.push_back(jargs["QueueSubmit"][idx0].asUInt64());
             }
-
         }
         catch (...)
         {
             GFXRECON_LOG_ERROR("Error reading file %s. Bad json format?", vulkan_replay_options.dump_resources.c_str());
             parse_error = true;
         }
-     }
-     else
-     {
-         // Check to see if dump-resource arg value is a file. If it is, read the dump args from the file.
-         // Allow either spaces or commas to separate fields in the file.
-         std::ifstream infile(vulkan_replay_options.dump_resources);
-         std::vector<std::string> drargs;
-         if (!infile.fail())
-         {
-             bool err = false;
-             for (std::string line; std::getline(infile, line); )
-             {
-                 // Remove leading and trailing spaces
-                 line.erase(0, line.find_first_not_of(" "));
-                 line.erase(line.find_last_not_of(" ")+1);
+    }
+    else
+    {
+        // Check to see if dump-resource arg value is a file. If it is, read the dump args from the file.
+        // Allow either spaces or commas to separate fields in the file.
+        std::ifstream            infile(vulkan_replay_options.dump_resources);
+        std::vector<std::string> drargs;
+        if (!infile.fail())
+        {
+            bool err = false;
+            for (std::string line; std::getline(infile, line);)
+            {
+                // Remove leading and trailing spaces
+                line.erase(0, line.find_first_not_of(" "));
+                line.erase(line.find_last_not_of(" ") + 1);
 
-                 // Remove instances of multiple spaces.
-                 // This is slow and inefficient, but it's compact code
-                 // and the loop should be executed only a few times.
-                 while (line.find("  ") != std::string::npos)
-                 {
-                     line.replace(line.find("  "), 2, " ");
-                 }
+                // Remove instances of multiple spaces.
+                // This is slow and inefficient, but it's compact code
+                // and the loop should be executed only a few times.
+                while (line.find("  ") != std::string::npos)
+                {
+                    line.replace(line.find("  "), 2, " ");
+                }
 
-                 // Replace spaces with commas
-                 std::replace(line.begin(), line.end(), ' ', ',');
+                // Replace spaces with commas
+                std::replace(line.begin(), line.end(), ' ', ',');
 
-                 // Save the modified line if it is non-blank
-                 if (line.length())
-                 {
-                     drargs.push_back(line);
-                 }
-             }
-         }
-         else
-         {
-             // dump-resource args are all specified on the command line
-             drargs.push_back(vulkan_replay_options.dump_resources);
-         }
+                // Save the modified line if it is non-blank
+                if (line.length())
+                {
+                    drargs.push_back(line);
+                }
+            }
+        }
+        else
+        {
+            // dump-resource args are all specified on the command line
+            drargs.push_back(vulkan_replay_options.dump_resources);
+        }
 
-         // Process non-json dump_resources args
-         int i;
-         for (int i=0; i<drargs.size() && !parse_error; i++)
-         {
-            uint64_t num;
-            uint64_t BeginCommandBuffer = 0;
-            uint64_t Draw = 0;
-            uint64_t BeginRenderPass = 0;
+        // Process non-json dump_resources args
+        int i;
+        for (int i = 0; i < drargs.size() && !parse_error; i++)
+        {
+            uint64_t              num;
+            uint64_t              BeginCommandBuffer = 0;
+            uint64_t              Draw               = 0;
+            uint64_t              BeginRenderPass    = 0;
             std::vector<uint64_t> NextSubPass;
-            uint64_t EndRenderPass = 0;
-            uint64_t Dispatch = 0;
-            uint64_t TraceRays = 0;
-            uint64_t QueueSubmit = 0;
-            size_t apos = 0;
-            errno=0;
+            uint64_t              EndRenderPass = 0;
+            uint64_t              Dispatch      = 0;
+            uint64_t              TraceRays     = 0;
+            uint64_t              QueueSubmit   = 0;
+            size_t                apos          = 0;
+            errno                               = 0;
 
             while (apos < drargs[i].length() && !parse_error)
             {
                 size_t epos, cpos; // '=' and ',' positions
-                char *endptr;
+                char*  endptr;
                 // Find next '=' and next ','
                 epos = drargs[i].find_first_of('=', apos);
                 cpos = drargs[i].find_first_of(',', apos);
@@ -212,24 +213,24 @@ void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions &vulkan_repl
                     cpos = drargs[i].length();
 
                 // Extract number after '='
-                num = strtol(drargs[i].c_str()+epos+1, &endptr, 10);
+                num = strtol(drargs[i].c_str() + epos + 1, &endptr, 10);
                 parse_error |= ((errno != 0) || (*endptr != ',' && *endptr != 0));
 
-                if (drargs[i].compare(apos, epos-apos,"BeginCommandBuffer") == 0)
+                if (drargs[i].compare(apos, epos - apos, "BeginCommandBuffer") == 0)
                     BeginCommandBuffer = num;
-                else if (drargs[i].compare(apos, epos-apos,"Draw") == 0)
+                else if (drargs[i].compare(apos, epos - apos, "Draw") == 0)
                     Draw = num;
-                else if (drargs[i].compare(apos, epos-apos,"BeginRenderPass") == 0)
+                else if (drargs[i].compare(apos, epos - apos, "BeginRenderPass") == 0)
                     BeginRenderPass = num;
-                else if (drargs[i].compare(apos, epos-apos,"NextSubPass") == 0)
+                else if (drargs[i].compare(apos, epos - apos, "NextSubPass") == 0)
                     NextSubPass.push_back(num);
-                else if (drargs[i].compare(apos, epos-apos,"EndRenderPass") == 0)
+                else if (drargs[i].compare(apos, epos - apos, "EndRenderPass") == 0)
                     EndRenderPass = num;
-                else if (drargs[i].compare(apos, epos-apos,"Dispatch") == 0)
+                else if (drargs[i].compare(apos, epos - apos, "Dispatch") == 0)
                     Dispatch = num;
-                else if (drargs[i].compare(apos, epos-apos,"TraceRays") == 0)
+                else if (drargs[i].compare(apos, epos - apos, "TraceRays") == 0)
                     TraceRays = num;
-                else if (drargs[i].compare(apos, epos-apos,"QueueSubmit") == 0)
+                else if (drargs[i].compare(apos, epos - apos, "QueueSubmit") == 0)
                     QueueSubmit = num;
                 else
                     parse_error = true;
@@ -273,12 +274,13 @@ void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions &vulkan_repl
 
                 vulkan_replay_options.QueueSubmit_Indices.push_back(QueueSubmit);
             }
-         }
+        }
 
-         if (parse_error)
-         {
-             GFXRECON_LOG_ERROR("ERROR - Ignoring invalid --dump-resources parameter: %s", vulkan_replay_options.dump_resources.c_str());
-         }
+        if (parse_error)
+        {
+            GFXRECON_LOG_ERROR("ERROR - Ignoring invalid --dump-resources parameter: %s",
+                               vulkan_replay_options.dump_resources.c_str());
+        }
     }
 
     if (!parse_error)
@@ -286,12 +288,12 @@ void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions &vulkan_repl
         // Verify required args are specified. This is not complete yet.
         parse_error |= (vulkan_replay_options.BeginCommandBuffer_Indices.size() == 0);
         parse_error |= (vulkan_replay_options.QueueSubmit_Indices.size() == 0);
-        parse_error |= (vulkan_replay_options.Draw_Indices.size() == 0 &&
-              vulkan_replay_options.Dispatch_Indices.size() == 0 &&
-              vulkan_replay_options.TraceRays_Indices.size() == 0);
+        parse_error |=
+            (vulkan_replay_options.Draw_Indices.size() == 0 && vulkan_replay_options.Dispatch_Indices.size() == 0 &&
+             vulkan_replay_options.TraceRays_Indices.size() == 0);
         if (vulkan_replay_options.Draw_Indices.size() != 0)
             parse_error |= (vulkan_replay_options.RenderPass_Indices.size() == 0);
-        else 
+        else
             parse_error |= (vulkan_replay_options.Dispatch_Indices.size() == 0 &&
                             +vulkan_replay_options.TraceRays_Indices.size() == 0);
 
@@ -301,16 +303,16 @@ void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions &vulkan_repl
         }
     }
 
-     vulkan_replay_options.dumping_resource = !parse_error;
-     if (parse_error)
-     {
+    vulkan_replay_options.dumping_resource = !parse_error;
+    if (parse_error)
+    {
         vulkan_replay_options.BeginCommandBuffer_Indices.clear();
         vulkan_replay_options.Draw_Indices.clear();
         vulkan_replay_options.RenderPass_Indices.clear();
         vulkan_replay_options.Dispatch_Indices.clear();
         vulkan_replay_options.TraceRays_Indices.clear();
         vulkan_replay_options.QueueSubmit_Indices.clear();
-     }
+    }
 }
 
 } // namespace parse_dump_resources
