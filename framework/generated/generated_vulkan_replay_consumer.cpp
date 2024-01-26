@@ -10338,7 +10338,7 @@ void VulkanReplayConsumer::Process_vkCmdTraceRaysKHR(
 
     if (dumper.IsRecording(in_commandBuffer))
     {
-        dumper.Process_vkCmdTraceRaysKHR(call_info, GetDeviceTable(in_commandBuffer)->CmdTraceRaysKHR, in_commandBuffer, in_pRaygenShaderBindingTable, in_pMissShaderBindingTable, in_pHitShaderBindingTable, in_pCallableShaderBindingTable, width, height, depth);
+        dumper.Process_vkCmdTraceRaysKHR(call_info, GetDeviceTable(in_commandBuffer)->CmdTraceRaysKHR, in_commandBuffer, pRaygenShaderBindingTable, pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable, width, height, depth);
     }
 }
 
