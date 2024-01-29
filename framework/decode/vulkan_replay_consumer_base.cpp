@@ -8093,10 +8093,10 @@ VkResult VulkanReplayConsumerBase::OverrideCreateGraphicsPipelines(
            (pPipelines != nullptr) && !pPipelines->IsNull() && (pPipelines->GetHandlePointer() != nullptr));
 
     VkDevice                            in_device                 = device_info->handle;
-    VkPipelineCache                     in_pipeline_cache         = pipeline_cache_info->handle;
     const VkGraphicsPipelineCreateInfo* in_p_create_infos         = pCreateInfos->GetPointer();
     const VkAllocationCallbacks*        in_p_allocation_callbacks = GetAllocationCallbacks(pAllocator);
     VkPipeline*                         out_pipelines             = pPipelines->GetHandlePointer();
+    VkPipelineCache in_pipeline_cache = (pipeline_cache_info != nullptr) ? pipeline_cache_info->handle : VK_NULL_HANDLE;
 
     VkResult replay_result = func(
         in_device, in_pipeline_cache, create_info_count, in_p_create_infos, in_p_allocation_callbacks, out_pipelines);
@@ -8118,6 +8118,7 @@ VkResult VulkanReplayConsumerBase::OverrideCreateGraphicsPipelines(
                 ShaderModuleInfo* module_info = object_info_table_.GetShaderModuleInfo(stages_info_meta[s].module);
                 assert(module_info);
 
+                assert(pipeline_info);
                 pipeline_info->shaders.push_back(*module_info);
             }
         }
@@ -8142,10 +8143,10 @@ VkResult VulkanReplayConsumerBase::OverrideCreateComputePipelines(
            (pPipelines != nullptr) && !pPipelines->IsNull() && (pPipelines->GetHandlePointer() != nullptr));
 
     VkDevice                           in_device                 = device_info->handle;
-    VkPipelineCache                    in_pipeline_cache         = pipeline_cache_info->handle;
     const VkComputePipelineCreateInfo* in_p_create_infos         = pCreateInfos->GetPointer();
     const VkAllocationCallbacks*       in_p_allocation_callbacks = GetAllocationCallbacks(pAllocator);
     VkPipeline*                        out_pipelines             = pPipelines->GetHandlePointer();
+    VkPipelineCache in_pipeline_cache = (pipeline_cache_info != nullptr) ? pipeline_cache_info->handle : VK_NULL_HANDLE;
 
     VkResult replay_result = func(
         in_device, in_pipeline_cache, create_info_count, in_p_create_infos, in_p_allocation_callbacks, out_pipelines);
@@ -8153,13 +8154,16 @@ VkResult VulkanReplayConsumerBase::OverrideCreateComputePipelines(
     if (replay_result == VK_SUCCESS)
     {
         const Decoded_VkComputePipelineCreateInfo* create_info_meta = pCreateInfos->GetMetaStructPointer();
+        assert(create_info_meta);
 
         for (uint32_t i = 0; i < create_info_count; ++i)
         {
+            assert(create_info_meta[i].stage);
             ShaderModuleInfo* module_info = object_info_table_.GetShaderModuleInfo(create_info_meta[i].stage->module);
             assert(module_info);
 
             PipelineInfo* pipeline_info = reinterpret_cast<PipelineInfo*>(pPipelines->GetConsumerData(i));
+            assert(pipeline_info);
             pipeline_info->shaders.push_back(*module_info);
         }
     }
