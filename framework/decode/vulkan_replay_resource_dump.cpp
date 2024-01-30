@@ -150,7 +150,7 @@ VulkanReplayResourceDumpBase::VulkanReplayResourceDumpBase(const VulkanReplayOpt
                                                   ? options.TraceRays_Indices[i]
                                                   : std::vector<uint64_t>(),
                                               object_info_table_,
-                                              dump_resources_before_,
+                                              options.dump_resources_before,
                                               options.dump_resources_output_path,
                                               options.dump_resource_image_format));
         }
@@ -2290,18 +2290,26 @@ void VulkanReplayResourceDumpBase::OverrideCmdDispatch(const ApiCallInfo& call_i
         }
     }
 
+    DispatchRaysCommandBufferContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
+    if (dump_resources_before_ && dr_context != nullptr)
+    {
+        if (dr_context->ShouldDumpDispatch(call_info.index))
+        {
+            dr_context->CloneDispatchRaysResources(call_info.index, true, true);
+        }
+    }
+
     VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
     if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
     {
         func(dispatch_rays_command_buffer, groupCountX, groupCountY, groupCountZ);
     }
 
-    DispatchRaysCommandBufferContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
     if (dr_context != nullptr)
     {
         if (dr_context->ShouldDumpDispatch(call_info.index))
         {
-            dr_context->CloneDispatchRaysResources(call_info.index, true);
+            dr_context->CloneDispatchRaysResources(call_info.index, false, true);
         }
     }
 }
@@ -2323,18 +2331,26 @@ void VulkanReplayResourceDumpBase::OverrideCmdDispatchIndirect(const ApiCallInfo
         }
     }
 
+    DispatchRaysCommandBufferContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
+    if (dump_resources_before_ && dr_context != nullptr)
+    {
+        if (dr_context->ShouldDumpDispatch(call_info.index))
+        {
+            dr_context->CloneDispatchRaysResources(call_info.index, true, true);
+        }
+    }
+
     VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
     if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
     {
         func(dispatch_rays_command_buffer, buffer, offset);
     }
 
-    DispatchRaysCommandBufferContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
     if (dr_context != nullptr)
     {
         if (dr_context->ShouldDumpDispatch(call_info.index))
         {
-            dr_context->CloneDispatchRaysResources(call_info.index, true);
+            dr_context->CloneDispatchRaysResources(call_info.index, false, true);
         }
     }
 }
@@ -2374,6 +2390,15 @@ void VulkanReplayResourceDumpBase::OverrideCmdTraceRaysKHR(
         }
     }
 
+    DispatchRaysCommandBufferContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
+    if (dump_resources_before_ && dr_context != nullptr)
+    {
+        if (dr_context->ShouldDumpTraceRays(call_info.index))
+        {
+            dr_context->CloneDispatchRaysResources(call_info.index, true, false);
+        }
+    }
+
     VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
     if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
     {
@@ -2387,12 +2412,11 @@ void VulkanReplayResourceDumpBase::OverrideCmdTraceRaysKHR(
              depth);
     }
 
-    DispatchRaysCommandBufferContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
     if (dr_context != nullptr)
     {
         if (dr_context->ShouldDumpTraceRays(call_info.index))
         {
-            dr_context->CloneDispatchRaysResources(call_info.index, false);
+            dr_context->CloneDispatchRaysResources(call_info.index, true, false);
         }
     }
 }
@@ -3393,11 +3417,16 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CopyImageRe
 }
 
 void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CloneDispatchRaysResources(uint64_t index,
-                                                                                                bool     is_dispatch)
+                                                                                                bool cloning_before_cmd,
+                                                                                                bool is_dispatch)
 {
     assert(IsRecording());
-    assert((is_dispatch && index == dispatch_indices[current_dispatch_index]) ||
-           (!is_dispatch && index == trace_rays_indices[current_trace_rays_index]));
+    assert(
+        (is_dispatch &&
+         index == dispatch_indices[(dump_resources_before ? (current_dispatch_index / 2) : current_dispatch_index)]) ||
+        (!is_dispatch &&
+         index ==
+             trace_rays_indices[(dump_resources_before ? (current_trace_rays_index / 2) : current_trace_rays_index)]));
 
     // Scan for mutable resources in the bound pipeline
     const PipelineBindPoints bind_point = is_dispatch ? kBindPoint_compute : kBindPoint_ray_tracing;
@@ -3429,17 +3458,38 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CloneDispat
                             const ImageInfo* img_info = bound_descriptor_sets[bind_point][set].image_infos[binding];
                             assert(img_info);
 
-                            mutable_resources_clones.insert({ index, DumpableResourceBackup() });
-                            mutable_resources_clones[index].original_images.push_back(img_info);
-                            mutable_resources_clones[index].image_desc_set_binding_pair.push_back(
-                                std::make_pair(set, binding));
+                            VkImage*        new_img_ptr        = nullptr;
+                            VkDeviceMemory* new_img_memory_ptr = nullptr;
 
-                            VkImage* new_img_ptr = &*(mutable_resources_clones[index].images.insert(
-                                mutable_resources_clones[index].images.end(), VK_NULL_HANDLE));
+                            if (!cloning_before_cmd)
+                            {
+                                mutable_resources_clones.insert({ index, DumpableResourceBackup() });
+                                mutable_resources_clones[index].original_images.push_back(img_info);
+                                mutable_resources_clones[index].image_desc_set_binding_pair.push_back(
+                                    std::make_pair(set, binding));
 
-                            VkDeviceMemory* new_img_memory_ptr =
-                                &*(mutable_resources_clones[index].image_memories.insert(
+                                new_img_ptr = &*(mutable_resources_clones[index].images.insert(
+                                    mutable_resources_clones[index].images.end(), VK_NULL_HANDLE));
+
+                                new_img_memory_ptr = &*(mutable_resources_clones[index].image_memories.insert(
                                     mutable_resources_clones[index].image_memories.end(), VK_NULL_HANDLE));
+                            }
+                            else
+                            {
+                                mutable_resources_clones_before.insert({ index, DumpableResourceBackup() });
+                                mutable_resources_clones_before[index].original_images.push_back(img_info);
+                                mutable_resources_clones_before[index].image_desc_set_binding_pair.push_back(
+                                    std::make_pair(set, binding));
+
+                                new_img_ptr = &*(mutable_resources_clones_before[index].images.insert(
+                                    mutable_resources_clones_before[index].images.end(), VK_NULL_HANDLE));
+
+                                new_img_memory_ptr = &*(mutable_resources_clones_before[index].image_memories.insert(
+                                    mutable_resources_clones_before[index].image_memories.end(), VK_NULL_HANDLE));
+                            }
+
+                            assert(new_img_ptr != nullptr);
+                            assert(new_img_memory_ptr != nullptr);
 
                             CloneImage(object_info_table,
                                        device_table,
@@ -3465,17 +3515,38 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CloneDispat
                             const BufferInfo* buf_info = bound_descriptor_sets[bind_point][set].buffer_infos[binding];
                             assert(buf_info);
 
-                            mutable_resources_clones.insert({ index, DumpableResourceBackup() });
-                            mutable_resources_clones[index].original_buffers.push_back(buf_info);
-                            mutable_resources_clones[index].buffer_desc_set_binding_pair.push_back(
-                                std::make_pair(set, binding));
+                            VkBuffer*       new_buf_ptr        = nullptr;
+                            VkDeviceMemory* new_buf_memory_ptr = nullptr;
 
-                            VkBuffer* new_buf_ptr = &*(mutable_resources_clones[index].buffers.insert(
-                                mutable_resources_clones[index].buffers.end(), VK_NULL_HANDLE));
+                            if (!cloning_before_cmd)
+                            {
+                                mutable_resources_clones.insert({ index, DumpableResourceBackup() });
+                                mutable_resources_clones[index].original_buffers.push_back(buf_info);
+                                mutable_resources_clones[index].buffer_desc_set_binding_pair.push_back(
+                                    std::make_pair(set, binding));
 
-                            VkDeviceMemory* new_buf_memory_ptr =
-                                &*(mutable_resources_clones[index].buffer_memories.insert(
+                                new_buf_ptr = &*(mutable_resources_clones[index].buffers.insert(
+                                    mutable_resources_clones[index].buffers.end(), VK_NULL_HANDLE));
+
+                                new_buf_memory_ptr = &*(mutable_resources_clones[index].buffer_memories.insert(
                                     mutable_resources_clones[index].buffer_memories.end(), VK_NULL_HANDLE));
+                            }
+                            else
+                            {
+                                mutable_resources_clones_before.insert({ index, DumpableResourceBackup() });
+                                mutable_resources_clones_before[index].original_buffers.push_back(buf_info);
+                                mutable_resources_clones_before[index].buffer_desc_set_binding_pair.push_back(
+                                    std::make_pair(set, binding));
+
+                                new_buf_ptr = &*(mutable_resources_clones_before[index].buffers.insert(
+                                    mutable_resources_clones_before[index].buffers.end(), VK_NULL_HANDLE));
+
+                                new_buf_memory_ptr = &*(mutable_resources_clones_before[index].buffer_memories.insert(
+                                    mutable_resources_clones_before[index].buffer_memories.end(), VK_NULL_HANDLE));
+                            }
+
+                            assert(new_buf_ptr != nullptr);
+                            assert(new_buf_memory_ptr != nullptr);
 
                             CloneBuffer(object_info_table,
                                         device_table,
@@ -3530,6 +3601,29 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CloneDispat
 void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DestroyMutableResourcesClones()
 {
     for (auto& dr_entry : mutable_resources_clones)
+    {
+        for (size_t i = 0; i < dr_entry.second.original_images.size(); ++i)
+        {
+            const DeviceInfo* device_info =
+                object_info_table.GetDeviceInfo(dr_entry.second.original_images[i]->parent_id);
+            VkDevice device = device_info->handle;
+
+            device_table->FreeMemory(device, dr_entry.second.image_memories[i], nullptr);
+            device_table->DestroyImage(device, dr_entry.second.images[i], nullptr);
+        }
+
+        for (size_t i = 0; i < dr_entry.second.original_buffers.size(); ++i)
+        {
+            const DeviceInfo* device_info =
+                object_info_table.GetDeviceInfo(dr_entry.second.original_buffers[i]->parent_id);
+            VkDevice device = device_info->handle;
+
+            device_table->FreeMemory(device, dr_entry.second.buffer_memories[i], nullptr);
+            device_table->DestroyBuffer(device, dr_entry.second.buffers[i], nullptr);
+        }
+    }
+
+    for (auto& dr_entry : mutable_resources_clones_before)
     {
         for (size_t i = 0; i < dr_entry.second.original_images.size(); ++i)
         {
@@ -3651,7 +3745,11 @@ VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpDispatchRays
 VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMutableResources(uint64_t index,
                                                                                               bool     is_dispatch)
 {
-    assert(mutable_resources_clones.find(index) != mutable_resources_clones.end());
+    if (!mutable_resources_clones.size())
+    {
+        assert(!mutable_resources_clones_before.size());
+        return VK_SUCCESS;
+    }
 
     assert(original_command_buffer_info);
     assert(original_command_buffer_info->parent_id != format::kNullHandleId);
@@ -3663,6 +3761,91 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
 
     graphics::VulkanResourcesUtil resource_util(
         device_info->handle, *device_table, *phys_dev_info->replay_device_info->memory_properties);
+
+    if (dump_resources_before)
+    {
+        assert(mutable_resources_clones_before.size());
+        assert(mutable_resources_clones_before.find(index) != mutable_resources_clones_before.end());
+
+        for (size_t i = 0; i < mutable_resources_clones_before[index].original_images.size(); ++i)
+        {
+            const ImageInfo*      image_info = mutable_resources_clones_before[index].original_images[i];
+            std::vector<uint8_t>  data;
+            std::vector<uint64_t> subresource_offsets;
+            std::vector<uint64_t> subresource_sizes;
+
+            VkResult res = resource_util.ReadFromImageResourceStaging(image_info->handle,
+                                                                      image_info->format,
+                                                                      image_info->type,
+                                                                      image_info->extent,
+                                                                      image_info->level_count,
+                                                                      image_info->layer_count,
+                                                                      image_info->tiling,
+                                                                      image_info->sample_count,
+                                                                      VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                                                                      0,
+                                                                      VK_IMAGE_ASPECT_COLOR_BIT,
+                                                                      data,
+                                                                      subresource_offsets,
+                                                                      subresource_sizes);
+
+            if (res != VK_SUCCESS)
+            {
+                return res;
+            }
+
+            util::imagewriter::DataFormats output_image_format = VkFormatToImageWriterDataFormat(image_info->format);
+
+            if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
+            {
+                uint32_t desc_set = mutable_resources_clones_before[index].image_desc_set_binding_pair[i].first;
+                uint32_t binding  = mutable_resources_clones_before[index].image_desc_set_binding_pair[i].second;
+
+                std::stringstream filename;
+                filename << dump_resource_path << (is_dispatch ? "vkCmdDispatch_" : "vkCmdTraceRays_") << "before_"
+                         << index << "_set_" << desc_set << "_binding_" << binding << "_aspect_"
+                         << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
+                         << 0 << util::ScreenshotFormatToCStr(image_file_format);
+
+                const uint32_t texel_size =
+                    vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
+                const uint32_t stride = texel_size * image_info->extent.width;
+
+                if (image_file_format == util::ScreenshotFormat::kBmp)
+                {
+                    util::imagewriter::WriteBmpImage(filename.str(),
+                                                     image_info->extent.width,
+                                                     image_info->extent.height,
+                                                     subresource_sizes[0],
+                                                     data.data(),
+                                                     stride,
+                                                     output_image_format);
+                }
+                else
+                {
+                    util::imagewriter::WritePngImage(filename.str(),
+                                                     image_info->extent.width,
+                                                     image_info->extent.height,
+                                                     subresource_sizes[0],
+                                                     data.data(),
+                                                     stride,
+                                                     output_image_format);
+                }
+            }
+            // else
+            // {
+            //     std::stringstream filename;
+            //     filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_att_" << i <<
+            //     "_aspect_"
+            //              << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
+            //              << 0 << ".bin";
+
+            //     util::bufferwriter::WriteBuffer(filename.str(), data.data(), data.size());
+            // }
+        }
+    }
+
+    assert(mutable_resources_clones.find(index) != mutable_resources_clones.end());
 
     for (size_t i = 0; i < mutable_resources_clones[index].original_images.size(); ++i)
     {
@@ -3679,8 +3862,6 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
                                                                   image_info->layer_count,
                                                                   image_info->tiling,
                                                                   image_info->sample_count,
-                                                                  // All ender targets should be transitioned by the
-                                                                  // custom render passes into TRANSFER_SRC_OPTIMAL
                                                                   VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                                                                   0,
                                                                   VK_IMAGE_ASPECT_COLOR_BIT,
@@ -3701,8 +3882,8 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
             uint32_t binding  = mutable_resources_clones[index].image_desc_set_binding_pair[i].second;
 
             std::stringstream filename;
-            filename << dump_resource_path << (is_dispatch ? "vkCmdDispatch_" : "vkCmdTraceRays_") << index
-                     << "desc_set_" << desc_set << "_binding_" << binding << "_aspect_"
+            filename << dump_resource_path << (is_dispatch ? "vkCmdDispatch_" : "vkCmdTraceRays_") << index << "_set_"
+                     << desc_set << "_binding_" << binding << "_aspect_"
                      << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_" << 0
                      << util::ScreenshotFormatToCStr(image_file_format);
 
@@ -3747,12 +3928,26 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
 
 void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::FinalizeCommandBuffer()
 {
-    assert(current_dispatch_index == dispatch_indices.size() && current_trace_rays_index == trace_rays_indices.size());
+    assert((dump_resources_before ? (current_dispatch_index / 2) : current_dispatch_index) == dispatch_indices.size() &&
+           (dump_resources_before ? (current_trace_rays_index / 2) : current_trace_rays_index) ==
+               trace_rays_indices.size());
     assert(DR_command_buffer != VK_NULL_HANDLE);
 
     GFXRECON_WRITE_CONSOLE("Finalizing Dispach/TraceRays command buffer")
 
     device_table->EndCommandBuffer(DR_command_buffer);
+}
+bool VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::IsRecording() const
+{
+    if (!dump_resources_before)
+    {
+        return current_dispatch_index < dispatch_indices.size() || current_trace_rays_index < trace_rays_indices.size();
+    }
+    else
+    {
+        return ((current_dispatch_index / 2) < dispatch_indices.size()) ||
+               ((current_trace_rays_index / 2) < trace_rays_indices.size());
+    }
 }
 
 GFXRECON_END_NAMESPACE(gfxrecon)
