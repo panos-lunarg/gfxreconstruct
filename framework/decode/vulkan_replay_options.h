@@ -632,6 +632,12 @@ struct VulkanReplayOptions : public ReplayOptions
     std::vector<std::vector<uint64_t>>              TraceRays_Indices;
     std::vector<uint64_t>                           QueueSubmit_Indices;
     std::string                                     dump_resources;
+#if defined(__ANDROID__)
+    std::string dump_resources_output_path{ "/storage/emulated/0/Download/dump_resources/" };
+#else
+    std::string dump_resources_output_path;
+#endif
+    util::ScreenshotFormat dump_resource_image_format{ util::ScreenshotFormat::kPng };
 
     bool dumping_resource{ true };
     bool dump_resources_before{ false };
