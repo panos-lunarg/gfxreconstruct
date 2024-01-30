@@ -5064,10 +5064,6 @@ PerformReflectionOnShaderModule(ShaderModuleInfo* shader_info, size_t spirv_size
 
         shader_info->used_descriptors_info[binding->set].emplace(binding->binding,
                                                                  ShaderModuleInfo::DescriptorInfo(type, readonly));
-
-        GFXRECON_WRITE_CONSOLE("set: %u binding: %u", binding->set, binding->binding)
-        GFXRECON_WRITE_CONSOLE("  type: %s", util::ToString<VkDescriptorType>(type).c_str());
-        GFXRECON_WRITE_CONSOLE("  readonly: %d", readonly);
     }
 
     return true;
