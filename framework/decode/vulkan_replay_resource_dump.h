@@ -415,11 +415,7 @@ class VulkanReplayResourceDumpBase
 
         void BindPipeline(VkPipelineBindPoint bind_point, const PipelineInfo* pipeline);
 
-        bool IsRecording() const
-        {
-            return current_dispatch_index < dispatch_indices.size() ||
-                   current_trace_rays_index < trace_rays_indices.size();
-        }
+        bool IsRecording() const;
 
         bool ShouldDumpDispatch(uint64_t index) const;
 
@@ -432,7 +428,7 @@ class VulkanReplayResourceDumpBase
                                 uint32_t                                     dynamicOffsetCount,
                                 const uint32_t*                              pDynamicOffsets);
 
-        void CloneDispatchRaysResources(uint64_t index, bool is_dispatch);
+        void CloneDispatchRaysResources(uint64_t index, bool cloning_before_cmd, bool is_dispatch);
 
         VkResult DumpDispatchRaysMutableResources(VkQueue queue, uint64_t bcb_index);
 
@@ -477,6 +473,7 @@ class VulkanReplayResourceDumpBase
 
         // This map should hold copies of all mutable resources per Dispach/TraceRays index
         std::unordered_map<uint64_t, DumpableResourceBackup> mutable_resources_clones;
+        std::unordered_map<uint64_t, DumpableResourceBackup> mutable_resources_clones_before;
 
         const encode::DeviceTable*              device_table;
         const VulkanObjectInfoTable&            object_info_table;
