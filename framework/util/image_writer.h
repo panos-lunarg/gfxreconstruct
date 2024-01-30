@@ -81,14 +81,15 @@ bool WriteBmpImage(const std::string& filename,
                    uint64_t           data_size,
                    const void*        data,
                    uint32_t           pitch       = 0,
-                   DataFormats        data_format = kFormat_UNSPECIFIED);
+                   DataFormats        data_format = kFormat_BGRA);
 
 bool WritePngImage(const std::string& filename,
                    uint32_t           width,
                    uint32_t           height,
                    uint64_t           data_size,
                    const void*        data,
-                   uint32_t           pitch = 0);
+                   uint32_t           pitch  = 0,
+                   DataFormats        format = kFormat_BGRA);
 
 GFXRECON_END_NAMESPACE(imagewriter)
 GFXRECON_END_NAMESPACE(util)
