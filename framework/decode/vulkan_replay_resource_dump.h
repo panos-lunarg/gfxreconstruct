@@ -275,7 +275,8 @@ class VulkanReplayResourceDumpBase
                                      const std::vector<std::vector<uint64_t>>& rp_indices,
                                      const VulkanObjectInfoTable&              object_info_table,
                                      bool                                      dump_resources_before,
-                                     std::string                               dump_resource_path);
+                                     const std::string&                        dump_resource_path,
+                                     util::ScreenshotFormat                    image_file_format);
 
         ~DrawCallCommandBufferContext();
 
@@ -291,7 +292,8 @@ class VulkanReplayResourceDumpBase
         uint32_t                           current_subpass;
         uint32_t                           n_subpasses;
         bool                               dump_resources_before;
-        std::string                        dump_resource_path;
+        const std::string&                 dump_resource_path;
+        util::ScreenshotFormat             image_file_format;
 
         std::vector<std::vector<VkRenderPass>> render_pass_clones;
         bool                                   inside_renderpass;
@@ -402,7 +404,8 @@ class VulkanReplayResourceDumpBase
                                          const std::vector<uint64_t>& trace_rays_indices,
                                          const VulkanObjectInfoTable& object_info_table,
                                          bool                         dump_resources_before,
-                                         std::string                  dump_resource_path);
+                                         const std::string&           dump_resource_path,
+                                         util::ScreenshotFormat       image_file_format);
 
         ~DispatchRaysCommandBufferContext();
 
@@ -446,11 +449,12 @@ class VulkanReplayResourceDumpBase
         const CommandBufferInfo* original_command_buffer_info;
         VkCommandBuffer          DR_command_buffer;
 
-        std::vector<uint64_t> dispatch_indices;
-        std::vector<uint64_t> trace_rays_indices;
-        const PipelineInfo*   bound_pipelines[kBindPoint_count];
-        bool                  dump_resources_before;
-        std::string           dump_resource_path;
+        std::vector<uint64_t>  dispatch_indices;
+        std::vector<uint64_t>  trace_rays_indices;
+        const PipelineInfo*    bound_pipelines[kBindPoint_count];
+        bool                   dump_resources_before;
+        const std::string&     dump_resource_path;
+        util::ScreenshotFormat image_file_format;
 
         descriptor_set_t bound_descriptor_sets[kBindPoint_count];
 
@@ -505,11 +509,10 @@ class VulkanReplayResourceDumpBase
     const VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext*
     FindDispatchRaysCommandBufferContext(VkCommandBuffer original_command_buffer) const;
 
-    bool        recording_;
-    bool        dump_resources_before_;
-    bool        isolate_draw_call_;
-    bool        enabled_;
-    std::string dump_resource_path_;
+    bool recording_;
+    bool dump_resources_before_;
+    bool isolate_draw_call_;
+    bool enabled_;
 
     const VulkanObjectInfoTable& object_info_table_;
 };
