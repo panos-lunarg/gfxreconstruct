@@ -24,12 +24,10 @@
 
 #include "replay_settings.h"
 
-namespace gfxrecon
-{
-namespace parse_dump_resources
-{
+GFXRECON_BEGIN_NAMESPACE(gfxrecon)
+GFXRECON_BEGIN_NAMESPACE(parse_dump_resources)
 
 void parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions& vulkan_replay_options);
 
-} // namespace parse_dump_resources
-} // namespace gfxrecon
+GFXRECON_END_NAMESPACE(parse_dump_resources)
+GFXRECON_END_NAMESPACE(gfxrecon)
