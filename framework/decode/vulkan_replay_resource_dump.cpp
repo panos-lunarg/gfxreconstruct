@@ -113,12 +113,7 @@ VulkanReplayResourceDumpBase::VulkanReplayResourceDumpBase(const VulkanReplayOpt
                                                            const VulkanObjectInfoTable& object_info_table) :
     QueueSubmit_indices_(options.QueueSubmit_Indices),
     recording_(false), dump_resources_before_(options.dump_resources_before), isolate_draw_call_(options.isolate_draw),
-    object_info_table_(object_info_table), enabled_(options.BeginCommandBuffer_Indices.size()),
-#if defined(__ANDROID__)
-    dump_resource_path_("/storage/emulated/0/Download/dump_resources/")
-#else
-    dump_resource_path_("./")
-#endif
+    object_info_table_(object_info_table), enabled_(options.BeginCommandBuffer_Indices.size())
 {
     // These should match
     // assert(options.BeginCommandBuffer_Indices.size() == options.Draw_Indices.size());
@@ -139,7 +134,8 @@ VulkanReplayResourceDumpBase::VulkanReplayResourceDumpBase(const VulkanReplayOpt
                                                          : std::vector<std::vector<uint64_t>>(),
                     object_info_table,
                     options.dump_resources_before,
-                    dump_resource_path_));
+                    options.dump_resources_output_path,
+                    options.dump_resource_image_format));
         }
 
         if ((i < options.Dispatch_Indices.size() && options.Dispatch_Indices[i].size()) ||
@@ -155,7 +151,8 @@ VulkanReplayResourceDumpBase::VulkanReplayResourceDumpBase(const VulkanReplayOpt
                                                   : std::vector<uint64_t>(),
                                               object_info_table_,
                                               dump_resources_before_,
-                                              dump_resource_path_));
+                                              options.dump_resources_output_path,
+                                              options.dump_resource_image_format));
         }
     }
 
@@ -164,7 +161,7 @@ VulkanReplayResourceDumpBase::VulkanReplayResourceDumpBase(const VulkanReplayOpt
     // "wb" might fail with the error that the file already exists. Deleting the file from code can workaround this
     if (enabled_)
     {
-        DIR* dump_resource_dir = opendir(dump_resource_path_.c_str());
+        DIR* dump_resource_dir = opendir(options.dump_resources_output_path.c_str());
         if (dump_resource_dir != nullptr)
         {
             struct dirent* dir;
@@ -175,9 +172,10 @@ VulkanReplayResourceDumpBase::VulkanReplayResourceDumpBase(const VulkanReplayOpt
                 {
                     const char* file_extension = &dir->d_name[len - 3];
 
-                    if (!strcmp(file_extension, "bmp") || !strcmp(file_extension, "bin"))
+                    if (!strcmp(file_extension, "bmp") || !strcmp(file_extension, "png") ||
+                        !strcmp(file_extension, "bin"))
                     {
-                        std::string full_path = dump_resource_path_ + std::string(dir->d_name);
+                        std::string full_path = options.dump_resources_output_path + std::string(dir->d_name);
                         GFXRECON_LOG_INFO("Deleting file %s", full_path.c_str());
                         if (remove(full_path.c_str()))
                         {
@@ -929,24 +927,37 @@ VulkanReplayResourceDumpBase::DrawCallCommandBufferContext::DumpRenderTargetAtta
                 filename << dump_resource_path << "vkCmdDraw_" << ((cmd_buf_index % 2) ? "after_" : "before_")
                          << dc_index << "_att_" << i << "_aspect_"
                          << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
-                         << 0 << ".bmp";
+                         << 0 << util::ScreenshotFormatToCStr(image_file_format);
             }
             else
             {
                 filename << dump_resource_path << "vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
                          << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
-                         << 0 << ".bmp";
+                         << 0 << util::ScreenshotFormatToCStr(image_file_format);
             }
             const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
             const uint32_t stride     = texel_size * image_info->extent.width;
 
-            util::imagewriter::WriteBmpImage(filename.str(),
-                                             image_info->extent.width,
-                                             image_info->extent.height,
-                                             subresource_sizes[0],
-                                             data.data(),
-                                             stride,
-                                             output_image_format);
+            if (image_file_format == util::ScreenshotFormat::kBmp)
+            {
+                util::imagewriter::WriteBmpImage(filename.str(),
+                                                 image_info->extent.width,
+                                                 image_info->extent.height,
+                                                 subresource_sizes[0],
+                                                 data.data(),
+                                                 stride,
+                                                 output_image_format);
+            }
+            else if (image_file_format == util::ScreenshotFormat::kPng)
+            {
+                util::imagewriter::WritePngImage(filename.str(),
+                                                 image_info->extent.width,
+                                                 image_info->extent.height,
+                                                 subresource_sizes[0],
+                                                 data.data(),
+                                                 stride,
+                                                 output_image_format);
+            }
         }
         // else
         // {
@@ -996,14 +1007,14 @@ VulkanReplayResourceDumpBase::DrawCallCommandBufferContext::DumpRenderTargetAtta
         {
             filename << dump_resource_path << "vkCmdDraw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index
                      << "_aspect_" << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0
-                     << "_al_" << 0 << ".bmp";
+                     << "_al_" << 0 << util::ScreenshotFormatToCStr(image_file_format);
         }
         else
         {
 
             filename << dump_resource_path << "vkCmdDraw_" << dc_index << "_aspect_"
                      << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
-                     << ".bmp";
+                     << util::ScreenshotFormatToCStr(image_file_format);
         }
 
         // This is a bit awkward
@@ -1012,13 +1023,26 @@ VulkanReplayResourceDumpBase::DrawCallCommandBufferContext::DumpRenderTargetAtta
                                         : 4;
         const uint32_t stride = texel_size * image_info->extent.width;
 
-        util::imagewriter::WriteBmpImage(filename.str(),
-                                         image_info->extent.width,
-                                         image_info->extent.height,
-                                         subresource_sizes[0],
-                                         data.data(),
-                                         stride,
-                                         VkFormatToImageWriterDataFormat(image_info->format));
+        if (image_file_format == util::ScreenshotFormat::kBmp)
+        {
+            util::imagewriter::WriteBmpImage(filename.str(),
+                                             image_info->extent.width,
+                                             image_info->extent.height,
+                                             subresource_sizes[0],
+                                             data.data(),
+                                             stride,
+                                             VkFormatToImageWriterDataFormat(image_info->format));
+        }
+        else
+        {
+            util::imagewriter::WritePngImage(filename.str(),
+                                             image_info->extent.width,
+                                             image_info->extent.height,
+                                             subresource_sizes[0],
+                                             data.data(),
+                                             stride,
+                                             VkFormatToImageWriterDataFormat(image_info->format));
+        }
     }
 
     return VK_SUCCESS;
@@ -2378,13 +2402,14 @@ VulkanReplayResourceDumpBase::DrawCallCommandBufferContext::DrawCallCommandBuffe
     const std::vector<std::vector<uint64_t>>& rp_indices,
     const VulkanObjectInfoTable&              object_info_table,
     bool                                      dump_resources_before,
-    std::string                               dump_resource_path) :
+    const std::string&                        dump_resource_path,
+    util::ScreenshotFormat                    image_file_format) :
     original_command_buffer_info(nullptr),
     current_cb_index(0), dc_indices(dc_indices), RP_indices(rp_indices), active_renderpass(nullptr),
     active_framebuffer(nullptr), bound_pipelines{ nullptr }, current_renderpass(0), current_subpass(0),
     dump_resources_before(dump_resources_before), aux_command_buffer(VK_NULL_HANDLE), aux_fence(VK_NULL_HANDLE),
     device_table(nullptr), object_info_table(object_info_table), replay_device_phys_mem_props(nullptr),
-    dump_resource_path(dump_resource_path)
+    dump_resource_path(dump_resource_path), image_file_format(image_file_format)
 {
     must_backup_resources = dc_indices.size() > 1;
 
@@ -2934,6 +2959,8 @@ VulkanReplayResourceDumpBase::DrawCallCommandBufferContext::GetRenderPassIndex(u
     }
 
     // If this is hit then probably there's something wrong with the draw call and/or render pass indices
+    GFXRECON_LOG_ERROR(
+        "It appears that there is an error with the provided Draw indices in combination with the render pass indices.")
     assert(0);
 
     return RenderPassSubpassPair(0, 0);
@@ -3001,12 +3028,14 @@ VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DispatchRaysComm
     const std::vector<uint64_t>& trace_rays_indices,
     const VulkanObjectInfoTable& object_info_table,
     bool                         dump_resources_before,
-    std::string                  dump_resource_path) :
+    const std::string&           dump_resource_path,
+    util::ScreenshotFormat       image_file_format) :
     original_command_buffer_info(nullptr),
     DR_command_buffer(VK_NULL_HANDLE), dispatch_indices(dispatch_indices),
     trace_rays_indices(trace_rays_indices), bound_pipelines{ nullptr }, dump_resources_before(dump_resources_before),
-    dump_resource_path(dump_resource_path), device_table(nullptr), object_info_table(object_info_table),
-    replay_device_phys_mem_props(nullptr), current_dispatch_index(0), current_trace_rays_index(0)
+    dump_resource_path(dump_resource_path), image_file_format(image_file_format), device_table(nullptr),
+    object_info_table(object_info_table), replay_device_phys_mem_props(nullptr), current_dispatch_index(0),
+    current_trace_rays_index(0)
 {}
 
 VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::~DispatchRaysCommandBufferContext()
@@ -3675,18 +3704,31 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
             filename << dump_resource_path << (is_dispatch ? "vkCmdDispatch_" : "vkCmdTraceRays_") << index
                      << "desc_set_" << desc_set << "_binding_" << binding << "_aspect_"
                      << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_" << 0
-                     << ".bmp";
+                     << util::ScreenshotFormatToCStr(image_file_format);
 
             const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
             const uint32_t stride     = texel_size * image_info->extent.width;
 
-            util::imagewriter::WriteBmpImage(filename.str(),
-                                             image_info->extent.width,
-                                             image_info->extent.height,
-                                             subresource_sizes[0],
-                                             data.data(),
-                                             stride,
-                                             output_image_format);
+            if (image_file_format == util::ScreenshotFormat::kBmp)
+            {
+                util::imagewriter::WriteBmpImage(filename.str(),
+                                                 image_info->extent.width,
+                                                 image_info->extent.height,
+                                                 subresource_sizes[0],
+                                                 data.data(),
+                                                 stride,
+                                                 output_image_format);
+            }
+            else
+            {
+                util::imagewriter::WritePngImage(filename.str(),
+                                                 image_info->extent.width,
+                                                 image_info->extent.height,
+                                                 subresource_sizes[0],
+                                                 data.data(),
+                                                 stride,
+                                                 output_image_format);
+            }
         }
         // else
         // {
