@@ -164,8 +164,8 @@ static float Ufloat10ToFloat(uint16_t val)
         }                                                                              \
     }
 
-static void ConvertIntoTemporaryBuffer(
-    uint32_t width, uint32_t height, const void* data, uint32_t row_pitch, DataFormats format, bool invert_height)
+static void
+ConvertIntoTemporaryBuffer(uint32_t width, uint32_t height, const void* data, uint32_t row_pitch, DataFormats format)
 {
     GFXRECON_UNREFERENCED_PARAMETER(row_pitch);
 
@@ -186,9 +186,9 @@ static void ConvertIntoTemporaryBuffer(
                 const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
-                    const uint8_t r = bytes[(invert_height ? (height - 1 - y) : y) * 3 * width + (3 * x) + 0];
-                    const uint8_t g = bytes[(invert_height ? (height - 1 - y) : y) * 3 * width + (3 * x) + 1];
-                    const uint8_t b = bytes[(invert_height ? (height - 1 - y) : y) * 3 * width + (3 * x) + 2];
+                    const uint8_t r = bytes[y * 3 * width + (3 * x) + 0];
+                    const uint8_t g = bytes[y * 3 * width + (3 * x) + 1];
+                    const uint8_t b = bytes[y * 3 * width + (3 * x) + 2];
 
                     const uint32_t rgba = (0xff << 24) | (r << 16) | (g << 8) | b;
                     *(temp_buffer++)    = rgba;
@@ -202,10 +202,10 @@ static void ConvertIntoTemporaryBuffer(
                 const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
-                    const uint8_t r = bytes[(invert_height ? (height - 1 - y) : y) * 4 * width + (4 * x) + 0];
-                    const uint8_t g = bytes[(invert_height ? (height - 1 - y) : y) * 4 * width + (4 * x) + 1];
-                    const uint8_t b = bytes[(invert_height ? (height - 1 - y) : y) * 4 * width + (4 * x) + 2];
-                    const uint8_t a = bytes[(invert_height ? (height - 1 - y) : y) * 4 * width + (4 * x) + 3];
+                    const uint8_t r = bytes[y * 4 * width + (4 * x) + 0];
+                    const uint8_t g = bytes[y * 4 * width + (4 * x) + 1];
+                    const uint8_t b = bytes[y * 4 * width + (4 * x) + 2];
+                    const uint8_t a = bytes[y * 4 * width + (4 * x) + 3];
 
                     const uint32_t rgba = (a << 24) | (r << 16) | (g << 8) | b;
                     *(temp_buffer++)    = rgba;
@@ -219,9 +219,9 @@ static void ConvertIntoTemporaryBuffer(
                 const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
-                    const uint8_t r = bytes[(invert_height ? (height - 1 - y) : y) * 3 * width + (3 * x) + 0];
-                    const uint8_t g = bytes[(invert_height ? (height - 1 - y) : y) * 3 * width + (3 * x) + 1];
-                    const uint8_t b = bytes[(invert_height ? (height - 1 - y) : y) * 3 * width + (3 * x) + 2];
+                    const uint8_t r = bytes[y * 3 * width + (3 * x) + 0];
+                    const uint8_t g = bytes[y * 3 * width + (3 * x) + 1];
+                    const uint8_t b = bytes[y * 3 * width + (3 * x) + 2];
 
                     const uint32_t rgba = (0xff << 24) | (r << 16) | (g << 8) | b;
                     *(temp_buffer++)    = rgba;
@@ -235,10 +235,10 @@ static void ConvertIntoTemporaryBuffer(
                 const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
-                    const uint8_t r = bytes[(invert_height ? (height - 1 - y) : y) * 4 * width + (4 * x) + 0];
-                    const uint8_t g = bytes[(invert_height ? (height - 1 - y) : y) * 4 * width + (4 * x) + 1];
-                    const uint8_t b = bytes[(invert_height ? (height - 1 - y) : y) * 4 * width + (4 * x) + 2];
-                    const uint8_t a = bytes[(invert_height ? (height - 1 - y) : y) * 4 * width + (4 * x) + 3];
+                    const uint8_t r = bytes[y * 4 * width + (4 * x) + 0];
+                    const uint8_t g = bytes[y * 4 * width + (4 * x) + 1];
+                    const uint8_t b = bytes[y * 4 * width + (4 * x) + 2];
+                    const uint8_t a = bytes[y * 4 * width + (4 * x) + 3];
 
                     const uint32_t rgba = (a << 24) | (r << 16) | (g << 8) | b;
                     *(temp_buffer++)    = rgba;
@@ -253,9 +253,9 @@ static void ConvertIntoTemporaryBuffer(
                 for (uint32_t x = 0; x < width; ++x)
                 {
                     // clang-format off
-                        const float b = Ufloat10ToFloat(static_cast<uint16_t>((u32_vals[(invert_height ? (height - 1 - y) : y) * width + x] & (0xFFC00000)) >> 22));
-                        const float g = Ufloat11ToFloat(static_cast<uint16_t>((u32_vals[(invert_height ? (height - 1 - y) : y) * width + x] & (0x003FF800)) >> 11));
-                        const float r = Ufloat11ToFloat(static_cast<uint16_t>((u32_vals[(invert_height ? (height - 1 - y) : y) * width + x] & (0x000007FF)) >> 0));
+                        const float b = Ufloat10ToFloat(static_cast<uint16_t>((u32_vals[y * width + x] & (0xFFC00000)) >> 22));
+                        const float g = Ufloat11ToFloat(static_cast<uint16_t>((u32_vals[y * width + x] & (0x003FF800)) >> 11));
+                        const float r = Ufloat11ToFloat(static_cast<uint16_t>((u32_vals[y * width + x] & (0x000007FF)) >> 0));
                     // clang-format on
 
                     const uint8_t b_u8 = static_cast<uint8_t>(std::min(b, 1.0f) * 255.0f);
@@ -274,14 +274,10 @@ static void ConvertIntoTemporaryBuffer(
                 const uint32_t* u32_vals = reinterpret_cast<const uint32_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
-                    uint8_t a = static_cast<uint8_t>(
-                        (u32_vals[(invert_height ? (height - 1 - y) : y) * width + x] & 0xC0000000) >> 30);
-                    uint8_t b = static_cast<uint8_t>(
-                        (u32_vals[(invert_height ? (height - 1 - y) : y) * width + x] & 0x3FF00000) >> 20);
-                    uint8_t g = static_cast<uint8_t>(
-                        (u32_vals[(invert_height ? (height - 1 - y) : y) * width + x] & 0x000FFC00) >> 10);
-                    uint8_t r = static_cast<uint8_t>(
-                        (u32_vals[(invert_height ? (height - 1 - y) : y) * width + x] & 0x000003FF) >> 0);
+                    uint8_t a = static_cast<uint8_t>((u32_vals[y * width + x] & 0xC0000000) >> 30);
+                    uint8_t b = static_cast<uint8_t>((u32_vals[y * width + x] & 0x3FF00000) >> 20);
+                    uint8_t g = static_cast<uint8_t>((u32_vals[y * width + x] & 0x000FFC00) >> 10);
+                    uint8_t r = static_cast<uint8_t>((u32_vals[y * width + x] & 0x000003FF) >> 0);
 
                     r = static_cast<uint8_t>(static_cast<float>(r) / 1023.0f * 255.0f);
                     g = static_cast<uint8_t>(static_cast<float>(g) / 1023.0f * 255.0f);
@@ -300,7 +296,7 @@ static void ConvertIntoTemporaryBuffer(
                 const float* bytes_float = reinterpret_cast<const float*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
-                    const float   float_depth = bytes_float[(invert_height ? (height - 1 - y) : y) * width + x];
+                    const float   float_depth = bytes_float[y * width + x];
                     const uint8_t depth       = static_cast<uint8_t>(float_depth * 255.0f);
 
                     uint32_t rgba    = (0xff << 24) | (depth << 16) | (depth << 8) | depth;
@@ -315,10 +311,9 @@ static void ConvertIntoTemporaryBuffer(
                 const uint32_t* bytes_u32 = reinterpret_cast<const uint32_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
-                    const uint32_t normalized_depth =
-                        bytes_u32[(invert_height ? (height - 1 - y) : y) * width + x] & 0x00FFFFFF;
-                    const float   float_depth = static_cast<float>(normalized_depth) / 8388607.0f;
-                    const uint8_t depth       = static_cast<uint8_t>(float_depth * 255.0f);
+                    const uint32_t normalized_depth = bytes_u32[y * width + x] & 0x00FFFFFF;
+                    const float    float_depth      = static_cast<float>(normalized_depth) / 8388607.0f;
+                    const uint8_t  depth            = static_cast<uint8_t>(float_depth * 255.0f);
 
                     uint32_t rgba    = (0xff << 24) | (depth << 16) | (depth << 8) | depth;
                     *(temp_buffer++) = rgba;
@@ -332,7 +327,7 @@ static void ConvertIntoTemporaryBuffer(
                 const uint16_t* bytes_u16 = reinterpret_cast<const uint16_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
-                    const uint16_t normalized_depth = bytes_u16[(invert_height ? (height - 1 - y) : y) * width + x];
+                    const uint16_t normalized_depth = bytes_u16[y * width + x];
                     const float    float_depth      = static_cast<float>(normalized_depth) / 32767.0f;
                     const uint8_t  depth            = static_cast<uint8_t>(float_depth * 255.0f);
 
@@ -431,7 +426,7 @@ bool WriteBmpImage(const std::string& filename,
             }
             else
             {
-                ConvertIntoTemporaryBuffer(width, height, data, row_pitch, format, true);
+                ConvertIntoTemporaryBuffer(width, height, data, row_pitch, format);
                 for (uint32_t y = 0; y < height; ++y)
                 {
                     const uint8_t* bytes = reinterpret_cast<const uint8_t*>(temporary_buffer.get());
@@ -486,7 +481,7 @@ bool WritePngImage(const std::string& filename,
     }
 #endif
     assert(pitch);
-    ConvertIntoTemporaryBuffer(width, height, data, pitch, format, false);
+    ConvertIntoTemporaryBuffer(width, height, data, pitch, format);
     if (1 == stbi_write_png(
                  filename.c_str(), width, height, kImageBpp, static_cast<const void*>(temporary_buffer.get()), pitch))
     {
