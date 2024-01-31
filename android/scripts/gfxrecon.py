@@ -96,6 +96,7 @@ def CreateReplayParser():
     parser.add_argument('file', nargs='?', help='File on device to play (forwarded to replay tool)')
     parser.add_argument('--dump-resources', metavar='DUMP_RESOURCES', help='--dump-resources <filename> Extract --dump-resources args from the specified file.')
     parser.add_argument('--dump-resources-before-draw', action='store_true', default=False, help= 'In addition to dumping gpu resources after the Vulkan draw calls specified by the --dump-resources argument, also dump resources before the draw calls.')
+    parser.add_argument('--dump-resources-image-format', metavar='FORMAT', choices=['bmp', 'png'], help='Image file format to use when dumping image resources. Available formats are: bmp, png')
     return parser
 
 def MakeExtrasString(args):
@@ -207,6 +208,10 @@ def MakeExtrasString(args):
 
     if args.dump_resources_before_draw:
         arg_list.append('--dump-resources-before-draw')
+
+    if args.dump_resources_image_format:
+        arg_list.append('--dump-resources-image-format')
+        arg_list.append('{}'.format(args.dump_resources_image_format))
 
     if args.file:
         arg_list.append(args.file)
