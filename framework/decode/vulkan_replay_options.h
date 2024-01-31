@@ -624,6 +624,7 @@ struct VulkanReplayOptions : public ReplayOptions
     bool dumping_resource{ true };
     bool dump_resources_before{ false };
     bool isolate_draw{ false }; // How should this be set?
+    float dump_resources_scale{1.0f};
 };
 
 GFXRECON_END_NAMESPACE(decode)
