@@ -276,7 +276,8 @@ class VulkanReplayResourceDumpBase
                                      const VulkanObjectInfoTable&              object_info_table,
                                      bool                                      dump_resources_before,
                                      const std::string&                        dump_resource_path,
-                                     util::ScreenshotFormat                    image_file_format);
+                                     util::ScreenshotFormat                    image_file_format,
+                                     float                                     dump_resource_scale);
 
         ~DrawCallCommandBufferContext();
 
@@ -294,6 +295,7 @@ class VulkanReplayResourceDumpBase
         bool                               dump_resources_before;
         const std::string&                 dump_resource_path;
         util::ScreenshotFormat             image_file_format;
+        float                              dump_resources_scale;
 
         std::vector<std::vector<VkRenderPass>> render_pass_clones;
         bool                                   inside_renderpass;
