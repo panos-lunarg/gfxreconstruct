@@ -98,6 +98,8 @@ def CreateReplayParser():
     parser.add_argument('--vssb', '--virtual-swapchain-skip-blit', action='store_true', default=False, help='Skip blit to real swapchain to gain performance during replay.')
     parser.add_argument('--use-captured-swapchain-indices', action='store_true', default=False, help='Same as "--swapchain captured". Ignored if the "--swapchain" option is used.')
     parser.add_argument('file', nargs='?', help='File on device to play (forwarded to replay tool)')
+    parser.add_argument('--dump-resources', metavar='DUMP_RESOURCES', help='--dump-resources <filename> Extract --dump-resources args from the specified file.')
+    parser.add_argument('--dump-resources-before-draw', action='store_true', default=False, help= 'In addition to dumping gpu resources after the Vulkan draw calls specified by the --dump-resources argument, also dump resources before the draw calls.')
     return parser
 
 def MakeExtrasString(args):
@@ -216,6 +218,13 @@ def MakeExtrasString(args):
     if args.memory_translation:
         arg_list.append('-m')
         arg_list.append('{}'.format(args.memory_translation))
+
+    if args.dump_resources:
+        arg_list.append('--dump-resources')
+        arg_list.append('{}'.format(args.dump_resources))
+
+    if args.dump_resources_before_draw:
+        arg_list.append('--dump-resources-before-draw')
 
     if args.file:
         arg_list.append(args.file)
