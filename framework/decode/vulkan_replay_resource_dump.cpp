@@ -137,7 +137,7 @@ VulkanReplayResourceDumpBase::VulkanReplayResourceDumpBase(const VulkanReplayOpt
                     object_info_table,
                     options.dump_resources_before,
                     options.dump_resources_output_path,
-                    options.dump_resource_image_format,
+                    options.dump_resources_image_format,
                     options.dump_resources_scale));
         }
 
@@ -155,7 +155,7 @@ VulkanReplayResourceDumpBase::VulkanReplayResourceDumpBase(const VulkanReplayOpt
                                               object_info_table_,
                                               options.dump_resources_before,
                                               options.dump_resources_output_path,
-                                              options.dump_resource_image_format));
+                                              options.dump_resources_image_format));
         }
     }
 

@@ -619,7 +619,7 @@ struct VulkanReplayOptions : public ReplayOptions
 #else
     std::string dump_resources_output_path;
 #endif
-    util::ScreenshotFormat dump_resource_image_format{ util::ScreenshotFormat::kPng };
+    util::ScreenshotFormat dump_resources_image_format{ util::ScreenshotFormat::kBmp };
 
     bool dumping_resource{ true };
     bool dump_resources_before{ false };
