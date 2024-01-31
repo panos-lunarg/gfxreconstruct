@@ -85,7 +85,9 @@ static util::imagewriter::DataFormats VkFormatToImageWriterDataFormat(VkFormat f
             return util::imagewriter::DataFormats::kFormat_D16_UNORM;
 
         default:
-            GFXRECON_LOG_ERROR("%s() failed to handle format: %s", __func__, util::ToString<VkFormat>(format).c_str());
+            GFXRECON_LOG_ERROR("%s() failed to handle format %s. Will dump as a plain binary file.",
+                               __func__,
+                               util::ToString<VkFormat>(format).c_str());
             return util::imagewriter::DataFormats::kFormat_UNSPECIFIED;
     }
 }
@@ -921,7 +923,6 @@ VulkanReplayResourceDumpBase::DrawCallCommandBufferContext::DumpRenderTargetAtta
         }
 
         util::imagewriter::DataFormats output_image_format = VkFormatToImageWriterDataFormat(image_info->format);
-
         if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
         {
             std::stringstream filename;
@@ -962,16 +963,25 @@ VulkanReplayResourceDumpBase::DrawCallCommandBufferContext::DumpRenderTargetAtta
                                                  output_image_format);
             }
         }
-        // else
-        // {
-        //     std::stringstream filename;
-        //     filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_att_" << i <<
-        //     "_aspect_"
-        //              << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
-        //              << 0 << ".bin";
+        else
+        {
+            std::stringstream filename;
+            if (dump_resources_before)
+            {
+                filename << dump_resource_path << "vkCmdDraw_" << ((cmd_buf_index % 2) ? "after_" : "before_")
+                         << dc_index << "_att_" << i << "_aspect_"
+                         << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
+                         << 0 << ".bin";
+            }
+            else
+            {
+                filename << dump_resource_path << "vkCmdDraw_" << dc_index << "_att_" << i << "_aspect_"
+                         << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
+                         << 0 << ".bin";
+            }
 
-        //     util::bufferwriter::WriteBuffer(filename.str(), data.data(), data.size());
-        // }
+            util::bufferwriter::WriteBuffer(filename.str(), data.data(), data.size());
+        }
     }
 
     if (render_targets_[rp][sp].depth_att_img != nullptr)
@@ -1007,46 +1017,70 @@ VulkanReplayResourceDumpBase::DrawCallCommandBufferContext::DumpRenderTargetAtta
             return res;
         }
 
-        std::stringstream filename;
-        if (dump_resources_before)
+        util::imagewriter::DataFormats output_image_format = VkFormatToImageWriterDataFormat(image_info->format);
+        if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
         {
-            filename << dump_resource_path << "vkCmdDraw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index
-                     << "_aspect_" << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0
-                     << "_al_" << 0 << util::ScreenshotFormatToCStr(image_file_format);
+            std::stringstream filename;
+            if (dump_resources_before)
+            {
+                filename << dump_resource_path << "vkCmdDraw_" << ((cmd_buf_index % 2) ? "after_" : "before_")
+                         << dc_index << "_aspect_"
+                         << "VK_IMAGE_ASPECT_DEPTH_BIT"
+                         << "_ml_" << 0 << "_al_" << 0 << util::ScreenshotFormatToCStr(image_file_format);
+            }
+            else
+            {
+
+                filename << dump_resource_path << "vkCmdDraw_" << dc_index << "_aspect_"
+                         << "VK_IMAGE_ASPECT_DEPTH_BIT"
+                         << "_ml_" << 0 << "_al_" << 0 << util::ScreenshotFormatToCStr(image_file_format);
+            }
+
+            // This is a bit awkward
+            const uint32_t texel_size =
+                image_info->format != VK_FORMAT_X8_D24_UNORM_PACK32
+                    ? vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_DEPTH_BIT)
+                    : 4;
+            const uint32_t stride = texel_size * image_info->extent.width * dump_resources_scale;
+
+            if (image_file_format == util::ScreenshotFormat::kBmp)
+            {
+                util::imagewriter::WriteBmpImage(filename.str(),
+                                                 image_info->extent.width * dump_resources_scale,
+                                                 image_info->extent.height * dump_resources_scale,
+                                                 subresource_sizes[0],
+                                                 data.data(),
+                                                 stride,
+                                                 output_image_format);
+            }
+            else
+            {
+                util::imagewriter::WritePngImage(filename.str(),
+                                                 image_info->extent.width * dump_resources_scale,
+                                                 image_info->extent.height * dump_resources_scale,
+                                                 subresource_sizes[0],
+                                                 data.data(),
+                                                 stride,
+                                                 output_image_format);
+            }
         }
         else
         {
+            std::stringstream filename;
+            if (dump_resources_before)
+            {
+                filename << dump_resource_path << "vkCmdDraw_" << ((cmd_buf_index % 2) ? "after_" : "before_")
+                         << dc_index << "_aspect_VK_IMAGE_ASPECT_DEPTH_BIT"
+                         << "_ml_" << 0 << "_al_" << 0 << ".bin";
+            }
+            else
+            {
 
-            filename << dump_resource_path << "vkCmdDraw_" << dc_index << "_aspect_"
-                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_DEPTH_BIT) << "_ml_" << 0 << "_al_" << 0
-                     << util::ScreenshotFormatToCStr(image_file_format);
-        }
+                filename << dump_resource_path << "vkCmdDraw_" << dc_index << "_aspect_VK_IMAGE_ASPECT_DEPTH_BIT"
+                         << "_ml_" << 0 << "_al_" << 0 << ".bin";
+            }
 
-        // This is a bit awkward
-        const uint32_t texel_size = image_info->format != VK_FORMAT_X8_D24_UNORM_PACK32
-                                        ? vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_DEPTH_BIT)
-                                        : 4;
-        const uint32_t stride = texel_size * image_info->extent.width * dump_resources_scale;
-
-        if (image_file_format == util::ScreenshotFormat::kBmp)
-        {
-            util::imagewriter::WriteBmpImage(filename.str(),
-                                             image_info->extent.width * dump_resources_scale,
-                                             image_info->extent.height * dump_resources_scale,
-                                             subresource_sizes[0],
-                                             data.data(),
-                                             stride,
-                                             VkFormatToImageWriterDataFormat(image_info->format));
-        }
-        else
-        {
-            util::imagewriter::WritePngImage(filename.str(),
-                                             image_info->extent.width * dump_resources_scale,
-                                             image_info->extent.height * dump_resources_scale,
-                                             subresource_sizes[0],
-                                             data.data(),
-                                             stride,
-                                             VkFormatToImageWriterDataFormat(image_info->format));
+            util::bufferwriter::WriteBuffer(filename.str(), data.data(), data.size());
         }
     }
 
@@ -2439,7 +2473,8 @@ VulkanReplayResourceDumpBase::DrawCallCommandBufferContext::DrawCallCommandBuffe
     active_framebuffer(nullptr), bound_pipelines{ nullptr }, current_renderpass(0), current_subpass(0),
     dump_resources_before(dump_resources_before), aux_command_buffer(VK_NULL_HANDLE), aux_fence(VK_NULL_HANDLE),
     device_table(nullptr), object_info_table(object_info_table), replay_device_phys_mem_props(nullptr),
-    dump_resource_path(dump_resource_path), image_file_format(image_file_format), dump_resources_scale(dump_resources_scale)
+    dump_resource_path(dump_resource_path), image_file_format(image_file_format),
+    dump_resources_scale(dump_resources_scale)
 {
     must_backup_resources = (dc_indices.size() > 1);
 
@@ -3837,16 +3872,19 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
                                                      output_image_format);
                 }
             }
-            // else
-            // {
-            //     std::stringstream filename;
-            //     filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_att_" << i <<
-            //     "_aspect_"
-            //              << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
-            //              << 0 << ".bin";
+            else
+            {
+                uint32_t desc_set = mutable_resources_clones_before[index].image_desc_set_binding_pair[i].first;
+                uint32_t binding  = mutable_resources_clones_before[index].image_desc_set_binding_pair[i].second;
 
-            //     util::bufferwriter::WriteBuffer(filename.str(), data.data(), data.size());
-            // }
+                std::stringstream filename;
+                filename << dump_resource_path << (is_dispatch ? "vkCmdDispatch_" : "vkCmdTraceRays_") << "before_"
+                         << index << "_set_" << desc_set << "_binding_" << binding << "_aspect_"
+                         << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
+                         << 0 << ".bin";
+
+                util::bufferwriter::WriteBuffer(filename.str(), data.data(), data.size());
+            }
         }
     }
 
@@ -3916,16 +3954,17 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
                                                  output_image_format);
             }
         }
-        // else
-        // {
-        //     std::stringstream filename;
-        //     filename << "/storage/emulated/0/Download/screens/vkCmdDraw_" << dc_index << "_att_" << i <<
-        //     "_aspect_"
-        //              << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_"
-        //              << 0 << ".bin";
+        else
+        {
+            uint32_t desc_set = mutable_resources_clones[index].image_desc_set_binding_pair[i].first;
+            uint32_t binding  = mutable_resources_clones[index].image_desc_set_binding_pair[i].second;
 
-        //     util::bufferwriter::WriteBuffer(filename.str(), data.data(), data.size());
-        // }
+            std::stringstream filename;
+            filename << dump_resource_path << (is_dispatch ? "vkCmdDispatch_after_" : "vkCmdTraceRays_after_") << index
+                     << "_set_" << desc_set << "_binding_" << binding << "_aspect_"
+                     << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_" << 0
+                     << ".bin";
+        }
     }
 
     return VK_SUCCESS;
