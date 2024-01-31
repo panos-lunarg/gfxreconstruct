@@ -3325,8 +3325,7 @@ void VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::CopyImageRe
     img_barrier.srcQueueFamilyIndex = src_image_info->queue_family_index;
     img_barrier.dstQueueFamilyIndex = src_image_info->queue_family_index;
     img_barrier.image               = src_image_info->handle;
-
-    const VkImageSubresourceRange range{
+    img_barrier.subresourceRange    = {
         graphics::GetFormatAspectMask(src_image_info->format), 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS
     };
 
@@ -3774,7 +3773,7 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
             std::vector<uint64_t> subresource_offsets;
             std::vector<uint64_t> subresource_sizes;
 
-            VkResult res = resource_util.ReadFromImageResourceStaging(image_info->handle,
+            VkResult res = resource_util.ReadFromImageResourceStaging(mutable_resources_clones_before[index].images[i],
                                                                       image_info->format,
                                                                       image_info->type,
                                                                       image_info->extent,
@@ -3854,7 +3853,7 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
         std::vector<uint64_t> subresource_offsets;
         std::vector<uint64_t> subresource_sizes;
 
-        VkResult res = resource_util.ReadFromImageResourceStaging(image_info->handle,
+        VkResult res = resource_util.ReadFromImageResourceStaging(mutable_resources_clones[index].images[i],
                                                                   image_info->format,
                                                                   image_info->type,
                                                                   image_info->extent,
@@ -3882,8 +3881,8 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
             uint32_t binding  = mutable_resources_clones[index].image_desc_set_binding_pair[i].second;
 
             std::stringstream filename;
-            filename << dump_resource_path << (is_dispatch ? "vkCmdDispatch_" : "vkCmdTraceRays_") << index << "_set_"
-                     << desc_set << "_binding_" << binding << "_aspect_"
+            filename << dump_resource_path << (is_dispatch ? "vkCmdDispatch_after_" : "vkCmdTraceRays_after_") << index
+                     << "_set_" << desc_set << "_binding_" << binding << "_aspect_"
                      << util::ToString<VkImageAspectFlagBits>(VK_IMAGE_ASPECT_COLOR_BIT) << "_ml_" << 0 << "_al_" << 0
                      << util::ScreenshotFormatToCStr(image_file_format);
 
