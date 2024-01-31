@@ -120,6 +120,7 @@ const char kBatchingMemoryUsageArgument[] = "--batching-memory-usage";
 #endif
 const char kDumpResourcesArgument[]             = "--dump-resources";
 const char kDumpResourcesBeforeDrawOption[]     = "--dump-resources-before-draw";
+const char kDumpResourcesScaleArgument[]        = "--dump-resources-scale";
 
 enum class WsiPlatform
 {
@@ -565,6 +566,36 @@ static float GetScreenshotScale(const gfxrecon::util::ArgumentParser& arg_parser
     return scale;
 }
 
+static float GetDumpResourcesScale(const gfxrecon::util::ArgumentParser& arg_parser)
+{
+    const auto& value = arg_parser.GetArgumentValue(kDumpResourcesScaleArgument);
+
+    float scale = 1.0f;
+
+    if (!value.empty())
+    {
+        try
+        {
+            scale = std::stof(value);
+        }
+        catch (std::exception&)
+        {
+            GFXRECON_LOG_WARNING("Ignoring invalid dump resources scale option.");
+        }
+        if (scale <= 0.0f)
+        {
+            GFXRECON_LOG_WARNING("Ignoring invalid dump resources scale option. Value must > 0.0.");
+            scale = 1.0f;
+        }
+        if (scale >= 10.0f)
+        {
+            scale = 10.0f;
+        }
+    }
+
+    return scale;
+}
+
 static std::vector<gfxrecon::decode::ScreenshotRange>
 GetScreenshotRanges(const gfxrecon::util::ArgumentParser& arg_parser)
 {
@@ -934,6 +965,7 @@ GetVulkanReplayOptions(const gfxrecon::util::ArgumentParser&           arg_parse
 
     replay_options.dump_resources = arg_parser.GetArgumentValue(kDumpResourcesArgument);
     replay_options.dump_resources_before = arg_parser.IsOptionSet(kDumpResourcesBeforeDrawOption);
+    replay_options.dump_resources_scale = GetDumpResourcesScale(arg_parser);
 
     return replay_options;
 }
