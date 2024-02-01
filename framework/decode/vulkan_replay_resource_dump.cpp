@@ -155,7 +155,8 @@ VulkanReplayResourceDumpBase::VulkanReplayResourceDumpBase(const VulkanReplayOpt
                                               object_info_table_,
                                               options.dump_resources_before,
                                               options.dump_resources_output_path,
-                                              options.dump_resources_image_format));
+                                              options.dump_resources_image_format,
+                                              options.dump_resources_scale));
         }
     }
 
@@ -945,8 +946,8 @@ VulkanReplayResourceDumpBase::DrawCallCommandBufferContext::DumpRenderTargetAtta
             if (image_file_format == util::ScreenshotFormat::kBmp)
             {
                 util::imagewriter::WriteBmpImage(filename.str(),
-                                                 image_info->extent.width,
-                                                 image_info->extent.height,
+                                                 image_info->extent.width * dump_resources_scale,
+                                                 image_info->extent.height * dump_resources_scale,
                                                  subresource_sizes[0],
                                                  data.data(),
                                                  stride,
@@ -3094,13 +3095,14 @@ VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DispatchRaysComm
     const VulkanObjectInfoTable& object_info_table,
     bool                         dump_resources_before,
     const std::string&           dump_resource_path,
-    util::ScreenshotFormat       image_file_format) :
+    util::ScreenshotFormat       image_file_format,
+    float                        dump_resources_scale) :
     original_command_buffer_info(nullptr),
     DR_command_buffer(VK_NULL_HANDLE), dispatch_indices(dispatch_indices),
     trace_rays_indices(trace_rays_indices), bound_pipelines{ nullptr }, dump_resources_before(dump_resources_before),
-    dump_resource_path(dump_resource_path), image_file_format(image_file_format), device_table(nullptr),
-    object_info_table(object_info_table), replay_device_phys_mem_props(nullptr), current_dispatch_index(0),
-    current_trace_rays_index(0)
+    dump_resource_path(dump_resource_path), image_file_format(image_file_format),
+    dump_resources_scale(dump_resources_scale), device_table(nullptr), object_info_table(object_info_table),
+    replay_device_phys_mem_props(nullptr), current_dispatch_index(0), current_trace_rays_index(0)
 {}
 
 VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::~DispatchRaysCommandBufferContext()
@@ -3827,7 +3829,9 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
                                                                       VK_IMAGE_ASPECT_COLOR_BIT,
                                                                       data,
                                                                       subresource_offsets,
-                                                                      subresource_sizes);
+                                                                      subresource_sizes,
+                                                                      false,
+                                                                      dump_resources_scale);
 
             if (res != VK_SUCCESS)
             {
@@ -3849,13 +3853,13 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
 
                 const uint32_t texel_size =
                     vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
-                const uint32_t stride = texel_size * image_info->extent.width;
+                const uint32_t stride = texel_size * image_info->extent.width * dump_resources_scale;
 
                 if (image_file_format == util::ScreenshotFormat::kBmp)
                 {
                     util::imagewriter::WriteBmpImage(filename.str(),
-                                                     image_info->extent.width,
-                                                     image_info->extent.height,
+                                                     image_info->extent.width * dump_resources_scale,
+                                                     image_info->extent.height * dump_resources_scale,
                                                      subresource_sizes[0],
                                                      data.data(),
                                                      stride,
@@ -3864,8 +3868,8 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
                 else
                 {
                     util::imagewriter::WritePngImage(filename.str(),
-                                                     image_info->extent.width,
-                                                     image_info->extent.height,
+                                                     image_info->extent.width * dump_resources_scale,
+                                                     image_info->extent.height * dump_resources_scale,
                                                      subresource_sizes[0],
                                                      data.data(),
                                                      stride,
@@ -3910,7 +3914,9 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
                                                                   VK_IMAGE_ASPECT_COLOR_BIT,
                                                                   data,
                                                                   subresource_offsets,
-                                                                  subresource_sizes);
+                                                                  subresource_sizes,
+                                                                  false,
+                                                                  dump_resources_scale);
 
         if (res != VK_SUCCESS)
         {
@@ -3931,13 +3937,13 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
                      << util::ScreenshotFormatToCStr(image_file_format);
 
             const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
-            const uint32_t stride     = texel_size * image_info->extent.width;
+            const uint32_t stride     = texel_size * image_info->extent.width * dump_resources_scale;
 
             if (image_file_format == util::ScreenshotFormat::kBmp)
             {
                 util::imagewriter::WriteBmpImage(filename.str(),
-                                                 image_info->extent.width,
-                                                 image_info->extent.height,
+                                                 image_info->extent.width * dump_resources_scale,
+                                                 image_info->extent.height * dump_resources_scale,
                                                  subresource_sizes[0],
                                                  data.data(),
                                                  stride,
@@ -3946,8 +3952,8 @@ VkResult VulkanReplayResourceDumpBase::DispatchRaysCommandBufferContext::DumpMut
             else
             {
                 util::imagewriter::WritePngImage(filename.str(),
-                                                 image_info->extent.width,
-                                                 image_info->extent.height,
+                                                 image_info->extent.width * dump_resources_scale,
+                                                 image_info->extent.height * dump_resources_scale,
                                                  subresource_sizes[0],
                                                  data.data(),
                                                  stride,
