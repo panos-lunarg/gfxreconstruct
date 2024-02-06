@@ -454,7 +454,7 @@ bool parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions& vulkan_repl
 
         if (parse_error)
         {
-            GFXRECON_LOG_ERROR("ERROR - Ignoring invalid --dump-resources parameter: %s",
+            GFXRECON_LOG_ERROR("Ignoring invalid --dump-resources parameter: %s",
                                vulkan_replay_options.dump_resources.c_str());
         }
     }
