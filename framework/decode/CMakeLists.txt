@@ -268,6 +268,7 @@ endif()
 if (WIN32)
 target_include_directories(gfxrecon_decode
                            PUBLIC
+                               ${CMAKE_BINARY_DIR}
                                ${CMAKE_SOURCE_DIR}/framework
                                ${CMAKE_SOURCE_DIR}/external
                                ${CMAKE_SOURCE_DIR}/external/precompiled/win64/include/
@@ -277,6 +278,7 @@ target_include_directories(gfxrecon_decode
                            PRIVATE
                                ${CMAKE_BINARY_DIR}
                            PUBLIC
+                               ${CMAKE_BINARY_DIR}
                                ${CMAKE_SOURCE_DIR}/framework
                                ${CMAKE_SOURCE_DIR}/external
                                ${CMAKE_SOURCE_DIR}/external/precompiled/linux/include/
