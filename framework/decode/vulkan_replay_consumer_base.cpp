@@ -5168,7 +5168,7 @@ PerformReflectionOnShaderModule(ShaderModuleInfo* shader_info, size_t spirv_size
             (binding->decoration_flags & SPV_REFLECT_DECORATION_NON_WRITABLE) == SPV_REFLECT_DECORATION_NON_WRITABLE;
 
         shader_info->used_descriptors_info[binding->set].emplace(binding->binding,
-                                                                 ShaderModuleInfo::DescriptorInfo(type, readonly));
+                                                                 ShaderModuleInfo::DescriptorInfo(type, readonly, binding->accessed));
     }
 
     return true;
@@ -7218,8 +7218,9 @@ VkResult VulkanReplayConsumerBase::OverrideCreateRayTracingPipelinesKHR(
             {
                 ShaderModuleInfo* module_info = object_info_table_.GetShaderModuleInfo(stages_info_meta[s].module);
                 assert(module_info);
+                assert(pipeline_info);
 
-                pipeline_info->shaders.push_back(*module_info);
+                pipeline_info->shaders.insert({pCreateInfos->GetPointer()->pStages[s].stage, *module_info});
             }
         }
     }
@@ -8309,9 +8310,9 @@ VkResult VulkanReplayConsumerBase::OverrideCreateGraphicsPipelines(
             {
                 ShaderModuleInfo* module_info = object_info_table_.GetShaderModuleInfo(stages_info_meta[s].module);
                 assert(module_info);
-
                 assert(pipeline_info);
-                pipeline_info->shaders.push_back(*module_info);
+
+                pipeline_info->shaders.insert({pCreateInfos->GetPointer()->pStages[s].stage, *module_info});
             }
         }
     }
@@ -8356,7 +8357,8 @@ VkResult VulkanReplayConsumerBase::OverrideCreateComputePipelines(
 
             PipelineInfo* pipeline_info = reinterpret_cast<PipelineInfo*>(pPipelines->GetConsumerData(i));
             assert(pipeline_info);
-            pipeline_info->shaders.push_back(*module_info);
+
+            pipeline_info->shaders.insert({VK_SHADER_STAGE_COMPUTE_BIT, *module_info});
         }
     }
 
