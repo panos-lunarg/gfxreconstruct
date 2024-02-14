@@ -221,9 +221,12 @@ static float Ufloat10ToFloat(uint16_t val)
         }                                                                              \
     }
 
-static void ConvertIntoTemporaryBuffer(
+static const uint8_t* ConvertIntoTemporaryBuffer(
     uint32_t width, uint32_t height, const void* data, uint32_t* row_pitch, DataFormats format, bool is_png)
 {
+    static std::unique_ptr<uint8_t[]> temporary_buffer;
+    static size_t                     temporary_buffer_size = 0;
+
     const uint32_t output_size = width * height * kImageBpp;
     if (output_size > temporary_buffer_size)
     {
@@ -508,9 +511,12 @@ static void ConvertIntoTemporaryBuffer(
         default:
             GFXRECON_LOG_ERROR("Format %u not handled", format);
             assert(0);
-            break;
+            return nullptr;
     }
+
     *row_pitch = width * sizeof(uint32_t);
+
+    return reinterpret_cast<const uint8_t*>(temporary_buffer.get());
 }
 
 bool WriteBmpImage(const std::string& filename,
@@ -598,8 +604,7 @@ bool WriteBmpImage(const std::string& filename,
             }
             else
             {
-                ConvertIntoTemporaryBuffer(width, height, data, &row_pitch, format, false);
-                const uint8_t* bytes = reinterpret_cast<const uint8_t*>(temporary_buffer.get());
+                const uint8_t* bytes = ConvertIntoTemporaryBuffer(width, height, data, &row_pitch, format, false);
                 for (uint32_t y = 0; y < height; ++y)
                 {
                     ret = util::platform::FileWrite(
@@ -728,9 +733,8 @@ bool WritePngImage(const std::string& filename,
     }
 #endif
     assert(pitch);
-    ConvertIntoTemporaryBuffer(width, height, data, &pitch, format, true);
-    if (1 == stbi_write_png(
-                 filename.c_str(), width, height, kImageBpp, static_cast<const void*>(temporary_buffer.get()), pitch))
+    const uint8_t* bytes = ConvertIntoTemporaryBuffer(width, height, data, &pitch, format, true);
+    if (1 == stbi_write_png(filename.c_str(), width, height, kImageBpp, static_cast<const void*>(bytes), pitch))
     {
         success = true;
     }
