@@ -218,8 +218,8 @@ static float Ufloat10ToFloat(uint16_t val)
         }                                                                              \
     }
 
-static void
-ConvertIntoTemporaryBuffer(uint32_t width, uint32_t height, const void* data, uint32_t* row_pitch, DataFormats format)
+static void ConvertIntoTemporaryBuffer(
+    uint32_t width, uint32_t height, const void* data, uint32_t* row_pitch, DataFormats format, bool is_png)
 {
     const uint32_t output_size = width * height * kImageBpp;
     if (output_size > temporary_buffer_size)
@@ -233,25 +233,38 @@ ConvertIntoTemporaryBuffer(uint32_t width, uint32_t height, const void* data, ui
     switch (format)
     {
         case kFormat_RGB:
+        {
+            const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
+
             for (uint32_t y = 0; y < height; ++y)
             {
-                const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
                     const uint8_t r = bytes[y * 3 * width + (3 * x) + 0];
                     const uint8_t g = bytes[y * 3 * width + (3 * x) + 1];
                     const uint8_t b = bytes[y * 3 * width + (3 * x) + 2];
 
-                    const uint32_t rgba = (0xff << 24) | (r << 16) | (g << 8) | b;
-                    *(temp_buffer++)    = rgba;
+                    uint32_t rgba;
+                    if (is_png)
+                    {
+                        rgba = (0xff << 24) | (b << 16) | (g << 8) | r;
+                    }
+                    else
+                    {
+                        rgba = (0xff << 24) | (r << 16) | (g << 8) | b;
+                    }
+                    *(temp_buffer++) = rgba;
                 }
             }
-            break;
+        }
+        break;
 
         case kFormat_RGBA:
+        {
+            const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
+
             for (uint32_t y = 0; y < height; ++y)
             {
-                const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
                     const uint8_t r = bytes[y * 4 * width + (4 * x) + 0];
@@ -259,71 +272,115 @@ ConvertIntoTemporaryBuffer(uint32_t width, uint32_t height, const void* data, ui
                     const uint8_t b = bytes[y * 4 * width + (4 * x) + 2];
                     const uint8_t a = bytes[y * 4 * width + (4 * x) + 3];
 
-                    const uint32_t rgba = (a << 24) | (r << 16) | (g << 8) | b;
-                    *(temp_buffer++)    = rgba;
+                    uint32_t rgba;
+                    if (is_png)
+                    {
+                        rgba = (a << 24) | (b << 16) | (g << 8) | r;
+                    }
+                    else
+                    {
+                        rgba = (a << 24) | (r << 16) | (g << 8) | b;
+                    }
+                    *(temp_buffer++) = rgba;
                 }
             }
-            break;
+        }
+        break;
 
         case kFormat_BGR:
+        {
+            const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
+
             for (uint32_t y = 0; y < height; ++y)
             {
-                const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
-                    const uint8_t r = bytes[y * 3 * width + (3 * x) + 0];
+                    const uint8_t b = bytes[y * 3 * width + (3 * x) + 0];
                     const uint8_t g = bytes[y * 3 * width + (3 * x) + 1];
-                    const uint8_t b = bytes[y * 3 * width + (3 * x) + 2];
+                    const uint8_t r = bytes[y * 3 * width + (3 * x) + 2];
 
-                    const uint32_t rgba = (0xff << 24) | (r << 16) | (g << 8) | b;
-                    *(temp_buffer++)    = rgba;
+                    uint32_t rgba;
+                    if (is_png)
+                    {
+                        rgba = (0xff << 24) | (b << 16) | (g << 8) | r;
+                    }
+                    else
+                    {
+                        rgba = (0xff << 24) | (r << 16) | (g << 8) | b;
+                    }
+                    *(temp_buffer++) = rgba;
                 }
             }
-            break;
+        }
+        break;
 
         case kFormat_BGRA:
+        {
+            const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
+
             for (uint32_t y = 0; y < height; ++y)
             {
-                const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
-                    const uint8_t r = bytes[y * 4 * width + (4 * x) + 0];
+                    const uint8_t b = bytes[y * 4 * width + (4 * x) + 0];
                     const uint8_t g = bytes[y * 4 * width + (4 * x) + 1];
-                    const uint8_t b = bytes[y * 4 * width + (4 * x) + 2];
+                    const uint8_t r = bytes[y * 4 * width + (4 * x) + 2];
                     const uint8_t a = bytes[y * 4 * width + (4 * x) + 3];
 
-                    const uint32_t rgba = (a << 24) | (r << 16) | (g << 8) | b;
-                    *(temp_buffer++)    = rgba;
+                    uint32_t rgba;
+                    if (is_png)
+                    {
+                        rgba = (a << 24) | (b << 16) | (g << 8) | r;
+                    }
+                    else
+                    {
+                        rgba = (a << 24) | (r << 16) | (g << 8) | b;
+                    }
+                    *(temp_buffer++) = rgba;
                 }
             }
-            break;
+        }
+        break;
 
         case kFormat_B10G11R11_UFLOAT:
+        {
+            const uint32_t* u32_vals = reinterpret_cast<const uint32_t*>(data);
+
             for (uint32_t y = 0; y < height; ++y)
             {
-                const uint32_t* u32_vals = reinterpret_cast<const uint32_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
                     // clang-format off
-                        const float b = Ufloat10ToFloat(static_cast<uint16_t>((u32_vals[y * width + x] & (0xFFC00000)) >> 22));
-                        const float g = Ufloat11ToFloat(static_cast<uint16_t>((u32_vals[y * width + x] & (0x003FF800)) >> 11));
-                        const float r = Ufloat11ToFloat(static_cast<uint16_t>((u32_vals[y * width + x] & (0x000007FF)) >> 0));
+                    const float b = Ufloat10ToFloat(static_cast<uint16_t>((u32_vals[y * width + x] & (0xFFC00000)) >> 22));
+                    const float g = Ufloat11ToFloat(static_cast<uint16_t>((u32_vals[y * width + x] & (0x003FF800)) >> 11));
+                    const float r = Ufloat11ToFloat(static_cast<uint16_t>((u32_vals[y * width + x] & (0x000007FF)) >> 0));
                     // clang-format on
 
                     const uint8_t b_u8 = static_cast<uint8_t>(std::min(b, 1.0f) * 255.0f);
                     const uint8_t g_u8 = static_cast<uint8_t>(std::min(g, 1.0f) * 255.0f);
                     const uint8_t r_u8 = static_cast<uint8_t>(std::min(r, 1.0f) * 255.0f);
 
-                    const uint32_t rgba = (0xff << 24) | (r_u8 << 16) | (g_u8 << 8) | b_u8;
-                    *(temp_buffer++)    = rgba;
+                    uint32_t rgba;
+                    if (is_png)
+                    {
+                        rgba = (0xff << 24) | (b_u8 << 16) | (g_u8 << 8) | r_u8;
+                    }
+                    else
+                    {
+                        rgba = (0xff << 24) | (r_u8 << 16) | (g_u8 << 8) | b_u8;
+                    }
+                    *(temp_buffer++) = rgba;
                 }
             }
-            break;
+        }
+        break;
 
         case kFormat_A2B10G10R10:
+        {
+            const uint32_t* u32_vals = reinterpret_cast<const uint32_t*>(data);
+
             for (uint32_t y = 0; y < height; ++y)
             {
-                const uint32_t* u32_vals = reinterpret_cast<const uint32_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
                     uint8_t a = static_cast<uint8_t>((u32_vals[y * width + x] & 0xC0000000) >> 30);
@@ -336,16 +393,27 @@ ConvertIntoTemporaryBuffer(uint32_t width, uint32_t height, const void* data, ui
                     b = static_cast<uint8_t>(static_cast<float>(b) / 1023.0f * 255.0f);
                     a = static_cast<uint8_t>(static_cast<float>(a) / 3.0f * 255.0f);
 
-                    const uint32_t rgba = (a << 24) | (r << 16) | (g << 8) | b;
-                    *(temp_buffer++)    = rgba;
+                    uint32_t rgba;
+                    if (is_png)
+                    {
+                        rgba = (a << 24) | (b << 16) | (g << 8) | r;
+                    }
+                    else
+                    {
+                        rgba = (a << 24) | (r << 16) | (g << 8) | b;
+                    }
+                    *(temp_buffer++) = rgba;
                 }
             }
-            break;
+        }
+        break;
 
         case kFormat_R16G16B16A16_SFLOAT:
+        {
+            const uint64_t* u64_vals = reinterpret_cast<const uint64_t*>(data);
+
             for (uint32_t y = 0; y < height; ++y)
             {
-                const uint64_t* u64_vals = reinterpret_cast<const uint64_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
                     uint16_t a_u16 = static_cast<uint16_t>((u64_vals[y * width + x] & 0xFFFF000000000000ULL) >> 48);
@@ -363,16 +431,27 @@ ConvertIntoTemporaryBuffer(uint32_t width, uint32_t height, const void* data, ui
                     uint8_t b = static_cast<uint8_t>(b_f * 255.0f);
                     uint8_t a = static_cast<uint8_t>(a_f * 255.0f);
 
-                    const uint32_t rgba = (a << 24) | (r << 16) | (g << 8) | b;
-                    *(temp_buffer++)    = rgba;
+                    uint32_t rgba;
+                    if (is_png)
+                    {
+                        rgba = (a << 24) | (b << 16) | (g << 8) | r;
+                    }
+                    else
+                    {
+                        rgba = (a << 24) | (r << 16) | (g << 8) | b;
+                    }
+                    *(temp_buffer++) = rgba;
                 }
             }
-            break;
+        }
+        break;
 
         case kFormat_D32_FLOAT:
+        {
+            const float* bytes_float = reinterpret_cast<const float*>(data);
+
             for (uint32_t y = 0; y < height; ++y)
             {
-                const float* bytes_float = reinterpret_cast<const float*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
                     const float   float_depth = bytes_float[y * width + x];
@@ -382,12 +461,15 @@ ConvertIntoTemporaryBuffer(uint32_t width, uint32_t height, const void* data, ui
                     *(temp_buffer++) = rgba;
                 }
             }
-            break;
+        }
+        break;
 
         case kFormat_D24_UNORM:
+        {
+            const uint32_t* bytes_u32 = reinterpret_cast<const uint32_t*>(data);
+
             for (uint32_t y = 0; y < height; ++y)
             {
-                const uint32_t* bytes_u32 = reinterpret_cast<const uint32_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
                     const uint32_t normalized_depth = bytes_u32[y * width + x] & 0x00FFFFFF;
@@ -398,12 +480,15 @@ ConvertIntoTemporaryBuffer(uint32_t width, uint32_t height, const void* data, ui
                     *(temp_buffer++) = rgba;
                 }
             }
-            break;
+        }
+        break;
 
         case kFormat_D16_UNORM:
+        {
+            const uint16_t* bytes_u16 = reinterpret_cast<const uint16_t*>(data);
+
             for (uint32_t y = 0; y < height; ++y)
             {
-                const uint16_t* bytes_u16 = reinterpret_cast<const uint16_t*>(data);
                 for (uint32_t x = 0; x < width; ++x)
                 {
                     const uint16_t normalized_depth = bytes_u16[y * width + x];
@@ -414,7 +499,8 @@ ConvertIntoTemporaryBuffer(uint32_t width, uint32_t height, const void* data, ui
                     *(temp_buffer++) = rgba;
                 }
             }
-            break;
+        }
+        break;
 
         default:
             GFXRECON_LOG_ERROR("Format %u not handled", format);
@@ -480,7 +566,7 @@ bool WriteBmpImage(const std::string& filename,
             info_header.planes           = 1;
             info_header.bit_count        = kBmpBitCount;
             info_header.compression      = 0;
-            info_header.size_image       = 0;
+            info_header.size_image       = image_size;
             info_header.x_pels_per_meter = 0;
             info_header.y_pels_per_meter = 0;
             info_header.clr_used         = 0;
@@ -507,14 +593,18 @@ bool WriteBmpImage(const std::string& filename,
             }
             else
             {
-                ConvertIntoTemporaryBuffer(width, height, data, &row_pitch, format);
+                ConvertIntoTemporaryBuffer(width, height, data, &row_pitch, format, false);
+                const uint8_t* bytes = reinterpret_cast<const uint8_t*>(temporary_buffer.get());
                 for (uint32_t y = 0; y < height; ++y)
                 {
-                    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(temporary_buffer.get());
-                    ret                  = util::platform::FileWrite(
-                        &bytes[(height_1 - y) * width * kImageBpp], 1, width * kImageBpp, file);
+                    // ret = util::platform::FileWrite(
+                    //     &bytes[(height_1 - y) * width * kImageBpp], 1, width * kImageBpp, file);
 
-                    CheckFwriteRetVal(ret, width * kImageBpp, file);
+                    for (uint32_t x = 0; x < width * 4; ++x)
+                    {
+                        ret = util::platform::FileWrite(&bytes[(height_1 - y) * width * 4 + x], 1, 1, file);
+                        // CheckFwriteRetVal(ret, kImageBpp, file);
+                    }
                 }
             }
 
@@ -563,7 +653,7 @@ bool WritePngImage(const std::string& filename,
     }
 #endif
     assert(pitch);
-    ConvertIntoTemporaryBuffer(width, height, data, &pitch, format);
+    ConvertIntoTemporaryBuffer(width, height, data, &pitch, format, true);
     if (1 == stbi_write_png(
                  filename.c_str(), width, height, kImageBpp, static_cast<const void*>(temporary_buffer.get()), pitch))
     {
