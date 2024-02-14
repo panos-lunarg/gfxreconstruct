@@ -597,14 +597,8 @@ bool WriteBmpImage(const std::string& filename,
                 const uint8_t* bytes = reinterpret_cast<const uint8_t*>(temporary_buffer.get());
                 for (uint32_t y = 0; y < height; ++y)
                 {
-                    // ret = util::platform::FileWrite(
-                    //     &bytes[(height_1 - y) * width * kImageBpp], 1, width * kImageBpp, file);
-
-                    for (uint32_t x = 0; x < width * 4; ++x)
-                    {
-                        ret = util::platform::FileWrite(&bytes[(height_1 - y) * width * 4 + x], 1, 1, file);
-                        // CheckFwriteRetVal(ret, kImageBpp, file);
-                    }
+                    ret = util::platform::FileWrite(
+                        &bytes[(height_1 - y) * width * kImageBpp], 1, width * kImageBpp, file);
                 }
             }
 
