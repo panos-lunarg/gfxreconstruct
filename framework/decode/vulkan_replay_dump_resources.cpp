@@ -1617,6 +1617,15 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::BeginRenderPass(const Re
     // Add vkCmdBeginRenderPass into the cloned command buffers using the modified render pass
     VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
     GetDrawCallActiveCommandBuffers(first, last);
+
+    VkRenderPassBeginInfo bi;
+    bi.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    bi.pNext           = nullptr;
+    bi.clearValueCount = clear_value_count;
+    bi.pClearValues    = p_clear_values;
+    bi.framebuffer     = framebuffer_info->handle;
+    bi.renderArea      = render_area;
+
     size_t cmd_buf_idx = current_cb_index;
     for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it, ++cmd_buf_idx)
     {
@@ -1632,24 +1641,26 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::BeginRenderPass(const Re
         {
             continue;
         }
-        else if (dc_index > RP_indices[rp][RP_indices[rp].size() - 1] || rp > current_renderpass)
+
+        if (dc_index > RP_indices[rp][RP_indices[rp].size() - 1] || rp > current_renderpass)
         {
-            break;
+            GFXRECON_WRITE_CONSOLE(
+                "  cmd_buf_idx: %zu with dc index: %" PRIu64 " gets original render pass", cmd_buf_idx, dc_index);
+
+            bi.renderPass = render_pass_info->handle;
         }
+        else
+        {
+            GFXRECON_WRITE_CONSOLE("  cmd_buf_idx: %zu with dc index: %" PRIu64 " gets new render pass: (%u, %u)",
+                                   cmd_buf_idx,
+                                   dc_index,
+                                   rp,
+                                   sp);
 
-        VkRenderPassBeginInfo bi = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO, nullptr };
-
-        bi.clearValueCount = clear_value_count;
-        bi.pClearValues    = p_clear_values;
-        bi.framebuffer     = framebuffer_info->handle;
-        bi.renderArea      = render_area;
-
-        GFXRECON_WRITE_CONSOLE(
-            "  cmd_buf_idx: %zu with dc index: %" PRIu64 " gets render pass: (%u, %u)", cmd_buf_idx, dc_index, rp, sp);
-
-        assert(rp < render_pass_clones.size());
-        assert(sp < render_pass_clones[rp].size());
-        bi.renderPass = render_pass_clones[rp][sp];
+            assert(rp < render_pass_clones.size());
+            assert(sp < render_pass_clones[rp].size());
+            bi.renderPass = render_pass_clones[rp][sp];
+        }
 
         device_table->CmdBeginRenderPass(*it, &bi, contents);
     }
@@ -1676,17 +1687,6 @@ void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::NextSubpass(VkSubpa
         const uint64_t              dc_index = dc_indices[CmdBufToDCVectorIndex(cmd_buf_idx)];
         const RenderPassSubpassPair RP_index = GetRenderPassIndex(dc_index);
         const uint64_t              rp       = RP_index.first;
-
-        if (rp != current_renderpass)
-        {
-            continue;
-        }
-
-        GFXRECON_WRITE_CONSOLE("  cmd_buf_idx: %zu with dc index: %" PRIu64 " moves to subpass: (%u, %u)",
-                               cmd_buf_idx,
-                               dc_index,
-                               rp,
-                               current_subpass);
 
         device_table->CmdNextSubpass(*it, contents);
     }
@@ -1765,13 +1765,21 @@ void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::EndRenderPass()
         {
             continue;
         }
-        else if (dc_index > RP_indices[rp][RP_indices[rp].size() - 1] || rp > current_renderpass)
-        {
-            break;
-        }
 
-        GFXRECON_WRITE_CONSOLE(
-            "  cmd_buf_idx: %zu with dc index: %" PRIu64 " ends render pass: (%u, %u)", cmd_buf_idx, dc_index, rp, sp);
+        if (dc_index > RP_indices[rp][RP_indices[rp].size() - 1] || rp > current_renderpass)
+        {
+            GFXRECON_WRITE_CONSOLE(
+                "  cmd_buf_idx: %zu with dc index: %" PRIu64 " ends render pass", cmd_buf_idx, dc_index);
+        }
+        else
+        {
+
+            GFXRECON_WRITE_CONSOLE("  cmd_buf_idx: %zu with dc index: %" PRIu64 " ends render pass: (%u, %u)",
+                                   cmd_buf_idx,
+                                   dc_index,
+                                   rp,
+                                   sp);
+        }
 
         device_table->CmdEndRenderPass(*it);
     }
