@@ -46,9 +46,10 @@ class VulkanReplayDumpResourcesBase
 
     VulkanReplayDumpResourcesBase(const VulkanReplayOptions& options, const VulkanObjectInfoTable& object_info_table);
 
-    VkResult CloneCommandBuffer(uint64_t                   bcb_index,
-                                const CommandBufferInfo*   original_command_buffer_info,
-                                const encode::DeviceTable* device_table);
+    VkResult CloneCommandBuffer(uint64_t                     bcb_index,
+                                const CommandBufferInfo*     original_command_buffer_info,
+                                const encode::DeviceTable*   device_table,
+                                const encode::InstanceTable* inst_table);
 
     void FinalizeDrawCallCommandBuffer(VkCommandBuffer original_command_buffer);
 
@@ -330,7 +331,9 @@ class VulkanReplayDumpResourcesBase
 
         void BindPipeline(VkPipelineBindPoint bind_point, const PipelineInfo* pipeline);
 
-        VkResult CloneCommandBuffer(const CommandBufferInfo* orig_cmd_buf_info, const encode::DeviceTable* dev_table);
+        VkResult CloneCommandBuffer(const CommandBufferInfo*     orig_cmd_buf_info,
+                                    const encode::DeviceTable*   dev_table,
+                                    const encode::InstanceTable* inst_table);
 
         VkResult CloneRenderPass(const RenderPassInfo* original_render_pass);
 
@@ -386,6 +389,7 @@ class VulkanReplayDumpResourcesBase
         bool            must_backup_resources;
 
         const encode::DeviceTable*              device_table;
+        const encode::InstanceTable*            instance_table;
         const VulkanObjectInfoTable&            object_info_table;
         const VkPhysicalDeviceMemoryProperties* replay_device_phys_mem_props;
     };
@@ -403,7 +407,9 @@ class VulkanReplayDumpResourcesBase
 
         ~DispatchTraceRaysDumpingContext();
 
-        VkResult CloneCommandBuffer(const CommandBufferInfo* orig_cmd_buf_info, const encode::DeviceTable* dev_table);
+        VkResult CloneCommandBuffer(const CommandBufferInfo*     orig_cmd_buf_info,
+                                    const encode::DeviceTable*   dev_table,
+                                    const encode::InstanceTable* inst_table);
 
         VkCommandBuffer GetDispatchRaysCommandBuffer() const { return DR_command_buffer; }
 
@@ -481,6 +487,7 @@ class VulkanReplayDumpResourcesBase
         std::unordered_map<uint64_t, DumpableResourceBackup> mutable_resources_clones_before;
 
         const encode::DeviceTable*              device_table;
+        const encode::InstanceTable*            instance_table;
         const VulkanObjectInfoTable&            object_info_table;
         const VkPhysicalDeviceMemoryProperties* replay_device_phys_mem_props;
         size_t                                  current_dispatch_index;
