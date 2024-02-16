@@ -37,7 +37,7 @@ const char kArguments[] =
     "--replace-shaders,--screenshots,--denied-messages,--allowed-messages,--screenshot-format,--"
     "screenshot-dir,--screenshot-prefix,--screenshot-size,--screenshot-scale,--mfr|--measurement-frame-range,--fw|--"
     "force-windowed,--batching-memory-usage,--measurement-file,--swapchain,--dump-resources,--dump-resources-scale,--"
-    "dump-resources-image-format";
+    "dump-resources-image-format,--dump-resources-dir";
 
 static void PrintUsage(const char* exe_name)
 {
