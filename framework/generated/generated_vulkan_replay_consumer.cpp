@@ -2094,7 +2094,7 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier(
 
     OverrideCmdPipelineBarrier(GetDeviceTable(in_commandBuffer->handle)->CmdPipelineBarrier, in_commandBuffer, srcStageMask, dstStageMask, dependencyFlags, memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers);
 
-    if (dumper.IsRecording(in_commandBuffer->handle))
+    if (options_.dumping_resources)
     {
         dumper.Process_vkCmdPipelineBarrier(call_info, GetDeviceTable(in_commandBuffer->handle)->CmdPipelineBarrier, in_commandBuffer->handle, srcStageMask, dstStageMask, dependencyFlags, memoryBarrierCount, pMemoryBarriers->GetPointer(), bufferMemoryBarrierCount, pBufferMemoryBarriers->GetPointer(), imageMemoryBarrierCount, pImageMemoryBarriers->GetPointer());
     }
@@ -2227,7 +2227,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass(
 
     OverrideCmdBeginRenderPass(GetDeviceTable(in_commandBuffer->handle)->CmdBeginRenderPass, in_commandBuffer, pRenderPassBegin, contents);
 
-    if (dumper.IsRecording(in_commandBuffer->handle))
+    if (options_.dumping_resources)
     {
         dumper.Process_vkCmdBeginRenderPass(call_info, GetDeviceTable(in_commandBuffer->handle)->CmdBeginRenderPass, in_commandBuffer->handle, pRenderPassBegin, contents);
     }
@@ -2750,7 +2750,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass2(
 
     OverrideCmdBeginRenderPass2(GetDeviceTable(in_commandBuffer->handle)->CmdBeginRenderPass2, in_commandBuffer, pRenderPassBegin, pSubpassBeginInfo);
 
-    if (dumper.IsRecording(in_commandBuffer->handle))
+    if (options_.dumping_resources)
     {
         dumper.Process_vkCmdBeginRenderPass2(call_info, GetDeviceTable(in_commandBuffer->handle)->CmdBeginRenderPass2, in_commandBuffer->handle, pRenderPassBegin, pSubpassBeginInfo);
     }
@@ -4755,7 +4755,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderPass2KHR(
 
     OverrideCmdBeginRenderPass2(GetDeviceTable(in_commandBuffer->handle)->CmdBeginRenderPass2KHR, in_commandBuffer, pRenderPassBegin, pSubpassBeginInfo);
 
-    if (dumper.IsRecording(in_commandBuffer->handle))
+    if (options_.dumping_resources)
     {
         dumper.Process_vkCmdBeginRenderPass2KHR(call_info, GetDeviceTable(in_commandBuffer->handle)->CmdBeginRenderPass2KHR, in_commandBuffer->handle, pRenderPassBegin, pSubpassBeginInfo);
     }
@@ -6253,7 +6253,7 @@ void VulkanReplayConsumer::Process_vkCmdDebugMarkerInsertEXT(
 
     OverrideCmdDebugMarkerInsertEXT(GetDeviceTable(in_commandBuffer->handle)->CmdDebugMarkerInsertEXT, in_commandBuffer, pMarkerInfo);
 
-    if (dumper.IsRecording(in_commandBuffer->handle))
+    if (options_.dumping_resources)
     {
         dumper.Process_vkCmdDebugMarkerInsertEXT(call_info, GetDeviceTable(in_commandBuffer->handle)->CmdDebugMarkerInsertEXT, in_commandBuffer->handle, pMarkerInfo->GetPointer());
     }
