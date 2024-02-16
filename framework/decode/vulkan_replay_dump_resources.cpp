@@ -138,7 +138,7 @@ VulkanReplayDumpResourcesBase::VulkanReplayDumpResourcesBase(const VulkanReplayO
                                                                    : std::vector<std::vector<uint64_t>>(),
                                                                object_info_table,
                                                                options.dump_resources_before,
-                                                               options.dump_resources_output_path,
+                                                               options.dump_resources_output_dir,
                                                                options.dump_resources_image_format,
                                                                options.dump_resources_scale));
         }
@@ -156,7 +156,7 @@ VulkanReplayDumpResourcesBase::VulkanReplayDumpResourcesBase(const VulkanReplayO
                                                   : std::vector<uint64_t>(),
                                               object_info_table_,
                                               options.dump_resources_before,
-                                              options.dump_resources_output_path,
+                                              options.dump_resources_output_dir,
                                               options.dump_resources_image_format,
                                               options.dump_resources_scale));
         }
@@ -165,7 +165,7 @@ VulkanReplayDumpResourcesBase::VulkanReplayDumpResourcesBase(const VulkanReplayO
 #if defined(__ANDROID__) && defined(DELETE_STALE_DUMP_FILES)
     // On Android there is an issue with files which are manually deleted (for example from adb shell) then fopen with
     // "wb" might fail with the error that the file already exists. Deleting the file from code can workaround this
-    DIR* dump_resource_dir = opendir(options.dump_resources_output_path.c_str());
+    DIR* dump_resource_dir = opendir(options.dump_resources_output_dir.c_str());
     if (dump_resource_dir != nullptr)
     {
         struct dirent* dir;
@@ -178,7 +178,7 @@ VulkanReplayDumpResourcesBase::VulkanReplayDumpResourcesBase(const VulkanReplayO
 
                 if (!strcmp(file_extension, "bmp") || !strcmp(file_extension, "png") || !strcmp(file_extension, "bin"))
                 {
-                    std::string full_path = options.dump_resources_output_path + std::string(dir->d_name);
+                    std::string full_path = options.dump_resources_output_dir + std::string(dir->d_name);
                     GFXRECON_LOG_INFO("Deleting file %s", full_path.c_str());
                     if (remove(full_path.c_str()))
                     {
