@@ -124,7 +124,7 @@ VulkanReplayDumpResourcesBase::VulkanReplayDumpResourcesBase(const VulkanReplayO
         return;
     }
 
-    dump_json_.VulkanReplayResourceDumpJsonOpen(options.filename);
+    dump_json_.VulkanReplayDumpResourcesJsonOpen(options.filename, options.dump_resources_output_dir);
 
     for (size_t i = 0; i < options.BeginCommandBuffer_Indices.size(); ++i)
     {
@@ -780,6 +780,8 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpDrawCallsAt
                           dc_indices[CmdBufToDCVectorIndex(cb)],
                           bcb_index);
 
+        p_dump_json->VulkanReplayDumpResourcesJsonBlockStart();
+
         VkSubmitInfo si;
         si.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         si.pNext                = nullptr;
@@ -847,7 +849,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpDrawCallsAt
         //     return res;
         // }
 
-        p_dump_json->VulkanReplayResourceDumpJsonBlockEnd();
+        p_dump_json->VulkanReplayDumpResourcesJsonBlockEnd();
     }
 
     return VK_SUCCESS;
@@ -876,12 +878,12 @@ std::string VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::GenerateImag
     {
         if (dump_resources_before)
         {
-            filename << dump_resource_path << "Draw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index
-                     << attachment_str << "_aspect_" << aspect_str << util::ScreenshotFormatToCStr(image_file_format);
+            filename << "Draw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << attachment_str
+                     << "_aspect_" << aspect_str << util::ScreenshotFormatToCStr(image_file_format);
         }
         else
         {
-            filename << dump_resource_path << "Draw_" << dc_index << attachment_str << "_aspect_" << aspect_str
+            filename << "Draw_" << dc_index << attachment_str << "_aspect_" << aspect_str
                      << util::ScreenshotFormatToCStr(image_file_format);
         }
     }
@@ -889,17 +891,18 @@ std::string VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::GenerateImag
     {
         if (dump_resources_before)
         {
-            filename << dump_resource_path << "Draw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index
-                     << attachment_str << "_aspect_" << aspect_str << ".bin";
+            filename << "Draw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << attachment_str
+                     << "_aspect_" << aspect_str << ".bin";
         }
         else
         {
-            filename << dump_resource_path << "Draw_" << dc_index << attachment_str << "_aspect_" << aspect_str
-                     << ".bin";
+            filename << "Draw_" << dc_index << attachment_str << "_aspect_" << aspect_str << ".bin";
         }
     }
 
-    return filename.str();
+    std::filesystem::path filedirname(dump_resource_path);
+    std::filesystem::path filebasename(filename.str());
+    return (filedirname / filebasename).string();
 }
 
 VkResult
@@ -983,8 +986,8 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTargetAttachme
                 scaled_extent = image_info->extent;
             }
 
-            p_dump_json->VulkanReplayResourceDumpJsonData("DrawIndex", dc_index);
-            p_dump_json->VulkanReplayResourceDumpJsonData("RenderTargetImage", filename);
+            p_dump_json->VulkanReplayDumpResourcesJsonData("DrawIndex", dc_index);
+            p_dump_json->VulkanReplayDumpResourcesJsonData("RenderTargetImage", filename);
 
             const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
             const uint32_t stride     = texel_size * scaled_extent.width;
@@ -1012,8 +1015,8 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTargetAttachme
         }
         else
         {
-            p_dump_json->VulkanReplayResourceDumpJsonData("DrawIndex", dc_index);
-            p_dump_json->VulkanReplayResourceDumpJsonData("RenderTargetImage", filename);
+            p_dump_json->VulkanReplayDumpResourcesJsonData("DrawIndex", dc_index);
+            p_dump_json->VulkanReplayDumpResourcesJsonData("RenderTargetImage", filename);
             util::bufferwriter::WriteBuffer(filename, data.data(), data.size());
         }
     }
@@ -1071,7 +1074,7 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTargetAttachme
                 scaled_extent = image_info->extent;
             }
 
-            p_dump_json->VulkanReplayResourceDumpJsonData("RenderTargetDepth", filename);
+            p_dump_json->VulkanReplayDumpResourcesJsonData("RenderTargetDepth", filename);
 
             // This is a bit awkward
             const uint32_t texel_size =
@@ -1103,7 +1106,7 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTargetAttachme
         }
         else
         {
-            p_dump_json->VulkanReplayResourceDumpJsonData("RenderTargetDepth", filename);
+            p_dump_json->VulkanReplayDumpResourcesJsonData("RenderTargetDepth", filename);
             util::bufferwriter::WriteBuffer(filename, data.data(), data.size());
         }
     }
@@ -1247,11 +1250,11 @@ VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitIn
         // Once all submissions are complete terminate process
         if (QueueSubmit_indices_.size() == 0)
         {
-            // The code in VulkanReplayResourceDumpJsonClose would ideally be in
-            // the VulkanReplayResourceDumpJson destructor. But the destructor
+            // The code in VulkanReplayDumpResourcesJsonClose would ideally be in
+            // the VulkanReplayDumpResourcesJson destructor. But the destructor
             // doesn't get called when exit(0) is called, so we call this method
             // instead.
-            dump_json_.VulkanReplayResourceDumpJsonClose();
+            dump_json_.VulkanReplayDumpResourcesJsonClose();
             exit(0);
         }
     }
@@ -2423,7 +2426,7 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DrawCallsDumpingContext(
     const std::string&                        dump_resource_path,
     util::ScreenshotFormat                    image_file_format,
     float                                     dump_resources_scale,
-    VulkanReplayResourceDumpJson*             p_dump_json) :
+    VulkanReplayDumpResourcesJson*            p_dump_json) :
     original_command_buffer_info(nullptr),
     current_cb_index(0), dc_indices(dc_indices), RP_indices(rp_indices), active_renderpass(nullptr),
     active_framebuffer(nullptr), bound_pipelines{ nullptr }, current_renderpass(0), current_subpass(0),
@@ -3065,14 +3068,14 @@ bool VulkanReplayDumpResourcesBase::IsRecording(VkCommandBuffer original_command
 }
 
 VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DispatchTraceRaysDumpingContext(
-    const std::vector<uint64_t>&  dispatch_indices,
-    const std::vector<uint64_t>&  trace_rays_indices,
-    const VulkanObjectInfoTable&  object_info_table,
-    bool                          dump_resources_before,
-    const std::string&            dump_resource_path,
-    util::ScreenshotFormat        image_file_format,
-    float                         dump_resources_scale,
-    VulkanReplayResourceDumpJson* p_dump_json) :
+    const std::vector<uint64_t>&   dispatch_indices,
+    const std::vector<uint64_t>&   trace_rays_indices,
+    const VulkanObjectInfoTable&   object_info_table,
+    bool                           dump_resources_before,
+    const std::string&             dump_resource_path,
+    util::ScreenshotFormat         image_file_format,
+    float                          dump_resources_scale,
+    VulkanReplayDumpResourcesJson* p_dump_json) :
     original_command_buffer_info(nullptr),
     DR_command_buffer(VK_NULL_HANDLE), dispatch_indices(dispatch_indices),
     trace_rays_indices(trace_rays_indices), bound_pipelines{ nullptr }, dump_resources_before(dump_resources_before),
@@ -3706,7 +3709,7 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpDis
         device_table->DestroyFence(device_info->handle, submission_fence, nullptr);
     }
 
-    p_dump_json->VulkanReplayResourceDumpJsonData("QueueSubmitIndex", qs_index);
+    p_dump_json->VulkanReplayDumpResourcesJsonData("QueueSubmitIndex", qs_index);
 
     for (auto index : dispatch_indices)
     {
@@ -3738,36 +3741,37 @@ std::string VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::Gene
     {
         if (VkFormatToImageWriterDataFormat(format) != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
         {
-            filename << dump_resource_path << (is_dispatch ? "Dispatch_" : "TraceRays_") << "before_" << index
-                     << "_set_" << desc_set << "_binding_" << desc_binding << "_"
-                     << util::ToString<VkFormat>(format).c_str() << "_aspect_" << aspect_str
-                     << util::ScreenshotFormatToCStr(image_file_format);
+            filename << (is_dispatch ? "Dispatch_" : "TraceRays_") << "before_" << index << "_set_" << desc_set
+                     << "_binding_" << desc_binding << "_" << util::ToString<VkFormat>(format).c_str() << "_aspect_"
+                     << aspect_str << util::ScreenshotFormatToCStr(image_file_format);
         }
         else
         {
-            filename << dump_resource_path << (is_dispatch ? "Dispatch_" : "TraceRays_") << "before_" << index
-                     << "_set_" << desc_set << "_binding_" << desc_binding << "_aspect_" << aspect_str
-                     << util::ToString<VkFormat>(format) << ".bin";
+            filename << (is_dispatch ? "Dispatch_" : "TraceRays_") << "before_" << index << "_set_" << desc_set
+                     << "_binding_" << desc_binding << "_aspect_" << aspect_str << util::ToString<VkFormat>(format)
+                     << ".bin";
         }
     }
     else
     {
         if (VkFormatToImageWriterDataFormat(format) != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
         {
-            filename << dump_resource_path << (is_dispatch ? "Dispatch_" : "TraceRays_")
-                     << (dump_resources_before ? "after_" : "") << index << "_set_" << desc_set << "_binding_"
-                     << desc_binding << "_" << util::ToString<VkFormat>(format).c_str() << "_aspect_" << aspect_str
+            filename << (is_dispatch ? "Dispatch_" : "TraceRays_") << (dump_resources_before ? "after_" : "") << index
+                     << "_set_" << desc_set << "_binding_" << desc_binding << "_"
+                     << util::ToString<VkFormat>(format).c_str() << "_aspect_" << aspect_str
                      << util::ScreenshotFormatToCStr(image_file_format);
         }
         else
         {
-            filename << dump_resource_path << (is_dispatch ? "Dispatch_" : "TraceRays_")
-                     << (dump_resources_before ? "after_" : "") << index << "_set_" << desc_set << "_binding_"
-                     << desc_binding << "_aspect_" << aspect_str << util::ToString<VkFormat>(format).c_str() << ".bin";
+            filename << (is_dispatch ? "Dispatch_" : "TraceRays_") << (dump_resources_before ? "after_" : "") << index
+                     << "_set_" << desc_set << "_binding_" << desc_binding << "_aspect_" << aspect_str
+                     << util::ToString<VkFormat>(format).c_str() << ".bin";
         }
     }
 
-    return filename.str();
+    std::filesystem::path filedirname(dump_resource_path);
+    std::filesystem::path filebasename(filename.str());
+    return (filedirname / filebasename).string();
 }
 
 std::string VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::GenerateBufferFilename(
@@ -3777,17 +3781,18 @@ std::string VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::Gene
 
     if (before_cmd)
     {
-        filename << dump_resource_path << (is_dispatch ? "Dispatch_" : "TraceRays_") << "before_" << index << "_set_"
-                 << desc_set << "_binding_" << desc_binding << "_buffer.bin";
+        filename << (is_dispatch ? "Dispatch_" : "TraceRays_") << "before_" << index << "_set_" << desc_set
+                 << "_binding_" << desc_binding << "_buffer.bin";
     }
     else
     {
-        filename << dump_resource_path << (is_dispatch ? "Dispatch_" : "TraceRays_")
-                 << (dump_resources_before ? "after_" : "") << index << "_set_" << desc_set << "_binding_"
-                 << desc_binding << "_buffer.bin";
+        filename << (is_dispatch ? "Dispatch_" : "TraceRays_") << (dump_resources_before ? "after_" : "") << index
+                 << "_set_" << desc_set << "_binding_" << desc_binding << "_buffer.bin";
     }
 
-    return filename.str();
+    std::filesystem::path filedirname(dump_resource_path);
+    std::filesystem::path filebasename(filename.str());
+    return (filedirname / filebasename).string();
 }
 
 VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpMutableResources(uint64_t index,
