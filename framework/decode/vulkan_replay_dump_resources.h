@@ -28,7 +28,7 @@
 #include "decode/vulkan_object_info_table.h"
 #include "decode/struct_pointer_decoder.h"
 #include "generated/generated_vulkan_dispatch_table.h"
-#include "decode/vulkan_replay_resource_dump_json.h"
+#include "decode/vulkan_replay_dump_resources_json.h"
 #include "format/format.h"
 #include "util/defines.h"
 #include "vulkan/vulkan.h"
@@ -275,7 +275,7 @@ class VulkanReplayDumpResourcesBase
                                 const std::string&                        dump_resource_path,
                                 util::ScreenshotFormat                    image_file_format,
                                 float                                     dump_resource_scale,
-                                VulkanReplayResourceDumpJson*             dump_json);
+                                VulkanReplayDumpResourcesJson*            dump_json);
 
         ~DrawCallsDumpingContext();
 
@@ -294,7 +294,7 @@ class VulkanReplayDumpResourcesBase
         const std::string&                 dump_resource_path;
         util::ScreenshotFormat             image_file_format;
         float                              dump_resources_scale;
-        VulkanReplayResourceDumpJson*      p_dump_json;
+        VulkanReplayDumpResourcesJson*     p_dump_json;
 
         std::vector<std::vector<VkRenderPass>> render_pass_clones;
         bool                                   inside_renderpass;
@@ -399,14 +399,14 @@ class VulkanReplayDumpResourcesBase
     // This class handles the context related to dumping Dispatch and TraceRays resouces
     struct DispatchTraceRaysDumpingContext
     {
-        DispatchTraceRaysDumpingContext(const std::vector<uint64_t>&  dispatch_indices,
-                                        const std::vector<uint64_t>&  trace_rays_indices,
-                                        const VulkanObjectInfoTable&  object_info_table,
-                                        bool                          dump_resources_before,
-                                        const std::string&            dump_resource_path,
-                                        util::ScreenshotFormat        image_file_format,
-                                        float                         dump_resources_scale,
-                                        VulkanReplayResourceDumpJson* p_dump_json);
+        DispatchTraceRaysDumpingContext(const std::vector<uint64_t>&   dispatch_indices,
+                                        const std::vector<uint64_t>&   trace_rays_indices,
+                                        const VulkanObjectInfoTable&   object_info_table,
+                                        bool                           dump_resources_before,
+                                        const std::string&             dump_resource_path,
+                                        util::ScreenshotFormat         image_file_format,
+                                        float                          dump_resources_scale,
+                                        VulkanReplayDumpResourcesJson* p_dump_json);
 
         ~DispatchTraceRaysDumpingContext();
 
@@ -456,16 +456,16 @@ class VulkanReplayDumpResourcesBase
         void FinalizeCommandBuffer();
 
         const CommandBufferInfo* original_command_buffer_info;
-        VkCommandBuffer               DR_command_buffer;
+        VkCommandBuffer                DR_command_buffer;
 
-        std::vector<uint64_t>         dispatch_indices;
-        std::vector<uint64_t>         trace_rays_indices;
-        const PipelineInfo*           bound_pipelines[kBindPoint_count];
-        bool                          dump_resources_before;
-        const std::string&            dump_resource_path;
-        util::ScreenshotFormat        image_file_format;
-        float                         dump_resources_scale;
-        VulkanReplayResourceDumpJson* p_dump_json;
+        std::vector<uint64_t>          dispatch_indices;
+        std::vector<uint64_t>          trace_rays_indices;
+        const PipelineInfo*            bound_pipelines[kBindPoint_count];
+        bool                           dump_resources_before;
+        const std::string&             dump_resource_path;
+        util::ScreenshotFormat         image_file_format;
+        float                          dump_resources_scale;
+        VulkanReplayDumpResourcesJson* p_dump_json;
 
         descriptor_set_t bound_descriptor_sets[kBindPoint_count];
 
@@ -513,7 +513,7 @@ class VulkanReplayDumpResourcesBase
     const VulkanObjectInfoTable& object_info_table_;
 
   private:
-    VulkanReplayResourceDumpJson dump_json_;
+    VulkanReplayDumpResourcesJson dump_json_;
 
     bool UpdateRecordingStatus();
 
