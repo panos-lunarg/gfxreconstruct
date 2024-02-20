@@ -202,11 +202,11 @@ class VulkanReplayDumpResourcesBase
                                        uint32_t                    dynamicOffsetCount,
                                        const uint32_t*             pDynamicOffsets);
 
-    VkResult QueueSubmit(std::vector<VkSubmitInfo>  modified_submit_infos,
-                         const encode::DeviceTable& device_table,
-                         VkQueue                    queue,
-                         VkFence                    fence,
-                         uint64_t                   index);
+    VkResult QueueSubmit(const std::vector<VkSubmitInfo>& modified_submit_infos,
+                         const encode::DeviceTable&       device_table,
+                         VkQueue                          queue,
+                         VkFence                          fence,
+                         uint64_t                         index);
 
     bool ShouldDumpQueueSubmitIndex(uint64_t index) const;
 
@@ -358,7 +358,8 @@ class VulkanReplayDumpResourcesBase
 
         uint32_t GetDrawCallActiveCommandBuffers(cmd_buf_it& first, cmd_buf_it& last) const;
 
-        VkResult DumpDrawCallsAttachments(VkQueue queue, uint64_t bcb_index, VkFence fence);
+        VkResult
+        DumpDrawCallsAttachments(VkQueue queue, uint64_t bcb_index, const VkSubmitInfo& submit_info, VkFence fence);
 
         VkResult DumpRenderTargetAttachments(uint64_t dc_index) const;
 
@@ -440,7 +441,10 @@ class VulkanReplayDumpResourcesBase
 
         void CloneDispatchRaysResources(uint64_t index, bool cloning_before_cmd, bool is_dispatch);
 
-        VkResult DumpDispatchRaysMutableResources(VkQueue queue, uint64_t bcb_index, VkFence fence);
+        VkResult DumpDispatchRaysMutableResources(VkQueue             queue,
+                                                  uint64_t            bcb_index,
+                                                  const VkSubmitInfo& submit_info,
+                                                  VkFence             fence);
 
         VkResult DumpMutableResources(uint64_t index, bool is_dispatch);
 
