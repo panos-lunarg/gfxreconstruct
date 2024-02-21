@@ -74,6 +74,7 @@ void VulkanReplayDumpResourcesJson::VulkanReplayDumpResourcesJsonOpen(const std:
 void VulkanReplayDumpResourcesJson::VulkanReplayDumpResourcesJsonBlockStart()
 {
     json_data_ = &json_writer_->WriteBlockStart();
+    (*dump_).clear();
 }
 
 void VulkanReplayDumpResourcesJson::VulkanReplayDumpResourcesJsonBlockEnd()
