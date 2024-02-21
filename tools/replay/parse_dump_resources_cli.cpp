@@ -334,6 +334,14 @@ bool parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions& vulkan_repl
             bool err = false;
             for (std::string line; std::getline(infile, line);)
             {
+                // Replace all whitespace with space character.
+                // Windows text files have CR/LF line endings that sometimes
+                // end up at the end of the input line. Get rid of them, and
+                // while we are at it, get rid of other whitespace.
+                const char *whitespace = "\n\t\v\r\f";
+                for (auto pws = whitespace; *pws; pws++)
+                    std::replace(line.begin(), line.end(), *pws, ' ');
+
                 // Remove leading and trailing spaces
                 line.erase(0, line.find_first_not_of(" "));
                 line.erase(line.find_last_not_of(" ") + 1);
