@@ -987,7 +987,7 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTargetAttachme
             }
 
             p_dump_json->VulkanReplayDumpResourcesJsonData("DrawIndex", dc_index);
-            p_dump_json->VulkanReplayDumpResourcesJsonData("RenderTargetImage", filename);
+            p_dump_json->VulkanReplayDumpResourcesJsonData(("RenderTargetImage_"+std::to_string(i)).c_str(), filename);
 
             const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
             const uint32_t stride     = texel_size * scaled_extent.width;
@@ -1016,7 +1016,7 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTargetAttachme
         else
         {
             p_dump_json->VulkanReplayDumpResourcesJsonData("DrawIndex", dc_index);
-            p_dump_json->VulkanReplayDumpResourcesJsonData("RenderTargetImage", filename);
+            p_dump_json->VulkanReplayDumpResourcesJsonData(("RenderTargetImage_"+std::to_string(i)).c_str(), filename);
             util::bufferwriter::WriteBuffer(filename, data.data(), data.size());
         }
     }
