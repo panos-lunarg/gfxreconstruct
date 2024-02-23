@@ -33,6 +33,7 @@ to one of these other documents:
     1. [Command Line Arguments](#command-line-arguments)
     2. [Key Controls](#key-controls)
     3. [Virtual Swapchain](#virtual-swapchain)
+    4. [Dumping resources](#dumping-resources)
 3. [Other Capture File Processing Tools](#other-capture-file-processing-tools)
     1. [Capture File Info](#capture-file-info)
     2. [Capture File Compression](#capture-file-compression)
@@ -608,6 +609,10 @@ Virtual Swapchain insulates higher layers in the Vulkan stack from these problem
 ### Debug mode VMA errors
 
 gfxrec-replay with the -m rebind option uses the Vulkan Memory Allocator library for memory allocations. If gfxrecon-replay is compiled debuggable, VMA_ASSERT errors in VMA can be trapped for debugging by setting GFXRECON_LOG_BREAK_ON_ERROR to true.
+
+### Dumping resources
+
+GFXReconstruct offers the capability to dump resources when replaying a capture file. Detailed documentation of that feature can be found in [vulkan_dump_resources.md](./vulkan_dump_resources.md)
 
 ## Other Capture File Processing Tools
 
