@@ -230,6 +230,7 @@ endif() # WIN32
 
 find_package(LZ4)
 find_package(ZSTD)
+find_package(jsoncpp)
 
 if(UNIX AND NOT APPLE)
     option(BUILD_WSI_XCB_SUPPORT "Build XCB WSI support" ON)

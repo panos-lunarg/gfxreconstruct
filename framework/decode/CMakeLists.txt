@@ -257,7 +257,7 @@ if (WIN32)
     if (CMAKE_SIZEOF_VOID_P EQUAL 8)
         target_include_directories(gfxrecon_decode
                                PUBLIC
-                                       ${CMAKE_BINARY_DIR}
+                                   ${CMAKE_BINARY_DIR}
                                    ${CMAKE_SOURCE_DIR}/framework
                                    ${CMAKE_SOURCE_DIR}/external
                                    ${CMAKE_SOURCE_DIR}/external/precompiled/win64/include/
@@ -265,7 +265,7 @@ if (WIN32)
     else()
         target_include_directories(gfxrecon_decode
                                PUBLIC
-                                       ${CMAKE_BINARY_DIR}
+                                   ${CMAKE_BINARY_DIR}
                                    ${CMAKE_SOURCE_DIR}/framework
                                    ${CMAKE_SOURCE_DIR}/external
                                    ${CMAKE_SOURCE_DIR}/external/precompiled/win32/include/
