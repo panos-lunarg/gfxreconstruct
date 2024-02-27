@@ -175,7 +175,7 @@ if(MSVC)
                 "set D3D12_SUPPORT=OFF or configure the build with the recommended Windows SDK version. See BUILD.md "
                 "for more information.")
         endif()
-        
+
     else()
         set(BUILD_LAUNCHER_AND_INTERCEPTOR OFF)
     endif()
@@ -187,14 +187,14 @@ if(MSVC)
 
     # Add option to enable/disable AGS support.
     option(GFXRECON_AGS_SUPPORT "Build with AGS support enabled. Ignored if D3D12_SUPPORT=OFF." ON)
-    
+
     if (${D3D12_SUPPORT})
         if (${GFXRECON_AGS_SUPPORT})
             if (CMAKE_SIZEOF_VOID_P EQUAL 8)
                 find_package(AGS)
                 if (TARGET AGS::AGS)
                     add_definitions(-DGFXRECON_AGS_SUPPORT)
-                
+
                     # The value for option GFXRECON_AGS_SUPPORT gets cached so use a non-cached variable
                     # to determine the final result.
                     set(GFXRECON_AGS_SUPPORT_FINAL ON)
@@ -202,7 +202,7 @@ if(MSVC)
             endif() # CMAKE_SIZEOF_VOID_P EQUAL 8
         endif() # GFXRECON_AGS_SUPPORT
     endif() # D3D12_SUPPORT
-	
+
 
 else(MSVC)
     # Turn off D3D12 support for non MSVC builds.
@@ -230,7 +230,10 @@ endif() # WIN32
 
 find_package(LZ4)
 find_package(ZSTD)
+
+if(MSVC)
 find_package(jsoncpp)
+endif() # MSVC
 
 if(UNIX AND NOT APPLE)
     option(BUILD_WSI_XCB_SUPPORT "Build XCB WSI support" ON)
