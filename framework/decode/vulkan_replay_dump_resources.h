@@ -39,6 +39,8 @@
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)
 
+static constexpr uint64_t INVALID_BLOCK_INDEX = std::numeric_limits<uint64_t>::max();
+
 class VulkanReplayDumpResourcesBase
 {
   public:
@@ -58,74 +60,74 @@ class VulkanReplayDumpResourcesBase
     void OverrideCmdDraw(const ApiCallInfo& call_info,
                          PFN_vkCmdDraw      func,
                          VkCommandBuffer    original_command_buffer,
-                         uint32_t           vertexCount,
-                         uint32_t           instanceCount,
-                         uint32_t           firstVertex,
-                         uint32_t           firstInstance);
+                         uint32_t           vertex_count,
+                         uint32_t           instance_count,
+                         uint32_t           first_vertex,
+                         uint32_t           first_instance);
 
     void OverrideCmdDrawIndexed(const ApiCallInfo&   call_info,
                                 PFN_vkCmdDrawIndexed func,
                                 VkCommandBuffer      original_command_buffer,
-                                uint32_t             indexCount,
-                                uint32_t             instanceCount,
-                                uint32_t             firstIndex,
-                                int32_t              vertexOffset,
-                                uint32_t             firstInstance);
+                                uint32_t             index_count,
+                                uint32_t             instance_count,
+                                uint32_t             first_index,
+                                int32_t              vertex_offset,
+                                uint32_t             first_instance);
 
     void OverrideCmdDrawIndirect(const ApiCallInfo&    call_info,
                                  PFN_vkCmdDrawIndirect func,
                                  VkCommandBuffer       original_command_buffer,
-                                 VkBuffer              buffer,
+                                 const BufferInfo*     buffer_info,
                                  VkDeviceSize          offset,
-                                 uint32_t              drawCount,
+                                 uint32_t              draw_count,
                                  uint32_t              stride);
 
     void OverrideCmdDrawIndexedIndirect(const ApiCallInfo&           call_info,
                                         PFN_vkCmdDrawIndexedIndirect func,
                                         VkCommandBuffer              original_command_buffer,
-                                        VkBuffer                     buffer,
+                                        const BufferInfo*            buffer_info,
                                         VkDeviceSize                 offset,
-                                        uint32_t                     drawCount,
+                                        uint32_t                     draw_count,
                                         uint32_t                     stride);
 
     void OverrideCmdDrawIndirectCount(const ApiCallInfo&         call_info,
                                       PFN_vkCmdDrawIndirectCount func,
                                       VkCommandBuffer            original_command_buffer,
-                                      VkBuffer                   buffer,
+                                      const BufferInfo*          buffer_info,
                                       VkDeviceSize               offset,
-                                      VkBuffer                   countBuffer,
-                                      VkDeviceSize               countBufferOffset,
-                                      uint32_t                   maxDrawCount,
+                                      const BufferInfo*          count_buffer_info,
+                                      VkDeviceSize               count_buffer_offset,
+                                      uint32_t                   max_draw_count,
                                       uint32_t                   stride);
 
     void OverrideCmdDrawIndexedIndirectCount(const ApiCallInfo&                call_info,
                                              PFN_vkCmdDrawIndexedIndirectCount func,
                                              VkCommandBuffer                   original_command_buffer,
-                                             VkBuffer                          buffer,
+                                             const BufferInfo*                 buffer_info,
                                              VkDeviceSize                      offset,
-                                             VkBuffer                          countBuffer,
-                                             VkDeviceSize                      countBufferOffset,
-                                             uint32_t                          maxDrawCount,
+                                             const BufferInfo*                 count_buffer_info,
+                                             VkDeviceSize                      count_buffer_offset,
+                                             uint32_t                          max_draw_count,
                                              uint32_t                          stride);
 
     void OverrideCmdDrawIndirectCountKHR(const ApiCallInfo&            call_info,
                                          PFN_vkCmdDrawIndirectCountKHR func,
                                          VkCommandBuffer               original_command_buffer,
-                                         VkBuffer                      buffer,
+                                         const BufferInfo*             buffer_info,
                                          VkDeviceSize                  offset,
-                                         VkBuffer                      countBuffer,
-                                         VkDeviceSize                  countBufferOffset,
-                                         uint32_t                      maxDrawCount,
+                                         const BufferInfo*             count_buffer_info,
+                                         VkDeviceSize                  count_buffer_offset,
+                                         uint32_t                      max_draw_count,
                                          uint32_t                      stride);
 
     void OverrideCmdDrawIndexedIndirectCountKHR(const ApiCallInfo&                   call_info,
                                                 PFN_vkCmdDrawIndexedIndirectCountKHR func,
                                                 VkCommandBuffer                      original_command_buffer,
-                                                VkBuffer                             buffer,
+                                                const BufferInfo*                    buffer_info,
                                                 VkDeviceSize                         offset,
-                                                VkBuffer                             countBuffer,
-                                                VkDeviceSize                         countBufferOffset,
-                                                uint32_t                             maxDrawCount,
+                                                const BufferInfo*                    count_buffer_info,
+                                                VkDeviceSize                         count_buffer_offset,
+                                                uint32_t                             max_draw_count,
                                                 uint32_t                             stride);
 
     void OverrideCmdBeginRenderPass(const ApiCallInfo&                                   call_info,
@@ -176,7 +178,7 @@ class VulkanReplayDumpResourcesBase
     void OverrideCmdDispatchIndirect(const ApiCallInfo&        call_info,
                                      PFN_vkCmdDispatchIndirect func,
                                      VkCommandBuffer           original_command_buffer,
-                                     VkBuffer                  buffer,
+                                     const BufferInfo*         buffer_info,
                                      VkDeviceSize              offset);
 
     void
@@ -195,12 +197,27 @@ class VulkanReplayDumpResourcesBase
                                        PFN_vkCmdBindDescriptorSets func,
                                        VkCommandBuffer             original_command_buffer,
                                        VkPipelineBindPoint         pipeline_bind_point,
-                                       VkPipelineLayout            layout,
+                                       const PipelineLayoutInfo*   layout_info,
                                        uint32_t                    first_set,
                                        uint32_t                    descriptor_sets_count,
                                        const format::HandleId*     descriptor_sets_ids,
                                        uint32_t                    dynamicOffsetCount,
                                        const uint32_t*             pDynamicOffsets);
+
+    void OverrideCmdBindIndexBuffer(const ApiCallInfo&       call_info,
+                                    PFN_vkCmdBindIndexBuffer func,
+                                    VkCommandBuffer          original_command_buffer,
+                                    const BufferInfo*        buffer,
+                                    VkDeviceSize             offset,
+                                    VkIndexType              indexType);
+
+    void OverrideCmdBindVertexBuffers(const ApiCallInfo&         call_info,
+                                      PFN_vkCmdBindVertexBuffers func,
+                                      VkCommandBuffer            original_command_buffer,
+                                      uint32_t                   firstBinding,
+                                      uint32_t                   bindingCount,
+                                      const format::HandleId*    buffer_ids,
+                                      const VkDeviceSize*        pOffsets);
 
     VkResult QueueSubmit(const std::vector<VkSubmitInfo>& modified_submit_infos,
                          const encode::DeviceTable&       device_table,
@@ -275,48 +292,10 @@ class VulkanReplayDumpResourcesBase
                                 const std::string&                        dump_resource_path,
                                 util::ScreenshotFormat                    image_file_format,
                                 float                                     dump_resource_scale,
-                                VulkanReplayDumpResourcesJson*            dump_json);
+                                VulkanReplayDumpResourcesJson*            dump_json,
+                                bool                                      dump_vertex_index_buffers);
 
         ~DrawCallsDumpingContext();
-
-        const CommandBufferInfo*           original_command_buffer_info;
-        std::vector<VkCommandBuffer>       command_buffers;
-        size_t                             current_cb_index;
-        std::vector<uint64_t>              dc_indices;
-        std::vector<std::vector<uint64_t>> RP_indices;
-        const RenderPassInfo*              active_renderpass;
-        const FramebufferInfo*             active_framebuffer;
-        const PipelineInfo*                bound_pipelines[kBindPoint_count];
-        uint32_t                           current_renderpass;
-        uint32_t                           current_subpass;
-        uint32_t                           n_subpasses;
-        bool                               dump_resources_before;
-        const std::string&                 dump_resource_path;
-        util::ScreenshotFormat             image_file_format;
-        float                              dump_resources_scale;
-        VulkanReplayDumpResourcesJson*     p_dump_json;
-
-        std::vector<std::vector<VkRenderPass>> render_pass_clones;
-        bool                                   inside_renderpass;
-
-        struct RenderTargets
-        {
-            RenderTargets() : depth_att_img(nullptr) {}
-
-            std::vector<const ImageInfo*> color_att_imgs;
-            const ImageInfo*              depth_att_img;
-        };
-
-        // render_targets_ is basically a 2d array (vector of vectors). It is indexed like render_targets_[rp][sp]
-        // where rp specifies the render pass and sp the subpass.
-        std::vector<std::vector<RenderTargets>> render_targets_;
-
-        // Render area is constant between subpasses so this array will be single dimension array
-        std::vector<VkRect2D> render_area_;
-
-        using RenderPassSubpassPair = std::pair<uint64_t, uint64_t>;
-        RenderPassSubpassPair GetRenderPassIndex(uint64_t dc_index) const;
-        size_t                CmdBufToDCVectorIndex(size_t cmd_buf_index) const;
 
         bool IsRecording() const { return current_cb_index < command_buffers.size(); }
 
@@ -325,7 +304,6 @@ class VulkanReplayDumpResourcesBase
         bool ShouldHandleRenderPass(uint64_t index) const;
 
         void BindDescriptorSets(VkPipelineBindPoint                          pipeline_bind_point,
-                                VkPipelineLayout                             layout,
                                 uint32_t                                     first_set,
                                 const std::vector<const DescriptorSetInfo*>& descriptor_sets_infos,
                                 uint32_t                                     dynamicOffsetCount,
@@ -350,13 +328,21 @@ class VulkanReplayDumpResourcesBase
 
         void EndRenderPass();
 
+        void BindVertexBuffers(uint64_t                              index,
+                               uint32_t                              firstBinding,
+                               const std::vector<const BufferInfo*>& buffer_infos,
+                               const VkDeviceSize*                   pOffsets);
+
+        void
+        BindIndexBuffer(uint64_t index, const BufferInfo* buffer_info, VkDeviceSize offset, VkIndexType index_type);
+
         void FinalizeCommandBuffer();
 
         void SetRenderTargets(const std::vector<const ImageInfo*>& color_att_imgs,
                               const ImageInfo*                     depth_att_img,
                               bool                                 new_renderpass);
 
-        void SetRenderArea(const VkRect2D& render_area);
+        void SetRenderArea(const VkRect2D& new_render_area);
 
         uint32_t GetDrawCallActiveCommandBuffers(cmd_buf_it& first, cmd_buf_it& last) const;
 
@@ -365,10 +351,228 @@ class VulkanReplayDumpResourcesBase
 
         VkResult DumpRenderTargetAttachments(uint64_t cmd_buf_index, uint64_t qs_index, uint64_t bcb_index) const;
 
+        VkResult DumpVertexIndexBuffers(uint64_t qs_index, uint64_t bcb_index) const;
+
         descriptor_set_t bound_descriptor_sets[kBindPoint_count];
 
         std::string
         GenerateImageFilename(VkFormat format, uint64_t cmd_buf_index, uint64_t dc_index, int attachment_index) const;
+
+        std::string GenerateVertexBufferFilename(uint64_t bind_vertex_buffer_index, uint32_t binding) const;
+
+        std::string GenerateIndexBufferFilename(uint64_t bind_index_buffer_index, VkIndexType type) const;
+
+        using RenderPassSubpassPair = std::pair<uint64_t, uint64_t>;
+        RenderPassSubpassPair GetRenderPassIndex(uint64_t dc_index) const;
+        size_t                CmdBufToDCVectorIndex(size_t cmd_buf_index) const;
+
+        void DestroyMutableResourceBackups();
+
+        VkResult BackUpMutableResources(VkQueue queue);
+
+        VkResult RevertMutableResources(VkQueue queue);
+
+        const CommandBufferInfo*           original_command_buffer_info;
+        std::vector<VkCommandBuffer>       command_buffers;
+        size_t                             current_cb_index;
+        std::vector<uint64_t>              dc_indices;
+        std::vector<std::vector<uint64_t>> RP_indices;
+        const RenderPassInfo*              active_renderpass;
+        const FramebufferInfo*             active_framebuffer;
+        const PipelineInfo*                bound_pipelines[kBindPoint_count];
+        uint32_t                           current_renderpass;
+        uint32_t                           current_subpass;
+        uint32_t                           n_subpasses;
+        bool                               dump_resources_before;
+        const std::string&                 dump_resource_path;
+        util::ScreenshotFormat             image_file_format;
+        float                              dump_resources_scale;
+        bool                               inside_renderpass;
+        VulkanReplayDumpResourcesJson*     p_dump_json;
+        bool                               dump_vertex_index_buffers;
+
+        std::vector<std::vector<VkRenderPass>> render_pass_clones;
+
+        struct RenderTargets
+        {
+            RenderTargets() : depth_att_img(nullptr) {}
+
+            std::vector<const ImageInfo*> color_att_imgs;
+            const ImageInfo*              depth_att_img;
+        };
+
+        // render_targets is basically a 2d array (vector of vectors). It is indexed like render_targets[rp][sp]
+        // where rp specifies the render pass and sp the subpass.
+        std::vector<std::vector<RenderTargets>> render_targets;
+
+        // Render area is constant between subpasses so this array will be single dimension array
+        std::vector<VkRect2D> render_area;
+
+        // Keep track of bound vertex buffers
+        struct BoundVertexBuffersInfo
+        {
+            BoundVertexBuffersInfo() : gr_pipeline_info(nullptr) {}
+
+            struct BufferPerBinding
+            {
+                BufferPerBinding() : buffer_info(nullptr), offset(0) {}
+                BufferPerBinding(const BufferInfo* buffer_info, VkDeviceSize offset) :
+                    buffer_info(buffer_info), offset(offset)
+                {}
+
+                const BufferInfo* buffer_info;
+                VkDeviceSize      offset;
+            };
+
+            // One entry for each vertex buffer bound at each binding
+            std::unordered_map<uint32_t, BufferPerBinding> bound_vertex_buffer_per_binding;
+
+            // A list of all draw calls that reference these vertex buffers
+            std::vector<uint64_t> referencing_draw_calls;
+
+            // The currently bound pipeline
+            const PipelineInfo* gr_pipeline_info;
+        };
+
+        // One entry for each vkCmdBindVertexBuffers
+        using BoundVertexBuffersMaps = std::unordered_map<uint64_t, BoundVertexBuffersInfo>;
+        BoundVertexBuffersMaps bound_vertex_buffers;
+
+        // A pointer to the last bound vertex buffers.
+        BoundVertexBuffersMaps::iterator currently_bound_vertex_buffers;
+
+        // Keep track of bound index buffer
+        struct BoundIndexBuffer
+        {
+            BoundIndexBuffer() : buffer_info(nullptr), offset(0), index_type(VK_INDEX_TYPE_MAX_ENUM) {}
+
+            BoundIndexBuffer(const BufferInfo* buffer_info, VkDeviceSize offset, VkIndexType index_type) :
+                buffer_info(buffer_info), offset(offset), index_type(index_type)
+            {}
+
+            const BufferInfo* buffer_info;
+            VkDeviceSize      offset;
+            VkIndexType       index_type;
+
+            // A list of all draw calls that reference this index buffer
+            std::vector<uint64_t> referencing_draw_calls;
+        };
+
+        // One entry for each vkCmdBindIndexBuffer
+        using BoundIndexBuffersMap = std::unordered_map<uint64_t, BoundIndexBuffer>;
+        BoundIndexBuffersMap bound_index_buffers;
+
+        // A pointer to the last bound index buffer.
+        BoundIndexBuffersMap::iterator currently_bound_index_buffer;
+
+        enum DrawCallTypes
+        {
+            kDraw,
+            kDrawIndirect,
+            kDrawIndirectCount,
+            kDrawIndirectCountKHR,
+            kDrawIndexed,
+            kDrawIndexedIndirect,
+            kDrawIndexedIndirectCount,
+            kDrawIndexedIndirectCountKHR
+        };
+
+        static bool IsDrawCallIndexed(DrawCallTypes dc_type)
+        {
+            switch (dc_type)
+            {
+                case kDraw:
+                case kDrawIndirect:
+                case kDrawIndirectCount:
+                case kDrawIndirectCountKHR:
+                    return false;
+
+                case kDrawIndexed:
+                case kDrawIndexedIndirect:
+                case kDrawIndexedIndirectCount:
+                case kDrawIndexedIndirectCountKHR:
+                    return true;
+
+                default:
+                    GFXRECON_LOG_ERROR(
+                        "%s() Unrecognized draw call type (%u)", __func__, static_cast<uint32_t>(dc_type))
+                    assert(0);
+                    return false;
+            }
+        }
+
+        struct DrawCallParameters
+        {
+            union DrawCallParamsUnion
+            {
+                struct
+                {
+                    uint32_t vertex_count;
+                    uint32_t instance_count;
+                    uint32_t first_vertex;
+                    uint32_t first_instance;
+                } draw;
+
+                struct
+                {
+                    uint32_t index_count;
+                    uint32_t instance_count;
+                    uint32_t first_index;
+                    int32_t  vertex_offset;
+                    uint32_t first_instance;
+                } draw_indexed;
+
+                // Constructor for vkCmdDraw*
+                DrawCallParamsUnion(uint32_t vertex_count,
+                                    uint32_t instance_count,
+                                    uint32_t first_vertex,
+                                    uint32_t first_instance) :
+                    draw{ vertex_count, instance_count, first_vertex, first_instance }
+                {}
+
+                // Constructor for vkCmdDrawIndexed*
+                DrawCallParamsUnion(uint32_t index_count,
+                                    uint32_t instance_count,
+                                    uint32_t first_index,
+                                    int32_t  vertex_offset,
+                                    uint32_t first_instance) :
+                    draw_indexed{ index_count, instance_count, first_index, vertex_offset, first_instance }
+                {}
+            } dc_params_union;
+
+            // Constructor for vkCmdDraw*
+            DrawCallParameters(DrawCallTypes type,
+                               uint32_t      vertex_count,
+                               uint32_t      instance_count,
+                               uint32_t      first_vertex,
+                               uint32_t      first_instance) :
+                dc_params_union(vertex_count, instance_count, first_vertex, first_instance),
+                type(type), referenced_bind_vertex_buffers(INVALID_BLOCK_INDEX),
+                referenced_bind_index_buffer(INVALID_BLOCK_INDEX)
+            {}
+
+            // Constructor for vkCmdDrawIndexed*
+            DrawCallParameters(DrawCallTypes type,
+                               uint32_t      index_count,
+                               uint32_t      instance_count,
+                               uint32_t      first_index,
+                               int32_t       vertex_offset,
+                               uint32_t      first_instance) :
+                dc_params_union(index_count, instance_count, first_index, vertex_offset, first_instance),
+                type(type), referenced_bind_vertex_buffers(INVALID_BLOCK_INDEX),
+                referenced_bind_index_buffer(INVALID_BLOCK_INDEX)
+            {}
+
+            DrawCallTypes type;
+
+            uint64_t referenced_bind_vertex_buffers;
+            uint64_t referenced_bind_index_buffer;
+        };
+
+        // One entry for each draw call
+        std::unordered_map<uint64_t, DrawCallParameters> draw_call_params;
+
+        void CopyVertexIndexBufferInfo(uint64_t dc_index, DrawCallParameters& dc_params);
 
         struct
         {
@@ -380,12 +584,6 @@ class VulkanReplayDumpResourcesBase
             std::vector<VkBuffer>          buffers;
             std::vector<VkDeviceMemory>    buffer_memories;
         } mutable_resource_backups;
-
-        void DestroyMutableResourceBackups();
-
-        VkResult BackUpMutableResources(VkQueue queue);
-
-        VkResult RevertMutableResources(VkQueue queue);
 
         VkCommandBuffer aux_command_buffer;
         VkFence         aux_fence;
@@ -436,7 +634,6 @@ class VulkanReplayDumpResourcesBase
             bool is_dispatch, uint64_t index, uint32_t desc_set, uint32_t desc_binding, bool before_cmd) const;
 
         void BindDescriptorSets(VkPipelineBindPoint                          pipeline_bind_point,
-                                VkPipelineLayout                             layout,
                                 uint32_t                                     first_set,
                                 const std::vector<const DescriptorSetInfo*>& descriptor_sets_infos,
                                 uint32_t                                     dynamicOffsetCount,
@@ -457,7 +654,7 @@ class VulkanReplayDumpResourcesBase
 
         void FinalizeCommandBuffer();
 
-        const CommandBufferInfo* original_command_buffer_info;
+        const CommandBufferInfo*       original_command_buffer_info;
         VkCommandBuffer                DR_command_buffer;
         std::vector<uint64_t>          dispatch_indices;
         std::vector<uint64_t>          trace_rays_indices;

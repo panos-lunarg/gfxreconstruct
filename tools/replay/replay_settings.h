@@ -30,8 +30,9 @@ const char kOptions[] =
     "-h|--help,--version,--log-debugview,--no-debug-popup,--paused,--sync,--sfa|--skip-failed-allocations,--"
     "opcd|--omit-pipeline-cache-data,--remove-unsupported,--validate,--debug-device-lost,--create-dummy-allocations,--"
     "screenshot-all,--onhb|--omit-null-hardware-buffers,--qamr|--quit-after-measurement-"
-    "range,--fmr|--flush-measurement-range,--flush-inside-measurement-range,--use-captured-swapchain-indices,--dcp,--discard-cached-psos,"
-    "--use-colorspace-fallback,--use-cached-psos,--dx12-override-object-names,--dump-resources-before-draw";
+    "range,--fmr|--flush-measurement-range,--flush-inside-measurement-range,--use-captured-swapchain-indices,--dcp,--"
+    "discard-cached-psos,--use-colorspace-fallback,--use-cached-psos,--dx12-override-object-names,--dump-resources-"
+    "before-draw,--dump-resources-dump-vertex-index-buffers";
 const char kArguments[] =
     "--log-level,--log-file,--gpu,--gpu-group,--pause-frame,--wsi,--surface-index,-m|--memory-translation,"
     "--replace-shaders,--screenshots,--denied-messages,--allowed-messages,--screenshot-format,--"
@@ -238,6 +239,7 @@ static void PrintUsage(const char* exe_name)
     GFXRECON_WRITE_CONSOLE("          \t\treturned by vkEnumeratePhysicalDeviceGroups.  Replay may fail");
     GFXRECON_WRITE_CONSOLE("          \t\tif the specified device group is not compatible with the");
     GFXRECON_WRITE_CONSOLE("          \t\toriginal capture device group.");
+    // clang-format off
     GFXRECON_WRITE_CONSOLE("  --dump-resources <args>");
     GFXRECON_WRITE_CONSOLE("          \t\tArgs is BeginCommandBuffer=<n>,Draw=<m>,RenderPass=<o>,NextSubpass=<p>,Dispatch=<q>,CmdTraceRays=<r>,QueueSubmit=<s>");
     GFXRECON_WRITE_CONSOLE("          \t\tGPU resources are dumped after the given vkCmdDraw*, vkCmdDispatch, or vkCmdTraceRaysKHR is replayed.");
@@ -255,6 +257,7 @@ static void PrintUsage(const char* exe_name)
     GFXRECON_WRITE_CONSOLE("          \t\tDirectory to write dump resources output files. Default is the current working directory.");
     GFXRECON_WRITE_CONSOLE("  --dump-resources-image-format <format>");
     GFXRECON_WRITE_CONSOLE("          \t\tImage file format to use when dumping image resources. Available formats are: bmp, png");
+    // clang-format on
 
 #if defined(WIN32)
     GFXRECON_WRITE_CONSOLE("")

@@ -5033,8 +5033,10 @@ static VkDescriptorType SpvReflectToVkDescriptorType(SpvReflectDescriptorType ty
     }
 }
 
-static bool
-PerformReflectionOnShaderModule(ShaderModuleInfo* shader_info, size_t spirv_size, const uint32_t* spirv_code)
+static bool SPIRVReflectPerformReflectionOnShaderModule(ShaderModuleInfo*             shader_info,
+                                                        size_t                        spirv_size,
+                                                        const uint32_t*               spirv_code,
+                                                        const VkPhysicalDeviceLimits& phys_dev_limits)
 {
     assert(shader_info != nullptr);
     assert(spirv_size);
@@ -5048,23 +5050,73 @@ PerformReflectionOnShaderModule(ShaderModuleInfo* shader_info, size_t spirv_size
         return false;
     }
 
+    // Scan shader descriptor bindings
     uint32_t         count  = 0;
     SpvReflectResult result = reflection.EnumerateDescriptorBindings(&count, nullptr);
-    assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-    std::vector<SpvReflectDescriptorBinding*> bindings;
-    bindings.resize(count);
-    result = reflection.EnumerateDescriptorBindings(&count, bindings.data());
-    assert(result == SPV_REFLECT_RESULT_SUCCESS);
-
-    for (const auto binding : bindings)
+    if (result != SPV_REFLECT_RESULT_SUCCESS)
     {
-        VkDescriptorType type = SpvReflectToVkDescriptorType(binding->descriptor_type);
-        bool             readonly =
-            (binding->decoration_flags & SPV_REFLECT_DECORATION_NON_WRITABLE) == SPV_REFLECT_DECORATION_NON_WRITABLE;
+        GFXRECON_LOG_ERROR("Shader reflection on shader %" PRIu64 " failed", shader_info->capture_id);
+        assert(0);
+        return false;
+    }
 
-        shader_info->used_descriptors_info[binding->set].emplace(
-            binding->binding, ShaderModuleInfo::DescriptorInfo(type, readonly, binding->accessed));
+    if (count)
+    {
+        std::vector<SpvReflectDescriptorBinding*> bindings(count, nullptr);
+        result = reflection.EnumerateDescriptorBindings(&count, bindings.data());
+        if (result != SPV_REFLECT_RESULT_SUCCESS)
+        {
+            GFXRECON_LOG_ERROR("Shader reflection on shader %" PRIu64 " failed", shader_info->capture_id);
+            assert(0);
+            return false;
+        }
+
+        for (const auto binding : bindings)
+        {
+            VkDescriptorType type     = SpvReflectToVkDescriptorType(binding->descriptor_type);
+            bool             readonly = ((binding->decoration_flags & SPV_REFLECT_DECORATION_NON_WRITABLE) ==
+                             SPV_REFLECT_DECORATION_NON_WRITABLE);
+
+            shader_info->used_descriptors_info[binding->set].emplace(
+                binding->binding, ShaderModuleInfo::DescriptorInfo(type, readonly, binding->accessed));
+        }
+    }
+
+    // Scan the shader input interface
+    count  = 0;
+    result = reflection.EnumerateInputVariables(&count, nullptr);
+    if (result != SPV_REFLECT_RESULT_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("Shader reflection on shader %" PRIu64 " failed", shader_info->capture_id);
+        assert(0);
+        return false;
+    }
+
+    if (count)
+    {
+        std::vector<SpvReflectInterfaceVariable*> inputs(count, nullptr);
+        result = reflection.EnumerateInputVariables(&count, inputs.data());
+        if (result != SPV_REFLECT_RESULT_SUCCESS)
+        {
+            GFXRECON_LOG_ERROR("Shader reflection on shader %" PRIu64 " failed", shader_info->capture_id);
+            assert(0);
+            return false;
+        }
+
+        for (const auto input : inputs)
+        {
+            // Ignore built ins. We care only about user defined inputs
+            if ((input->decoration_flags & SPV_REFLECT_DECORATION_BUILT_IN) == SPV_REFLECT_DECORATION_BUILT_IN)
+            {
+                continue;
+            }
+
+            const uint32_t location = input->location;
+            if (location < phys_dev_limits.maxVertexInputAttributes)
+            {
+                shader_info->input_info.emplace(std::make_pair(location, true));
+            }
+        }
     }
 
     return true;
@@ -5092,7 +5144,16 @@ VkResult VulkanReplayConsumerBase::OverrideCreateShaderModule(
         if (vk_res == VK_SUCCESS && options_.dumping_resources)
         {
             ShaderModuleInfo* shader_info = reinterpret_cast<ShaderModuleInfo*>(pShaderModule->GetConsumerData(0));
-            PerformReflectionOnShaderModule(shader_info, original_info->codeSize, original_info->pCode);
+            assert(shader_info);
+
+            const PhysicalDeviceInfo* phys_dev = object_info_table_.GetPhysicalDeviceInfo(device_info->parent_id);
+            assert(phys_dev);
+            assert(phys_dev->replay_device_info);
+
+            SPIRVReflectPerformReflectionOnShaderModule(shader_info,
+                                                        original_info->codeSize,
+                                                        original_info->pCode,
+                                                        phys_dev->replay_device_info->properties->limits);
         }
 
         return vk_res;
@@ -5128,7 +5189,14 @@ VkResult VulkanReplayConsumerBase::OverrideCreateShaderModule(
     if (vk_res == VK_SUCCESS && options_.dumping_resources)
     {
         ShaderModuleInfo* shader_info = reinterpret_cast<ShaderModuleInfo*>(pShaderModule->GetConsumerData(0));
-        PerformReflectionOnShaderModule(shader_info, override_info.codeSize, override_info.pCode);
+        assert(shader_info);
+
+        const PhysicalDeviceInfo* phys_dev = object_info_table_.GetPhysicalDeviceInfo(device_info->parent_id);
+        assert(phys_dev);
+        assert(phys_dev->replay_device_info);
+
+        SPIRVReflectPerformReflectionOnShaderModule(
+            shader_info, override_info.codeSize, override_info.pCode, phys_dev->replay_device_info->properties->limits);
     }
 
     return vk_res;
@@ -7956,6 +8024,35 @@ VkResult VulkanReplayConsumerBase::OverrideCreateGraphicsPipelines(
                 assert(pipeline_info);
 
                 pipeline_info->shaders.insert({ pCreateInfos->GetPointer()->pStages[s].stage, *module_info });
+            }
+
+            // Copy vertex input state information
+            if (in_p_create_infos != nullptr && in_p_create_infos->pVertexInputState)
+            {
+                // Vertex binding info
+                for (uint32_t vb = 0; vb < in_p_create_infos->pVertexInputState->vertexBindingDescriptionCount; ++vb)
+                {
+                    PipelineInfo::VertexBindingInfo info{
+                        in_p_create_infos->pVertexInputState->pVertexBindingDescriptions->stride,
+                        in_p_create_infos->pVertexInputState->pVertexBindingDescriptions->inputRate
+                    };
+
+                    uint32_t binding = in_p_create_infos->pVertexInputState->pVertexBindingDescriptions->binding;
+                    pipeline_info->vertex_binding_info.emplace(binding, info);
+                }
+
+                // Vertex attribute info
+                for (uint32_t va = 0; va < in_p_create_infos->pVertexInputState->vertexAttributeDescriptionCount; ++va)
+                {
+                    PipelineInfo::VertexAttributeInfo info{
+                        in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions->binding,
+                        in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions->format,
+                        in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions->offset
+                    };
+
+                    uint32_t location = in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions->location;
+                    pipeline_info->vertex_attribute_info.emplace(location, info);
+                }
             }
         }
     }
