@@ -3319,7 +3319,7 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
             }
 
             if (submit_info_data != nullptr && (options_.dumping_resources) &&
-                resource_dumper.ShouldDumpQueueSubmitIndex(index))
+                resource_dumper.MustDumpQueueSubmitIndex(index))
             {
                 resource_dumper.QueueSubmit(
                     modified_submit_infos, *GetDeviceTable(queue_info->handle), queue_info->handle, fence, index);
@@ -8033,11 +8033,11 @@ VkResult VulkanReplayConsumerBase::OverrideCreateGraphicsPipelines(
                 for (uint32_t vb = 0; vb < in_p_create_infos->pVertexInputState->vertexBindingDescriptionCount; ++vb)
                 {
                     PipelineInfo::VertexBindingInfo info{
-                        in_p_create_infos->pVertexInputState->pVertexBindingDescriptions->stride,
-                        in_p_create_infos->pVertexInputState->pVertexBindingDescriptions->inputRate
+                        in_p_create_infos->pVertexInputState->pVertexBindingDescriptions[vb].stride,
+                        in_p_create_infos->pVertexInputState->pVertexBindingDescriptions[vb].inputRate
                     };
 
-                    uint32_t binding = in_p_create_infos->pVertexInputState->pVertexBindingDescriptions->binding;
+                    uint32_t binding = in_p_create_infos->pVertexInputState->pVertexBindingDescriptions[vb].binding;
                     pipeline_info->vertex_binding_info.emplace(binding, info);
                 }
 
@@ -8045,12 +8045,12 @@ VkResult VulkanReplayConsumerBase::OverrideCreateGraphicsPipelines(
                 for (uint32_t va = 0; va < in_p_create_infos->pVertexInputState->vertexAttributeDescriptionCount; ++va)
                 {
                     PipelineInfo::VertexAttributeInfo info{
-                        in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions->binding,
-                        in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions->format,
-                        in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions->offset
+                        in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions[va].binding,
+                        in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions[va].format,
+                        in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions[va].offset
                     };
 
-                    uint32_t location = in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions->location;
+                    uint32_t location = in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions[va].location;
                     pipeline_info->vertex_attribute_info.emplace(location, info);
                 }
             }

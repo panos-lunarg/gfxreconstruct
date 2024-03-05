@@ -31,7 +31,6 @@
 #include "decode/vulkan_replay_dump_resources_json.h"
 #include "format/format.h"
 #include "util/defines.h"
-#include "vulkan/vulkan.h"
 #include <vector>
 #include <unordered_map>
 #include <utility>
@@ -225,13 +224,13 @@ class VulkanReplayDumpResourcesBase
                          VkFence                          fence,
                          uint64_t                         index);
 
-    bool ShouldDumpQueueSubmitIndex(uint64_t index) const;
+    bool MustDumpQueueSubmitIndex(uint64_t index) const;
 
-    bool ShouldDumpDrawCall(VkCommandBuffer original_command_buffer, uint64_t dc_index) const;
+    bool MustDumpDrawCall(VkCommandBuffer original_command_buffer, uint64_t dc_index) const;
 
-    bool ShouldDumpDispatch(VkCommandBuffer original_command_buffer, uint64_t index) const;
+    bool MustDumpDispatch(VkCommandBuffer original_command_buffer, uint64_t index) const;
 
-    bool ShouldDumpTraceRays(VkCommandBuffer original_command_buffer, uint64_t index) const;
+    bool MustDumpTraceRays(VkCommandBuffer original_command_buffer, uint64_t index) const;
 
     bool DumpingBeginCommandBufferIndex(uint64_t index) const;
 
@@ -299,7 +298,7 @@ class VulkanReplayDumpResourcesBase
 
         bool IsRecording() const { return current_cb_index < command_buffers.size(); }
 
-        bool ShouldDumpDrawCall(uint64_t index) const;
+        bool MustDumpDrawCall(uint64_t index) const;
 
         bool ShouldHandleRenderPass(uint64_t index) const;
 
@@ -351,7 +350,7 @@ class VulkanReplayDumpResourcesBase
 
         VkResult DumpRenderTargetAttachments(uint64_t cmd_buf_index, uint64_t qs_index, uint64_t bcb_index) const;
 
-        VkResult DumpVertexIndexBuffers(uint64_t qs_index, uint64_t bcb_index) const;
+        VkResult DumpVertexIndexBuffers();
 
         descriptor_set_t bound_descriptor_sets[kBindPoint_count];
 
@@ -367,6 +366,8 @@ class VulkanReplayDumpResourcesBase
         size_t                CmdBufToDCVectorIndex(size_t cmd_buf_index) const;
 
         void DestroyMutableResourceBackups();
+
+        void ReleaseIndirectDrawParams();
 
         VkResult BackUpMutableResources(VkQueue queue);
 
@@ -501,28 +502,79 @@ class VulkanReplayDumpResourcesBase
             }
         }
 
+        static bool IsDrawCallIndirect(DrawCallTypes dc_type)
+        {
+            switch (dc_type)
+            {
+                case kDraw:
+                case kDrawIndexed:
+                    return false;
+
+                case kDrawIndirect:
+                case kDrawIndirectCount:
+                case kDrawIndirectCountKHR:
+                case kDrawIndexedIndirect:
+                case kDrawIndexedIndirectCount:
+                case kDrawIndexedIndirectCountKHR:
+                    return true;
+
+                default:
+                    GFXRECON_LOG_ERROR(
+                        "%s() Unrecognized draw call type (%u)", __func__, static_cast<uint32_t>(dc_type))
+                    assert(0);
+                    return false;
+            }
+        }
+
         struct DrawCallParameters
         {
             union DrawCallParamsUnion
             {
-                struct
+                struct DrawParams
                 {
                     uint32_t vertex_count;
                     uint32_t instance_count;
                     uint32_t first_vertex;
                     uint32_t first_instance;
-                } draw;
+                };
 
-                struct
+                DrawParams draw;
+
+                struct DrawIndexedParams
                 {
                     uint32_t index_count;
                     uint32_t instance_count;
                     uint32_t first_index;
                     int32_t  vertex_offset;
                     uint32_t first_instance;
-                } draw_indexed;
+                };
 
-                // Constructor for vkCmdDraw*
+                DrawIndexedParams draw_indexed;
+
+                struct DrawIndirectParams
+                {
+                    const BufferInfo* params_buffer_info;
+                    VkDeviceSize      offset;
+                    uint32_t          draw_count;
+                    uint32_t          stride;
+
+                    VkBuffer       new_params_buffer;
+                    VkDeviceMemory new_params_memory;
+                    VkDeviceSize   new_params_buffer_size;
+
+                    // Pointers that will point to host allocated memory and filled with the draw params
+                    // read back after executing on the gpu. Because of the union a data structure
+                    // with a non default destructor (vector/unique_ptr) cannot be used and we will
+                    // handle the memory allocation ourselves.
+                    // One of these pointer will be used, depending on whether the draw call is indexed
+                    // or not.
+                    DrawParams*        draw_params;
+                    DrawIndexedParams* draw_indexed_params;
+                };
+
+                DrawIndirectParams draw_indirect;
+
+                // Constructor for vkCmdDraw
                 DrawCallParamsUnion(uint32_t vertex_count,
                                     uint32_t instance_count,
                                     uint32_t first_vertex,
@@ -538,9 +590,18 @@ class VulkanReplayDumpResourcesBase
                                     uint32_t first_instance) :
                     draw_indexed{ index_count, instance_count, first_index, vertex_offset, first_instance }
                 {}
+
+                // Constructor for vkCmdDrawIndirect*
+                DrawCallParamsUnion(const BufferInfo* params_buffer_info,
+                                    VkDeviceSize      offset,
+                                    uint32_t          draw_count,
+                                    uint32_t          stride) :
+                    draw_indirect{ params_buffer_info, offset, draw_count, stride, VK_NULL_HANDLE,
+                                   VK_NULL_HANDLE,     0,      nullptr,    nullptr }
+                {}
             } dc_params_union;
 
-            // Constructor for vkCmdDraw*
+            // Constructor for vkCmdDraw
             DrawCallParameters(DrawCallTypes type,
                                uint32_t      vertex_count,
                                uint32_t      instance_count,
@@ -549,7 +610,22 @@ class VulkanReplayDumpResourcesBase
                 dc_params_union(vertex_count, instance_count, first_vertex, first_instance),
                 type(type), referenced_bind_vertex_buffers(INVALID_BLOCK_INDEX),
                 referenced_bind_index_buffer(INVALID_BLOCK_INDEX)
-            {}
+            {
+                assert(type == DrawCallTypes::kDraw);
+            }
+
+            // Constructor for vkCmdDrawIndirect*
+            DrawCallParameters(DrawCallTypes     type,
+                               const BufferInfo* params_buffer_info,
+                               VkDeviceSize      offset,
+                               uint32_t          draw_count,
+                               uint32_t          stride) :
+                dc_params_union(params_buffer_info, offset, draw_count, stride),
+                type(type), referenced_bind_vertex_buffers(INVALID_BLOCK_INDEX),
+                referenced_bind_index_buffer(INVALID_BLOCK_INDEX)
+            {
+                assert(type == DrawCallTypes::kDrawIndirect || type == DrawCallTypes::kDrawIndexedIndirect);
+            }
 
             // Constructor for vkCmdDrawIndexed*
             DrawCallParameters(DrawCallTypes type,
@@ -561,7 +637,9 @@ class VulkanReplayDumpResourcesBase
                 dc_params_union(index_count, instance_count, first_index, vertex_offset, first_instance),
                 type(type), referenced_bind_vertex_buffers(INVALID_BLOCK_INDEX),
                 referenced_bind_index_buffer(INVALID_BLOCK_INDEX)
-            {}
+            {
+                assert(type == DrawCallTypes::kDrawIndexed);
+            }
 
             DrawCallTypes type;
 
@@ -573,6 +651,10 @@ class VulkanReplayDumpResourcesBase
         std::unordered_map<uint64_t, DrawCallParameters> draw_call_params;
 
         void CopyVertexIndexBufferInfo(uint64_t dc_index, DrawCallParameters& dc_params);
+
+        VkResult CopyIndirectDrawParameters(DrawCallParameters& dc_params);
+
+        VkResult FetchDrawIndirectParams();
 
         struct
         {
@@ -619,9 +701,9 @@ class VulkanReplayDumpResourcesBase
 
         bool IsRecording() const;
 
-        bool ShouldDumpDispatch(uint64_t index) const;
+        bool MustDumpDispatch(uint64_t index) const;
 
-        bool ShouldDumpTraceRays(uint64_t index) const;
+        bool MustDumpTraceRays(uint64_t index) const;
 
         std::string GenerateImageFilename(VkFormat format,
                                           bool     is_dispatch,

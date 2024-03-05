@@ -20,7 +20,6 @@
 ** DEALINGS IN THE SOFTWARE.
 */
 
-#include "generated/generated_vulkan_enum_to_string.h"
 #include "generated/generated_vulkan_struct_decoders.h"
 #include "graphics/vulkan_resources_util.h"
 #include "util/image_writer.h"
@@ -28,6 +27,8 @@
 #include "vulkan_replay_dump_resources.h"
 
 #include "Vulkan-Utility-Libraries/vk_format_utils.h"
+#include "util/logging.h"
+#include "util/platform.h"
 
 #include <sstream>
 #if !defined(WIN32)
@@ -573,11 +574,120 @@ VkResult VulkanReplayDumpResourcesBase::CloneCommandBuffer(uint64_t             
     return VK_SUCCESS;
 }
 
+VkResult
+VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyIndirectDrawParameters(DrawCallParameters& dc_params)
+{
+    switch (dc_params.type)
+    {
+        case kDrawIndirect:
+        case kDrawIndexedIndirect:
+        {
+            const uint32_t draw_count = dc_params.dc_params_union.draw_indirect.draw_count;
+
+            // According to spec drawCount can be zero. Nothing to do in this case
+            if (!draw_count)
+            {
+                return VK_SUCCESS;
+            }
+
+            VkDeviceSize draw_call_params_size;
+            if (dc_params.type == kDrawIndirect)
+            {
+                draw_call_params_size = sizeof(DrawCallParameters::DrawCallParamsUnion::DrawParams);
+            }
+            else
+            {
+                draw_call_params_size = sizeof(DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams);
+            }
+
+            const VkDeviceSize copy_buffer_size = draw_call_params_size * draw_count;
+            assert(copy_buffer_size <= dc_params.dc_params_union.draw_indirect.params_buffer_info->size);
+
+            dc_params.dc_params_union.draw_indirect.new_params_buffer_size = copy_buffer_size;
+
+            VkResult res = CloneBuffer(object_info_table,
+                                       device_table,
+                                       replay_device_phys_mem_props,
+                                       dc_params.dc_params_union.draw_indirect.params_buffer_info,
+                                       &dc_params.dc_params_union.draw_indirect.new_params_buffer,
+                                       &dc_params.dc_params_union.draw_indirect.new_params_memory,
+                                       copy_buffer_size);
+
+            if (res != VK_SUCCESS)
+            {
+                return res;
+            }
+
+            // Inject a cmdCopyBuffer to copy the draw params from the buffer
+            {
+                const uint32_t            param_buffer_stride = dc_params.dc_params_union.draw_indirect.stride;
+                std::vector<VkBufferCopy> regions(param_buffer_stride ? draw_count : 1);
+                if (param_buffer_stride)
+                {
+                    VkDeviceSize src_offset = 0;
+                    VkDeviceSize dst_offset = 0;
+                    for (uint32_t i = 0; i < draw_count; ++i)
+                    {
+                        regions[i].size = draw_call_params_size;
+
+                        regions[i].srcOffset = src_offset;
+                        src_offset += param_buffer_stride;
+
+                        regions[i].dstOffset = dst_offset;
+                        dst_offset += draw_call_params_size;
+                    }
+                    assert(src_offset == copy_buffer_size);
+                }
+                else
+                {
+                    regions[0].size      = copy_buffer_size;
+                    regions[0].srcOffset = 0;
+                    regions[0].dstOffset = 0;
+                }
+
+                VkCommandBuffer cmd_buf = command_buffers[current_cb_index];
+                device_table->CmdCopyBuffer(cmd_buf,
+                                            dc_params.dc_params_union.draw_indirect.params_buffer_info->handle,
+                                            dc_params.dc_params_union.draw_indirect.new_params_buffer,
+                                            regions.size(),
+                                            regions.data());
+
+                VkBufferMemoryBarrier buf_barrier;
+                buf_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+                buf_barrier.pNext               = nullptr;
+                buf_barrier.buffer              = dc_params.dc_params_union.draw_indirect.new_params_buffer;
+                buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
+                buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_READ_BIT;
+                buf_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                buf_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+                buf_barrier.size                = copy_buffer_size;
+                buf_barrier.offset              = 0;
+
+                device_table->CmdPipelineBarrier(cmd_buf,
+                                                 VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                                 VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                                 VkDependencyFlags{ 0 },
+                                                 0,
+                                                 nullptr,
+                                                 1,
+                                                 &buf_barrier,
+                                                 0,
+                                                 nullptr);
+            }
+        }
+        break;
+
+        default:
+            assert(0);
+            return VK_SUCCESS;
+    }
+
+    return VK_SUCCESS;
+}
+
 void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyVertexIndexBufferInfo(uint64_t            dc_index,
                                                                                        DrawCallParameters& dc_params)
 {
-    assert(current_cb_index < command_buffers.size());
-
     const PipelineInfo* gr_pipeline_info = bound_pipelines[kBindPoint_graphics];
     assert(gr_pipeline_info != nullptr);
 
@@ -642,21 +752,24 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDraw(const ApiCallInfo& call_info
 {
     assert(IsRecording(original_command_buffer));
 
-    if (dump_resources_before_ && ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    const uint64_t dc_index  = call_info.index;
+    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+
+    if (dump_resources_before_ && must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
 
     DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    if (dc_context != nullptr)
+    if (dc_context != nullptr && must_dump)
     {
         auto new_entry = dc_context->draw_call_params.emplace(
             std::piecewise_construct,
-            std::forward_as_tuple(call_info.index),
+            std::forward_as_tuple(dc_index),
             std::forward_as_tuple(
                 DrawCallsDumpingContext::kDraw, vertex_count, instance_count, first_vertex, first_instance));
         assert(new_entry.second);
-        dc_context->CopyVertexIndexBufferInfo(call_info.index, (new_entry.first->second));
+        dc_context->CopyVertexIndexBufferInfo(dc_index, (new_entry.first->second));
     }
 
     VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
@@ -672,7 +785,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDraw(const ApiCallInfo& call_info
         func(dr_command_buffer, vertex_count, instance_count, first_vertex, first_instance);
     }
 
-    if (ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    if (must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
@@ -689,18 +802,21 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexed(const ApiCallInfo&   
 {
     assert(IsRecording(original_command_buffer));
 
-    if (dump_resources_before_ && ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    const uint64_t dc_index  = call_info.index;
+    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+
+    if (dump_resources_before_ && must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
 
     // Copy vertex attribute info
     DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    if (dc_context != nullptr)
+    if (dc_context != nullptr && must_dump)
     {
         auto new_entry =
             dc_context->draw_call_params.emplace(std::piecewise_construct,
-                                                 std::forward_as_tuple(call_info.index),
+                                                 std::forward_as_tuple(dc_index),
                                                  std::forward_as_tuple(DrawCallsDumpingContext::kDrawIndexed,
                                                                        index_count,
                                                                        instance_count,
@@ -708,7 +824,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexed(const ApiCallInfo&   
                                                                        vertexOffset,
                                                                        first_instance));
         assert(new_entry.second);
-        dc_context->CopyVertexIndexBufferInfo(call_info.index, new_entry.first->second);
+        dc_context->CopyVertexIndexBufferInfo(dc_index, new_entry.first->second);
     }
 
     VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
@@ -724,7 +840,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexed(const ApiCallInfo&   
         func(dr_command_buffer, index_count, instance_count, first_index, vertexOffset, first_instance);
     }
 
-    if (ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    if (must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
@@ -740,9 +856,25 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirect(const ApiCallInfo&  
 {
     assert(IsRecording(original_command_buffer));
 
-    if (dump_resources_before_ && ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    const uint64_t dc_index  = call_info.index;
+    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+
+    if (dump_resources_before_ && must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
+    }
+
+    // Copy vertex attribute info
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr && must_dump)
+    {
+        auto new_entry = dc_context->draw_call_params.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(dc_index),
+            std::forward_as_tuple(DrawCallsDumpingContext::kDrawIndirect, buffer_info, offset, draw_count, stride));
+        assert(new_entry.second);
+        dc_context->CopyVertexIndexBufferInfo(dc_index, new_entry.first->second);
+        dc_context->CopyIndirectDrawParameters(new_entry.first->second);
     }
 
     VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
@@ -758,7 +890,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirect(const ApiCallInfo&  
         func(dr_command_buffer, buffer_info->handle, offset, draw_count, stride);
     }
 
-    if (ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    if (must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
@@ -774,9 +906,25 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirect(const ApiCall
 {
     assert(IsRecording(original_command_buffer));
 
-    if (dump_resources_before_ && ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    const uint64_t dc_index  = call_info.index;
+    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+
+    if (dump_resources_before_ && must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
+    }
+
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr && must_dump)
+    {
+        auto new_entry = dc_context->draw_call_params.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(dc_index),
+            std::forward_as_tuple(
+                DrawCallsDumpingContext::kDrawIndexedIndirect, buffer_info, offset, draw_count, stride));
+        assert(new_entry.second);
+        dc_context->CopyVertexIndexBufferInfo(dc_index, new_entry.first->second);
+        dc_context->CopyIndirectDrawParameters(new_entry.first->second);
     }
 
     VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
@@ -792,7 +940,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirect(const ApiCall
         func(dr_command_buffer, buffer_info->handle, offset, draw_count, stride);
     }
 
-    if (ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    if (must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
@@ -810,7 +958,10 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCount(const ApiCallIn
 {
     assert(IsRecording(original_command_buffer));
 
-    if (dump_resources_before_ && ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    const uint64_t dc_index  = call_info.index;
+    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+
+    if (dump_resources_before_ && must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
@@ -834,7 +985,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCount(const ApiCallIn
              stride);
     }
 
-    if (ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    if (must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
@@ -852,7 +1003,10 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCount(const Ap
 {
     assert(IsRecording(original_command_buffer));
 
-    if (dump_resources_before_ && ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    const uint64_t dc_index  = call_info.index;
+    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+
+    if (dump_resources_before_ && must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
@@ -876,7 +1030,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCount(const Ap
              stride);
     }
 
-    if (ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    if (must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
@@ -894,7 +1048,10 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCountKHR(const ApiCal
 {
     assert(IsRecording(original_command_buffer));
 
-    if (dump_resources_before_ && ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    const uint64_t dc_index  = call_info.index;
+    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+
+    if (dump_resources_before_ && must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
@@ -918,7 +1075,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCountKHR(const ApiCal
              stride);
     }
 
-    if (ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    if (must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
@@ -936,7 +1093,10 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCountKHR(const
 {
     assert(IsRecording(original_command_buffer));
 
-    if (dump_resources_before_ && ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    const uint64_t dc_index  = call_info.index;
+    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+
+    if (dump_resources_before_ && must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
@@ -960,13 +1120,13 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCountKHR(const
              stride);
     }
 
-    if (ShouldDumpDrawCall(original_command_buffer, call_info.index))
+    if (must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
 }
 
-bool VulkanReplayDumpResourcesBase::ShouldDumpDrawCall(VkCommandBuffer original_command_buffer, uint64_t index) const
+bool VulkanReplayDumpResourcesBase::MustDumpDrawCall(VkCommandBuffer original_command_buffer, uint64_t index) const
 {
     assert(original_command_buffer != VK_NULL_HANDLE);
     assert(IsRecording(original_command_buffer));
@@ -974,7 +1134,7 @@ bool VulkanReplayDumpResourcesBase::ShouldDumpDrawCall(VkCommandBuffer original_
     const DrawCallsDumpingContext* context = FindDrawCallCommandBufferContext(original_command_buffer);
     if (context != nullptr)
     {
-        return context->ShouldDumpDrawCall(index);
+        return context->MustDumpDrawCall(index);
     }
     else
     {
@@ -982,7 +1142,7 @@ bool VulkanReplayDumpResourcesBase::ShouldDumpDrawCall(VkCommandBuffer original_
     }
 }
 
-bool VulkanReplayDumpResourcesBase::ShouldDumpDispatch(VkCommandBuffer original_command_buffer, uint64_t index) const
+bool VulkanReplayDumpResourcesBase::MustDumpDispatch(VkCommandBuffer original_command_buffer, uint64_t index) const
 {
     assert(original_command_buffer != VK_NULL_HANDLE);
     assert(IsRecording(original_command_buffer));
@@ -992,7 +1152,7 @@ bool VulkanReplayDumpResourcesBase::ShouldDumpDispatch(VkCommandBuffer original_
 
     if (context != nullptr)
     {
-        return context->ShouldDumpDispatch(index);
+        return context->MustDumpDispatch(index);
     }
     else
     {
@@ -1000,7 +1160,7 @@ bool VulkanReplayDumpResourcesBase::ShouldDumpDispatch(VkCommandBuffer original_
     }
 }
 
-bool VulkanReplayDumpResourcesBase::ShouldDumpTraceRays(VkCommandBuffer original_command_buffer, uint64_t index) const
+bool VulkanReplayDumpResourcesBase::MustDumpTraceRays(VkCommandBuffer original_command_buffer, uint64_t index) const
 {
     assert(original_command_buffer != VK_NULL_HANDLE);
     assert(IsRecording(original_command_buffer));
@@ -1010,7 +1170,7 @@ bool VulkanReplayDumpResourcesBase::ShouldDumpTraceRays(VkCommandBuffer original
 
     if (context != nullptr)
     {
-        return context->ShouldDumpTraceRays(index);
+        return context->MustDumpTraceRays(index);
     }
     else
     {
@@ -1018,7 +1178,7 @@ bool VulkanReplayDumpResourcesBase::ShouldDumpTraceRays(VkCommandBuffer original
     }
 }
 
-bool VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::ShouldDumpDrawCall(uint64_t index) const
+bool VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::MustDumpDrawCall(uint64_t index) const
 {
     // Indices should be sorted
     if (!IsInsideRange(dc_indices, index))
@@ -1144,7 +1304,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpDrawCallsAt
     // Dump vertex attributes
     if (dump_vertex_index_buffers)
     {
-        DumpVertexIndexBuffers(qs_index, bcb_index);
+        DumpVertexIndexBuffers();
     }
 
     return VK_SUCCESS;
@@ -1479,10 +1639,107 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::GenerateVertexBufferFile
     return (filedirname / filebasename).string();
 }
 
-VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndexBuffers(uint64_t qs_index,
-                                                                                        uint64_t bcb_index) const
+VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::FetchDrawIndirectParams()
+{
+    assert(original_command_buffer_info);
+    assert(original_command_buffer_info->parent_id != format::kNullHandleId);
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+    assert(device_info);
+
+    const PhysicalDeviceInfo* phys_dev_info = object_info_table.GetPhysicalDeviceInfo(device_info->parent_id);
+    assert(phys_dev_info);
+
+    graphics::VulkanResourcesUtil resource_util(device_info->handle,
+                                                device_info->parent,
+                                                *device_table,
+                                                *instance_table,
+                                                *phys_dev_info->replay_device_info->memory_properties);
+
+    for (auto& dc_param_entry : draw_call_params)
+    {
+        DrawCallParameters& dc_params = dc_param_entry.second;
+
+        if (!IsDrawCallIndirect(dc_params.type))
+        {
+            continue;
+        }
+
+        if (dc_params.type == DrawCallTypes::kDrawIndirect)
+        {
+            if (!dc_params.dc_params_union.draw_indirect.draw_count)
+            {
+                continue;
+            }
+
+            assert(dc_params.dc_params_union.draw_indirect.draw_params == nullptr);
+            dc_params.dc_params_union.draw_indirect.draw_params =
+                new DrawCallParameters::DrawCallParamsUnion::DrawParams[dc_params.dc_params_union.draw_indirect
+                                                                            .draw_count];
+            if (dc_params.dc_params_union.draw_indirect.draw_params == nullptr)
+            {
+                return VK_ERROR_OUT_OF_HOST_MEMORY;
+            }
+        }
+        else if (dc_params.type == DrawCallTypes::kDrawIndexedIndirect)
+        {
+            if (!dc_params.dc_params_union.draw_indirect.draw_count)
+            {
+                continue;
+            }
+
+            assert(dc_params.dc_params_union.draw_indirect.draw_indexed_params == nullptr);
+            dc_params.dc_params_union.draw_indirect.draw_indexed_params =
+                new DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams[dc_params.dc_params_union.draw_indirect
+                                                                                   .draw_count];
+            if (dc_params.dc_params_union.draw_indirect.draw_indexed_params == nullptr)
+            {
+                return VK_ERROR_OUT_OF_HOST_MEMORY;
+            }
+        }
+
+        std::vector<uint8_t> params_data;
+        VkResult             res = resource_util.ReadFromBufferResource(
+            dc_params.dc_params_union.draw_indirect.new_params_buffer,
+            dc_params.dc_params_union.draw_indirect.new_params_buffer_size,
+            0,
+            dc_params.dc_params_union.draw_indirect.params_buffer_info->queue_family_index,
+            params_data);
+
+        if (res != VK_SUCCESS)
+        {
+            return res;
+        }
+
+        assert(params_data.size() == dc_params.dc_params_union.draw_indirect.new_params_buffer_size);
+
+        if (dc_params.type == DrawCallTypes::kDrawIndirect)
+        {
+            util::platform::MemoryCopy(dc_params.dc_params_union.draw_indirect.draw_params,
+                                       dc_params.dc_params_union.draw_indirect.new_params_buffer_size,
+                                       params_data.data(),
+                                       params_data.size());
+        }
+        else if (dc_params.type == DrawCallTypes::kDrawIndexedIndirect)
+        {
+            util::platform::MemoryCopy(dc_params.dc_params_union.draw_indirect.draw_indexed_params,
+                                       dc_params.dc_params_union.draw_indirect.new_params_buffer_size,
+                                       params_data.data(),
+                                       params_data.size());
+        }
+    }
+
+    return VK_SUCCESS;
+}
+
+VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndexBuffers()
 {
     assert(draw_call_params.size() == dc_indices.size());
+
+    VkResult res = FetchDrawIndirectParams();
+    if (res != VK_SUCCESS)
+    {
+        return res;
+    }
 
     assert(original_command_buffer_info);
     assert(original_command_buffer_info->parent_id != format::kNullHandleId);
@@ -1506,6 +1763,11 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
     {
         const uint64_t bind_index_buffer_block_index = idx_buf.first;
 
+        if (idx_buf.second.referencing_draw_calls.empty())
+        {
+            continue;
+        }
+
         // In order to deduce the index buffer's size find the greatest index count
         // used by all draw calls that reference this index buffer
         uint32_t max_index_count = 0;
@@ -1518,25 +1780,53 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
             assert(IsDrawCallIndexed(dc_params.type));
             assert(dc_params.referenced_bind_index_buffer != INVALID_BLOCK_INDEX);
 
-            if (dc_params.dc_params_union.draw_indexed.index_count > max_index_count)
+            if (IsDrawCallIndirect(dc_params.type))
             {
-                max_index_count = dc_params.dc_params_union.draw_indexed.index_count;
+                if (!dc_params.dc_params_union.draw_indirect.draw_count)
+                {
+                    continue;
+                }
+
+                assert(dc_params.dc_params_union.draw_indirect.draw_indexed_params != nullptr);
+                const DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams* indirect_indexed_params =
+                    dc_params.dc_params_union.draw_indirect.draw_indexed_params;
+                for (uint32_t d = 0; d < dc_params.dc_params_union.draw_indirect.draw_count; ++d)
+                {
+                    if (max_index_count < indirect_indexed_params[d].index_count)
+                    {
+                        max_index_count = indirect_indexed_params[d].index_count;
+                    }
+                }
+            }
+            else
+            {
+                if (max_index_count < dc_params.dc_params_union.draw_indexed.index_count)
+                {
+                    max_index_count = dc_params.dc_params_union.draw_indexed.index_count;
+                }
             }
         }
 
         const VkIndexType index_type  = idx_buf.second.index_type;
         const uint32_t    index_size  = VkIndexTypeToBytes(index_type);
         const uint32_t    index_count = max_index_count;
-        const uint32_t    total_size  = index_count * index_size;
         const uint32_t    offset      = idx_buf.second.offset;
+        uint32_t          total_size  = index_count * index_size;
 
         assert(idx_buf.second.buffer_info != nullptr);
+        assert(total_size <= idx_buf.second.buffer_info->size - offset);
+        // There is something wrong with the calculations if this is true
+        if (total_size > idx_buf.second.buffer_info->size - offset)
+        {
+            total_size = idx_buf.second.buffer_info->size - offset;
+        }
+
         std::vector<uint8_t> index_data;
-        VkResult             res = resource_util.ReadFromBufferResource(idx_buf.second.buffer_info->handle,
-                                                            total_size,
-                                                            offset,
-                                                            idx_buf.second.buffer_info->queue_family_index,
-                                                            index_data);
+        res = resource_util.ReadFromBufferResource(idx_buf.second.buffer_info->handle,
+                                                   total_size,
+                                                   offset,
+                                                   idx_buf.second.buffer_info->queue_family_index,
+                                                   index_data);
         if (res != VK_SUCCESS)
         {
             return res;
@@ -1555,6 +1845,11 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
     for (const auto& vbs : bound_vertex_buffers)
     {
         const uint64_t bind_vertex_buffers_index = vbs.first;
+
+        if (vbs.second.referencing_draw_calls.empty())
+        {
+            continue;
+        }
 
         // In order to deduce the vertex buffer's size find the greatest vertex count
         // used by all draw calls that reference this index buffer
@@ -1575,16 +1870,37 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
                     max_vertex_index_per_index_buffer.find(dc_params.referenced_bind_index_buffer);
                 assert(max_vertex_index_entry != max_vertex_index_per_index_buffer.end());
 
-                if (max_vertex_index_entry->second > max_vertex_count)
+                if (max_vertex_count < max_vertex_index_entry->second)
                 {
                     max_vertex_count = max_vertex_index_entry->second;
                 }
             }
             else
             {
-                if (dc_params.dc_params_union.draw.vertex_count > max_vertex_count)
+                if (IsDrawCallIndirect(dc_params.type))
                 {
-                    max_vertex_count = dc_params.dc_params_union.draw.vertex_count;
+                    if (!dc_params.dc_params_union.draw_indirect.draw_count)
+                    {
+                        continue;
+                    }
+
+                    assert(dc_params.dc_params_union.draw_indirect.draw_params != nullptr);
+                    const DrawCallParameters::DrawCallParamsUnion::DrawParams* indirect_params =
+                        dc_params.dc_params_union.draw_indirect.draw_params;
+                    for (uint32_t d = 0; d < dc_params.dc_params_union.draw_indirect.draw_count; ++d)
+                    {
+                        if (max_vertex_count < indirect_params[d].vertex_count)
+                        {
+                            max_vertex_count = indirect_params[d].vertex_count;
+                        }
+                    }
+                }
+                else
+                {
+                    if (max_vertex_count < dc_params.dc_params_union.draw.vertex_count)
+                    {
+                        max_vertex_count = dc_params.dc_params_union.draw.vertex_count;
+                    }
                 }
             }
         }
@@ -1603,16 +1919,23 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
             }
 
             const uint32_t binding_stride = ppl_vb_binding_entry->second.stride;
-            const uint32_t total_size     = max_vertex_count * binding_stride;
             const uint32_t offset         = vb_binding.second.offset;
+            uint32_t       total_size     = max_vertex_count * binding_stride;
+
+            assert(vb_binding.second.buffer_info != nullptr);
+            assert(total_size <= vb_binding.second.buffer_info->size - offset);
+            // There is something wrong with the calculations if this is true
+            if (total_size > vb_binding.second.buffer_info->size - offset)
+            {
+                total_size = vb_binding.second.buffer_info->size - offset;
+            }
 
             std::vector<uint8_t> vb_data;
-            assert(vb_binding.second.buffer_info != nullptr);
-            VkResult res = resource_util.ReadFromBufferResource(vb_binding.second.buffer_info->handle,
-                                                                total_size,
-                                                                offset,
-                                                                vb_binding.second.buffer_info->queue_family_index,
-                                                                vb_data);
+            res = resource_util.ReadFromBufferResource(vb_binding.second.buffer_info->handle,
+                                                       total_size,
+                                                       offset,
+                                                       vb_binding.second.buffer_info->queue_family_index,
+                                                       vb_data);
 
             std::string filename = GenerateVertexBufferFilename(bind_vertex_buffers_index, binding);
             util::bufferwriter::WriteBuffer(filename, vb_data.data(), vb_data.size());
@@ -2446,7 +2769,7 @@ bool VulkanReplayDumpResourcesBase::UpdateRecordingStatus()
     return (recording_ = false);
 }
 
-bool VulkanReplayDumpResourcesBase::ShouldDumpQueueSubmitIndex(uint64_t index) const
+bool VulkanReplayDumpResourcesBase::MustDumpQueueSubmitIndex(uint64_t index) const
 {
     // Indices should be sorted
     if (!IsInsideRange(QueueSubmit_indices_, index))
@@ -2908,7 +3231,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDispatch(const ApiCallInfo& call_
     DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
     if (dump_resources_before_ && dr_context != nullptr)
     {
-        if (dr_context->ShouldDumpDispatch(call_info.index))
+        if (dr_context->MustDumpDispatch(call_info.index))
         {
             dr_context->CloneDispatchRaysResources(call_info.index, true, true);
         }
@@ -2922,7 +3245,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDispatch(const ApiCallInfo& call_
 
     if (dr_context != nullptr)
     {
-        if (dr_context->ShouldDumpDispatch(call_info.index))
+        if (dr_context->MustDumpDispatch(call_info.index))
         {
             dr_context->CloneDispatchRaysResources(call_info.index, false, true);
             FinalizeDispatchRaysCommandBuffer(original_command_buffer);
@@ -2950,7 +3273,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDispatchIndirect(const ApiCallInf
     DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
     if (dump_resources_before_ && dr_context != nullptr)
     {
-        if (dr_context->ShouldDumpDispatch(call_info.index))
+        if (dr_context->MustDumpDispatch(call_info.index))
         {
             dr_context->CloneDispatchRaysResources(call_info.index, true, true);
         }
@@ -2964,7 +3287,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDispatchIndirect(const ApiCallInf
 
     if (dr_context != nullptr)
     {
-        if (dr_context->ShouldDumpDispatch(call_info.index))
+        if (dr_context->MustDumpDispatch(call_info.index))
         {
             dr_context->CloneDispatchRaysResources(call_info.index, false, true);
             FinalizeDispatchRaysCommandBuffer(original_command_buffer);
@@ -3010,7 +3333,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdTraceRaysKHR(
     DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
     if (dump_resources_before_ && dr_context != nullptr)
     {
-        if (dr_context->ShouldDumpTraceRays(call_info.index))
+        if (dr_context->MustDumpTraceRays(call_info.index))
         {
             dr_context->CloneDispatchRaysResources(call_info.index, true, false);
         }
@@ -3031,7 +3354,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdTraceRaysKHR(
 
     if (dr_context != nullptr)
     {
-        if (dr_context->ShouldDumpTraceRays(call_info.index))
+        if (dr_context->MustDumpTraceRays(call_info.index))
         {
             dr_context->CloneDispatchRaysResources(call_info.index, false, false);
             FinalizeDispatchRaysCommandBuffer(original_command_buffer);
@@ -3099,6 +3422,7 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::~DrawCallsDumpingContext
         }
 
         DestroyMutableResourceBackups();
+        ReleaseIndirectDrawParams();
     }
 }
 
@@ -3171,6 +3495,48 @@ static VkResult CloneImage(const VulkanObjectInfoTable&            object_info_t
     }
 
     return VK_SUCCESS;
+}
+
+void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::ReleaseIndirectDrawParams()
+{
+    assert(original_command_buffer_info);
+    assert(original_command_buffer_info->parent_id != format::kNullHandleId);
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+
+    if (device_info == nullptr)
+    {
+        return;
+    }
+
+    for (auto& dc_param_entry : draw_call_params)
+    {
+        DrawCallParameters& dc_params = dc_param_entry.second;
+        if (dc_params.type == DrawCallTypes::kDrawIndirect &&
+            dc_params.dc_params_union.draw_indirect.draw_params != nullptr)
+        {
+            delete[] dc_params.dc_params_union.draw_indirect.draw_params;
+        }
+        else if (dc_params.type == DrawCallTypes::kDrawIndexedIndirect &&
+                 dc_params.dc_params_union.draw_indirect.draw_indexed_params != nullptr)
+        {
+            delete[] dc_params.dc_params_union.draw_indirect.draw_indexed_params;
+        }
+
+        if (dc_params.type == DrawCallTypes::kDrawIndirect || dc_params.type == DrawCallTypes::kDrawIndexedIndirect)
+        {
+            if (dc_params.dc_params_union.draw_indirect.new_params_buffer != VK_NULL_HANDLE)
+            {
+                device_table->DestroyBuffer(
+                    device_info->handle, dc_params.dc_params_union.draw_indirect.new_params_buffer, nullptr);
+            }
+
+            if (dc_params.dc_params_union.draw_indirect.new_params_memory != VK_NULL_HANDLE)
+            {
+                device_table->FreeMemory(
+                    device_info->handle, dc_params.dc_params_union.draw_indirect.new_params_memory, nullptr);
+            }
+        }
+    }
 }
 
 void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DestroyMutableResourceBackups()
@@ -3801,7 +4167,7 @@ void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::BindDescrip
     }
 }
 
-bool VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::ShouldDumpDispatch(uint64_t index) const
+bool VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::MustDumpDispatch(uint64_t index) const
 {
     // Indices should be sorted
     if (!IsInsideRange(dispatch_indices, index))
@@ -3827,7 +4193,7 @@ bool VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::ShouldDumpD
     return false;
 }
 
-bool VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::ShouldDumpTraceRays(uint64_t index) const
+bool VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::MustDumpTraceRays(uint64_t index) const
 {
     // Indices should be sorted
     if (!IsInsideRange(trace_rays_indices, index))
