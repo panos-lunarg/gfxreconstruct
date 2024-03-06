@@ -30,7 +30,10 @@
 #include "util/logging.h"
 #include "util/platform.h"
 
+#include <cstdint>
+#include <limits>
 #include <sstream>
+#include <vulkan/vulkan_core.h>
 #if !defined(WIN32)
 #include <dirent.h>
 #endif
@@ -577,109 +580,239 @@ VkResult VulkanReplayDumpResourcesBase::CloneCommandBuffer(uint64_t             
 VkResult
 VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyIndirectDrawParameters(DrawCallParameters& dc_params)
 {
-    switch (dc_params.type)
+    assert(IsDrawCallIndirect(dc_params.type));
+
+    if (IsDrawCallIndirectCount(dc_params.type))
     {
-        case kDrawIndirect:
-        case kDrawIndexedIndirect:
+        DrawCallParameters::DrawCallParamsUnion::DrawIndirectCountParams& ic_params =
+            dc_params.dc_params_union.draw_indirect_count;
+
+        const uint32_t max_draw_count = ic_params.max_draw_count;
+
+        // Not sure from spec if max_draw_count can be zero. Assume it can
+        if (!max_draw_count)
         {
-            const uint32_t draw_count = dc_params.dc_params_union.draw_indirect.draw_count;
+            return VK_SUCCESS;
+        }
 
-            // According to spec drawCount can be zero. Nothing to do in this case
-            if (!draw_count)
-            {
-                return VK_SUCCESS;
-            }
+        const VkDeviceSize draw_call_params_size =
+            IsDrawCallIndexed(dc_params.type) ? sizeof(DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams)
+                                              : sizeof(DrawCallParameters::DrawCallParamsUnion::DrawParams);
 
-            VkDeviceSize draw_call_params_size;
-            if (dc_params.type == kDrawIndirect)
+        // Create a buffer to copy the parameters buffer
+        const VkDeviceSize copy_buffer_size = draw_call_params_size * max_draw_count;
+        assert(copy_buffer_size <= ic_params.params_buffer_info->size);
+
+        ic_params.new_params_buffer_size = copy_buffer_size;
+
+        VkResult res = CloneBuffer(object_info_table,
+                                   device_table,
+                                   replay_device_phys_mem_props,
+                                   ic_params.params_buffer_info,
+                                   &ic_params.new_params_buffer,
+                                   &ic_params.new_params_memory,
+                                   copy_buffer_size);
+        if (res != VK_SUCCESS)
+        {
+            return res;
+        }
+
+        // Inject a cmdCopyBuffer to copy the draw params into the new buffer
+        {
+            const uint32_t            param_buffer_stride = ic_params.stride;
+            std::vector<VkBufferCopy> regions(param_buffer_stride ? max_draw_count : 1);
+            if (param_buffer_stride)
             {
-                draw_call_params_size = sizeof(DrawCallParameters::DrawCallParamsUnion::DrawParams);
+                VkDeviceSize src_offset = ic_params.params_buffer_offset;
+                VkDeviceSize dst_offset = 0;
+                for (uint32_t i = 0; i < max_draw_count; ++i)
+                {
+                    regions[i].size = draw_call_params_size;
+
+                    regions[i].srcOffset = src_offset;
+                    src_offset += param_buffer_stride;
+
+                    regions[i].dstOffset = dst_offset;
+                    dst_offset += draw_call_params_size;
+                }
+                assert(src_offset == copy_buffer_size);
             }
             else
             {
-                draw_call_params_size = sizeof(DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams);
+                regions[0].size      = copy_buffer_size;
+                regions[0].srcOffset = ic_params.params_buffer_offset;
+                regions[0].dstOffset = 0;
             }
 
-            const VkDeviceSize copy_buffer_size = draw_call_params_size * draw_count;
-            assert(copy_buffer_size <= dc_params.dc_params_union.draw_indirect.params_buffer_info->size);
+            VkCommandBuffer cmd_buf = command_buffers[current_cb_index];
+            device_table->CmdCopyBuffer(cmd_buf,
+                                        ic_params.params_buffer_info->handle,
+                                        ic_params.new_params_buffer,
+                                        regions.size(),
+                                        regions.data());
 
-            dc_params.dc_params_union.draw_indirect.new_params_buffer_size = copy_buffer_size;
+            VkBufferMemoryBarrier buf_barrier;
+            buf_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            buf_barrier.pNext               = nullptr;
+            buf_barrier.buffer              = ic_params.new_params_buffer;
+            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
+            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_READ_BIT;
+            buf_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            buf_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            buf_barrier.size                = copy_buffer_size;
+            buf_barrier.offset              = 0;
 
-            VkResult res = CloneBuffer(object_info_table,
-                                       device_table,
-                                       replay_device_phys_mem_props,
-                                       dc_params.dc_params_union.draw_indirect.params_buffer_info,
-                                       &dc_params.dc_params_union.draw_indirect.new_params_buffer,
-                                       &dc_params.dc_params_union.draw_indirect.new_params_memory,
-                                       copy_buffer_size);
-
-            if (res != VK_SUCCESS)
-            {
-                return res;
-            }
-
-            // Inject a cmdCopyBuffer to copy the draw params from the buffer
-            {
-                const uint32_t            param_buffer_stride = dc_params.dc_params_union.draw_indirect.stride;
-                std::vector<VkBufferCopy> regions(param_buffer_stride ? draw_count : 1);
-                if (param_buffer_stride)
-                {
-                    VkDeviceSize src_offset = dc_params.dc_params_union.draw_indirect.offset;
-                    VkDeviceSize dst_offset = 0;
-                    for (uint32_t i = 0; i < draw_count; ++i)
-                    {
-                        regions[i].size = draw_call_params_size;
-
-                        regions[i].srcOffset = src_offset;
-                        src_offset += param_buffer_stride;
-
-                        regions[i].dstOffset = dst_offset;
-                        dst_offset += draw_call_params_size;
-                    }
-                    assert(src_offset == copy_buffer_size);
-                }
-                else
-                {
-                    regions[0].size      = copy_buffer_size;
-                    regions[0].srcOffset = 0;
-                    regions[0].dstOffset = 0;
-                }
-
-                VkCommandBuffer cmd_buf = command_buffers[current_cb_index];
-                device_table->CmdCopyBuffer(cmd_buf,
-                                            dc_params.dc_params_union.draw_indirect.params_buffer_info->handle,
-                                            dc_params.dc_params_union.draw_indirect.new_params_buffer,
-                                            regions.size(),
-                                            regions.data());
-
-                VkBufferMemoryBarrier buf_barrier;
-                buf_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-                buf_barrier.pNext               = nullptr;
-                buf_barrier.buffer              = dc_params.dc_params_union.draw_indirect.new_params_buffer;
-                buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
-                buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_READ_BIT;
-                buf_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                buf_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-                buf_barrier.size                = copy_buffer_size;
-                buf_barrier.offset              = 0;
-
-                device_table->CmdPipelineBarrier(cmd_buf,
-                                                 VK_PIPELINE_STAGE_TRANSFER_BIT,
-                                                 VK_PIPELINE_STAGE_TRANSFER_BIT,
-                                                 VkDependencyFlags{ 0 },
-                                                 0,
-                                                 nullptr,
-                                                 1,
-                                                 &buf_barrier,
-                                                 0,
-                                                 nullptr);
-            }
+            device_table->CmdPipelineBarrier(cmd_buf,
+                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                             VkDependencyFlags{ 0 },
+                                             0,
+                                             nullptr,
+                                             1,
+                                             &buf_barrier,
+                                             0,
+                                             nullptr);
         }
-        break;
 
-        default:
-            assert(0);
+        // Create a buffer to copy the draw count parameter
+        const VkDeviceSize count_buffer_size = sizeof(uint32_t);
+        assert(count_buffer_size <= ic_params.count_buffer_info->size);
+        res = CloneBuffer(object_info_table,
+                          device_table,
+                          replay_device_phys_mem_props,
+                          ic_params.count_buffer_info,
+                          &ic_params.new_count_buffer,
+                          &ic_params.new_count_memory,
+                          count_buffer_size);
+        if (res != VK_SUCCESS)
+        {
+            return res;
+        }
+
+        // Inject a cmdCopyBuffer to copy the count into the new buffer
+        {
+            VkBufferCopy region;
+            region.size      = count_buffer_size;
+            region.srcOffset = ic_params.count_buffer_offset;
+            region.dstOffset = 0;
+
+            VkCommandBuffer cmd_buf = command_buffers[current_cb_index];
+            device_table->CmdCopyBuffer(
+                cmd_buf, ic_params.params_buffer_info->handle, ic_params.new_params_buffer, 1, &region);
+
+            VkBufferMemoryBarrier buf_barrier;
+            buf_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            buf_barrier.pNext               = nullptr;
+            buf_barrier.buffer              = ic_params.new_count_buffer;
+            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
+            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_READ_BIT;
+            buf_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            buf_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            buf_barrier.size                = count_buffer_size;
+            buf_barrier.offset              = 0;
+
+            device_table->CmdPipelineBarrier(cmd_buf,
+                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                             VkDependencyFlags{ 0 },
+                                             0,
+                                             nullptr,
+                                             1,
+                                             &buf_barrier,
+                                             0,
+                                             nullptr);
+        }
+    }
+    else
+    {
+        DrawCallParameters::DrawCallParamsUnion::DrawIndirectParams& i_params = dc_params.dc_params_union.draw_indirect;
+
+        const uint32_t draw_count = i_params.draw_count;
+
+        // According to spec drawCount can be zero. Nothing to do in this case
+        if (!draw_count)
+        {
             return VK_SUCCESS;
+        }
+
+        const VkDeviceSize draw_call_params_size =
+            IsDrawCallIndexed(dc_params.type) ? sizeof(DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams)
+                                              : sizeof(DrawCallParameters::DrawCallParamsUnion::DrawParams);
+
+        // Create a buffer to copy the parameters buffer
+        const VkDeviceSize copy_buffer_size = draw_call_params_size * draw_count;
+        assert(copy_buffer_size <= i_params.params_buffer_info->size);
+
+        i_params.new_params_buffer_size = copy_buffer_size;
+
+        VkResult res = CloneBuffer(object_info_table,
+                                   device_table,
+                                   replay_device_phys_mem_props,
+                                   i_params.params_buffer_info,
+                                   &i_params.new_params_buffer,
+                                   &i_params.new_params_memory,
+                                   copy_buffer_size);
+        if (res != VK_SUCCESS)
+        {
+            return res;
+        }
+
+        // Inject a cmdCopyBuffer to copy the draw params into the new buffer
+        {
+            const uint32_t            param_buffer_stride = i_params.stride;
+            std::vector<VkBufferCopy> regions(param_buffer_stride ? draw_count : 1);
+            if (param_buffer_stride)
+            {
+                VkDeviceSize src_offset = i_params.params_buffer_offset;
+                VkDeviceSize dst_offset = 0;
+                for (uint32_t i = 0; i < draw_count; ++i)
+                {
+                    regions[i].size = draw_call_params_size;
+
+                    regions[i].srcOffset = src_offset;
+                    src_offset += param_buffer_stride;
+
+                    regions[i].dstOffset = dst_offset;
+                    dst_offset += draw_call_params_size;
+                }
+                assert(src_offset == copy_buffer_size);
+            }
+            else
+            {
+                regions[0].size      = copy_buffer_size;
+                regions[0].srcOffset = i_params.params_buffer_offset;
+                regions[0].dstOffset = 0;
+            }
+
+            VkCommandBuffer cmd_buf = command_buffers[current_cb_index];
+            device_table->CmdCopyBuffer(cmd_buf,
+                                        i_params.params_buffer_info->handle,
+                                        i_params.new_params_buffer,
+                                        regions.size(),
+                                        regions.data());
+
+            VkBufferMemoryBarrier buf_barrier;
+            buf_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            buf_barrier.pNext               = nullptr;
+            buf_barrier.buffer              = i_params.new_params_buffer;
+            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
+            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_READ_BIT;
+            buf_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            buf_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            buf_barrier.size                = copy_buffer_size;
+            buf_barrier.offset              = 0;
+
+            device_table->CmdPipelineBarrier(cmd_buf,
+                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                             VkDependencyFlags{ 0 },
+                                             0,
+                                             nullptr,
+                                             1,
+                                             &buf_barrier,
+                                             0,
+                                             nullptr);
+        }
     }
 
     return VK_SUCCESS;
@@ -966,6 +1099,24 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCount(const ApiCallIn
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
 
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr && must_dump)
+    {
+        auto new_entry =
+            dc_context->draw_call_params.emplace(std::piecewise_construct,
+                                                 std::forward_as_tuple(dc_index),
+                                                 std::forward_as_tuple(DrawCallsDumpingContext::kDrawIndirectCount,
+                                                                       buffer_info,
+                                                                       offset,
+                                                                       count_buffer_info,
+                                                                       count_buffer_offset,
+                                                                       max_draw_count,
+                                                                       stride));
+        assert(new_entry.second);
+        dc_context->CopyVertexIndexBufferInfo(dc_index, new_entry.first->second);
+        dc_context->CopyIndirectDrawParameters(new_entry.first->second);
+    }
+
     VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
     GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
     for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
@@ -1009,6 +1160,24 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCount(const Ap
     if (dump_resources_before_ && must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
+    }
+
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr && must_dump)
+    {
+        auto new_entry = dc_context->draw_call_params.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(dc_index),
+            std::forward_as_tuple(DrawCallsDumpingContext::kDrawIndexedIndirectCount,
+                                  buffer_info,
+                                  offset,
+                                  count_buffer_info,
+                                  count_buffer_offset,
+                                  max_draw_count,
+                                  stride));
+        assert(new_entry.second);
+        dc_context->CopyVertexIndexBufferInfo(dc_index, new_entry.first->second);
+        dc_context->CopyIndirectDrawParameters(new_entry.first->second);
     }
 
     VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
@@ -1056,6 +1225,24 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCountKHR(const ApiCal
         FinalizeDrawCallCommandBuffer(original_command_buffer);
     }
 
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr && must_dump)
+    {
+        auto new_entry =
+            dc_context->draw_call_params.emplace(std::piecewise_construct,
+                                                 std::forward_as_tuple(dc_index),
+                                                 std::forward_as_tuple(DrawCallsDumpingContext::kDrawIndirectCountKHR,
+                                                                       buffer_info,
+                                                                       offset,
+                                                                       count_buffer_info,
+                                                                       count_buffer_offset,
+                                                                       max_draw_count,
+                                                                       stride));
+        assert(new_entry.second);
+        dc_context->CopyVertexIndexBufferInfo(dc_index, new_entry.first->second);
+        dc_context->CopyIndirectDrawParameters(new_entry.first->second);
+    }
+
     VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
     GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
     for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
@@ -1099,6 +1286,24 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCountKHR(const
     if (dump_resources_before_ && must_dump)
     {
         FinalizeDrawCallCommandBuffer(original_command_buffer);
+    }
+
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr && must_dump)
+    {
+        auto new_entry = dc_context->draw_call_params.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(dc_index),
+            std::forward_as_tuple(DrawCallsDumpingContext::kDrawIndexedIndirectCountKHR,
+                                  buffer_info,
+                                  offset,
+                                  count_buffer_info,
+                                  count_buffer_offset,
+                                  max_draw_count,
+                                  stride));
+        assert(new_entry.second);
+        dc_context->CopyVertexIndexBufferInfo(dc_index, new_entry.first->second);
+        dc_context->CopyIndirectDrawParameters(new_entry.first->second);
     }
 
     VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
@@ -1664,67 +1869,128 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::FetchDrawIndire
             continue;
         }
 
-        if (dc_params.type == DrawCallTypes::kDrawIndirect)
+        if (IsDrawCallIndirectCount(dc_params.type))
         {
-            if (!dc_params.dc_params_union.draw_indirect.draw_count)
+            DrawCallParameters::DrawCallParamsUnion::DrawIndirectCountParams& ic_params =
+                dc_params.dc_params_union.draw_indirect_count;
+
+            if (!ic_params.max_draw_count)
             {
                 continue;
             }
 
-            assert(dc_params.dc_params_union.draw_indirect.draw_params == nullptr);
-            dc_params.dc_params_union.draw_indirect.draw_params =
-                new DrawCallParameters::DrawCallParamsUnion::DrawParams[dc_params.dc_params_union.draw_indirect
-                                                                            .draw_count];
-            if (dc_params.dc_params_union.draw_indirect.draw_params == nullptr)
+            // Fetch draw count buffer
+            std::vector<uint8_t> data;
+            VkResult             res = resource_util.ReadFromBufferResource(
+                ic_params.new_count_buffer, sizeof(uint32_t), 0, ic_params.count_buffer_info->queue_family_index, data);
+            if (res != VK_SUCCESS)
             {
-                return VK_ERROR_OUT_OF_HOST_MEMORY;
+                return res;
             }
-        }
-        else if (dc_params.type == DrawCallTypes::kDrawIndexedIndirect)
-        {
-            if (!dc_params.dc_params_union.draw_indirect.draw_count)
+
+            assert(data.size() == sizeof(uint32_t));
+            assert(ic_params.actual_draw_count == std::numeric_limits<uint32_t>::max());
+            util::platform::MemoryCopy(&ic_params.actual_draw_count, sizeof(uint32_t), data.data(), data.size());
+            assert(ic_params.actual_draw_count != std::numeric_limits<uint32_t>::max());
+
+            if (!ic_params.actual_draw_count)
             {
                 continue;
             }
 
-            assert(dc_params.dc_params_union.draw_indirect.draw_indexed_params == nullptr);
-            dc_params.dc_params_union.draw_indirect.draw_indexed_params =
-                new DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams[dc_params.dc_params_union.draw_indirect
-                                                                                   .draw_count];
-            if (dc_params.dc_params_union.draw_indirect.draw_indexed_params == nullptr)
+            const uint32_t actual_draw_count = ic_params.actual_draw_count;
+
+            if (IsDrawCallIndexed(dc_params.type))
             {
-                return VK_ERROR_OUT_OF_HOST_MEMORY;
+                assert(ic_params.draw_indexed_params == nullptr);
+                ic_params.draw_indexed_params =
+                    new DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams[actual_draw_count];
+                if (ic_params.draw_indexed_params == nullptr)
+                {
+                    return VK_ERROR_OUT_OF_HOST_MEMORY;
+                }
+            }
+            else
+            {
+                assert(ic_params.draw_params == nullptr);
+                ic_params.draw_params = new DrawCallParameters::DrawCallParamsUnion::DrawParams[actual_draw_count];
+                if (ic_params.draw_params == nullptr)
+                {
+                    return VK_ERROR_OUT_OF_HOST_MEMORY;
+                }
+            }
+
+            // Now we know the exact draw count. We can fetch the exact draw params instead of the whole buffer
+            const VkDeviceSize draw_call_params_size =
+                IsDrawCallIndexed(dc_params.type) ? sizeof(DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams)
+                                                  : sizeof(DrawCallParameters::DrawCallParamsUnion::DrawParams);
+            const VkDeviceSize params_actual_size = draw_call_params_size * actual_draw_count;
+            // Fetch param buffers
+            res = resource_util.ReadFromBufferResource(ic_params.new_params_buffer,
+                                                       params_actual_size,
+                                                       0,
+                                                       ic_params.params_buffer_info->queue_family_index,
+                                                       data);
+            if (res != VK_SUCCESS)
+            {
+                return res;
             }
         }
-
-        std::vector<uint8_t> params_data;
-        VkResult             res = resource_util.ReadFromBufferResource(
-            dc_params.dc_params_union.draw_indirect.new_params_buffer,
-            dc_params.dc_params_union.draw_indirect.new_params_buffer_size,
-            0,
-            dc_params.dc_params_union.draw_indirect.params_buffer_info->queue_family_index,
-            params_data);
-
-        if (res != VK_SUCCESS)
+        else
         {
-            return res;
-        }
+            DrawCallParameters::DrawCallParamsUnion::DrawIndirectParams& i_params =
+                dc_params.dc_params_union.draw_indirect;
 
-        assert(params_data.size() == dc_params.dc_params_union.draw_indirect.new_params_buffer_size);
+            if (!i_params.draw_count)
+            {
+                continue;
+            }
 
-        if (dc_params.type == DrawCallTypes::kDrawIndirect)
-        {
-            util::platform::MemoryCopy(dc_params.dc_params_union.draw_indirect.draw_params,
-                                       dc_params.dc_params_union.draw_indirect.new_params_buffer_size,
-                                       params_data.data(),
-                                       params_data.size());
-        }
-        else if (dc_params.type == DrawCallTypes::kDrawIndexedIndirect)
-        {
-            util::platform::MemoryCopy(dc_params.dc_params_union.draw_indirect.draw_indexed_params,
-                                       dc_params.dc_params_union.draw_indirect.new_params_buffer_size,
-                                       params_data.data(),
-                                       params_data.size());
+            if (IsDrawCallIndexed(dc_params.type))
+            {
+                assert(i_params.draw_indexed_params == nullptr);
+                i_params.draw_indexed_params =
+                    new DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams[i_params.draw_count];
+                if (i_params.draw_indexed_params == nullptr)
+                {
+                    return VK_ERROR_OUT_OF_HOST_MEMORY;
+                }
+            }
+            else
+            {
+                assert(i_params.draw_params == nullptr);
+                i_params.draw_params = new DrawCallParameters::DrawCallParamsUnion::DrawParams[i_params.draw_count];
+                if (i_params.draw_params == nullptr)
+                {
+                    return VK_ERROR_OUT_OF_HOST_MEMORY;
+                }
+            }
+
+            std::vector<uint8_t> params_data;
+            VkResult             res = resource_util.ReadFromBufferResource(i_params.new_params_buffer,
+                                                                i_params.new_params_buffer_size,
+                                                                0,
+                                                                i_params.params_buffer_info->queue_family_index,
+                                                                params_data);
+            if (res != VK_SUCCESS)
+            {
+                return res;
+            }
+
+            assert(params_data.size() == i_params.new_params_buffer_size);
+
+            if (IsDrawCallIndexed(dc_params.type))
+            {
+                util::platform::MemoryCopy(i_params.draw_indexed_params,
+                                           i_params.new_params_buffer_size,
+                                           params_data.data(),
+                                           params_data.size());
+            }
+            else if (dc_params.type == DrawCallTypes::kDrawIndexedIndirect)
+            {
+                util::platform::MemoryCopy(
+                    i_params.draw_params, i_params.new_params_buffer_size, params_data.data(), params_data.size());
+            }
         }
     }
 
