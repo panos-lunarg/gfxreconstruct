@@ -624,7 +624,7 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyIndirectDrawParamete
                 std::vector<VkBufferCopy> regions(param_buffer_stride ? draw_count : 1);
                 if (param_buffer_stride)
                 {
-                    VkDeviceSize src_offset = 0;
+                    VkDeviceSize src_offset = dc_params.dc_params_union.draw_indirect.offset;
                     VkDeviceSize dst_offset = 0;
                     for (uint32_t i = 0; i < draw_count; ++i)
                     {
