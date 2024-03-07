@@ -994,6 +994,11 @@ optional arguments:
               greater than 0. Values greater than 10 are capped at 10. Default value is 1.0.
   --dump-resources-dir <dir>
               Directory to write dump resources output files. Default is the current working directory.
+  --dump-resources-dump-depth-attachment
+              Configures whether to dump the depth attachment when dumping draw calls. Default is disabled.
+  --dump-resources-dump-color-attachment-index
+              Specify which color attachment to dump when dumping draw calls. It should be an unsigned zero
+              based integer. Default is to dump all color attachment
 ```
 
 The command will force-stop an active replay process before starting the replay
