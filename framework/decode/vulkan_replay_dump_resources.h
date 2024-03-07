@@ -39,6 +39,8 @@
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)
 
+static constexpr int32_t UNSPECIFIED_COLOR_ATTACHMENT_INDEX = -1;
+
 class VulkanReplayDumpResourcesBase
 {
   public:
@@ -276,7 +278,8 @@ class VulkanReplayDumpResourcesBase
                                 util::ScreenshotFormat                    image_file_format,
                                 float                                     dump_resource_scale,
                                 VulkanReplayDumpResourcesJson*            dump_json,
-                                bool                                      dump_depth);
+                                bool                                      dump_depth,
+                                int32_t                                   color_attachment_to_dump);
 
         ~DrawCallsDumpingContext();
 
@@ -297,6 +300,7 @@ class VulkanReplayDumpResourcesBase
         float                              dump_resources_scale;
         VulkanReplayDumpResourcesJson*     p_dump_json;
         bool                               dump_depth;
+        int32_t                            color_attachment_to_dump;
 
         std::vector<std::vector<VkRenderPass>> render_pass_clones;
         bool                                   inside_renderpass;

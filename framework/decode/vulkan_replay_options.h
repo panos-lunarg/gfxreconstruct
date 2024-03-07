@@ -76,6 +76,7 @@ struct VulkanReplayOptions : public ReplayOptions
     bool  dumping_resources{ false };
     bool  dump_resources_before{ false };
     bool  dump_resources_dump_depth{ false };
+    int   dump_resources_color_attachment_index{ -1 };
     float dump_resources_scale{ 1.0f };
 };
 

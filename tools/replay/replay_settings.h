@@ -38,7 +38,7 @@ const char kArguments[] =
     "--replace-shaders,--screenshots,--denied-messages,--allowed-messages,--screenshot-format,--"
     "screenshot-dir,--screenshot-prefix,--screenshot-size,--screenshot-scale,--mfr|--measurement-frame-range,--fw|--"
     "force-windowed,--batching-memory-usage,--measurement-file,--swapchain,--dump-resources,--dump-resources-scale,--"
-    "dump-resources-image-format,--dump-resources-dir";
+    "dump-resources-image-format,--dump-resources-dir,--dump-resources-dump-color-attachment-index";
 
 static void PrintUsage(const char* exe_name)
 {
@@ -268,6 +268,9 @@ static void PrintUsage(const char* exe_name)
     GFXRECON_WRITE_CONSOLE("  --dump-resources-dump-depth-attachment");
     GFXRECON_WRITE_CONSOLE(
         "          \t\tConfigures whether to dump the depth attachment of draw calls. Default is false.");
+    GFXRECON_WRITE_CONSOLE("  --dump-resources-dump-color-attachment-index");
+    GFXRECON_WRITE_CONSOLE(
+        "          \t\tConfigures which color attachment to dump when dumping draw calls. Default is all attachments.");
 
 #if defined(WIN32)
     GFXRECON_WRITE_CONSOLE("")
