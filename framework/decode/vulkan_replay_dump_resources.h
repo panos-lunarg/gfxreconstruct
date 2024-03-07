@@ -275,7 +275,8 @@ class VulkanReplayDumpResourcesBase
                                 const std::string&                        dump_resource_path,
                                 util::ScreenshotFormat                    image_file_format,
                                 float                                     dump_resource_scale,
-                                VulkanReplayDumpResourcesJson*            dump_json);
+                                VulkanReplayDumpResourcesJson*            dump_json,
+                                bool                                      dump_depth);
 
         ~DrawCallsDumpingContext();
 
@@ -295,6 +296,7 @@ class VulkanReplayDumpResourcesBase
         util::ScreenshotFormat             image_file_format;
         float                              dump_resources_scale;
         VulkanReplayDumpResourcesJson*     p_dump_json;
+        bool                               dump_depth;
 
         std::vector<std::vector<VkRenderPass>> render_pass_clones;
         bool                                   inside_renderpass;

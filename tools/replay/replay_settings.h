@@ -32,7 +32,7 @@ const char kOptions[] =
     "screenshot-all,--onhb|--omit-null-hardware-buffers,--qamr|--quit-after-measurement-range,--fmr|--flush-"
     "measurement-range,--flush-inside-measurement-range,--vssb|--virtual-swapchain-skip-blit,--use-captured-swapchain-"
     "indices,--dcp,--discard-cached-psos,--use-colorspace-fallback,--use-cached-psos,--dx12-override-object-names,--"
-    "offscreen-swapchain-frame-boundary,--dump-resources-before-draw";
+    "offscreen-swapchain-frame-boundary,--dump-resources-before-draw,--dump-resources-dump-depth-attachment";
 const char kArguments[] =
     "--log-level,--log-file,--gpu,--gpu-group,--pause-frame,--wsi,--surface-index,-m|--memory-translation,"
     "--replace-shaders,--screenshots,--denied-messages,--allowed-messages,--screenshot-format,--"
@@ -287,6 +287,9 @@ static void PrintUsage(const char* exe_name)
     GFXRECON_WRITE_CONSOLE("          \t\tDirectory to write dump resources output files. Default is the current working directory.");
     GFXRECON_WRITE_CONSOLE("  --dump-resources-image-format <format>");
     GFXRECON_WRITE_CONSOLE("          \t\tImage file format to use when dumping image resources. Available formats are: bmp, png");
+    GFXRECON_WRITE_CONSOLE("  --dump-resources-dump-depth-attachment");
+    GFXRECON_WRITE_CONSOLE(
+        "          \t\tConfigures whether to dump the depth attachment of draw calls. Default is false.");
 
 #if defined(WIN32)
     GFXRECON_WRITE_CONSOLE("")

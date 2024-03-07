@@ -128,6 +128,7 @@ const char kDumpResourcesArgument[]         = "--dump-resources";
 const char kDumpResourcesBeforeDrawOption[] = "--dump-resources-before-draw";
 const char kDumpResourcesImageFormat[]      = "--dump-resources-image-format";
 const char kDumpResourcesScaleArgument[]    = "--dump-resources-scale";
+const char kDumpResourcesDepth[]            = "--dump-resources-dump-depth-attachment";
 const char kDumpResourcesDirArgument[]      = "--dump-resources-dir";
 
 enum class WsiPlatform
@@ -1108,6 +1109,7 @@ GetVulkanReplayOptions(const gfxrecon::util::ArgumentParser&           arg_parse
 
     replay_options.dump_resources              = arg_parser.GetArgumentValue(kDumpResourcesArgument);
     replay_options.dump_resources_before       = arg_parser.IsOptionSet(kDumpResourcesBeforeDrawOption);
+    replay_options.dump_resources_dump_depth   = arg_parser.IsOptionSet(kDumpResourcesDepth);
     replay_options.dump_resources_image_format = GetDumpresourcesImageFormat(arg_parser);
     replay_options.dump_resources_scale        = GetDumpResourcesScale(arg_parser);
     replay_options.dump_resources_output_dir   = GetDumpResourcesDir(arg_parser);

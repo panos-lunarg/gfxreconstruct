@@ -143,7 +143,8 @@ VulkanReplayDumpResourcesBase::VulkanReplayDumpResourcesBase(const VulkanReplayO
                                                                options.dump_resources_output_dir,
                                                                options.dump_resources_image_format,
                                                                options.dump_resources_scale,
-                                                               &dump_json_));
+                                                               &dump_json_,
+                                                               options.dump_resources_dump_depth));
         }
 
         if ((i < options.Dispatch_Indices.size() && options.Dispatch_Indices[i].size()) ||
@@ -1023,7 +1024,7 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTargetAttachme
     }
 
     // Dump depth attachment
-    if (render_targets_[rp][sp].depth_att_img != nullptr)
+    if (dump_depth && render_targets_[rp][sp].depth_att_img != nullptr)
     {
         const ImageInfo* image_info = render_targets_[rp][sp].depth_att_img;
 
@@ -2427,14 +2428,15 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DrawCallsDumpingContext(
     const std::string&                        dump_resource_path,
     util::ScreenshotFormat                    image_file_format,
     float                                     dump_resources_scale,
-    VulkanReplayDumpResourcesJson*            p_dump_json) :
+    VulkanReplayDumpResourcesJson*            p_dump_json,
+    bool                                      dump_depth) :
     original_command_buffer_info(nullptr),
     current_cb_index(0), dc_indices(dc_indices), RP_indices(rp_indices), active_renderpass(nullptr),
     active_framebuffer(nullptr), bound_pipelines{ nullptr }, current_renderpass(0), current_subpass(0),
     dump_resources_before(dump_resources_before), aux_command_buffer(VK_NULL_HANDLE), aux_fence(VK_NULL_HANDLE),
     device_table(nullptr), instance_table(nullptr), object_info_table(object_info_table),
     replay_device_phys_mem_props(nullptr), dump_resource_path(dump_resource_path), image_file_format(image_file_format),
-    dump_resources_scale(dump_resources_scale), p_dump_json(p_dump_json)
+    dump_resources_scale(dump_resources_scale), p_dump_json(p_dump_json), dump_depth(dump_depth)
 {
     must_backup_resources = (dc_indices.size() > 1);
 
