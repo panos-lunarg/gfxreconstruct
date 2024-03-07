@@ -833,6 +833,19 @@ void Process_vkCmdSetFragmentShadingRateKHR(
     const VkFragmentShadingRateCombinerOpKHR*   combinerOps);
 
 
+void Process_vkCmdSetRenderingAttachmentLocationsKHR(
+    const ApiCallInfo&                          call_info,
+    PFN_vkCmdSetRenderingAttachmentLocationsKHR func,
+    VkCommandBuffer                             commandBuffer,
+    const VkRenderingAttachmentLocationInfoKHR* pLocationInfo);
+
+void Process_vkCmdSetRenderingInputAttachmentIndicesKHR(
+    const ApiCallInfo&                          call_info,
+    PFN_vkCmdSetRenderingInputAttachmentIndicesKHR func,
+    VkCommandBuffer                             commandBuffer,
+    const VkRenderingInputAttachmentIndexInfoKHR* pLocationInfo);
+
+
 
 
 
@@ -945,6 +958,14 @@ void Process_vkCmdBindIndexBuffer2KHR(
     VkDeviceSize                                size,
     VkIndexType                                 indexType);
 
+
+
+void Process_vkCmdSetLineStippleKHR(
+    const ApiCallInfo&                          call_info,
+    PFN_vkCmdSetLineStippleKHR                  func,
+    VkCommandBuffer                             commandBuffer,
+    uint32_t                                    lineStippleFactor,
+    uint16_t                                    lineStipplePattern);
 
 
 
@@ -1621,12 +1642,6 @@ void Process_vkCmdUpdatePipelineIndirectBufferNV(
     VkPipeline                                  pipeline);
 
 
-void Process_vkCmdSetTessellationDomainOriginEXT(
-    const ApiCallInfo&                          call_info,
-    PFN_vkCmdSetTessellationDomainOriginEXT     func,
-    VkCommandBuffer                             commandBuffer,
-    VkTessellationDomainOrigin                  domainOrigin);
-
 void Process_vkCmdSetDepthClampEnableEXT(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdSetDepthClampEnableEXT             func,
@@ -1693,6 +1708,12 @@ void Process_vkCmdSetColorWriteMaskEXT(
     uint32_t                                    firstAttachment,
     uint32_t                                    attachmentCount,
     const VkColorComponentFlags*                pColorWriteMasks);
+
+void Process_vkCmdSetTessellationDomainOriginEXT(
+    const ApiCallInfo&                          call_info,
+    PFN_vkCmdSetTessellationDomainOriginEXT     func,
+    VkCommandBuffer                             commandBuffer,
+    VkTessellationDomainOrigin                  domainOrigin);
 
 void Process_vkCmdSetRasterizationStreamEXT(
     const ApiCallInfo&                          call_info,

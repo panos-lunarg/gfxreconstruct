@@ -2388,6 +2388,58 @@ void VulkanReplayDumpResources::Process_vkCmdSetFragmentShadingRateKHR(
     }
 }
 
+void VulkanReplayDumpResources::Process_vkCmdSetRenderingAttachmentLocationsKHR(
+    const ApiCallInfo&                          call_info,
+    PFN_vkCmdSetRenderingAttachmentLocationsKHR func,
+    VkCommandBuffer                             commandBuffer,
+    const VkRenderingAttachmentLocationInfoKHR* pLocationInfo)
+{
+    if (IsRecording(commandBuffer))
+    {
+        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+        bool found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
+        if (found)
+        {
+            for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+            {
+                 func(*it, pLocationInfo);
+            }
+        }
+
+        VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
+        if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+        {
+             func(dispatch_rays_command_buffer, pLocationInfo);
+        }
+    }
+}
+
+void VulkanReplayDumpResources::Process_vkCmdSetRenderingInputAttachmentIndicesKHR(
+    const ApiCallInfo&                          call_info,
+    PFN_vkCmdSetRenderingInputAttachmentIndicesKHR func,
+    VkCommandBuffer                             commandBuffer,
+    const VkRenderingInputAttachmentIndexInfoKHR* pLocationInfo)
+{
+    if (IsRecording(commandBuffer))
+    {
+        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+        bool found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
+        if (found)
+        {
+            for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+            {
+                 func(*it, pLocationInfo);
+            }
+        }
+
+        VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
+        if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+        {
+             func(dispatch_rays_command_buffer, pLocationInfo);
+        }
+    }
+}
+
 
 
 
@@ -2796,6 +2848,33 @@ void VulkanReplayDumpResources::Process_vkCmdBindIndexBuffer2KHR(
     }
 }
 
+
+void VulkanReplayDumpResources::Process_vkCmdSetLineStippleKHR(
+    const ApiCallInfo&                          call_info,
+    PFN_vkCmdSetLineStippleKHR                  func,
+    VkCommandBuffer                             commandBuffer,
+    uint32_t                                    lineStippleFactor,
+    uint16_t                                    lineStipplePattern)
+{
+    if (IsRecording(commandBuffer))
+    {
+        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+        bool found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
+        if (found)
+        {
+            for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+            {
+                 func(*it, lineStippleFactor, lineStipplePattern);
+            }
+        }
+
+        VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
+        if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+        {
+             func(dispatch_rays_command_buffer, lineStippleFactor, lineStipplePattern);
+        }
+    }
+}
 
 
 void VulkanReplayDumpResources::Process_vkCmdBindDescriptorSets2KHR(
@@ -5042,32 +5121,6 @@ void VulkanReplayDumpResources::Process_vkCmdUpdatePipelineIndirectBufferNV(
     }
 }
 
-void VulkanReplayDumpResources::Process_vkCmdSetTessellationDomainOriginEXT(
-    const ApiCallInfo&                          call_info,
-    PFN_vkCmdSetTessellationDomainOriginEXT     func,
-    VkCommandBuffer                             commandBuffer,
-    VkTessellationDomainOrigin                  domainOrigin)
-{
-    if (IsRecording(commandBuffer))
-    {
-        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-        bool found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
-        if (found)
-        {
-            for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-            {
-                 func(*it, domainOrigin);
-            }
-        }
-
-        VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
-        if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-        {
-             func(dispatch_rays_command_buffer, domainOrigin);
-        }
-    }
-}
-
 void VulkanReplayDumpResources::Process_vkCmdSetDepthClampEnableEXT(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdSetDepthClampEnableEXT             func,
@@ -5331,6 +5384,32 @@ void VulkanReplayDumpResources::Process_vkCmdSetColorWriteMaskEXT(
         if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
         {
              func(dispatch_rays_command_buffer, firstAttachment, attachmentCount, pColorWriteMasks);
+        }
+    }
+}
+
+void VulkanReplayDumpResources::Process_vkCmdSetTessellationDomainOriginEXT(
+    const ApiCallInfo&                          call_info,
+    PFN_vkCmdSetTessellationDomainOriginEXT     func,
+    VkCommandBuffer                             commandBuffer,
+    VkTessellationDomainOrigin                  domainOrigin)
+{
+    if (IsRecording(commandBuffer))
+    {
+        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+        bool found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
+        if (found)
+        {
+            for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+            {
+                 func(*it, domainOrigin);
+            }
+        }
+
+        VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
+        if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+        {
+             func(dispatch_rays_command_buffer, domainOrigin);
         }
     }
 }
