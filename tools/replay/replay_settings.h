@@ -39,7 +39,8 @@ const char kArguments[] =
     "screenshot-dir,--screenshot-prefix,--screenshot-size,--screenshot-scale,--mfr|--measurement-frame-range,--fw|--"
     "force-windowed,--fwo|--force-windowed-origin,--batching-memory-usage,--measurement-file,--swapchain,--sgfs|--skip-"
     "get-fence-status,--sgfr|--"
-    "skip-get-fence-ranges,--dump-resources,--dump-resources-scale,--dump-resources-image-format,--dump-resources-dir";
+    "skip-get-fence-ranges,--dump-resources,--dump-resources-scale,--dump-resources-image-format,--dump-resources-dir,"
+    "--dump-resources-dump-color-attachment-index";
 
 static void PrintUsage(const char* exe_name)
 {
@@ -260,36 +261,60 @@ static void PrintUsage(const char* exe_name)
     GFXRECON_WRITE_CONSOLE("  --sgfr <frame-ranges>");
     GFXRECON_WRITE_CONSOLE("          \t\tFrame ranges where --sgfs applies. The format is:");
     GFXRECON_WRITE_CONSOLE("          \t\t\t<frame-start-1>-<frame-end-1>[,<frame-start-1>-<frame-end-1>]*");
-    GFXRECON_WRITE_CONSOLE("  --dump-resources <vulkan-begincommandbuffercall-index>,<vulkan-drawcall-index>,<vulkan-queuesubmitcall-index>");
-    GFXRECON_WRITE_CONSOLE("          \t\tOutput gpu resources after the specified draw call in the specific command buffer, during");
-    GFXRECON_WRITE_CONSOLE("          \t\tthe specific queuesubmit call. Can use index of vulkan api call following the draw call");
-    GFXRECON_WRITE_CONSOLE("          \t\tto dump resources after the draw call. Option can be repeated to initiate multiple dumps.");
-    GFXRECON_WRITE_CONSOLE("  --dump-resources BeginCommandBuffer=<n>,CmdDraw=<m>,RenderPass=<n>,NextSubpass=<o>,CmdDispatch=<p>,CmdTraceRays=<q>,QueueSubmit=<r>");
-    GFXRECON_WRITE_CONSOLE("          \t\tDump gpu resources after the given vmCmdDraw*, vkCmdDispatch, or vkCmdTraceRaysKHR is replayed.");
-    GFXRECON_WRITE_CONSOLE("  --dump-resources BeginCommandBuffer=<n>,Draw=<m>,RenderPass=<n>,NextSubpass=<o>,Dispatch=<p>,CmdTraceRays=<q>,QueueSubmit=<r>");
-    GFXRECON_WRITE_CONSOLE("          \t\tDump gpu resources after the given vkCmdDraw*, vkCmdDispatch, or vkCmdTraceRaysKHR is replayed.");
+    GFXRECON_WRITE_CONSOLE(
+        "  --dump-resources "
+        "<vulkan-begincommandbuffercall-index>,<vulkan-drawcall-index>,<vulkan-queuesubmitcall-index>");
+    GFXRECON_WRITE_CONSOLE(
+        "          \t\tOutput gpu resources after the specified draw call in the specific command buffer, during");
+    GFXRECON_WRITE_CONSOLE(
+        "          \t\tthe specific queuesubmit call. Can use index of vulkan api call following the draw call");
+    GFXRECON_WRITE_CONSOLE(
+        "          \t\tto dump resources after the draw call. Option can be repeated to initiate multiple dumps.");
+    GFXRECON_WRITE_CONSOLE("  --dump-resources "
+                           "BeginCommandBuffer=<n>,CmdDraw=<m>,RenderPass=<n>,NextSubpass=<o>,CmdDispatch=<p>,"
+                           "CmdTraceRays=<q>,QueueSubmit=<r>");
+    GFXRECON_WRITE_CONSOLE("          \t\tDump gpu resources after the given vmCmdDraw*, vkCmdDispatch, or "
+                           "vkCmdTraceRaysKHR is replayed.");
+    GFXRECON_WRITE_CONSOLE(
+        "  --dump-resources "
+        "BeginCommandBuffer=<n>,Draw=<m>,RenderPass=<n>,NextSubpass=<o>,Dispatch=<p>,CmdTraceRays=<q>,QueueSubmit=<r>");
+    GFXRECON_WRITE_CONSOLE("          \t\tDump gpu resources after the given vkCmdDraw*, vkCmdDispatch, or "
+                           "vkCmdTraceRaysKHR is replayed.");
     GFXRECON_WRITE_CONSOLE("  --dump-resources <filename>");
     GFXRECON_WRITE_CONSOLE("          \t\tExtract --dump-resources args from the specified file.");
     GFXRECON_WRITE_CONSOLE("  --dump-resources <args>");
-    GFXRECON_WRITE_CONSOLE("          \t\tArgs is BeginCommandBuffer=<n>,Draw=<m>,RenderPass=<o>,NextSubpass=<p>,Dispatch=<q>,CmdTraceRays=<r>,QueueSubmit=<s>");
-    GFXRECON_WRITE_CONSOLE("          \t\tGPU resources are dumped after the given vkCmdDraw*, vkCmdDispatch, or vkCmdTraceRaysKHR is replayed.");
+    GFXRECON_WRITE_CONSOLE(
+        "          \t\tArgs is "
+        "BeginCommandBuffer=<n>,Draw=<m>,RenderPass=<o>,NextSubpass=<p>,Dispatch=<q>,CmdTraceRays=<r>,QueueSubmit=<s>");
+    GFXRECON_WRITE_CONSOLE("          \t\tGPU resources are dumped after the given vkCmdDraw*, vkCmdDispatch, or "
+                           "vkCmdTraceRaysKHR is replayed.");
     GFXRECON_WRITE_CONSOLE("  --dump-resources <file>");
-    GFXRECON_WRITE_CONSOLE("          \t\tExtract --dump-resources args from the specified file. Can be either a json or a text file.");
-    GFXRECON_WRITE_CONSOLE("          \t\tIf a text file is used, each line of the file should contain comma separated indices as in the command line above.");
+    GFXRECON_WRITE_CONSOLE(
+        "          \t\tExtract --dump-resources args from the specified file. Can be either a json or a text file.");
+    GFXRECON_WRITE_CONSOLE("          \t\tIf a text file is used, each line of the file should contain comma separated "
+                           "indices as in the command line above.");
     GFXRECON_WRITE_CONSOLE("  --dump-resources-before-draw");
-    GFXRECON_WRITE_CONSOLE("          \t\tIn addition to dumping GPU resources after the Vulkan draw calls specified by the");
+    GFXRECON_WRITE_CONSOLE(
+        "          \t\tIn addition to dumping GPU resources after the Vulkan draw calls specified by the");
     GFXRECON_WRITE_CONSOLE("          \t\t--dump-resources argument, also dump resources before the draw calls.");
     GFXRECON_WRITE_CONSOLE("  --dump-resources-scale <scale>");
-    GFXRECON_WRITE_CONSOLE("          \t\tScale images generated by dump resources by the given scale factor. The scale factor must");
-    GFXRECON_WRITE_CONSOLE("          \t\tbe a floating point number greater than 0. Values greater than 10 are capped at 10. Default");
+    GFXRECON_WRITE_CONSOLE(
+        "          \t\tScale images generated by dump resources by the given scale factor. The scale factor must");
+    GFXRECON_WRITE_CONSOLE(
+        "          \t\tbe a floating point number greater than 0. Values greater than 10 are capped at 10. Default");
     GFXRECON_WRITE_CONSOLE("          \t\tvalue is 1.0.");
     GFXRECON_WRITE_CONSOLE("  --dump-resources-dir <dir>");
-    GFXRECON_WRITE_CONSOLE("          \t\tDirectory to write dump resources output files. Default is the current working directory.");
+    GFXRECON_WRITE_CONSOLE(
+        "          \t\tDirectory to write dump resources output files. Default is the current working directory.");
     GFXRECON_WRITE_CONSOLE("  --dump-resources-image-format <format>");
-    GFXRECON_WRITE_CONSOLE("          \t\tImage file format to use when dumping image resources. Available formats are: bmp, png");
+    GFXRECON_WRITE_CONSOLE(
+        "          \t\tImage file format to use when dumping image resources. Available formats are: bmp, png");
     GFXRECON_WRITE_CONSOLE("  --dump-resources-dump-depth-attachment");
     GFXRECON_WRITE_CONSOLE(
         "          \t\tConfigures whether to dump the depth attachment of draw calls. Default is false.");
+    GFXRECON_WRITE_CONSOLE("  --dump-resources-dump-color-attachment-index");
+    GFXRECON_WRITE_CONSOLE(
+        "          \t\tConfigures which color attachment to dump when dumping draw calls. Default is all attachments.");
 
 #if defined(WIN32)
     GFXRECON_WRITE_CONSOLE("")
