@@ -226,7 +226,6 @@ def MakeExtrasString(args):
 
     if args.dump_resources_dump_vertex_index_buffers:
         arg_list.append('--dump-resources-dump-vertex-index-buffers')
-        arg_list.append('{}'.format(args.dump_resources_dump_vertex_index_buffers))
 
     if args.file:
         arg_list.append(args.file)
