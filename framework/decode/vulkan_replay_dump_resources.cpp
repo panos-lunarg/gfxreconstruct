@@ -211,7 +211,7 @@ static uint32_t FindGreatestVertexIndex(const std::vector<uint8_t>& index_data, 
     {
         case VK_INDEX_TYPE_UINT8_EXT:
         {
-            uint8_t        restart_index = 0xff;
+            const uint8_t  restart_index = 0xff;
             const uint8_t* indices       = static_cast<const uint8_t*>(index_data.data());
             uint32_t       i             = 0;
             while (indices[i] == restart_index && i < index_count)
@@ -245,7 +245,7 @@ static uint32_t FindGreatestVertexIndex(const std::vector<uint8_t>& index_data, 
 
         case VK_INDEX_TYPE_UINT16:
         {
-            uint16_t        restart_index = 0xff;
+            const uint16_t  restart_index = 0xffff;
             const uint16_t* indices       = reinterpret_cast<const uint16_t*>(index_data.data());
             uint32_t        i             = 0;
             while (indices[i] == restart_index && i < index_count)
@@ -279,7 +279,7 @@ static uint32_t FindGreatestVertexIndex(const std::vector<uint8_t>& index_data, 
 
         case VK_INDEX_TYPE_UINT32:
         {
-            uint32_t        restart_index = 0xff;
+            const uint32_t  restart_index = 0xffffffff;
             const uint32_t* indices       = reinterpret_cast<const uint32_t*>(index_data.data());
             uint32_t        i             = 0;
             while (indices[i] == restart_index && i < index_count)
