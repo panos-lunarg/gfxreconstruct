@@ -30,8 +30,6 @@
 #include "util/logging.h"
 #include "util/platform.h"
 
-#include <cstdint>
-#include <limits>
 #include <sstream>
 #include <vulkan/vulkan_core.h>
 #if !defined(WIN32)
@@ -621,7 +619,7 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyIndirectDrawParamete
         {
             const uint32_t            param_buffer_stride = ic_params.stride;
             std::vector<VkBufferCopy> regions(param_buffer_stride ? max_draw_count : 1);
-            if (param_buffer_stride)
+            if (param_buffer_stride != draw_call_params_size)
             {
                 VkDeviceSize src_offset = ic_params.params_buffer_offset;
                 VkDeviceSize dst_offset = 0;
@@ -761,7 +759,7 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyIndirectDrawParamete
         {
             const uint32_t            param_buffer_stride = i_params.stride;
             std::vector<VkBufferCopy> regions(param_buffer_stride ? draw_count : 1);
-            if (param_buffer_stride)
+            if (param_buffer_stride != draw_call_params_size)
             {
                 VkDeviceSize src_offset = i_params.params_buffer_offset;
                 VkDeviceSize dst_offset = 0;
@@ -1425,6 +1423,12 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpDrawCallsAt
 {
     // BackUpMutableResources(queue);
 
+    // Dump vertex attributes
+    if (dump_vertex_index_buffers)
+    {
+        DumpVertexIndexBuffers();
+    }
+
     const size_t n_drawcalls = command_buffers.size();
     for (size_t cb = 0; cb < n_drawcalls; ++cb)
     {
@@ -1504,12 +1508,6 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpDrawCallsAt
         // }
 
         p_dump_json->VulkanReplayDumpResourcesJsonBlockEnd();
-    }
-
-    // Dump vertex attributes
-    if (dump_vertex_index_buffers)
-    {
-        DumpVertexIndexBuffers();
     }
 
     return VK_SUCCESS;
@@ -1900,6 +1898,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::FetchDrawIndire
 
             const uint32_t actual_draw_count = ic_params.actual_draw_count;
 
+            VkDeviceSize params_actual_size;
             if (IsDrawCallIndexed(dc_params.type))
             {
                 assert(ic_params.draw_indexed_params == nullptr);
@@ -1909,6 +1908,10 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::FetchDrawIndire
                 {
                     return VK_ERROR_OUT_OF_HOST_MEMORY;
                 }
+
+                // Now we know the exact draw count. We can fetch the exact draw params instead of the whole buffer
+                params_actual_size =
+                    sizeof(DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams) * actual_draw_count;
             }
             else
             {
@@ -1918,13 +1921,11 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::FetchDrawIndire
                 {
                     return VK_ERROR_OUT_OF_HOST_MEMORY;
                 }
+
+                // Now we know the exact draw count. We can fetch the exact draw params instead of the whole buffer
+                params_actual_size = sizeof(DrawCallParameters::DrawCallParamsUnion::DrawParams) * actual_draw_count;
             }
 
-            // Now we know the exact draw count. We can fetch the exact draw params instead of the whole buffer
-            const VkDeviceSize draw_call_params_size =
-                IsDrawCallIndexed(dc_params.type) ? sizeof(DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams)
-                                                  : sizeof(DrawCallParameters::DrawCallParamsUnion::DrawParams);
-            const VkDeviceSize params_actual_size = draw_call_params_size * actual_draw_count;
             // Fetch param buffers
             res = resource_util.ReadFromBufferResource(ic_params.new_params_buffer,
                                                        params_actual_size,
@@ -1934,6 +1935,17 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::FetchDrawIndire
             if (res != VK_SUCCESS)
             {
                 return res;
+            }
+
+            assert(data.size() == params_actual_size);
+            if (IsDrawCallIndexed(dc_params.type))
+            {
+                util::platform::MemoryCopy(
+                    ic_params.draw_indexed_params, params_actual_size, data.data(), params_actual_size);
+            }
+            else
+            {
+                util::platform::MemoryCopy(ic_params.draw_params, params_actual_size, data.data(), params_actual_size);
             }
         }
         else
@@ -2048,19 +2060,42 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
 
             if (IsDrawCallIndirect(dc_params.type))
             {
-                if (!dc_params.dc_params_union.draw_indirect.draw_count)
+                if (IsDrawCallIndirectCount(dc_params.type))
                 {
-                    continue;
-                }
+                    const DrawCallParameters::DrawCallParamsUnion::DrawIndirectCountParams& ic_params =
+                        dc_params.dc_params_union.draw_indirect_count;
 
-                assert(dc_params.dc_params_union.draw_indirect.draw_indexed_params != nullptr);
-                const DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams* indirect_indexed_params =
-                    dc_params.dc_params_union.draw_indirect.draw_indexed_params;
-                for (uint32_t d = 0; d < dc_params.dc_params_union.draw_indirect.draw_count; ++d)
-                {
-                    if (max_index_count < indirect_indexed_params[d].index_count)
+                    if (!ic_params.max_draw_count)
                     {
-                        max_index_count = indirect_indexed_params[d].index_count;
+                        continue;
+                    }
+
+                    assert(ic_params.draw_indexed_params != nullptr);
+                    for (uint32_t d = 0; d < ic_params.max_draw_count; ++d)
+                    {
+                        if (max_index_count < ic_params.draw_indexed_params[d].index_count)
+                        {
+                            max_index_count = ic_params.draw_indexed_params[d].index_count;
+                        }
+                    }
+                }
+                else
+                {
+                    const DrawCallParameters::DrawCallParamsUnion::DrawIndirectParams& i_params =
+                        dc_params.dc_params_union.draw_indirect;
+
+                    if (!i_params.draw_count)
+                    {
+                        continue;
+                    }
+
+                    assert(i_params.draw_indexed_params != nullptr);
+                    for (uint32_t d = 0; d < i_params.draw_count; ++d)
+                    {
+                        if (max_index_count < i_params.draw_indexed_params[d].index_count)
+                        {
+                            max_index_count = i_params.draw_indexed_params[d].index_count;
+                        }
                     }
                 }
             }
@@ -2071,6 +2106,11 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
                     max_index_count = dc_params.dc_params_union.draw_indexed.index_count;
                 }
             }
+        }
+
+        if (!max_index_count)
+        {
+            continue;
         }
 
         const VkIndexType index_type  = idx_buf.second.index_type;
@@ -2145,19 +2185,42 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
             {
                 if (IsDrawCallIndirect(dc_params.type))
                 {
-                    if (!dc_params.dc_params_union.draw_indirect.draw_count)
+                    if (IsDrawCallIndirectCount(dc_params.type))
                     {
-                        continue;
-                    }
+                        const DrawCallParameters::DrawCallParamsUnion::DrawIndirectCountParams& ic_params =
+                            dc_params.dc_params_union.draw_indirect_count;
 
-                    assert(dc_params.dc_params_union.draw_indirect.draw_params != nullptr);
-                    const DrawCallParameters::DrawCallParamsUnion::DrawParams* indirect_params =
-                        dc_params.dc_params_union.draw_indirect.draw_params;
-                    for (uint32_t d = 0; d < dc_params.dc_params_union.draw_indirect.draw_count; ++d)
-                    {
-                        if (max_vertex_count < indirect_params[d].vertex_count)
+                        if (!ic_params.max_draw_count)
                         {
-                            max_vertex_count = indirect_params[d].vertex_count;
+                            continue;
+                        }
+
+                        assert(ic_params.draw_params != nullptr);
+                        for (uint32_t d = 0; d < ic_params.max_draw_count; ++d)
+                        {
+                            if (max_vertex_count < ic_params.draw_params[d].vertex_count)
+                            {
+                                max_vertex_count = ic_params.draw_params[d].vertex_count;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        const DrawCallParameters::DrawCallParamsUnion::DrawIndirectParams& i_params =
+                            dc_params.dc_params_union.draw_indirect;
+
+                        if (!i_params.draw_count)
+                        {
+                            continue;
+                        }
+
+                        assert(i_params.draw_params != nullptr);
+                        for (uint32_t d = 0; d < i_params.draw_count; ++d)
+                        {
+                            if (max_vertex_count < i_params.draw_params[d].vertex_count)
+                            {
+                                max_vertex_count = i_params.draw_params[d].vertex_count;
+                            }
                         }
                     }
                 }
@@ -2171,6 +2234,11 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
             }
         }
 
+        if (!max_vertex_count)
+        {
+            continue;
+        }
+
         for (const auto& vb_binding : vbs.second.bound_vertex_buffer_per_binding)
         {
             const uint32_t binding = vb_binding.first;
@@ -2180,6 +2248,18 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
             const auto& ppl_vb_binding_entry = vbs.second.gr_pipeline_info->vertex_binding_info.find(binding);
             assert(ppl_vb_binding_entry != vbs.second.gr_pipeline_info->vertex_binding_info.end());
             if (ppl_vb_binding_entry == vbs.second.gr_pipeline_info->vertex_binding_info.end())
+            {
+                continue;
+            }
+
+            // According to spec this is valid. Can't see what can be done in this case
+            if (!ppl_vb_binding_entry->second.stride)
+            {
+                continue;
+            }
+
+            // Ignore instance data for now
+            if (ppl_vb_binding_entry->second.inputRate == VK_VERTEX_INPUT_RATE_INSTANCE)
             {
                 continue;
             }
