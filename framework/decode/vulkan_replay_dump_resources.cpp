@@ -2243,17 +2243,12 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
         {
             const uint32_t binding = vb_binding.first;
 
-            assert(vbs.second.gr_pipeline_info);
+            const PipelineInfo* gr_pipeline_info = vbs.second.gr_pipeline_info;
+            assert(gr_pipeline_info != nullptr);
 
-            const auto& ppl_vb_binding_entry = vbs.second.gr_pipeline_info->vertex_binding_info.find(binding);
-            assert(ppl_vb_binding_entry != vbs.second.gr_pipeline_info->vertex_binding_info.end());
-            if (ppl_vb_binding_entry == vbs.second.gr_pipeline_info->vertex_binding_info.end())
-            {
-                continue;
-            }
-
-            // According to spec this is valid. Can't see what can be done in this case
-            if (!ppl_vb_binding_entry->second.stride)
+            const auto& ppl_vb_binding_entry = gr_pipeline_info->vertex_binding_info.find(binding);
+            assert(ppl_vb_binding_entry != gr_pipeline_info->vertex_binding_info.end());
+            if (ppl_vb_binding_entry == gr_pipeline_info->vertex_binding_info.end())
             {
                 continue;
             }
@@ -2264,9 +2259,34 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
                 continue;
             }
 
-            const uint32_t binding_stride = ppl_vb_binding_entry->second.stride;
             const uint32_t offset         = vb_binding.second.offset;
-            uint32_t       total_size     = max_vertex_count * binding_stride;
+            const uint32_t binding_stride = ppl_vb_binding_entry->second.stride;
+            uint32_t       total_size;
+            if (binding_stride)
+            {
+                total_size = max_vertex_count * binding_stride;
+            }
+            else
+            {
+                // According to the spec providing a VkVertexInputBindingDescription.stride equal to zero is valid.
+                // In these cases we will assume that information for only 1 vertex will be consumed (since we can't
+                // tell where the next one is located). So calculate the total size of all attributes that are using
+                // that binding and use that as the size of the vertex information for 1 vertex.
+                total_size = 0;
+                for (const auto& ppl_attr : gr_pipeline_info->vertex_attribute_info)
+                {
+                    if (ppl_attr.second.binding != binding)
+                    {
+                        continue;
+                    }
+                    total_size += vkuFormatElementSize(ppl_attr.second.format);
+                }
+
+                if (!total_size)
+                {
+                    continue;
+                }
+            }
 
             assert(vb_binding.second.buffer_info != nullptr);
             assert(total_size <= vb_binding.second.buffer_info->size - offset);
