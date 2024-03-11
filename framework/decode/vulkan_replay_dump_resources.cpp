@@ -20,6 +20,8 @@
 ** DEALINGS IN THE SOFTWARE.
 */
 
+#include "decode/vulkan_object_info.h"
+#include "format/format.h"
 #include "generated/generated_vulkan_struct_decoders.h"
 #include "graphics/vulkan_resources_util.h"
 #include "util/image_writer.h"
@@ -30,6 +32,7 @@
 #include "util/logging.h"
 #include "util/platform.h"
 
+#include <cstdint>
 #include <sstream>
 #include <vulkan/vulkan_core.h>
 #if !defined(WIN32)
@@ -816,8 +819,8 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyIndirectDrawParamete
     return VK_SUCCESS;
 }
 
-void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyVertexIndexBufferInfo(uint64_t            dc_index,
-                                                                                       DrawCallParameters& dc_params)
+void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyVertexInputStateInfo(uint64_t            dc_index,
+                                                                                      DrawCallParameters& dc_params)
 {
     const PipelineInfo* gr_pipeline_info = bound_pipelines[kBindPoint_graphics];
     assert(gr_pipeline_info != nullptr);
@@ -825,19 +828,52 @@ void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyVertexIndexBuff
     // Pipeline has no vertex binding and/or attribute information.
     // This can be a case of shader generated vertices, or vertex buffer is bound as a UBO
     if (gr_pipeline_info != nullptr &&
-        (!gr_pipeline_info->vertex_attribute_info.size() && !gr_pipeline_info->vertex_attribute_info.size()))
+        (!gr_pipeline_info->vertex_input_attribute_map.size() &&
+         !gr_pipeline_info->vertex_input_attribute_map.size()) &&
+        (!gr_pipeline_info->dynamic_vertex_input && !gr_pipeline_info->dynamic_vertex_binding_stride))
     {
         return;
     }
 
-    if (gr_pipeline_info->vertex_attribute_info.size())
+    // If VK_DYNAMIC_STATE_VERTEX_INPUT_EXT is enabled then get all vertex input state from
+    // vkCmdSetVertexInputEXT
+    if (gr_pipeline_info->dynamic_vertex_input)
     {
-        assert(currently_bound_vertex_buffers != bound_vertex_buffers.end());
-
-        currently_bound_vertex_buffers->second.referencing_draw_calls.push_back(dc_index);
-        currently_bound_vertex_buffers->second.gr_pipeline_info = gr_pipeline_info;
-        dc_params.referenced_bind_vertex_buffers                = currently_bound_vertex_buffers->first;
+        currently_bound_vertex_buffers->second.vertex_input_state = dynamic_vertex_input_state;
     }
+    else
+    {
+        if (gr_pipeline_info)
+        {
+            // Copy vertex input binding state
+            currently_bound_vertex_buffers->second.vertex_input_state.input_binding_map =
+                gr_pipeline_info->vertex_input_binding_map;
+
+            // If VK_DYNAMIC_STATE_VERTEX_INPUT_BINDING_STRIDE_EXT is enabled, ignore strides from
+            // pipeline and get them from vkCmdBindVertexBuffers2EXT instead
+            if (gr_pipeline_info->dynamic_vertex_binding_stride)
+            {
+                for (auto& vb_binding : currently_bound_vertex_buffers->second.vertex_input_state.input_binding_map)
+                {
+                    const uint32_t binding = vb_binding.first;
+                    if (dynamic_vertex_input_state.input_binding_map.find(binding) !=
+                        dynamic_vertex_input_state.input_binding_map.end())
+                    {
+                        vb_binding.second.stride = dynamic_vertex_input_state.input_binding_map[binding].stride;
+                    }
+                }
+            }
+
+            // Copy vertex attributes info
+            currently_bound_vertex_buffers->second.vertex_input_state.input_attribute_map =
+                gr_pipeline_info->vertex_input_attribute_map;
+        }
+    }
+
+    assert(currently_bound_vertex_buffers != bound_vertex_buffers.end());
+
+    currently_bound_vertex_buffers->second.referencing_draw_calls.push_back(dc_index);
+    dc_params.referenced_bind_vertex_buffers = currently_bound_vertex_buffers->first;
 
     if (IsDrawCallIndexed(dc_params.type))
     {
@@ -900,7 +936,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDraw(const ApiCallInfo& call_info
             std::forward_as_tuple(
                 DrawCallsDumpingContext::kDraw, vertex_count, instance_count, first_vertex, first_instance));
         assert(new_entry.second);
-        dc_context->CopyVertexIndexBufferInfo(dc_index, (new_entry.first->second));
+        dc_context->CopyVertexInputStateInfo(dc_index, (new_entry.first->second));
     }
 
     VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
@@ -955,7 +991,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexed(const ApiCallInfo&   
                                                                        vertexOffset,
                                                                        first_instance));
         assert(new_entry.second);
-        dc_context->CopyVertexIndexBufferInfo(dc_index, new_entry.first->second);
+        dc_context->CopyVertexInputStateInfo(dc_index, new_entry.first->second);
     }
 
     VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
@@ -1004,7 +1040,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirect(const ApiCallInfo&  
             std::forward_as_tuple(dc_index),
             std::forward_as_tuple(DrawCallsDumpingContext::kDrawIndirect, buffer_info, offset, draw_count, stride));
         assert(new_entry.second);
-        dc_context->CopyVertexIndexBufferInfo(dc_index, new_entry.first->second);
+        dc_context->CopyVertexInputStateInfo(dc_index, new_entry.first->second);
         dc_context->CopyIndirectDrawParameters(new_entry.first->second);
     }
 
@@ -1054,7 +1090,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirect(const ApiCall
             std::forward_as_tuple(
                 DrawCallsDumpingContext::kDrawIndexedIndirect, buffer_info, offset, draw_count, stride));
         assert(new_entry.second);
-        dc_context->CopyVertexIndexBufferInfo(dc_index, new_entry.first->second);
+        dc_context->CopyVertexInputStateInfo(dc_index, new_entry.first->second);
         dc_context->CopyIndirectDrawParameters(new_entry.first->second);
     }
 
@@ -1111,7 +1147,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCount(const ApiCallIn
                                                                        max_draw_count,
                                                                        stride));
         assert(new_entry.second);
-        dc_context->CopyVertexIndexBufferInfo(dc_index, new_entry.first->second);
+        dc_context->CopyVertexInputStateInfo(dc_index, new_entry.first->second);
         dc_context->CopyIndirectDrawParameters(new_entry.first->second);
     }
 
@@ -1174,7 +1210,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCount(const Ap
                                   max_draw_count,
                                   stride));
         assert(new_entry.second);
-        dc_context->CopyVertexIndexBufferInfo(dc_index, new_entry.first->second);
+        dc_context->CopyVertexInputStateInfo(dc_index, new_entry.first->second);
         dc_context->CopyIndirectDrawParameters(new_entry.first->second);
     }
 
@@ -1237,7 +1273,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCountKHR(const ApiCal
                                                                        max_draw_count,
                                                                        stride));
         assert(new_entry.second);
-        dc_context->CopyVertexIndexBufferInfo(dc_index, new_entry.first->second);
+        dc_context->CopyVertexInputStateInfo(dc_index, new_entry.first->second);
         dc_context->CopyIndirectDrawParameters(new_entry.first->second);
     }
 
@@ -1300,7 +1336,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCountKHR(const
                                   max_draw_count,
                                   stride));
         assert(new_entry.second);
-        dc_context->CopyVertexIndexBufferInfo(dc_index, new_entry.first->second);
+        dc_context->CopyVertexInputStateInfo(dc_index, new_entry.first->second);
         dc_context->CopyIndirectDrawParameters(new_entry.first->second);
     }
 
@@ -1796,11 +1832,11 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
             }
 
             const PipelineInfo* gr_pipeline_info = bound_pipelines[kBindPoint_graphics];
-            if (gr_pipeline_info != nullptr && gr_pipeline_info->vertex_binding_info.size() &&
+            if (gr_pipeline_info != nullptr && gr_pipeline_info->vertex_input_binding_map.size() &&
                 dc_param.referenced_bind_vertex_buffers != INVALID_BLOCK_INDEX)
             {
                 uint32_t i = 0;
-                for (const auto& vb_binding : gr_pipeline_info->vertex_binding_info)
+                for (const auto& vb_binding : gr_pipeline_info->vertex_input_binding_map)
                 {
                     const std::string vb_filename =
                         GenerateVertexBufferFilename(dc_param.referenced_bind_vertex_buffers, vb_binding.first);
@@ -2243,24 +2279,21 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
         {
             const uint32_t binding = vb_binding.first;
 
-            const PipelineInfo* gr_pipeline_info = vbs.second.gr_pipeline_info;
-            assert(gr_pipeline_info != nullptr);
-
-            const auto& ppl_vb_binding_entry = gr_pipeline_info->vertex_binding_info.find(binding);
-            assert(ppl_vb_binding_entry != gr_pipeline_info->vertex_binding_info.end());
-            if (ppl_vb_binding_entry == gr_pipeline_info->vertex_binding_info.end())
+            const auto& vb_binding_entry = vbs.second.vertex_input_state.input_binding_map.find(binding);
+            assert(vb_binding_entry != vbs.second.vertex_input_state.input_binding_map.end());
+            if (vb_binding_entry == vbs.second.vertex_input_state.input_binding_map.end())
             {
                 continue;
             }
 
             // Ignore instance data for now
-            if (ppl_vb_binding_entry->second.inputRate == VK_VERTEX_INPUT_RATE_INSTANCE)
+            if (vb_binding_entry->second.inputRate == VK_VERTEX_INPUT_RATE_INSTANCE)
             {
                 continue;
             }
 
             const uint32_t offset         = vb_binding.second.offset;
-            const uint32_t binding_stride = ppl_vb_binding_entry->second.stride;
+            const uint32_t binding_stride = vb_binding_entry->second.stride;
             uint32_t       total_size;
             if (binding_stride)
             {
@@ -2273,7 +2306,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
                 // tell where the next one is located). So calculate the total size of all attributes that are using
                 // that binding and use that as the size of the vertex information for 1 vertex.
                 total_size = 0;
-                for (const auto& ppl_attr : gr_pipeline_info->vertex_attribute_info)
+                for (const auto& ppl_attr : vbs.second.vertex_input_state.input_attribute_map)
                 {
                     if (ppl_attr.second.binding != binding)
                     {
@@ -3023,6 +3056,59 @@ void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::BindVertexBuffers(
     }
 }
 
+void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::BindVertexBuffers2(
+    uint64_t                              index,
+    uint32_t                              first_binding,
+    const std::vector<const BufferInfo*>& buffer_infos,
+    const std::vector<VkDeviceSize>&      offsets,
+    const std::vector<VkDeviceSize>&      sizes,
+    const std::vector<VkDeviceSize>&      strides)
+{
+    if (!buffer_infos.size())
+    {
+        return;
+    }
+
+    auto new_entry =
+        bound_vertex_buffers.emplace(std::piecewise_construct, std::forward_as_tuple(index), std::forward_as_tuple());
+    assert(new_entry.second);
+    currently_bound_vertex_buffers = new_entry.first;
+
+    for (size_t i = 0; i < buffer_infos.size(); ++i)
+    {
+        const uint32_t binding = static_cast<uint32_t>(first_binding + i);
+        currently_bound_vertex_buffers->second.bound_vertex_buffer_per_binding.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(binding),
+            std::forward_as_tuple(buffer_infos[i], offsets[i], sizes[i], strides[i]));
+    }
+}
+
+void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::SetVertexInput(
+    uint32_t                                     vertexBindingDescriptionCount,
+    const VkVertexInputBindingDescription2EXT*   pVertexBindingDescriptions,
+    uint32_t                                     vertexAttributeDescriptionCount,
+    const VkVertexInputAttributeDescription2EXT* pVertexAttributeDescriptions)
+{
+    for (uint32_t i = 0; i < vertexBindingDescriptionCount; ++i)
+    {
+        dynamic_vertex_input_state.input_binding_map[pVertexBindingDescriptions[i].binding].inputRate =
+            pVertexBindingDescriptions[i].inputRate;
+        dynamic_vertex_input_state.input_binding_map[pVertexBindingDescriptions[i].binding].stride =
+            pVertexBindingDescriptions[i].stride;
+    }
+
+    for (uint32_t i = 0; i < vertexAttributeDescriptionCount; ++i)
+    {
+        dynamic_vertex_input_state.input_attribute_map[pVertexAttributeDescriptions[i].location].binding =
+            pVertexAttributeDescriptions[i].binding;
+        dynamic_vertex_input_state.input_attribute_map[pVertexAttributeDescriptions[i].location].format =
+            pVertexAttributeDescriptions[i].format;
+        dynamic_vertex_input_state.input_attribute_map[pVertexAttributeDescriptions[i].location].offset =
+            pVertexAttributeDescriptions[i].offset;
+    }
+}
+
 void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::BindIndexBuffer(uint64_t          index,
                                                                              const BufferInfo* buffer_info,
                                                                              VkDeviceSize      offset,
@@ -3556,10 +3642,125 @@ void VulkanReplayDumpResourcesBase::OverrideCmdBindVertexBuffers(const ApiCallIn
     }
 
     DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    if (dc_context != nullptr)
+    if (dc_context != nullptr && bindingCount)
     {
         assert(buffer_infos.size() == bindingCount);
         dc_context->BindVertexBuffers(call_info.index, firstBinding, buffer_infos, pOffsets);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdSetVertexInputEXT(
+    const ApiCallInfo&                                                   call_info,
+    PFN_vkCmdSetVertexInputEXT                                           func,
+    VkCommandBuffer                                                      original_command_buffer,
+    uint32_t                                                             vertexBindingDescriptionCount,
+    StructPointerDecoder<Decoded_VkVertexInputBindingDescription2EXT>*   pVertexBindingDescriptions,
+    uint32_t                                                             vertexAttributeDescriptionCount,
+    StructPointerDecoder<Decoded_VkVertexInputAttributeDescription2EXT>* pVertexAttributeDescriptions)
+{
+    const VkVertexInputBindingDescription2EXT* in_pVertexBindingDescriptions = pVertexBindingDescriptions->GetPointer();
+    const VkVertexInputAttributeDescription2EXT* in_pVertexAttributeDescriptions =
+        pVertexAttributeDescriptions->GetPointer();
+
+    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+    if (GetDrawCallActiveCommandBuffers(original_command_buffer, first, last))
+    {
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it,
+                 vertexBindingDescriptionCount,
+                 in_pVertexBindingDescriptions,
+                 vertexAttributeDescriptionCount,
+                 in_pVertexAttributeDescriptions);
+        }
+
+        DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+        dc_context->SetVertexInput(vertexBindingDescriptionCount,
+                                   in_pVertexBindingDescriptions,
+                                   vertexAttributeDescriptionCount,
+                                   in_pVertexAttributeDescriptions);
+    }
+
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dispatch_rays_command_buffer,
+             vertexBindingDescriptionCount,
+             in_pVertexBindingDescriptions,
+             vertexAttributeDescriptionCount,
+             in_pVertexAttributeDescriptions);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdBindVertexBuffers2(const ApiCallInfo&          call_info,
+                                                                  PFN_vkCmdBindVertexBuffers2 func,
+                                                                  VkCommandBuffer             original_command_buffer,
+                                                                  uint32_t                    firstBinding,
+                                                                  uint32_t                    bindingCount,
+                                                                  const format::HandleId*     pBuffers_ids,
+                                                                  const VkDeviceSize*         pOffsets,
+                                                                  const VkDeviceSize*         pSizes,
+                                                                  const VkDeviceSize*         pStrides)
+{
+    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+    bool            dc_found = GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+
+    std::vector<VkBuffer> buffer_handles(bindingCount);
+    if (dc_found || dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        for (uint32_t i = 0; i < bindingCount; ++i)
+        {
+            const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(pBuffers_ids[i]);
+            assert(buffer_info);
+            buffer_handles[i] = buffer_info->handle;
+        }
+    }
+
+    if (dc_found)
+    {
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it, firstBinding, bindingCount, buffer_handles.data(), pOffsets, pSizes, pStrides);
+        }
+
+        DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+        if (dc_context != nullptr && bindingCount)
+        {
+            assert(pBuffers_ids);
+            assert(pOffsets);
+            assert(pSizes);
+            assert(pStrides);
+
+            std::vector<const BufferInfo*> buffer_infos(bindingCount);
+            std::vector<VkDeviceSize>      offsets(bindingCount);
+            std::vector<VkDeviceSize>      sizes(bindingCount);
+            std::vector<VkDeviceSize>      strides(bindingCount);
+
+            for (uint32_t i = 0; i < bindingCount; ++i)
+            {
+                const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(pBuffers_ids[i]);
+                assert(buffer_info);
+
+                buffer_infos[i] = buffer_info;
+                offsets[i]      = pOffsets[i];
+                sizes[i]        = pSizes[i];
+                strides[i]      = pStrides[i];
+            }
+
+            dc_context->BindVertexBuffers2(call_info.index, firstBinding, buffer_infos, offsets, sizes, strides);
+        }
+    }
+
+    if (dispatch_rays_command_buffer)
+    {
+        func(dispatch_rays_command_buffer,
+             firstBinding,
+             bindingCount,
+             buffer_handles.data(),
+             pOffsets,
+             pSizes,
+             pStrides);
     }
 }
 

@@ -400,13 +400,13 @@ struct PipelineInfo : public VulkanObjectInfo<VkPipeline>
     // dump resources feature is in use
     std::unordered_map<VkShaderStageFlagBits, ShaderModuleInfo> shaders;
 
-    struct VertexBindingInfo
+    struct InputBindingDescription
     {
         uint32_t          stride;
         VkVertexInputRate inputRate;
     };
 
-    struct VertexAttributeInfo
+    struct InputAttributeDescription
     {
         uint32_t binding;
         VkFormat format;
@@ -414,10 +414,18 @@ struct PipelineInfo : public VulkanObjectInfo<VkPipeline>
     };
 
     // One entry per binding
-    std::unordered_map<uint32_t, VertexBindingInfo>   vertex_binding_info;
+    using VertexInputBindingMap = std::unordered_map<uint32_t, InputBindingDescription>;
+    VertexInputBindingMap vertex_input_binding_map;
 
     // One entry per location
-    std::unordered_map<uint32_t, VertexAttributeInfo> vertex_attribute_info;
+    using VertexInputAttributeMap = std::unordered_map<uint32_t, InputAttributeDescription>;
+    VertexInputAttributeMap vertex_input_attribute_map;
+
+    // Is VK_DYNAMIC_STATE_VERTEX_INPUT_EXT enabled
+    bool dynamic_vertex_input{ false };
+
+    // Is VK_DYNAMIC_STATE_VERTEX_INPUT_BINDING_STRIDE_EXT enabled
+    bool dynamic_vertex_binding_stride{ false };
 };
 
 struct DescriptorPoolInfo : public VulkanPoolInfo<VkDescriptorPool>

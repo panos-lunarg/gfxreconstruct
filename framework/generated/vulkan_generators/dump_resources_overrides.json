@@ -23,6 +23,8 @@
     "vkCmdDrawIndirectCountKHR": "OverrideCmdDrawIndirectCountKHR",
     "vkCmdDrawIndexedIndirectCountKHR": "OverrideCmdDrawIndexedIndirectCountKHR",
     "vkCmdBindVertexBuffers": "OverrideCmdBindVertexBuffers",
-    "vkCmdBindIndexBuffer": "OverrideCmdBindIndexBuffer"
+    "vkCmdBindIndexBuffer": "OverrideCmdBindIndexBuffer",
+    "vkCmdSetVertexInputEXT": "OverrideCmdSetVertexInputEXT",
+    "vkCmdBindVertexBuffers2": "OverrideCmdBindVertexBuffers2"
   }
 }
