@@ -8017,40 +8017,45 @@ VkResult VulkanReplayConsumerBase::OverrideCreateGraphicsPipelines(
                 create_info_meta[i].pStages->GetMetaStructPointer();
             const size_t stages_count = create_info_meta->pStages->GetLength();
 
-            for (size_t s = 0; s < stages_count; ++s)
+            if (stages_info_meta != nullptr)
             {
-                ShaderModuleInfo* module_info = object_info_table_.GetShaderModuleInfo(stages_info_meta[s].module);
-                assert(module_info);
-                assert(pipeline_info);
+                for (size_t s = 0; s < stages_count; ++s)
+                {
+                    ShaderModuleInfo* module_info = object_info_table_.GetShaderModuleInfo(stages_info_meta[s].module);
+                    assert(module_info);
+                    assert(pipeline_info);
 
-                pipeline_info->shaders.insert({ pCreateInfos->GetPointer()->pStages[s].stage, *module_info });
+                    pipeline_info->shaders.insert({ pCreateInfos->GetPointer()->pStages[s].stage, *module_info });
+                }
             }
 
             // Copy vertex input state information
-            if (in_p_create_infos != nullptr && in_p_create_infos->pVertexInputState)
+            if (in_p_create_infos != nullptr && in_p_create_infos[i].pVertexInputState)
             {
                 // Vertex binding info
-                for (uint32_t vb = 0; vb < in_p_create_infos->pVertexInputState->vertexBindingDescriptionCount; ++vb)
+                for (uint32_t vb = 0; vb < in_p_create_infos[i].pVertexInputState->vertexBindingDescriptionCount; ++vb)
                 {
                     PipelineInfo::VertexBindingInfo info{
-                        in_p_create_infos->pVertexInputState->pVertexBindingDescriptions[vb].stride,
-                        in_p_create_infos->pVertexInputState->pVertexBindingDescriptions[vb].inputRate
+                        in_p_create_infos[i].pVertexInputState->pVertexBindingDescriptions[vb].stride,
+                        in_p_create_infos[i].pVertexInputState->pVertexBindingDescriptions[vb].inputRate
                     };
 
-                    uint32_t binding = in_p_create_infos->pVertexInputState->pVertexBindingDescriptions[vb].binding;
+                    uint32_t binding = in_p_create_infos[i].pVertexInputState->pVertexBindingDescriptions[vb].binding;
                     pipeline_info->vertex_binding_info.emplace(binding, info);
                 }
 
                 // Vertex attribute info
-                for (uint32_t va = 0; va < in_p_create_infos->pVertexInputState->vertexAttributeDescriptionCount; ++va)
+                for (uint32_t va = 0; va < in_p_create_infos[i].pVertexInputState->vertexAttributeDescriptionCount;
+                     ++va)
                 {
                     PipelineInfo::VertexAttributeInfo info{
-                        in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions[va].binding,
-                        in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions[va].format,
-                        in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions[va].offset
+                        in_p_create_infos[i].pVertexInputState->pVertexAttributeDescriptions[va].binding,
+                        in_p_create_infos[i].pVertexInputState->pVertexAttributeDescriptions[va].format,
+                        in_p_create_infos[i].pVertexInputState->pVertexAttributeDescriptions[va].offset
                     };
 
-                    uint32_t location = in_p_create_infos->pVertexInputState->pVertexAttributeDescriptions[va].location;
+                    uint32_t location =
+                        in_p_create_infos[i].pVertexInputState->pVertexAttributeDescriptions[va].location;
                     pipeline_info->vertex_attribute_info.emplace(location, info);
                 }
             }
