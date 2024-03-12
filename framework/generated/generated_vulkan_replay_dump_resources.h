@@ -940,7 +940,7 @@ void Process_vkCmdBindIndexBuffer2KHR(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdBindIndexBuffer2KHR                func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
     VkDeviceSize                                size,
     VkIndexType                                 indexType);

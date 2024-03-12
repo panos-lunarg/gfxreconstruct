@@ -2729,28 +2729,14 @@ void VulkanReplayDumpResources::Process_vkCmdBindIndexBuffer2KHR(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdBindIndexBuffer2KHR                func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
     VkDeviceSize                                size,
     VkIndexType                                 indexType)
 {
     if (IsRecording(commandBuffer))
     {
-        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-        bool found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
-        if (found)
-        {
-            for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-            {
-                 func(*it, buffer, offset, size, indexType);
-            }
-        }
-
-        VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
-        if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-        {
-             func(dispatch_rays_command_buffer, buffer, offset, size, indexType);
-        }
+        OverrideCmdBindIndexBuffer2KHR(call_info, func, commandBuffer, buffer, offset, size, indexType);
     }
 }
 

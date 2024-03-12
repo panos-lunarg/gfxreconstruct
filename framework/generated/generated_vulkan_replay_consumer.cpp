@@ -5919,7 +5919,7 @@ void VulkanReplayConsumer::Process_vkCmdBindIndexBuffer2KHR(
 
     if (options_.dumping_resources)
     {
-        resource_dumper.Process_vkCmdBindIndexBuffer2KHR(call_info, GetDeviceTable(in_commandBuffer)->CmdBindIndexBuffer2KHR, in_commandBuffer, in_buffer, offset, size, indexType);
+        resource_dumper.Process_vkCmdBindIndexBuffer2KHR(call_info, GetDeviceTable(in_commandBuffer)->CmdBindIndexBuffer2KHR, in_commandBuffer, GetObjectInfoTable().GetBufferInfo(buffer), offset, size, indexType);
     }
 }
 

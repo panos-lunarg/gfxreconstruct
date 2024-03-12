@@ -2089,15 +2089,24 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
             continue;
         }
 
+        // Buffer can be null
+        if (idx_buf.second.buffer_info == nullptr)
+        {
+            continue;
+        }
+
         // In order to deduce the index buffer's size find the greatest index count
         // used by all draw calls that reference this index buffer
         uint32_t max_abs_count   = 0;
         uint32_t max_index_count = 0;
-        uint32_t max_first_index = 0;
 
+        // Store all (indexCount, firstIndex) pairs used by all associated with this index buffer.
+        // Latter we will parse the index buffer using all these pairs in order to detect the
+        // greatest index.
         std::vector<std::pair<uint32_t, uint32_t>> index_count_first_index_pairs(
             idx_buf.second.referencing_draw_calls.size());
         uint32_t pair = 0;
+
         for (const auto ref_dc_index : idx_buf.second.referencing_draw_calls)
         {
             const auto& dc_params_entry = draw_call_params.find(ref_dc_index);
@@ -2195,9 +2204,10 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
         const VkIndexType index_type = idx_buf.second.index_type;
         const uint32_t    index_size = VkIndexTypeToBytes(index_type);
         const uint32_t    offset     = idx_buf.second.offset;
-        uint32_t          total_size = max_abs_count * index_size;
 
-        assert(idx_buf.second.buffer_info != nullptr);
+        // Check if the exact size has been provided by vkCmdBindIndexBuffer2
+        uint32_t total_size = (idx_buf.second.size != 0) ? (idx_buf.second.size) : (max_abs_count * index_size);
+
         assert(total_size <= idx_buf.second.buffer_info->size - offset);
         // There is something wrong with the calculations if this is true
         if (total_size > idx_buf.second.buffer_info->size - offset)
@@ -2219,15 +2229,15 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
         std::string filename = GenerateIndexBufferFilename(bind_index_buffer_block_index, index_type);
         util::bufferwriter::WriteBuffer(filename, index_data.data(), index_data.size());
 
-        // Parse indices and find the greatest vertex index. We should need this
-        // later when we calculate the size of the vertex buffers
+        // Parse indices and find the greatest vertex index. We should need this later
+        // when we calculate the size of the vertex buffers
         uint32_t greatest_vertex_index = 0;
         for (const auto& pairs : index_count_first_index_pairs)
         {
-            uint32_t vi = FindGreatestVertexIndex(index_data, pairs.first, pairs.second, index_type);
-            if (greatest_vertex_index < vi)
+            const uint32_t gvi = FindGreatestVertexIndex(index_data, pairs.first, pairs.second, index_type);
+            if (greatest_vertex_index < gvi)
             {
-                greatest_vertex_index = vi;
+                greatest_vertex_index = gvi;
             }
         }
         max_vertex_index_per_index_buffer.emplace(bind_index_buffer_block_index, greatest_vertex_index);
@@ -2244,7 +2254,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
         }
 
         // In order to deduce the vertex buffer's size find the greatest vertex count
-        // used by all draw calls that reference this index buffer
+        // used by all draw calls that reference this vertex buffer
         uint32_t max_vertex_count = 0;
         uint32_t max_first_vertex = 0;
         for (const auto ref_dc_index : vbs.second.referencing_draw_calls)
@@ -2358,45 +2368,58 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
                 continue;
             }
 
-            const uint32_t offset         = vb_binding.second.offset;
-            const uint32_t binding_stride = vb_binding_entry->second.stride;
-            uint32_t       total_size;
-            if (binding_stride)
+            // Buffers can be NULL
+            if (vb_binding.second.buffer_info == nullptr)
             {
-                total_size = (max_vertex_count + max_first_vertex) * binding_stride;
+                continue;
+            }
+
+            const uint32_t offset = vb_binding.second.offset;
+            uint32_t       total_size;
+            if (vb_binding.second.size)
+            {
+                // Exact size was provided by vkCmdBindVertexBuffers2
+                total_size = vb_binding.second.size;
             }
             else
             {
-                // According to the spec providing a VkVertexInputBindingDescription.stride equal to zero is valid.
-                // In these cases we will assume that information for only 1 vertex will be consumed (since we can't
-                // tell where the next one is located). So calculate the total size of all attributes that are using
-                // that binding and use that as the size of the vertex information for 1 vertex.
-                total_size          = 0;
-                uint32_t min_offset = std::numeric_limits<uint32_t>::max();
-                for (const auto& ppl_attr : vbs.second.vertex_input_state.input_attribute_map)
+                const uint32_t binding_stride = vb_binding_entry->second.stride;
+                if (binding_stride)
                 {
-                    if (ppl_attr.second.binding != binding)
+                    total_size = (max_vertex_count + max_first_vertex) * binding_stride;
+                }
+                else
+                {
+                    // According to the spec providing a VkVertexInputBindingDescription.stride equal to zero is valid.
+                    // In these cases we will assume that information for only 1 vertex will be consumed (since we can't
+                    // tell where the next one is located). So calculate the total size of all attributes that are using
+                    // that binding and use that as the size of the vertex information for 1 vertex.
+                    total_size          = 0;
+                    uint32_t min_offset = std::numeric_limits<uint32_t>::max();
+                    for (const auto& ppl_attr : vbs.second.vertex_input_state.input_attribute_map)
+                    {
+                        if (ppl_attr.second.binding != binding)
+                        {
+                            continue;
+                        }
+
+                        total_size += vkuFormatElementSize(ppl_attr.second.format);
+
+                        if (min_offset > ppl_attr.second.offset)
+                        {
+                            min_offset = ppl_attr.second.offset;
+                        }
+                    }
+
+                    if (!total_size)
                     {
                         continue;
                     }
 
-                    total_size += vkuFormatElementSize(ppl_attr.second.format);
-
-                    if (min_offset > ppl_attr.second.offset)
-                    {
-                        min_offset = ppl_attr.second.offset;
-                    }
+                    total_size += min_offset;
                 }
-
-                if (!total_size)
-                {
-                    continue;
-                }
-
-                total_size += min_offset;
             }
 
-            assert(vb_binding.second.buffer_info != nullptr);
             assert(total_size <= vb_binding.second.buffer_info->size - offset);
             // There is something wrong with the calculations if this is true
             if (total_size > vb_binding.second.buffer_info->size - offset)
@@ -3135,9 +3158,9 @@ void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::BindVertexBuffers2(
     uint64_t                              index,
     uint32_t                              first_binding,
     const std::vector<const BufferInfo*>& buffer_infos,
-    const std::vector<VkDeviceSize>&      offsets,
-    const std::vector<VkDeviceSize>&      sizes,
-    const std::vector<VkDeviceSize>&      strides)
+    const VkDeviceSize*                   offsets,
+    const VkDeviceSize*                   sizes,
+    const VkDeviceSize*                   strides)
 {
     if (!buffer_infos.size())
     {
@@ -3151,11 +3174,25 @@ void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::BindVertexBuffers2(
 
     for (size_t i = 0; i < buffer_infos.size(); ++i)
     {
+        VkDeviceSize buffer_size = 0;
+        if (sizes[i] && buffer_infos[i] != nullptr)
+        {
+            if (sizes[i] == VK_WHOLE_SIZE)
+            {
+                assert(buffer_infos[i]->size > offsets[i]);
+                buffer_size = buffer_infos[i]->size - offsets[i];
+            }
+            else
+            {
+                buffer_size = sizes[i];
+            }
+        }
+
         const uint32_t binding = static_cast<uint32_t>(first_binding + i);
         currently_bound_vertex_buffers->second.bound_vertex_buffer_per_binding.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(binding),
-            std::forward_as_tuple(buffer_infos[i], offsets[i], sizes[i], strides[i]));
+            std::forward_as_tuple(buffer_infos[i], offsets[i], buffer_size, strides[i]));
     }
 }
 
@@ -3184,13 +3221,27 @@ void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::SetVertexInput(
     }
 }
 
-void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::BindIndexBuffer(uint64_t          index,
-                                                                             const BufferInfo* buffer_info,
-                                                                             VkDeviceSize      offset,
-                                                                             VkIndexType       index_type)
+void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::BindIndexBuffer(
+    uint64_t index, const BufferInfo* buffer_info, VkDeviceSize offset, VkIndexType index_type, VkDeviceSize size)
 {
-    auto new_entry = bound_index_buffers.emplace(
-        std::piecewise_construct, std::forward_as_tuple(index), std::forward_as_tuple(buffer_info, offset, index_type));
+    VkDeviceSize index_buffer_size = 0;
+    if (size)
+    {
+        if (size == VK_WHOLE_SIZE && buffer_info != nullptr)
+        {
+            assert(buffer_info->size > offset);
+            index_buffer_size = buffer_info->size - offset;
+        }
+        else
+        {
+            index_buffer_size = size;
+        }
+    }
+
+    auto new_entry =
+        bound_index_buffers.emplace(std::piecewise_construct,
+                                    std::forward_as_tuple(index),
+                                    std::forward_as_tuple(buffer_info, offset, index_type, index_buffer_size));
     assert(new_entry.second);
     currently_bound_index_buffer = new_entry.first;
 }
@@ -3654,26 +3705,63 @@ void VulkanReplayDumpResourcesBase::OverrideCmdBindIndexBuffer(const ApiCallInfo
                                                                VkDeviceSize             offset,
                                                                VkIndexType              indexType)
 {
+    // buffer can be VK_NULL_HANDLE/NULL
+    VkBuffer buffer_handle = buffer != nullptr ? buffer->handle : VK_NULL_HANDLE;
+
     VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
     bool found = GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
     if (found)
     {
         for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
         {
-            func(*it, buffer->handle, offset, indexType);
+            func(*it, buffer_handle, offset, indexType);
         }
     }
 
     VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
     if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
     {
-        func(dispatch_rays_command_buffer, buffer->handle, offset, indexType);
+        func(dispatch_rays_command_buffer, buffer_handle, offset, indexType);
     }
 
     DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
     if (dc_context != nullptr)
     {
         dc_context->BindIndexBuffer(call_info.index, buffer, offset, indexType);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdBindIndexBuffer2KHR(const ApiCallInfo&           call_info,
+                                                                   PFN_vkCmdBindIndexBuffer2KHR func,
+                                                                   VkCommandBuffer              original_command_buffer,
+                                                                   const BufferInfo*            buffer,
+                                                                   VkDeviceSize                 offset,
+                                                                   VkDeviceSize                 size,
+                                                                   VkIndexType                  indexType)
+{
+    // buffer can be VK_NULL_HANDLE/NULL
+    VkBuffer buffer_handle = buffer != nullptr ? buffer->handle : VK_NULL_HANDLE;
+
+    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+    bool found = GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
+    if (found)
+    {
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it, buffer_handle, offset, size, indexType);
+        }
+    }
+
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dispatch_rays_command_buffer, buffer_handle, offset, size, indexType);
+    }
+
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr)
+    {
+        dc_context->BindIndexBuffer(call_info.index, buffer, offset, indexType, size);
     }
 }
 
@@ -3695,11 +3783,11 @@ void VulkanReplayDumpResourcesBase::OverrideCmdBindVertexBuffers(const ApiCallIn
     {
         for (uint32_t i = 0; i < bindingCount; ++i)
         {
+            // Buffer can be VK_NULL_HANDLE
             const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(buffer_ids[i]);
-            assert(buffer_info);
 
             buffer_infos[i]   = buffer_info;
-            buffer_handles[i] = buffer_info->handle;
+            buffer_handles[i] = buffer_info != nullptr ? buffer_info->handle : VK_NULL_HANDLE;
         }
     }
 
@@ -3787,8 +3875,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdBindVertexBuffers2(const ApiCallI
         for (uint32_t i = 0; i < bindingCount; ++i)
         {
             const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(pBuffers_ids[i]);
-            assert(buffer_info);
-            buffer_handles[i] = buffer_info->handle;
+            buffer_handles[i]             = (buffer_info != nullptr) ? buffer_info->handle : VK_NULL_HANDLE;
         }
     }
 
@@ -3808,22 +3895,15 @@ void VulkanReplayDumpResourcesBase::OverrideCmdBindVertexBuffers2(const ApiCallI
             assert(pStrides);
 
             std::vector<const BufferInfo*> buffer_infos(bindingCount);
-            std::vector<VkDeviceSize>      offsets(bindingCount);
-            std::vector<VkDeviceSize>      sizes(bindingCount);
-            std::vector<VkDeviceSize>      strides(bindingCount);
 
             for (uint32_t i = 0; i < bindingCount; ++i)
             {
                 const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(pBuffers_ids[i]);
-                assert(buffer_info);
 
                 buffer_infos[i] = buffer_info;
-                offsets[i]      = pOffsets[i];
-                sizes[i]        = pSizes[i];
-                strides[i]      = pStrides[i];
             }
 
-            dc_context->BindVertexBuffers2(call_info.index, firstBinding, buffer_infos, offsets, sizes, strides);
+            dc_context->BindVertexBuffers2(call_info.index, firstBinding, buffer_infos, pOffsets, pSizes, pStrides);
         }
     }
 

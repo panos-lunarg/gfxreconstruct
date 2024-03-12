@@ -240,6 +240,14 @@ class VulkanReplayDumpResourcesBase
                                        const VkDeviceSize*         pSizes,
                                        const VkDeviceSize*         pStrides);
 
+    void OverrideCmdBindIndexBuffer2KHR(const ApiCallInfo&           call_info,
+                                        PFN_vkCmdBindIndexBuffer2KHR func,
+                                        VkCommandBuffer              commandBuffer,
+                                        const BufferInfo*            buffer,
+                                        VkDeviceSize                 offset,
+                                        VkDeviceSize                 size,
+                                        VkIndexType                  indexType);
+
     VkResult QueueSubmit(const std::vector<VkSubmitInfo>& modified_submit_infos,
                          const encode::DeviceTable&       device_table,
                          VkQueue                          queue,
@@ -357,17 +365,20 @@ class VulkanReplayDumpResourcesBase
         void BindVertexBuffers2(uint64_t                              index,
                                 uint32_t                              first_binding,
                                 const std::vector<const BufferInfo*>& buffer_infos,
-                                const std::vector<VkDeviceSize>&      offsets,
-                                const std::vector<VkDeviceSize>&      sizes,
-                                const std::vector<VkDeviceSize>&      strides);
+                                const VkDeviceSize*                   offsets,
+                                const VkDeviceSize*                   sizes,
+                                const VkDeviceSize*                   strides);
 
         void SetVertexInput(uint32_t                                     vertexBindingDescriptionCount,
                             const VkVertexInputBindingDescription2EXT*   pVertexBindingDescriptions,
                             uint32_t                                     vertexAttributeDescriptionCount,
                             const VkVertexInputAttributeDescription2EXT* pVertexAttributeDescriptions);
 
-        void
-        BindIndexBuffer(uint64_t index, const BufferInfo* buffer_info, VkDeviceSize offset, VkIndexType index_type);
+        void BindIndexBuffer(uint64_t          index,
+                             const BufferInfo* buffer_info,
+                             VkDeviceSize      offset,
+                             VkIndexType       index_type,
+                             VkDeviceSize      size = 0);
 
         void FinalizeCommandBuffer();
 
@@ -500,13 +511,20 @@ class VulkanReplayDumpResourcesBase
         {
             BoundIndexBuffer() : buffer_info(nullptr), offset(0), index_type(VK_INDEX_TYPE_MAX_ENUM) {}
 
-            BoundIndexBuffer(const BufferInfo* buffer_info, VkDeviceSize offset, VkIndexType index_type) :
-                buffer_info(buffer_info), offset(offset), index_type(index_type)
+            BoundIndexBuffer(const BufferInfo* buffer_info,
+                             VkDeviceSize      offset,
+                             VkIndexType       index_type,
+                             VkDeviceSize      size) :
+                buffer_info(buffer_info),
+                offset(offset), index_type(index_type), size(size)
             {}
 
             const BufferInfo* buffer_info;
             VkDeviceSize      offset;
             VkIndexType       index_type;
+
+            // This is provided only by vkCmdBindIndexBuffer2KHR
+            VkDeviceSize size;
 
             // A list of all draw calls that reference this index buffer
             std::vector<uint64_t> referencing_draw_calls;

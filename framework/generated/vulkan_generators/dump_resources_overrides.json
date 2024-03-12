@@ -25,6 +25,7 @@
     "vkCmdBindVertexBuffers": "OverrideCmdBindVertexBuffers",
     "vkCmdBindIndexBuffer": "OverrideCmdBindIndexBuffer",
     "vkCmdSetVertexInputEXT": "OverrideCmdSetVertexInputEXT",
-    "vkCmdBindVertexBuffers2": "OverrideCmdBindVertexBuffers2"
+    "vkCmdBindVertexBuffers2": "OverrideCmdBindVertexBuffers2",
+    "vkCmdBindIndexBuffer2KHR": "OverrideCmdBindIndexBuffer2KHR"
   }
 }
