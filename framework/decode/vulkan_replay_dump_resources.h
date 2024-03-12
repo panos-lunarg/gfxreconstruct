@@ -452,7 +452,7 @@ class VulkanReplayDumpResourcesBase
             PipelineInfo::VertexInputAttributeMap input_attribute_map;
         };
 
-        // Updated by CmdSetVertexInputEXT
+        // Keep track of CmdSetVertexInputEXT
         VertexInputState dynamic_vertex_input_state;
 
         // Keep track of bound vertex buffers
@@ -472,7 +472,7 @@ class VulkanReplayDumpResourcesBase
                 const BufferInfo* buffer_info;
                 VkDeviceSize      offset;
 
-                // These are provided by CmdBindVertexBuffers2
+                // These are provided only by CmdBindVertexBuffers2
                 VkDeviceSize size;
                 VkDeviceSize stride;
             };

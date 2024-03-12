@@ -33,6 +33,8 @@
 #include "util/platform.h"
 
 #include <cstdint>
+#include <limits>
+#include <utility>
 #include <sstream>
 #include <vulkan/vulkan_core.h>
 #if !defined(WIN32)
@@ -208,7 +210,10 @@ static uint32_t VkIndexTypeToBytes(VkIndexType type)
     }
 }
 
-static uint32_t FindGreatestVertexIndex(const std::vector<uint8_t>& index_data, uint32_t index_count, VkIndexType type)
+static uint32_t FindGreatestVertexIndex(const std::vector<uint8_t>& index_data,
+                                        uint32_t                    index_count,
+                                        uint32_t                    first_index,
+                                        VkIndexType                 type)
 {
     switch (type)
     {
@@ -217,7 +222,7 @@ static uint32_t FindGreatestVertexIndex(const std::vector<uint8_t>& index_data, 
             const uint8_t  restart_index = 0xff;
             const uint8_t* indices       = static_cast<const uint8_t*>(index_data.data());
             uint32_t       i             = 0;
-            while (indices[i] == restart_index && i < index_count)
+            while (indices[first_index + i] == restart_index && i < index_count)
             {
                 ++i;
             }
@@ -227,18 +232,18 @@ static uint32_t FindGreatestVertexIndex(const std::vector<uint8_t>& index_data, 
                 return 0;
             }
 
-            uint8_t max = indices[i];
+            uint8_t max = indices[first_index + i];
 
             for (; i < index_count; ++i)
             {
-                if (indices[i] == restart_index)
+                if (indices[first_index + i] == restart_index)
                 {
                     continue;
                 }
 
-                if (indices[i] > max)
+                if (indices[first_index + i] > max)
                 {
-                    max = indices[i];
+                    max = indices[first_index + i];
                 }
             }
 
@@ -251,7 +256,7 @@ static uint32_t FindGreatestVertexIndex(const std::vector<uint8_t>& index_data, 
             const uint16_t  restart_index = 0xffff;
             const uint16_t* indices       = reinterpret_cast<const uint16_t*>(index_data.data());
             uint32_t        i             = 0;
-            while (indices[i] == restart_index && i < index_count)
+            while (indices[first_index + i] == restart_index && i < index_count)
             {
                 ++i;
             }
@@ -261,18 +266,18 @@ static uint32_t FindGreatestVertexIndex(const std::vector<uint8_t>& index_data, 
                 return 0;
             }
 
-            uint16_t max = indices[i];
+            uint16_t max = indices[first_index + i];
 
             for (; i < index_count; ++i)
             {
-                if (indices[i] == restart_index)
+                if (indices[first_index + i] == restart_index)
                 {
                     continue;
                 }
 
-                if (indices[i] > max)
+                if (indices[first_index + i] > max)
                 {
-                    max = indices[i];
+                    max = indices[first_index + i];
                 }
             }
 
@@ -285,7 +290,7 @@ static uint32_t FindGreatestVertexIndex(const std::vector<uint8_t>& index_data, 
             const uint32_t  restart_index = 0xffffffff;
             const uint32_t* indices       = reinterpret_cast<const uint32_t*>(index_data.data());
             uint32_t        i             = 0;
-            while (indices[i] == restart_index && i < index_count)
+            while (indices[first_index + i] == restart_index && i < index_count)
             {
                 ++i;
             }
@@ -295,18 +300,18 @@ static uint32_t FindGreatestVertexIndex(const std::vector<uint8_t>& index_data, 
                 return 0;
             }
 
-            uint32_t max = indices[i];
+            uint32_t max = indices[first_index + i];
 
             for (; i < index_count; ++i)
             {
-                if (indices[i] == restart_index)
+                if (indices[first_index + i] == restart_index)
                 {
                     continue;
                 }
 
-                if (indices[i] > max)
+                if (indices[first_index + i] > max)
                 {
-                    max = indices[i];
+                    max = indices[first_index + i];
                 }
             }
 
@@ -2049,6 +2054,8 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
 {
     assert(draw_call_params.size() == dc_indices.size());
 
+    // Fetch draw params for all Indirect and IndirectCount draw calls from the buffers
+    // into the DrawCallParameters
     VkResult res = FetchDrawIndirectParams();
     if (res != VK_SUCCESS)
     {
@@ -2084,7 +2091,13 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
 
         // In order to deduce the index buffer's size find the greatest index count
         // used by all draw calls that reference this index buffer
+        uint32_t max_abs_count   = 0;
         uint32_t max_index_count = 0;
+        uint32_t max_first_index = 0;
+
+        std::vector<std::pair<uint32_t, uint32_t>> index_count_first_index_pairs(
+            idx_buf.second.referencing_draw_calls.size());
+        uint32_t pair = 0;
         for (const auto ref_dc_index : idx_buf.second.referencing_draw_calls)
         {
             const auto& dc_params_entry = draw_call_params.find(ref_dc_index);
@@ -2109,9 +2122,19 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
                     assert(ic_params.draw_indexed_params != nullptr);
                     for (uint32_t d = 0; d < ic_params.max_draw_count; ++d)
                     {
-                        if (max_index_count < ic_params.draw_indexed_params[d].index_count)
+                        const uint32_t index_count = ic_params.draw_indexed_params[d].index_count;
+                        const uint32_t first_index = ic_params.draw_indexed_params[d].first_index;
+
+                        index_count_first_index_pairs[pair++] = std::make_pair(index_count, first_index);
+
+                        if (max_index_count < index_count)
                         {
-                            max_index_count = ic_params.draw_indexed_params[d].index_count;
+                            max_index_count = index_count;
+                        }
+
+                        if (max_abs_count < index_count + first_index)
+                        {
+                            max_abs_count = index_count + first_index;
                         }
                     }
                 }
@@ -2128,18 +2151,38 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
                     assert(i_params.draw_indexed_params != nullptr);
                     for (uint32_t d = 0; d < i_params.draw_count; ++d)
                     {
-                        if (max_index_count < i_params.draw_indexed_params[d].index_count)
+                        const uint32_t index_count = i_params.draw_indexed_params[d].index_count;
+                        const uint32_t first_index = i_params.draw_indexed_params[d].first_index;
+
+                        index_count_first_index_pairs[pair++] = std::make_pair(index_count, first_index);
+
+                        if (max_index_count < index_count)
                         {
-                            max_index_count = i_params.draw_indexed_params[d].index_count;
+                            max_index_count = index_count;
+                        }
+
+                        if (max_abs_count < index_count + first_index)
+                        {
+                            max_abs_count = index_count + first_index;
                         }
                     }
                 }
             }
             else
             {
-                if (max_index_count < dc_params.dc_params_union.draw_indexed.index_count)
+                const uint32_t index_count = dc_params.dc_params_union.draw_indexed.index_count;
+                const uint32_t first_index = dc_params.dc_params_union.draw_indexed.first_index;
+
+                index_count_first_index_pairs[pair++] = std::make_pair(index_count, first_index);
+
+                if (max_index_count < index_count)
                 {
-                    max_index_count = dc_params.dc_params_union.draw_indexed.index_count;
+                    max_index_count = index_count;
+                }
+
+                if (max_abs_count < index_count + first_index)
+                {
+                    max_abs_count = index_count + first_index;
                 }
             }
         }
@@ -2149,11 +2192,10 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
             continue;
         }
 
-        const VkIndexType index_type  = idx_buf.second.index_type;
-        const uint32_t    index_size  = VkIndexTypeToBytes(index_type);
-        const uint32_t    index_count = max_index_count;
-        const uint32_t    offset      = idx_buf.second.offset;
-        uint32_t          total_size  = index_count * index_size;
+        const VkIndexType index_type = idx_buf.second.index_type;
+        const uint32_t    index_size = VkIndexTypeToBytes(index_type);
+        const uint32_t    offset     = idx_buf.second.offset;
+        uint32_t          total_size = max_abs_count * index_size;
 
         assert(idx_buf.second.buffer_info != nullptr);
         assert(total_size <= idx_buf.second.buffer_info->size - offset);
@@ -2179,7 +2221,15 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
 
         // Parse indices and find the greatest vertex index. We should need this
         // later when we calculate the size of the vertex buffers
-        uint32_t greatest_vertex_index = FindGreatestVertexIndex(index_data, index_count, index_type);
+        uint32_t greatest_vertex_index = 0;
+        for (const auto& pairs : index_count_first_index_pairs)
+        {
+            uint32_t vi = FindGreatestVertexIndex(index_data, pairs.first, pairs.second, index_type);
+            if (greatest_vertex_index < vi)
+            {
+                greatest_vertex_index = vi;
+            }
+        }
         max_vertex_index_per_index_buffer.emplace(bind_index_buffer_block_index, greatest_vertex_index);
     }
 
@@ -2196,6 +2246,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
         // In order to deduce the vertex buffer's size find the greatest vertex count
         // used by all draw calls that reference this index buffer
         uint32_t max_vertex_count = 0;
+        uint32_t max_first_vertex = 0;
         for (const auto ref_dc_index : vbs.second.referencing_draw_calls)
         {
             const auto& dc_params_entry = draw_call_params.find(ref_dc_index);
@@ -2238,6 +2289,11 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
                             {
                                 max_vertex_count = ic_params.draw_params[d].vertex_count;
                             }
+
+                            if (max_first_vertex < ic_params.draw_params[d].first_vertex)
+                            {
+                                max_first_vertex = ic_params.draw_params[d].first_vertex;
+                            }
                         }
                     }
                     else
@@ -2257,6 +2313,11 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
                             {
                                 max_vertex_count = i_params.draw_params[d].vertex_count;
                             }
+
+                            if (max_first_vertex < i_params.draw_params[d].first_vertex)
+                            {
+                                max_first_vertex = i_params.draw_params[d].first_vertex;
+                            }
                         }
                     }
                 }
@@ -2265,6 +2326,11 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
                     if (max_vertex_count < dc_params.dc_params_union.draw.vertex_count)
                     {
                         max_vertex_count = dc_params.dc_params_union.draw.vertex_count;
+                    }
+
+                    if (max_first_vertex < dc_params.dc_params_union.draw.first_vertex)
+                    {
+                        max_first_vertex = dc_params.dc_params_union.draw.first_vertex;
                     }
                 }
             }
@@ -2297,7 +2363,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
             uint32_t       total_size;
             if (binding_stride)
             {
-                total_size = max_vertex_count * binding_stride;
+                total_size = (max_vertex_count + max_first_vertex) * binding_stride;
             }
             else
             {
@@ -2305,20 +2371,29 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
                 // In these cases we will assume that information for only 1 vertex will be consumed (since we can't
                 // tell where the next one is located). So calculate the total size of all attributes that are using
                 // that binding and use that as the size of the vertex information for 1 vertex.
-                total_size = 0;
+                total_size          = 0;
+                uint32_t min_offset = std::numeric_limits<uint32_t>::max();
                 for (const auto& ppl_attr : vbs.second.vertex_input_state.input_attribute_map)
                 {
                     if (ppl_attr.second.binding != binding)
                     {
                         continue;
                     }
+
                     total_size += vkuFormatElementSize(ppl_attr.second.format);
+
+                    if (min_offset > ppl_attr.second.offset)
+                    {
+                        min_offset = ppl_attr.second.offset;
+                    }
                 }
 
                 if (!total_size)
                 {
                     continue;
                 }
+
+                total_size += min_offset;
             }
 
             assert(vb_binding.second.buffer_info != nullptr);
