@@ -296,7 +296,7 @@ void VulkanReplayDumpResources::Process_vkCmdBindDescriptorSets(
     PFN_vkCmdBindDescriptorSets                 func,
     VkCommandBuffer                             commandBuffer,
     VkPipelineBindPoint                         pipelineBindPoint,
-    VkPipelineLayout                            layout,
+    const PipelineLayoutInfo*                   layout,
     uint32_t                                    firstSet,
     uint32_t                                    descriptorSetCount,
     HandlePointerDecoder<VkDescriptorSet>*      pDescriptorSets,
@@ -313,27 +313,13 @@ void VulkanReplayDumpResources::Process_vkCmdBindIndexBuffer(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdBindIndexBuffer                    func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
     VkIndexType                                 indexType)
 {
     if (IsRecording(commandBuffer))
     {
-        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-        bool found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
-        if (found)
-        {
-            for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-            {
-                 func(*it, buffer, offset, indexType);
-            }
-        }
-
-        VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
-        if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-        {
-             func(dispatch_rays_command_buffer, buffer, offset, indexType);
-        }
+        OverrideCmdBindIndexBuffer(call_info, func, commandBuffer, buffer, offset, indexType);
     }
 }
 
@@ -343,26 +329,12 @@ void VulkanReplayDumpResources::Process_vkCmdBindVertexBuffers(
     VkCommandBuffer                             commandBuffer,
     uint32_t                                    firstBinding,
     uint32_t                                    bindingCount,
-    const VkBuffer*                             pBuffers,
+    HandlePointerDecoder<VkBuffer>*             pBuffers,
     const VkDeviceSize*                         pOffsets)
 {
     if (IsRecording(commandBuffer))
     {
-        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-        bool found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
-        if (found)
-        {
-            for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-            {
-                 func(*it, firstBinding, bindingCount, pBuffers, pOffsets);
-            }
-        }
-
-        VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
-        if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-        {
-             func(dispatch_rays_command_buffer, firstBinding, bindingCount, pBuffers, pOffsets);
-        }
+        OverrideCmdBindVertexBuffers(call_info, func, commandBuffer, firstBinding, bindingCount, pBuffers->GetPointer(), pOffsets);
     }
 }
 
@@ -401,7 +373,7 @@ void VulkanReplayDumpResources::Process_vkCmdDrawIndirect(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdDrawIndirect                       func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
     uint32_t                                    drawCount,
     uint32_t                                    stride)
@@ -416,7 +388,7 @@ void VulkanReplayDumpResources::Process_vkCmdDrawIndexedIndirect(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdDrawIndexedIndirect                func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
     uint32_t                                    drawCount,
     uint32_t                                    stride)
@@ -445,7 +417,7 @@ void VulkanReplayDumpResources::Process_vkCmdDispatchIndirect(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdDispatchIndirect                   func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset)
 {
     if (IsRecording(commandBuffer))
@@ -1204,9 +1176,9 @@ void VulkanReplayDumpResources::Process_vkCmdDrawIndirectCount(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdDrawIndirectCount                  func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
-    VkBuffer                                    countBuffer,
+    const BufferInfo*                           countBuffer,
     VkDeviceSize                                countBufferOffset,
     uint32_t                                    maxDrawCount,
     uint32_t                                    stride)
@@ -1221,9 +1193,9 @@ void VulkanReplayDumpResources::Process_vkCmdDrawIndexedIndirectCount(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdDrawIndexedIndirectCount           func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
-    VkBuffer                                    countBuffer,
+    const BufferInfo*                           countBuffer,
     VkDeviceSize                                countBufferOffset,
     uint32_t                                    maxDrawCount,
     uint32_t                                    stride)
@@ -1753,28 +1725,14 @@ void VulkanReplayDumpResources::Process_vkCmdBindVertexBuffers2(
     VkCommandBuffer                             commandBuffer,
     uint32_t                                    firstBinding,
     uint32_t                                    bindingCount,
-    const VkBuffer*                             pBuffers,
+    HandlePointerDecoder<VkBuffer>*             pBuffers,
     const VkDeviceSize*                         pOffsets,
     const VkDeviceSize*                         pSizes,
     const VkDeviceSize*                         pStrides)
 {
     if (IsRecording(commandBuffer))
     {
-        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-        bool found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
-        if (found)
-        {
-            for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-            {
-                 func(*it, firstBinding, bindingCount, pBuffers, pOffsets, pSizes, pStrides);
-            }
-        }
-
-        VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
-        if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-        {
-             func(dispatch_rays_command_buffer, firstBinding, bindingCount, pBuffers, pOffsets, pSizes, pStrides);
-        }
+        OverrideCmdBindVertexBuffers2(call_info, func, commandBuffer, firstBinding, bindingCount, pBuffers->GetPointer(), pOffsets, pSizes, pStrides);
     }
 }
 
@@ -2330,9 +2288,9 @@ void VulkanReplayDumpResources::Process_vkCmdDrawIndirectCountKHR(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdDrawIndirectCountKHR               func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
-    VkBuffer                                    countBuffer,
+    const BufferInfo*                           countBuffer,
     VkDeviceSize                                countBufferOffset,
     uint32_t                                    maxDrawCount,
     uint32_t                                    stride)
@@ -2347,9 +2305,9 @@ void VulkanReplayDumpResources::Process_vkCmdDrawIndexedIndirectCountKHR(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdDrawIndexedIndirectCountKHR        func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
-    VkBuffer                                    countBuffer,
+    const BufferInfo*                           countBuffer,
     VkDeviceSize                                countBufferOffset,
     uint32_t                                    maxDrawCount,
     uint32_t                                    stride)
@@ -2771,28 +2729,14 @@ void VulkanReplayDumpResources::Process_vkCmdBindIndexBuffer2KHR(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdBindIndexBuffer2KHR                func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
     VkDeviceSize                                size,
     VkIndexType                                 indexType)
 {
     if (IsRecording(commandBuffer))
     {
-        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-        bool found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
-        if (found)
-        {
-            for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-            {
-                 func(*it, buffer, offset, size, indexType);
-            }
-        }
-
-        VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
-        if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-        {
-             func(dispatch_rays_command_buffer, buffer, offset, size, indexType);
-        }
+        OverrideCmdBindIndexBuffer2KHR(call_info, func, commandBuffer, buffer, offset, size, indexType);
     }
 }
 
@@ -4550,27 +4494,13 @@ void VulkanReplayDumpResources::Process_vkCmdSetVertexInputEXT(
     PFN_vkCmdSetVertexInputEXT                  func,
     VkCommandBuffer                             commandBuffer,
     uint32_t                                    vertexBindingDescriptionCount,
-    const VkVertexInputBindingDescription2EXT*  pVertexBindingDescriptions,
+    StructPointerDecoder<Decoded_VkVertexInputBindingDescription2EXT>* pVertexBindingDescriptions,
     uint32_t                                    vertexAttributeDescriptionCount,
-    const VkVertexInputAttributeDescription2EXT* pVertexAttributeDescriptions)
+    StructPointerDecoder<Decoded_VkVertexInputAttributeDescription2EXT>* pVertexAttributeDescriptions)
 {
     if (IsRecording(commandBuffer))
     {
-        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-        bool found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
-        if (found)
-        {
-            for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-            {
-                 func(*it, vertexBindingDescriptionCount, pVertexBindingDescriptions, vertexAttributeDescriptionCount, pVertexAttributeDescriptions);
-            }
-        }
-
-        VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
-        if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-        {
-             func(dispatch_rays_command_buffer, vertexBindingDescriptionCount, pVertexBindingDescriptions, vertexAttributeDescriptionCount, pVertexAttributeDescriptions);
-        }
+        OverrideCmdSetVertexInputEXT(call_info, func, commandBuffer, vertexBindingDescriptionCount, pVertexBindingDescriptions, vertexAttributeDescriptionCount, pVertexAttributeDescriptions);
     }
 }
 

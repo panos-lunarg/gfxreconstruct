@@ -129,7 +129,7 @@ void Process_vkCmdBindDescriptorSets(
     PFN_vkCmdBindDescriptorSets                 func,
     VkCommandBuffer                             commandBuffer,
     VkPipelineBindPoint                         pipelineBindPoint,
-    VkPipelineLayout                            layout,
+    const PipelineLayoutInfo*                   layout,
     uint32_t                                    firstSet,
     uint32_t                                    descriptorSetCount,
     HandlePointerDecoder<VkDescriptorSet>*      pDescriptorSets,
@@ -140,7 +140,7 @@ void Process_vkCmdBindIndexBuffer(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdBindIndexBuffer                    func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
     VkIndexType                                 indexType);
 
@@ -150,7 +150,7 @@ void Process_vkCmdBindVertexBuffers(
     VkCommandBuffer                             commandBuffer,
     uint32_t                                    firstBinding,
     uint32_t                                    bindingCount,
-    const VkBuffer*                             pBuffers,
+    HandlePointerDecoder<VkBuffer>*             pBuffers,
     const VkDeviceSize*                         pOffsets);
 
 void Process_vkCmdDraw(
@@ -176,7 +176,7 @@ void Process_vkCmdDrawIndirect(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdDrawIndirect                       func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
     uint32_t                                    drawCount,
     uint32_t                                    stride);
@@ -185,7 +185,7 @@ void Process_vkCmdDrawIndexedIndirect(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdDrawIndexedIndirect                func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
     uint32_t                                    drawCount,
     uint32_t                                    stride);
@@ -202,7 +202,7 @@ void Process_vkCmdDispatchIndirect(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdDispatchIndirect                   func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset);
 
 void Process_vkCmdCopyBuffer(
@@ -459,9 +459,9 @@ void Process_vkCmdDrawIndirectCount(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdDrawIndirectCount                  func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
-    VkBuffer                                    countBuffer,
+    const BufferInfo*                           countBuffer,
     VkDeviceSize                                countBufferOffset,
     uint32_t                                    maxDrawCount,
     uint32_t                                    stride);
@@ -470,9 +470,9 @@ void Process_vkCmdDrawIndexedIndirectCount(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdDrawIndexedIndirectCount           func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
-    VkBuffer                                    countBuffer,
+    const BufferInfo*                           countBuffer,
     VkDeviceSize                                countBufferOffset,
     uint32_t                                    maxDrawCount,
     uint32_t                                    stride);
@@ -619,7 +619,7 @@ void Process_vkCmdBindVertexBuffers2(
     VkCommandBuffer                             commandBuffer,
     uint32_t                                    firstBinding,
     uint32_t                                    bindingCount,
-    const VkBuffer*                             pBuffers,
+    HandlePointerDecoder<VkBuffer>*             pBuffers,
     const VkDeviceSize*                         pOffsets,
     const VkDeviceSize*                         pSizes,
     const VkDeviceSize*                         pStrides);
@@ -805,9 +805,9 @@ void Process_vkCmdDrawIndirectCountKHR(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdDrawIndirectCountKHR               func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
-    VkBuffer                                    countBuffer,
+    const BufferInfo*                           countBuffer,
     VkDeviceSize                                countBufferOffset,
     uint32_t                                    maxDrawCount,
     uint32_t                                    stride);
@@ -816,9 +816,9 @@ void Process_vkCmdDrawIndexedIndirectCountKHR(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdDrawIndexedIndirectCountKHR        func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
-    VkBuffer                                    countBuffer,
+    const BufferInfo*                           countBuffer,
     VkDeviceSize                                countBufferOffset,
     uint32_t                                    maxDrawCount,
     uint32_t                                    stride);
@@ -940,7 +940,7 @@ void Process_vkCmdBindIndexBuffer2KHR(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdBindIndexBuffer2KHR                func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    buffer,
+    const BufferInfo*                           buffer,
     VkDeviceSize                                offset,
     VkDeviceSize                                size,
     VkIndexType                                 indexType);
@@ -1481,9 +1481,9 @@ void Process_vkCmdSetVertexInputEXT(
     PFN_vkCmdSetVertexInputEXT                  func,
     VkCommandBuffer                             commandBuffer,
     uint32_t                                    vertexBindingDescriptionCount,
-    const VkVertexInputBindingDescription2EXT*  pVertexBindingDescriptions,
+    StructPointerDecoder<Decoded_VkVertexInputBindingDescription2EXT>* pVertexBindingDescriptions,
     uint32_t                                    vertexAttributeDescriptionCount,
-    const VkVertexInputAttributeDescription2EXT* pVertexAttributeDescriptions);
+    StructPointerDecoder<Decoded_VkVertexInputAttributeDescription2EXT>* pVertexAttributeDescriptions);
 
 
 
