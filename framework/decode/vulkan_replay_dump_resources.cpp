@@ -4233,29 +4233,77 @@ void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::ReleaseIndirectDraw
     for (auto& dc_param_entry : draw_call_params)
     {
         DrawCallParameters& dc_params = dc_param_entry.second;
-        if (dc_params.type == DrawCallTypes::kDrawIndirect &&
-            dc_params.dc_params_union.draw_indirect.draw_params != nullptr)
+        if (IsDrawCallIndirect(dc_params.type))
         {
-            delete[] dc_params.dc_params_union.draw_indirect.draw_params;
-        }
-        else if (dc_params.type == DrawCallTypes::kDrawIndexedIndirect &&
-                 dc_params.dc_params_union.draw_indirect.draw_indexed_params != nullptr)
-        {
-            delete[] dc_params.dc_params_union.draw_indirect.draw_indexed_params;
-        }
-
-        if (dc_params.type == DrawCallTypes::kDrawIndirect || dc_params.type == DrawCallTypes::kDrawIndexedIndirect)
-        {
-            if (dc_params.dc_params_union.draw_indirect.new_params_buffer != VK_NULL_HANDLE)
+            if (IsDrawCallIndirectCount(dc_params.type))
             {
-                device_table->DestroyBuffer(
-                    device_info->handle, dc_params.dc_params_union.draw_indirect.new_params_buffer, nullptr);
+                DrawCallParameters::DrawCallParamsUnion::DrawIndirectCountParams& ic_params =
+                    dc_params.dc_params_union.draw_indirect_count;
+
+                if (ic_params.draw_params != nullptr)
+                {
+                    delete[] ic_params.draw_params;
+                    ic_params.draw_params = nullptr;
+                }
+
+                if (ic_params.draw_indexed_params != nullptr)
+                {
+                    delete[] ic_params.draw_indexed_params;
+                    ic_params.draw_indexed_params = nullptr;
+                }
+
+                if (ic_params.new_params_buffer != VK_NULL_HANDLE)
+                {
+                    device_table->DestroyBuffer(device_info->handle, ic_params.new_params_buffer, nullptr);
+                    ic_params.new_params_buffer = VK_NULL_HANDLE;
+                }
+
+                if (ic_params.new_params_memory != VK_NULL_HANDLE)
+                {
+                    device_table->FreeMemory(device_info->handle, ic_params.new_params_memory, nullptr);
+                    ic_params.new_params_memory = VK_NULL_HANDLE;
+                }
+
+                if (ic_params.new_count_buffer != VK_NULL_HANDLE)
+                {
+                    device_table->DestroyBuffer(device_info->handle, ic_params.new_count_buffer, nullptr);
+                    ic_params.new_count_buffer = VK_NULL_HANDLE;
+                }
+
+                if (ic_params.new_count_memory != VK_NULL_HANDLE)
+                {
+                    device_table->FreeMemory(device_info->handle, ic_params.new_count_memory, nullptr);
+                    ic_params.new_count_memory = VK_NULL_HANDLE;
+                }
             }
-
-            if (dc_params.dc_params_union.draw_indirect.new_params_memory != VK_NULL_HANDLE)
+            else
             {
-                device_table->FreeMemory(
-                    device_info->handle, dc_params.dc_params_union.draw_indirect.new_params_memory, nullptr);
+                DrawCallParameters::DrawCallParamsUnion::DrawIndirectParams& i_params =
+                    dc_params.dc_params_union.draw_indirect;
+
+                if (i_params.draw_params != nullptr)
+                {
+                    delete[] i_params.draw_params;
+                    i_params.draw_params = nullptr;
+                }
+
+                if (i_params.draw_indexed_params != nullptr)
+                {
+                    delete[] i_params.draw_indexed_params;
+                    i_params.draw_indexed_params = nullptr;
+                }
+
+                if (i_params.new_params_buffer != VK_NULL_HANDLE)
+                {
+                    device_table->DestroyBuffer(device_info->handle, i_params.new_params_buffer, nullptr);
+                    i_params.new_params_buffer = VK_NULL_HANDLE;
+                }
+
+                if (i_params.new_params_memory != VK_NULL_HANDLE)
+                {
+                    device_table->FreeMemory(device_info->handle, i_params.new_params_memory, nullptr);
+                    i_params.new_params_memory = VK_NULL_HANDLE;
+                }
             }
         }
     }
