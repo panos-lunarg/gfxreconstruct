@@ -102,7 +102,7 @@ def CreateReplayParser():
     parser.add_argument('--dump-resources-dir', metavar='DIR', help='Directory to write dump resources output files. Default is "/sdcard" (forwarded to replay tool)')
     parser.add_argument('--dump-resources-dump-depth-attachment', action='store_true', default=False, help= 'Dump depth attachment when dumping a draw call. Default is false.')
     parser.add_argument('--dump-resources-dump-color-attachment-index', metavar='N', help='Specify which color attachment to dump when dumping draw calls. It should be an unsigned zero based integer. Default is to dump all color attachment')
-    parser.add_argument('--dump-resources-dump-vertex-index-buffers', action='store_true', default=False, help= 'Enables dumping of vertex and index buffers while dumping draw call resources.')
+    parser.add_argument('--dump-resources-dump-vertex-index-buffers', action='store_true', default=False, help= 'Enables dumping of vertex and index buffers while dumping draw call resources. Default is disabled.')
     return parser
 
 def MakeExtrasString(args):
