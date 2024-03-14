@@ -999,6 +999,8 @@ optional arguments:
   --dump-resources-dump-color-attachment-index
               Specify which color attachment to dump when dumping draw calls. It should be an unsigned zero
               based integer. Default is to dump all color attachment
+  --dump-resources-dump-vertex-index-buffers
+              Enables dumping of vertex and index buffers while dumping draw call resources.
 ```
 
 The command will force-stop an active replay process before starting the replay
