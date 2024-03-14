@@ -33,7 +33,6 @@
 #include "decode/vulkan_object_info.h"
 #include "decode/vulkan_object_info_table.h"
 #include "decode/vulkan_replay_options.h"
-#include "decode/vulkan_replay_dump_resources.h"
 #include "decode/vulkan_resource_allocator.h"
 #include "decode/vulkan_resource_tracking_consumer.h"
 #include "decode/vulkan_resource_initializer.h"

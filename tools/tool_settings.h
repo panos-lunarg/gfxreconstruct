@@ -124,13 +124,15 @@ const char kDxTwoPassReplay[]             = "--dx12-two-pass-replay";
 const char kDxOverrideObjectNames[]       = "--dx12-override-object-names";
 const char kBatchingMemoryUsageArgument[] = "--batching-memory-usage";
 #endif
-const char kDumpResourcesArgument[]         = "--dump-resources";
-const char kDumpResourcesBeforeDrawOption[] = "--dump-resources-before-draw";
-const char kDumpResourcesImageFormat[]      = "--dump-resources-image-format";
-const char kDumpResourcesScaleArgument[]    = "--dump-resources-scale";
-const char kDumpResourcesDepth[]            = "--dump-resources-dump-depth-attachment";
-const char kDumpResourcesDirArgument[]      = "--dump-resources-dir";
-const char kDumpResourcesColorAttIdxArg[]   = "--dump-resources-dump-color-attachment-index";
+
+const char kDumpResourcesArgument[]               = "--dump-resources";
+const char kDumpResourcesBeforeDrawOption[]       = "--dump-resources-before-draw";
+const char kDumpResourcesImageFormat[]            = "--dump-resources-image-format";
+const char kDumpResourcesScaleArgument[]          = "--dump-resources-scale";
+const char kDumpResourcesDepth[]                  = "--dump-resources-dump-depth-attachment";
+const char kDumpResourcesDirArgument[]            = "--dump-resources-dir";
+const char kDumpResourcesColorAttIdxArg[]         = "--dump-resources-dump-color-attachment-index";
+const char kDumpResourcesDumpVertexIndexBuffers[] = "--dump-resources-dump-vertex-index-buffers";
 
 enum class WsiPlatform
 {
@@ -1115,6 +1117,8 @@ GetVulkanReplayOptions(const gfxrecon::util::ArgumentParser&           arg_parse
     replay_options.dump_resources_scale        = GetDumpResourcesScale(arg_parser);
     replay_options.dump_resources_output_dir   = GetDumpResourcesDir(arg_parser);
     replay_options.dumping_resources           = !replay_options.dump_resources.empty();
+    replay_options.dump_resources_dump_vertex_index_buffer =
+        arg_parser.IsOptionSet(kDumpResourcesDumpVertexIndexBuffers);
 
     std::string dr_color_att_idx = arg_parser.GetArgumentValue(kDumpResourcesColorAttIdxArg);
     if (!dr_color_att_idx.empty())

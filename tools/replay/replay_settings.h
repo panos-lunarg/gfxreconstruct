@@ -32,7 +32,8 @@ const char kOptions[] =
     "screenshot-all,--onhb|--omit-null-hardware-buffers,--qamr|--quit-after-measurement-range,--fmr|--flush-"
     "measurement-range,--flush-inside-measurement-range,--vssb|--virtual-swapchain-skip-blit,--use-captured-swapchain-"
     "indices,--dcp,--discard-cached-psos,--use-colorspace-fallback,--use-cached-psos,--dx12-override-object-names,--"
-    "offscreen-swapchain-frame-boundary,--dump-resources-before-draw,--dump-resources-dump-depth-attachment";
+    "offscreen-swapchain-frame-boundary,--dump-resources-before-draw,--dump-resources-dump-depth-attachment,--dump-"
+    "resources-dump-vertex-index-buffers";
 const char kArguments[] =
     "--log-level,--log-file,--gpu,--gpu-group,--pause-frame,--wsi,--surface-index,-m|--memory-translation,"
     "--replace-shaders,--screenshots,--denied-messages,--allowed-messages,--screenshot-format,--"
@@ -282,6 +283,7 @@ static void PrintUsage(const char* exe_name)
                            "vkCmdTraceRaysKHR is replayed.");
     GFXRECON_WRITE_CONSOLE("  --dump-resources <filename>");
     GFXRECON_WRITE_CONSOLE("          \t\tExtract --dump-resources args from the specified file.");
+    // clang-format off
     GFXRECON_WRITE_CONSOLE("  --dump-resources <args>");
     GFXRECON_WRITE_CONSOLE(
         "          \t\tArgs is "
@@ -310,11 +312,10 @@ static void PrintUsage(const char* exe_name)
     GFXRECON_WRITE_CONSOLE(
         "          \t\tImage file format to use when dumping image resources. Available formats are: bmp, png");
     GFXRECON_WRITE_CONSOLE("  --dump-resources-dump-depth-attachment");
-    GFXRECON_WRITE_CONSOLE(
-        "          \t\tConfigures whether to dump the depth attachment of draw calls. Default is false.");
+    GFXRECON_WRITE_CONSOLE("          \t\tConfigures whether to dump the depth attachment of draw calls. Default is false.");
     GFXRECON_WRITE_CONSOLE("  --dump-resources-dump-color-attachment-index");
-    GFXRECON_WRITE_CONSOLE(
-        "          \t\tConfigures which color attachment to dump when dumping draw calls. Default is all attachments.");
+    GFXRECON_WRITE_CONSOLE("          \t\tConfigures which color attachment to dump when dumping draw calls. Default is all attachments.");
+    // clang-format on
 
 #if defined(WIN32)
     GFXRECON_WRITE_CONSOLE("")
