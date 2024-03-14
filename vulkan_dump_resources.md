@@ -263,6 +263,9 @@ Dump resources feature can be control in several ways. To do so, a number of par
               based integer. Default is to dump all color attachment
   --dump-resources-dump-vertex-index-buffers
               Enables dumping of vertex and index buffers while dumping draw call resources.
+  --dump-resources-json-output-per-command
+              Enables storing a json output file for each dumped command. Overrides default behavior which
+              is generating one output json file that contains the information for all dumped commands.
 ```
 
 ## Output

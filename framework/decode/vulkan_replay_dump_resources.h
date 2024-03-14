@@ -432,6 +432,7 @@ class VulkanReplayDumpResourcesBase
         bool                               dump_depth;
         int32_t                            color_attachment_to_dump;
         bool                               dump_vertex_index_buffers;
+        bool                               output_json_per_command;
 
         std::vector<std::vector<VkRenderPass>> render_pass_clones;
 
@@ -908,6 +909,7 @@ class VulkanReplayDumpResourcesBase
         util::ScreenshotFormat         image_file_format;
         float                          dump_resources_scale;
         VulkanReplayDumpResourcesJson& dump_json;
+        bool                           output_json_per_command;
 
         descriptor_set_t bound_descriptor_sets[kBindPoint_count];
 
@@ -956,6 +958,7 @@ class VulkanReplayDumpResourcesBase
 
   private:
     VulkanReplayDumpResourcesJson dump_json_;
+    bool                          output_json_per_command;
 
     bool UpdateRecordingStatus();
 
