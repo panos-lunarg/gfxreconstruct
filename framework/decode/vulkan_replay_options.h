@@ -94,6 +94,7 @@ struct VulkanReplayOptions : public ReplayOptions
     int   dump_resources_color_attachment_index{ kUnspecifiedColorAttachment };
     float dump_resources_scale{ 1.0f };
     bool  dump_resources_dump_vertex_index_buffer{ false };
+    bool  dump_resources_json_per_command{ false };
 };
 
 GFXRECON_END_NAMESPACE(decode)

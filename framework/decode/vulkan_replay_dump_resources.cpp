@@ -331,14 +331,18 @@ static uint32_t FindGreatestVertexIndex(const std::vector<uint8_t>& index_data,
 VulkanReplayDumpResourcesBase::VulkanReplayDumpResourcesBase(const VulkanReplayOptions&   options,
                                                              const VulkanObjectInfoTable& object_info_table) :
     QueueSubmit_indices_(options.QueueSubmit_Indices),
-    recording_(false), dump_resources_before_(options.dump_resources_before), object_info_table_(object_info_table)
+    recording_(false), dump_resources_before_(options.dump_resources_before), object_info_table_(object_info_table),
+    output_json_per_command(options.dump_resources_json_per_command)
 {
     if (!options.Draw_Indices.size() && !options.Dispatch_Indices.size() && !options.TraceRays_Indices.size())
     {
         return;
     }
 
-    dump_json_.VulkanReplayDumpResourcesJsonOpen(options.filename, options.dump_resources_output_dir);
+    if (!options.dump_resources_json_per_command)
+    {
+        dump_json_.VulkanReplayDumpResourcesJsonOpen(options.filename, options.dump_resources_output_dir);
+    }
 
     for (size_t i = 0; i < options.BeginCommandBuffer_Indices.size(); ++i)
     {
@@ -1472,7 +1476,10 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpDrawCallsAt
                           dc_indices[CmdBufToDCVectorIndex(cb)],
                           bcb_index);
 
-        dump_json.VulkanReplayDumpResourcesJsonBlockStart();
+        if (!output_json_per_command)
+        {
+            dump_json.VulkanReplayDumpResourcesJsonBlockStart();
+        }
 
         VkSubmitInfo si;
         si.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1541,7 +1548,10 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpDrawCallsAt
         //     return res;
         // }
 
-        dump_json.VulkanReplayDumpResourcesJsonBlockEnd();
+        if (!output_json_per_command)
+        {
+            dump_json.VulkanReplayDumpResourcesJsonBlockEnd();
+        }
     }
 
     return VK_SUCCESS;
@@ -1627,6 +1637,21 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
                                                 *instance_table,
                                                 *phys_dev_info->replay_device_info->memory_properties);
 
+    VulkanReplayDumpResourcesJson  draw_call_output_json;
+    VulkanReplayDumpResourcesJson* output_json_writer;
+    if (output_json_per_command)
+    {
+        const std::string dc_json_filename = "DrawCall_" + std::to_string(dc_index);
+        draw_call_output_json.VulkanReplayDumpResourcesJsonOpen(dc_json_filename, dump_resource_path);
+        draw_call_output_json.VulkanReplayDumpResourcesJsonBlockStart();
+
+        output_json_writer = &draw_call_output_json;
+    }
+    else
+    {
+        output_json_writer = &dump_json;
+    }
+
     // Dump color attachments
     for (size_t i = 0; i < render_targets[rp][sp].color_att_imgs.size(); ++i)
     {
@@ -1671,9 +1696,9 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
 
         util::imagewriter::DataFormats output_image_format = VkFormatToImageWriterDataFormat(image_info->format);
         const std::string              filename = GenerateImageFilename(image_info->format, cmd_buf_index, dc_index, i);
-        dump_json.VulkanReplayDumpResourcesJsonData("DrawIndex", dc_index);
-        dump_json.VulkanReplayDumpResourcesJsonData("BeginCommandBufferIndex", bcb_index);
-        dump_json.VulkanReplayDumpResourcesJsonData("QueueSubmitIndex", qs_index);
+        output_json_writer->VulkanReplayDumpResourcesJsonData("DrawIndex", dc_index);
+        output_json_writer->VulkanReplayDumpResourcesJsonData("BeginCommandBufferIndex", bcb_index);
+        output_json_writer->VulkanReplayDumpResourcesJsonData("QueueSubmitIndex", qs_index);
         if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
         {
             VkExtent3D scaled_extent;
@@ -1688,7 +1713,8 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
                 scaled_extent = image_info->extent;
             }
 
-            dump_json.VulkanReplayDumpResourcesJsonData(("RenderTargetImage_" + std::to_string(i)).c_str(), filename);
+            output_json_writer->VulkanReplayDumpResourcesJsonData(("RenderTargetImage_" + std::to_string(i)).c_str(),
+                                                                  filename);
 
             const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
             const uint32_t stride     = texel_size * scaled_extent.width;
@@ -1716,7 +1742,8 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
         }
         else
         {
-            dump_json.VulkanReplayDumpResourcesJsonData(("RenderTargetImage_" + std::to_string(i)).c_str(), filename);
+            output_json_writer->VulkanReplayDumpResourcesJsonData(("RenderTargetImage_" + std::to_string(i)).c_str(),
+                                                                  filename);
             util::bufferwriter::WriteBuffer(filename, data.data(), data.size());
         }
     }
@@ -1774,7 +1801,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
                 scaled_extent = image_info->extent;
             }
 
-            dump_json.VulkanReplayDumpResourcesJsonData("RenderTargetDepth", filename);
+            output_json_writer->VulkanReplayDumpResourcesJsonData("RenderTargetDepth", filename);
 
             // This is a bit awkward
             const uint32_t texel_size =
@@ -1806,7 +1833,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
         }
         else
         {
-            dump_json.VulkanReplayDumpResourcesJsonData("RenderTargetDepth", filename);
+            output_json_writer->VulkanReplayDumpResourcesJsonData("RenderTargetDepth", filename);
             util::bufferwriter::WriteBuffer(filename, data.data(), data.size());
         }
     }
@@ -1829,7 +1856,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
                     const std::string index_buffer_filename = GenerateIndexBufferFilename(
                         dc_param.referenced_bind_index_buffer, bound_index_buffer_entry->second.index_type);
 
-                    dump_json.VulkanReplayDumpResourcesJsonData("IndexBuffer", index_buffer_filename);
+                    output_json_writer->VulkanReplayDumpResourcesJsonData("IndexBuffer", index_buffer_filename);
                 }
             }
 
@@ -1841,10 +1868,17 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
                 {
                     const std::string vb_filename =
                         GenerateVertexBufferFilename(dc_param.referenced_bind_vertex_buffers, vb_binding.first);
-                    dump_json.VulkanReplayDumpResourcesJsonData(("VertexBuffer_" + std::to_string(i++)), vb_filename);
+                    output_json_writer->VulkanReplayDumpResourcesJsonData(("VertexBuffer_" + std::to_string(i++)),
+                                                                          vb_filename);
                 }
             }
         }
+    }
+
+    if (output_json_per_command)
+    {
+        draw_call_output_json.VulkanReplayDumpResourcesJsonBlockEnd();
+        draw_call_output_json.VulkanReplayDumpResourcesJsonClose();
     }
 
     return VK_SUCCESS;
@@ -2577,7 +2611,11 @@ VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitIn
             // the VulkanReplayDumpResourcesJson destructor. But the destructor
             // doesn't get called when exit(0) is called, so we call this method
             // instead.
-            dump_json_.VulkanReplayDumpResourcesJsonClose();
+            if (!output_json_per_command)
+            {
+                dump_json_.VulkanReplayDumpResourcesJsonClose();
+            }
+
             exit(0);
         }
     }
@@ -4095,6 +4133,7 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DrawCallsDumpingContext(
     dump_json(dump_json), dump_depth(options.dump_resources_dump_depth),
     color_attachment_to_dump(options.dump_resources_color_attachment_index),
     dump_vertex_index_buffers(options.dump_resources_dump_vertex_index_buffer),
+    output_json_per_command(options.dump_resources_json_per_command),
     currently_bound_vertex_buffers(bound_vertex_buffers.end()), currently_bound_index_buffer(bound_index_buffers.end())
 {
     must_backup_resources = (dc_indices.size() > 1);
@@ -4767,7 +4806,7 @@ VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DispatchTraceRay
     dump_resource_path(options.dump_resources_output_dir), image_file_format(options.dump_resources_image_format),
     dump_resources_scale(options.dump_resources_scale), device_table(nullptr), instance_table(nullptr),
     object_info_table(object_info_table), replay_device_phys_mem_props(nullptr), current_dispatch_index(0),
-    current_trace_rays_index(0), dump_json(dump_json)
+    current_trace_rays_index(0), dump_json(dump_json), output_json_per_command(options.dump_resources_json_per_command)
 {}
 
 VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::~DispatchTraceRaysDumpingContext()
@@ -5502,15 +5541,30 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpMut
                                                 *instance_table,
                                                 *phys_dev_info->replay_device_info->memory_properties);
 
+    VulkanReplayDumpResourcesJson  draw_call_output_json;
+    VulkanReplayDumpResourcesJson* output_json_writer;
+    if (output_json_per_command)
+    {
+        const std::string dc_json_filename = (is_dispatch ? "Dispatch_" : "TraceRays_") + std::to_string(index);
+        draw_call_output_json.VulkanReplayDumpResourcesJsonOpen(dc_json_filename, dump_resource_path);
+        draw_call_output_json.VulkanReplayDumpResourcesJsonBlockStart();
+
+        output_json_writer = &draw_call_output_json;
+    }
+    else
+    {
+        output_json_writer = &dump_json;
+    }
+
     if (dump_resources_before)
     {
         assert(mutable_resources_clones_before.size());
         assert(mutable_resources_clones_before.find(index) != mutable_resources_clones_before.end());
 
-        dump_json.VulkanReplayDumpResourcesJsonBlockStart();
-        dump_json.VulkanReplayDumpResourcesJsonData(is_dispatch ? "DispatchIndex" : "TraceRaysIndex", index);
-        dump_json.VulkanReplayDumpResourcesJsonData("BeginCommandBufferIndex", bcb_index);
-        dump_json.VulkanReplayDumpResourcesJsonData("QueueSubmitIndex", qs_index);
+        output_json_writer->VulkanReplayDumpResourcesJsonBlockStart();
+        output_json_writer->VulkanReplayDumpResourcesJsonData(is_dispatch ? "DispatchIndex" : "TraceRaysIndex", index);
+        output_json_writer->VulkanReplayDumpResourcesJsonData("BeginCommandBufferIndex", bcb_index);
+        output_json_writer->VulkanReplayDumpResourcesJsonData("QueueSubmitIndex", qs_index);
 
         // Dump images
         for (size_t i = 0; i < mutable_resources_clones_before[index].original_images.size(); ++i)
@@ -5549,7 +5603,8 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpMut
             std::string filename =
                 GenerateImageFilename(image_info->format, is_dispatch, index, desc_set, binding, true);
             util::imagewriter::DataFormats output_image_format = VkFormatToImageWriterDataFormat(image_info->format);
-            dump_json.VulkanReplayDumpResourcesJsonData(("RenderTargetImage_" + std::to_string(i)).c_str(), filename);
+            output_json_writer->VulkanReplayDumpResourcesJsonData(("RenderTargetImage_" + std::to_string(i)).c_str(),
+                                                                  filename);
             if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
             {
                 VkExtent3D scaled_extent;
@@ -5618,15 +5673,15 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpMut
 
             util::bufferwriter::WriteBuffer(filename, data.data(), data.size());
         }
-        dump_json.VulkanReplayDumpResourcesJsonBlockEnd();
+        output_json_writer->VulkanReplayDumpResourcesJsonBlockEnd();
     }
 
     assert(mutable_resources_clones.find(index) != mutable_resources_clones.end());
 
-    dump_json.VulkanReplayDumpResourcesJsonBlockStart();
-    dump_json.VulkanReplayDumpResourcesJsonData("BeginCommandBufferIndex", bcb_index);
-    dump_json.VulkanReplayDumpResourcesJsonData(is_dispatch ? "DispatchIndex" : "TraceRaysIndex", index);
-    dump_json.VulkanReplayDumpResourcesJsonData("QueueSubmitIndex", qs_index);
+    output_json_writer->VulkanReplayDumpResourcesJsonBlockStart();
+    output_json_writer->VulkanReplayDumpResourcesJsonData("BeginCommandBufferIndex", bcb_index);
+    output_json_writer->VulkanReplayDumpResourcesJsonData(is_dispatch ? "DispatchIndex" : "TraceRaysIndex", index);
+    output_json_writer->VulkanReplayDumpResourcesJsonData("QueueSubmitIndex", qs_index);
 
     for (size_t i = 0; i < mutable_resources_clones[index].original_images.size(); ++i)
     {
@@ -5663,7 +5718,8 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpMut
         uint32_t    binding  = mutable_resources_clones[index].image_desc_set_binding_pair[i].second;
         std::string filename = GenerateImageFilename(image_info->format, is_dispatch, index, desc_set, binding, false);
         util::imagewriter::DataFormats output_image_format = VkFormatToImageWriterDataFormat(image_info->format);
-        dump_json.VulkanReplayDumpResourcesJsonData(("RenderTargetImage_" + std::to_string(i)).c_str(), filename);
+        output_json_writer->VulkanReplayDumpResourcesJsonData(("RenderTargetImage_" + std::to_string(i)).c_str(),
+                                                              filename);
         if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
         {
             VkExtent3D scaled_extent;
@@ -5728,7 +5784,16 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpMut
 
         util::bufferwriter::WriteBuffer(filename, data.data(), data.size());
     }
-    dump_json.VulkanReplayDumpResourcesJsonBlockEnd();
+
+    if (output_json_per_command)
+    {
+        draw_call_output_json.VulkanReplayDumpResourcesJsonBlockEnd();
+        draw_call_output_json.VulkanReplayDumpResourcesJsonClose();
+    }
+    else
+    {
+        dump_json.VulkanReplayDumpResourcesJsonBlockEnd();
+    }
 
     return VK_SUCCESS;
 }

@@ -33,7 +33,7 @@ const char kOptions[] =
     "measurement-range,--flush-inside-measurement-range,--vssb|--virtual-swapchain-skip-blit,--use-captured-swapchain-"
     "indices,--dcp,--discard-cached-psos,--use-colorspace-fallback,--use-cached-psos,--dx12-override-object-names,--"
     "offscreen-swapchain-frame-boundary,--dump-resources-before-draw,--dump-resources-dump-depth-attachment,--dump-"
-    "resources-dump-vertex-index-buffers";
+    "resources-dump-vertex-index-buffers,--dump-resources-json-output-per-command";
 const char kArguments[] =
     "--log-level,--log-file,--gpu,--gpu-group,--pause-frame,--wsi,--surface-index,-m|--memory-translation,"
     "--replace-shaders,--screenshots,--denied-messages,--allowed-messages,--screenshot-format,--"
@@ -295,6 +295,10 @@ static void PrintUsage(const char* exe_name)
     GFXRECON_WRITE_CONSOLE("  --dump-resources-dump-vertex-index-buffers");
     GFXRECON_WRITE_CONSOLE("          \t\tEnables dumping of vertex and index buffers while dumping draw");
     GFXRECON_WRITE_CONSOLE("          \t\tcall resources. Default is disabled.");
+    GFXRECON_WRITE_CONSOLE("  --dump-resources-json-output-per-command");
+    GFXRECON_WRITE_CONSOLE("          \t\tEnables storing a json output file for each dumped command.");
+    GFXRECON_WRITE_CONSOLE("          \t\tOverrides default behavior which is generating one output json file that");
+    GFXRECON_WRITE_CONSOLE("          \t\tcontains the information for all dumped commands.");
 
 #if defined(WIN32)
     GFXRECON_WRITE_CONSOLE("")
