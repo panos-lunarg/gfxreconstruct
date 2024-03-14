@@ -842,7 +842,7 @@ void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyVertexInputStat
 
     // If VK_DYNAMIC_STATE_VERTEX_INPUT_EXT is enabled then get all vertex input state from
     // vkCmdSetVertexInputEXT
-    if (gr_pipeline_info->dynamic_vertex_input)
+    if (gr_pipeline_info == nullptr || gr_pipeline_info->dynamic_vertex_input)
     {
         currently_bound_vertex_buffers->second.vertex_input_state = dynamic_vertex_input_state;
     }
@@ -1836,12 +1836,11 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
                 }
             }
 
-            const PipelineInfo* gr_pipeline_info = bound_pipelines[kBindPoint_graphics];
-            if (gr_pipeline_info != nullptr && gr_pipeline_info->vertex_input_binding_map.size() &&
-                dc_param.referenced_bind_vertex_buffers != INVALID_BLOCK_INDEX)
+            const auto& dc_vbo = bound_vertex_buffers.find(dc_param.referenced_bind_vertex_buffers);
+            if (dc_vbo != bound_vertex_buffers.end())
             {
                 uint32_t i = 0;
-                for (const auto& vb_binding : gr_pipeline_info->vertex_input_binding_map)
+                for (const auto& vb_binding : dc_vbo->second.vertex_input_state.input_binding_map)
                 {
                     const std::string vb_filename =
                         GenerateVertexBufferFilename(dc_param.referenced_bind_vertex_buffers, vb_binding.first);
