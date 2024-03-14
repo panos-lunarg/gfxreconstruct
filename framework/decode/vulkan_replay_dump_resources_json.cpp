@@ -22,7 +22,8 @@
 
 #include "vulkan_replay_dump_resources_json.h"
 #include "project_version.h"
-#include "vulkan_replay_dump_resources.h"
+#include "util/logging.h"
+#include "vulkan/vulkan.h"
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)

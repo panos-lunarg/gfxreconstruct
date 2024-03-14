@@ -1239,7 +1239,7 @@ void VulkanStateWriter::ProcessBufferMemory(const DeviceWrapper*                
         if (snapshot_entry.need_staging_copy)
         {
             VkResult result = resource_util.ReadFromBufferResource(
-                buffer_wrapper->handle, buffer_wrapper->created_size, buffer_wrapper->queue_family_index, data);
+                buffer_wrapper->handle, buffer_wrapper->created_size, 0, buffer_wrapper->queue_family_index, data);
 
             if (result == VK_SUCCESS)
             {
@@ -1849,8 +1849,8 @@ void VulkanStateWriter::WriteSwapchainImageState(const VulkanStateTable& state_t
 
         const DeviceWrapper* device_wrapper = wrapper->device;
         size_t               image_count    = wrapper->child_images.size() > wrapper->image_acquired_info.size()
-                                                  ? wrapper->image_acquired_info.size()
-                                                  : wrapper->child_images.size();
+                                 ? wrapper->image_acquired_info.size()
+                                 : wrapper->child_images.size();
 
         format::SetSwapchainImageStateCommandHeader header;
         format::SwapchainImageStateInfo             info;

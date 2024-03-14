@@ -357,10 +357,17 @@ struct PipelineCacheInfo : public VulkanObjectInfo<VkPipelineCache>
 
 struct ShaderModuleInfo : public VulkanObjectInfo<VkShaderModule>
 {
+    // All information stored in ShaderModuleInfo is populated and used
+    // by the dump resources feature
     struct DescriptorInfo
     {
-        DescriptorInfo(VkDescriptorType type, bool readonly, uint32_t accessed) : type(type), readonly(readonly), accessed(accessed) {}
-        DescriptorInfo(const DescriptorInfo& other) : type(other.type), readonly(other.readonly), accessed(other.accessed) {}
+        DescriptorInfo(VkDescriptorType type, bool readonly, uint32_t accessed) :
+            type(type), readonly(readonly), accessed(accessed)
+        {}
+
+        DescriptorInfo(const DescriptorInfo& other) :
+            type(other.type), readonly(other.readonly), accessed(other.accessed)
+        {}
 
         VkDescriptorType type;
         bool             readonly;
@@ -380,13 +387,45 @@ struct ShaderModuleInfo : public VulkanObjectInfo<VkShaderModule>
     using DescriptorSetsInfos = std::map<uint32_t, DescriptorSetInfo>;
 
     DescriptorSetsInfos used_descriptors_info;
+
+    // An entry for each input variables declared in the shader. Key is variable's location.
+    std::unordered_map<uint32_t, bool> input_info;
 };
 
 struct PipelineInfo : public VulkanObjectInfo<VkPipeline>
 {
     std::unordered_map<uint32_t, size_t> array_counts;
 
+    // The following information is populated and used only when the
+    // dump resources feature is in use
     std::unordered_map<VkShaderStageFlagBits, ShaderModuleInfo> shaders;
+
+    struct InputBindingDescription
+    {
+        uint32_t          stride;
+        VkVertexInputRate inputRate;
+    };
+
+    struct InputAttributeDescription
+    {
+        uint32_t binding;
+        VkFormat format;
+        uint32_t offset;
+    };
+
+    // One entry per binding
+    using VertexInputBindingMap = std::unordered_map<uint32_t, InputBindingDescription>;
+    VertexInputBindingMap vertex_input_binding_map;
+
+    // One entry per location
+    using VertexInputAttributeMap = std::unordered_map<uint32_t, InputAttributeDescription>;
+    VertexInputAttributeMap vertex_input_attribute_map;
+
+    // Is VK_DYNAMIC_STATE_VERTEX_INPUT_EXT enabled
+    bool dynamic_vertex_input{ false };
+
+    // Is VK_DYNAMIC_STATE_VERTEX_INPUT_BINDING_STRIDE_EXT enabled
+    bool dynamic_vertex_binding_stride{ false };
 };
 
 struct DescriptorPoolInfo : public VulkanPoolInfo<VkDescriptorPool>
