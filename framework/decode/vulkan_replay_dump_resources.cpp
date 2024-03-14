@@ -1630,7 +1630,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
     // Dump color attachments
     for (size_t i = 0; i < render_targets[rp][sp].color_att_imgs.size(); ++i)
     {
-        if (color_attachment_to_dump != UNSPECIFIED_COLOR_ATTACHMENT_INDEX &&
+        if (color_attachment_to_dump != kUnspecifiedColorAttachment &&
             static_cast<size_t>(color_attachment_to_dump) != i)
         {
             continue;
@@ -1821,7 +1821,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
             const DrawCallParameters& dc_param = dc_param_entry->second;
             if (IsDrawCallIndexed(dc_param.type))
             {
-                assert(dc_param.referenced_bind_index_buffer != INVALID_BLOCK_INDEX);
+                assert(dc_param.referenced_bind_index_buffer != DrawCallParameters::INVALID_BLOCK_INDEX);
                 const auto bound_index_buffer_entry = bound_index_buffers.find(dc_param.referenced_bind_index_buffer);
                 assert(bound_index_buffer_entry != bound_index_buffers.end());
                 if (bound_index_buffer_entry != bound_index_buffers.end())
@@ -2109,7 +2109,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
 
             const DrawCallParameters& dc_params = dc_params_entry->second;
             assert(IsDrawCallIndexed(dc_params.type));
-            assert(dc_params.referenced_bind_index_buffer != INVALID_BLOCK_INDEX);
+            assert(dc_params.referenced_bind_index_buffer != DrawCallParameters::INVALID_BLOCK_INDEX);
 
             if (IsDrawCallIndirect(dc_params.type))
             {
@@ -2258,12 +2258,12 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
             assert(dc_params_entry != draw_call_params.end());
 
             const DrawCallParameters& dc_params = dc_params_entry->second;
-            assert(dc_params.referenced_bind_vertex_buffers != INVALID_BLOCK_INDEX);
+            assert(dc_params.referenced_bind_vertex_buffers != DrawCallParameters::INVALID_BLOCK_INDEX);
 
             if (IsDrawCallIndexed(dc_params.type))
             {
                 // For indexed draw calls the greatest vertex index will be used as the max vertex count
-                assert(dc_params.referenced_bind_index_buffer != INVALID_BLOCK_INDEX);
+                assert(dc_params.referenced_bind_index_buffer != DrawCallParameters::INVALID_BLOCK_INDEX);
                 const auto max_vertex_index_entry =
                     max_vertex_index_per_index_buffer.find(dc_params.referenced_bind_index_buffer);
                 assert(max_vertex_index_entry != max_vertex_index_per_index_buffer.end());
