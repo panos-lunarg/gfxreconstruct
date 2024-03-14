@@ -41,6 +41,10 @@ typedef std::function<VulkanResourceAllocator*()> CreateResourceAllocator;
 // Default log level to use prior to loading settings.
 const util::Log::Severity kDefaultLogLevel = util::Log::Severity::kInfoSeverity;
 
+// Default color attachment index selection for dump resources feature.
+// This default value essentially defines to dump all attachments.
+static constexpr int kUnspecifiedColorAttachment = -1;
+
 struct VulkanReplayOptions : public ReplayOptions
 {
     bool                         enable_vulkan{ true };
@@ -76,7 +80,7 @@ struct VulkanReplayOptions : public ReplayOptions
     bool  dumping_resources{ false };
     bool  dump_resources_before{ false };
     bool  dump_resources_dump_depth{ false };
-    int   dump_resources_color_attachment_index{ -1 };
+    int   dump_resources_color_attachment_index{ kUnspecifiedColorAttachment };
     float dump_resources_scale{ 1.0f };
     bool  dump_resources_dump_vertex_index_buffer{ false };
 };

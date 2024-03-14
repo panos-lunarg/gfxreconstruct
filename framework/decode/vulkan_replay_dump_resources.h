@@ -41,9 +41,6 @@
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(decode)
 
-static constexpr int32_t  UNSPECIFIED_COLOR_ATTACHMENT_INDEX = -1;
-static constexpr uint64_t INVALID_BLOCK_INDEX                = std::numeric_limits<uint64_t>::max();
-
 class VulkanReplayDumpResourcesBase
 {
   public:
@@ -622,6 +619,8 @@ class VulkanReplayDumpResourcesBase
 
         struct DrawCallParameters
         {
+            static constexpr uint64_t INVALID_BLOCK_INDEX = std::numeric_limits<uint64_t>::max();
+
             union DrawCallParamsUnion
             {
                 struct DrawParams
