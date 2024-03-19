@@ -1178,6 +1178,10 @@ class VulkanReplayConsumerBase : public VulkanConsumer
     bool CheckCommandBufferInfoForFrameBoundary(const CommandBufferInfo* command_buffer_info);
     bool CheckPNextChainForFrameBoundary(const DeviceInfo* device_info, const Decoded_VkBaseOutStructure* current);
 
+    void UpdateDescriptorSetInfoWithTemplate(DescriptorSetInfo*                     desc_set_info,
+                                             const DescriptorUpdateTemplateInfo*    template_info,
+                                             const DescriptorUpdateTemplateDecoder* decoder) const;
+
   private:
     struct HardwareBufferInfo
     {

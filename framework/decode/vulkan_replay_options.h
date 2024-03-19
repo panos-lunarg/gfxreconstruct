@@ -84,6 +84,7 @@ struct VulkanReplayOptions : public ReplayOptions
     float dump_resources_scale{ 1.0f };
     bool  dump_resources_dump_vertex_index_buffer{ false };
     bool  dump_resources_json_per_command{ false };
+    bool  dump_resources_dump_immutable_resources{ false };
 };
 
 GFXRECON_END_NAMESPACE(decode)

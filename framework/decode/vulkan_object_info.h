@@ -348,6 +348,7 @@ struct ImageInfo : public VulkanObjectInfo<VkImage>
     uint32_t              queue_family_index{ 0 };
 
     VkImageLayout current_layout{ VK_IMAGE_LAYOUT_UNDEFINED };
+    VkImageLayout intermediate_layout{ VK_IMAGE_LAYOUT_UNDEFINED };
 };
 
 struct PipelineCacheInfo : public VulkanObjectInfo<VkPipelineCache>
@@ -359,19 +360,22 @@ struct ShaderModuleInfo : public VulkanObjectInfo<VkShaderModule>
 {
     // All information stored in ShaderModuleInfo is populated and used
     // by the dump resources feature
-    struct DescriptorInfo
+    struct ShaderDescriptorInfo
     {
-        DescriptorInfo(VkDescriptorType type, bool readonly, uint32_t accessed) :
-            type(type), readonly(readonly), accessed(accessed)
+        ShaderDescriptorInfo(VkDescriptorType type, bool readonly, uint32_t accessed, uint32_t count, bool is_array) :
+            type(type), readonly(readonly), accessed(accessed), count(count), is_array(is_array)
         {}
 
-        DescriptorInfo(const DescriptorInfo& other) :
-            type(other.type), readonly(other.readonly), accessed(other.accessed)
+        ShaderDescriptorInfo(const ShaderDescriptorInfo& other) :
+            type(other.type), readonly(other.readonly), accessed(other.accessed), count(other.count),
+            is_array(other.is_array)
         {}
 
         VkDescriptorType type;
         bool             readonly;
         uint32_t         accessed;
+        uint32_t         count;
+        bool             is_array;
     };
 
     ShaderModuleInfo() = default;
@@ -383,13 +387,13 @@ struct ShaderModuleInfo : public VulkanObjectInfo<VkShaderModule>
         used_descriptors_info = other.used_descriptors_info;
     }
 
-    using DescriptorSetInfo   = std::map<uint32_t, DescriptorInfo>;
-    using DescriptorSetsInfos = std::map<uint32_t, DescriptorSetInfo>;
+    // One entry per descriptor binding
+    using ShaderDescriptorSetInfo = std::map<uint32_t, ShaderDescriptorInfo>;
 
-    DescriptorSetsInfos used_descriptors_info;
+    // One entry per descriptor set
+    using ShaderDescriptorSetsInfos = std::map<uint32_t, ShaderDescriptorSetInfo>;
 
-    // An entry for each input variables declared in the shader. Key is variable's location.
-    std::unordered_map<uint32_t, bool> input_info;
+    ShaderDescriptorSetsInfos used_descriptors_info;
 };
 
 struct PipelineInfo : public VulkanObjectInfo<VkPipeline>
@@ -439,7 +443,8 @@ struct DescriptorPoolInfo : public VulkanPoolInfo<VkDescriptorPool>
 
 struct DescriptorUpdateTemplateInfo : public VulkanObjectInfo<VkDescriptorUpdateTemplate>
 {
-    std::vector<VkDescriptorType> descriptor_image_types;
+    std::vector<VkDescriptorType>                descriptor_image_types;
+    std::vector<VkDescriptorUpdateTemplateEntry> entries;
 };
 
 struct DisplayKHRInfo : public VulkanObjectInfo<VkDisplayKHR>
@@ -562,30 +567,32 @@ struct RenderPassInfo : public VulkanObjectInfo<VkRenderPass>
     std::vector<VkSubpassDependency> dependencies;
 };
 
-struct descriptor_type_image_info
+struct DescriptorTypeImageInfo
 {
-    format::HandleId image_view_id;
-    VkImageLayout    image_layout;
+    const ImageViewInfo* image_view_info;
+    VkImageLayout        image_layout;
 };
 
-struct descriptor_type_buffer_info
+struct DescriptorTypeBufferInfo
 {
-    format::HandleId buffer_id;
-    VkDeviceSize     offset;
-    VkDeviceSize     range;
+    const BufferInfo* buffer_info;
+    VkDeviceSize      offset;
+    VkDeviceSize      range;
 };
 
-struct descriptor_binding_info
+struct DescriptorSetBindingInfo
 {
-    VkDescriptorType            desc_type;
-    descriptor_type_image_info  image_info;
-    descriptor_type_buffer_info buffer_info;
-    format::HandleId            texel_buffer_view;
+    VkDescriptorType                      desc_type;
+    std::vector<DescriptorTypeImageInfo>  image_info;
+    std::vector<DescriptorTypeBufferInfo> buffer_info;
+    std::vector<const BufferViewInfo*>    texel_buffer_view_info;
 };
 
 struct DescriptorSetInfo : public VulkanPoolObjectInfo<VkDescriptorSet>
 {
-    std::unordered_map<uint32_t, descriptor_binding_info> descriptors;
+    // One entry per binding
+    using DescriptorBindingsInfo = std::unordered_map<uint32_t, DescriptorSetBindingInfo>;
+    DescriptorBindingsInfo descriptors;
 };
 
 //
