@@ -107,6 +107,7 @@ def CreateReplayParser():
     parser.add_argument('--dump-resources-dump-color-attachment-index', metavar='N', help='Specify which color attachment to dump when dumping draw calls. It should be an unsigned zero based integer. Default is to dump all color attachment')
     parser.add_argument('--dump-resources-dump-vertex-index-buffers', action='store_true', default=False, help= 'Enables dumping of vertex and index buffers while dumping draw call resources. Default is disabled.')
     parser.add_argument('--dump-resources-json-output-per-command', action='store_true', default=False, help= 'Enables storing a json output file for each dumped command. Default is disabled.')
+    parser.add_argument('--dump-resources-dump-immutable-resources', action='store_true', default=False, help= 'Dump immutable immutable shader resources.')
     return parser
 
 def MakeExtrasString(args):
@@ -257,6 +258,9 @@ def MakeExtrasString(args):
 
     if args.dump_resources_json_output_per_command:
         arg_list.append('--dump-resources-json-output-per-command')
+
+    if args.dump_resources_dump_immutable_resources:
+        arg_list.append('--dump-resources-dump-immutable-resources')
 
     if args.file:
         arg_list.append(args.file)

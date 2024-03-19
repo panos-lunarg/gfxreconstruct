@@ -32,6 +32,7 @@
 #include "decode/vulkan_replay_dump_resources_json.h"
 #include "format/format.h"
 #include "util/defines.h"
+#include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <limits>
 #include <vector>
@@ -46,10 +47,10 @@ class VulkanReplayDumpResourcesBase
   public:
     VulkanReplayDumpResourcesBase() = delete;
 
-    VulkanReplayDumpResourcesBase(const VulkanReplayOptions& options, const VulkanObjectInfoTable& object_info_table);
+    VulkanReplayDumpResourcesBase(const VulkanReplayOptions& options, VulkanObjectInfoTable& object_info_table);
 
-    VkResult CloneCommandBuffer(uint64_t                     bcb_index,
-                                const CommandBufferInfo*     original_command_buffer_info,
+    VkResult CloneCommandBuffer(uint64_t                           bcb_index,
+                                CommandBufferInfo*                 original_command_buffer_info,
                                 const encode::VulkanDeviceTable*   device_table,
                                 const encode::VulkanInstanceTable* inst_table);
 
@@ -248,9 +249,9 @@ class VulkanReplayDumpResourcesBase
 
     VkResult QueueSubmit(const std::vector<VkSubmitInfo>& modified_submit_infos,
                          const encode::VulkanDeviceTable& device_table,
-                         VkQueue                    queue,
-                         VkFence                    fence,
-                         uint64_t                   index);
+                         VkQueue                          queue,
+                         VkFence                          fence,
+                         uint64_t                         index);
 
     bool MustDumpQueueSubmitIndex(uint64_t index) const;
 
@@ -272,17 +273,6 @@ class VulkanReplayDumpResourcesBase
     VkCommandBuffer GetDispatchRaysCommandBuffer(VkCommandBuffer original_command_buffer) const;
 
   private:
-    struct descriptor_set_bindings
-    {
-        // storage images
-        std::unordered_map<uint32_t, const ImageInfo*> image_infos;
-
-        // storage and texel buffers
-        std::unordered_map<uint32_t, const BufferInfo*> buffer_infos;
-    };
-
-    using descriptor_set_t = std::unordered_map<uint32_t, descriptor_set_bindings>;
-
     enum PipelineBindPoints
     {
         kBindPoint_graphics = 0,
@@ -314,7 +304,7 @@ class VulkanReplayDumpResourcesBase
     {
         DrawCallsDumpingContext(const std::vector<uint64_t>&              dc_indices,
                                 const std::vector<std::vector<uint64_t>>& rp_indices,
-                                const VulkanObjectInfoTable&              object_info_table,
+                                VulkanObjectInfoTable&                    object_info_table,
                                 const VulkanReplayOptions&                options,
                                 VulkanReplayDumpResourcesJson&            dump_json);
 
@@ -334,11 +324,11 @@ class VulkanReplayDumpResourcesBase
 
         void BindPipeline(VkPipelineBindPoint bind_point, const PipelineInfo* pipeline);
 
-        VkResult CloneCommandBuffer(const CommandBufferInfo*     orig_cmd_buf_info,
+        VkResult CloneCommandBuffer(CommandBufferInfo*                 orig_cmd_buf_info,
                                     const encode::VulkanDeviceTable*   dev_table,
                                     const encode::VulkanInstanceTable* inst_table);
 
-        VkResult CloneRenderPass(const RenderPassInfo* original_render_pass);
+        VkResult CloneRenderPass(const RenderPassInfo* original_render_pass, const FramebufferInfo* fb_info);
 
         VkResult BeginRenderPass(const RenderPassInfo*  render_pass_info,
                                  uint32_t               clear_value_count,
@@ -389,12 +379,23 @@ class VulkanReplayDumpResourcesBase
 
         VkResult DumpRenderTargetAttachments(uint64_t cmd_buf_index, uint64_t qs_index, uint64_t bcb_index) const;
 
+        VkResult DumpImmutableResources(uint64_t qs_index, uint64_t bcb_index) const;
+
         VkResult DumpVertexIndexBuffers();
 
-        descriptor_set_t bound_descriptor_sets[kBindPoint_count];
+        // One entry per descriptor set
+        std::unordered_map<uint32_t, const DescriptorSetInfo*> bound_descriptor_sets_gr;
+
+        std::string GenerateRenderTargetImageFilename(VkFormat              format,
+                                                      uint64_t              cmd_buf_index,
+                                                      uint64_t              dc_index,
+                                                      int                   attachment_index,
+                                                      VkImageAspectFlagBits aspect) const;
 
         std::string
-        GenerateImageFilename(VkFormat format, uint64_t cmd_buf_index, uint64_t dc_index, int attachment_index) const;
+        GenerateImageDescriptorFilename(VkFormat format, VkImageAspectFlagBits aspect, format::HandleId image_id) const;
+
+        std::string GenerateBufferDescriptorFilename(format::HandleId buffer_id) const;
 
         std::string GenerateVertexBufferFilename(uint64_t bind_vertex_buffer_index, uint32_t binding) const;
 
@@ -412,7 +413,7 @@ class VulkanReplayDumpResourcesBase
 
         VkResult RevertMutableResources(VkQueue queue);
 
-        const CommandBufferInfo*           original_command_buffer_info;
+        CommandBufferInfo*                 original_command_buffer_info;
         std::vector<VkCommandBuffer>       command_buffers;
         size_t                             current_cb_index;
         std::vector<uint64_t>              dc_indices;
@@ -433,6 +434,7 @@ class VulkanReplayDumpResourcesBase
         int32_t                            color_attachment_to_dump;
         bool                               dump_vertex_index_buffers;
         bool                               output_json_per_command;
+        bool                               dump_immutable_resources;
 
         std::vector<std::vector<VkRenderPass>> render_pass_clones;
 
@@ -811,6 +813,11 @@ class VulkanReplayDumpResourcesBase
             // that were active when the draw call was issued
             uint64_t referenced_bind_vertex_buffers;
             uint64_t referenced_bind_index_buffer;
+
+            // Keep copies of the descriptor bindings referenced by each draw call
+            std::unordered_map<VkShaderStageFlagBits,
+                               std::unordered_map<uint32_t, DescriptorSetInfo::DescriptorBindingsInfo>>
+                referenced_descriptors;
         };
 
         // One entry for each draw call
@@ -819,6 +826,8 @@ class VulkanReplayDumpResourcesBase
         void CopyVertexInputStateInfo(uint64_t dc_index, DrawCallParameters& dc_params);
 
         VkResult CopyIndirectDrawParameters(DrawCallParameters& dc_params);
+
+        void SnapshotBoundDescriptors(DrawCallParameters& dc_params);
 
         VkResult FetchDrawIndirectParams();
 
@@ -837,9 +846,9 @@ class VulkanReplayDumpResourcesBase
         VkFence         aux_fence;
         bool            must_backup_resources;
 
-        const encode::VulkanDeviceTable*              device_table;
-        const encode::VulkanInstanceTable*            instance_table;
-        const VulkanObjectInfoTable&            object_info_table;
+        const encode::VulkanDeviceTable*        device_table;
+        const encode::VulkanInstanceTable*      instance_table;
+        VulkanObjectInfoTable&                  object_info_table;
         const VkPhysicalDeviceMemoryProperties* replay_device_phys_mem_props;
     };
 
@@ -848,13 +857,13 @@ class VulkanReplayDumpResourcesBase
     {
         DispatchTraceRaysDumpingContext(const std::vector<uint64_t>&   dispatch_indices,
                                         const std::vector<uint64_t>&   trace_rays_indices,
-                                        const VulkanObjectInfoTable&   object_info_table,
+                                        VulkanObjectInfoTable&         object_info_table,
                                         const VulkanReplayOptions&     options,
                                         VulkanReplayDumpResourcesJson& dump_json);
 
         ~DispatchTraceRaysDumpingContext();
 
-        VkResult CloneCommandBuffer(const CommandBufferInfo*     orig_cmd_buf_info,
+        VkResult CloneCommandBuffer(CommandBufferInfo*                 orig_cmd_buf_info,
                                     const encode::VulkanDeviceTable*   dev_table,
                                     const encode::VulkanInstanceTable* inst_table);
 
@@ -868,14 +877,15 @@ class VulkanReplayDumpResourcesBase
 
         bool MustDumpTraceRays(uint64_t index) const;
 
-        std::string GenerateImageFilename(VkFormat format,
-                                          bool     is_dispatch,
-                                          uint64_t index,
-                                          uint32_t desc_set,
-                                          uint32_t desc_binding,
-                                          bool     before_cmd) const;
+        std::string GenerateDispatchTraceRaysImageFilename(VkFormat              format,
+                                                           bool                  is_dispatch,
+                                                           uint64_t              index,
+                                                           uint32_t              desc_set,
+                                                           uint32_t              desc_binding,
+                                                           bool                  before_cmd,
+                                                           VkImageAspectFlagBits aspect) const;
 
-        std::string GenerateBufferFilename(
+        std::string GenerateDispatchTraceRaysBufferFilename(
             bool is_dispatch, uint64_t index, uint32_t desc_set, uint32_t desc_binding, bool before_cmd) const;
 
         void BindDescriptorSets(VkPipelineBindPoint                          pipeline_bind_point,
@@ -911,7 +921,8 @@ class VulkanReplayDumpResourcesBase
         VulkanReplayDumpResourcesJson& dump_json;
         bool                           output_json_per_command;
 
-        descriptor_set_t bound_descriptor_sets[kBindPoint_count];
+        // One entry per pipeline binding point
+        const DescriptorSetInfo* bound_descriptor_sets[kBindPoint_count];
 
         // For each Dispatch/TraceRays that we dump we create a clone of all mutable resources used in the
         // shaders/pipeline and the content of the original resources are copied into the clones
@@ -934,9 +945,9 @@ class VulkanReplayDumpResourcesBase
         std::unordered_map<uint64_t, DumpableResourceBackup> mutable_resources_clones;
         std::unordered_map<uint64_t, DumpableResourceBackup> mutable_resources_clones_before;
 
-        const encode::VulkanDeviceTable*              device_table;
-        const encode::VulkanInstanceTable*            instance_table;
-        const VulkanObjectInfoTable&            object_info_table;
+        const encode::VulkanDeviceTable*        device_table;
+        const encode::VulkanInstanceTable*      instance_table;
+        VulkanObjectInfoTable&                  object_info_table;
         const VkPhysicalDeviceMemoryProperties* replay_device_phys_mem_props;
         size_t                                  current_dispatch_index;
         size_t                                  current_trace_rays_index;
@@ -954,7 +965,7 @@ class VulkanReplayDumpResourcesBase
     bool recording_;
     bool dump_resources_before_;
 
-    const VulkanObjectInfoTable& object_info_table_;
+    VulkanObjectInfoTable& object_info_table_;
 
   private:
     VulkanReplayDumpResourcesJson dump_json_;

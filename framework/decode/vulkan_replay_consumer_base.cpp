@@ -27,12 +27,15 @@
 #include "decode/descriptor_update_template_decoder.h"
 #include "decode/resource_util.h"
 #include "decode/vulkan_captured_swapchain.h"
+#include "decode/vulkan_object_info.h"
 #include "decode/vulkan_virtual_swapchain.h"
 #include "decode/vulkan_offscreen_swapchain.h"
 #include "decode/vulkan_enum_util.h"
 #include "decode/vulkan_feature_util.h"
 #include "decode/vulkan_object_cleanup_util.h"
+#include "format/format.h"
 #include "format/format_util.h"
+#include "generated/generated_vulkan_struct_decoders.h"
 #include "generated/generated_vulkan_struct_handle_mappers.h"
 #include "generated/generated_vulkan_constant_maps.h"
 #include "graphics/vulkan_device_util.h"
@@ -45,8 +48,11 @@
 #include "spirv_reflect.h"
 
 #include "generated/generated_vulkan_enum_to_string.h"
+#include "util/to_string.h"
+#include "vulkan/vulkan_core.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <numeric>
@@ -4050,9 +4056,9 @@ VkResult VulkanReplayConsumerBase::OverrideAllocateMemory(
 
             VkMemoryAllocateInfo                     modified_allocate_info = (*replay_allocate_info);
             VkMemoryOpaqueCaptureAddressAllocateInfo address_info           = {
-                          VK_STRUCTURE_TYPE_MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO,
-                          modified_allocate_info.pNext,
-                          opaque_address
+                VK_STRUCTURE_TYPE_MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO,
+                modified_allocate_info.pNext,
+                opaque_address
             };
             modified_allocate_info.pNext = &address_info;
 
@@ -4929,6 +4935,9 @@ void VulkanReplayConsumerBase::OverrideCmdPipelineBarrier(
     {
         auto image_id                                        = pImageMemoryBarriers->GetMetaStructPointer()[i].image;
         command_buffer_info->image_layout_barriers[image_id] = pImageMemoryBarriers->GetPointer()[i].newLayout;
+        ImageInfo* img_info                                  = object_info_table_.GetImageInfo(image_id);
+        assert(img_info != nullptr);
+        img_info->intermediate_layout = pImageMemoryBarriers->GetPointer()[i].newLayout;
     }
 }
 
@@ -5059,6 +5068,7 @@ VkResult VulkanReplayConsumerBase::OverrideCreateDescriptorUpdateTemplate(
             assert(update_template_info != nullptr);
 
             update_template_info->descriptor_image_types = std::move(image_types);
+            update_template_info->entries                = std::move(entries);
         }
 
         return result;
@@ -5181,46 +5191,14 @@ static bool SPIRVReflectPerformReflectionOnShaderModule(ShaderModuleInfo*       
             VkDescriptorType type     = SpvReflectToVkDescriptorType(binding->descriptor_type);
             bool             readonly = ((binding->decoration_flags & SPV_REFLECT_DECORATION_NON_WRITABLE) ==
                              SPV_REFLECT_DECORATION_NON_WRITABLE);
+            const uint32_t   count    = binding->count;
+            const bool       is_array = binding->array.dims_count > 0;
+
+            assert((count > 1 && is_array) || (count == 1 && !is_array));
 
             shader_info->used_descriptors_info[binding->set].emplace(
-                binding->binding, ShaderModuleInfo::DescriptorInfo(type, readonly, binding->accessed));
-        }
-    }
-
-    // Scan the shader input interface
-    count  = 0;
-    result = reflection.EnumerateInputVariables(&count, nullptr);
-    if (result != SPV_REFLECT_RESULT_SUCCESS)
-    {
-        GFXRECON_LOG_ERROR("Shader reflection on shader %" PRIu64 " failed", shader_info->capture_id);
-        assert(0);
-        return false;
-    }
-
-    if (count)
-    {
-        std::vector<SpvReflectInterfaceVariable*> inputs(count, nullptr);
-        result = reflection.EnumerateInputVariables(&count, inputs.data());
-        if (result != SPV_REFLECT_RESULT_SUCCESS)
-        {
-            GFXRECON_LOG_ERROR("Shader reflection on shader %" PRIu64 " failed", shader_info->capture_id);
-            assert(0);
-            return false;
-        }
-
-        for (const auto input : inputs)
-        {
-            // Ignore built ins. We care only about user defined inputs
-            if ((input->decoration_flags & SPV_REFLECT_DECORATION_BUILT_IN) == SPV_REFLECT_DECORATION_BUILT_IN)
-            {
-                continue;
-            }
-
-            const uint32_t location = input->location;
-            if (location < phys_dev_limits.maxVertexInputAttributes)
-            {
-                shader_info->input_info.emplace(std::make_pair(location, true));
-            }
+                binding->binding,
+                ShaderModuleInfo::ShaderDescriptorInfo(type, readonly, binding->accessed, count, is_array));
         }
     }
 
@@ -7568,6 +7546,12 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass(
             auto image_view_info = object_info_table_.GetImageViewInfo(image_view_id);
             command_buffer_info->image_layout_barriers[image_view_info->image_id] =
                 render_pass_info->attachment_description_final_layouts[i];
+
+            const ImageViewInfo* img_view_info = object_info_table_.GetImageViewInfo(image_view_id);
+            assert(image_view_info != nullptr);
+            ImageInfo* img_info = object_info_table_.GetImageInfo(img_view_info->image_id);
+            assert(img_info);
+            img_info->intermediate_layout = render_pass_info->attachment_description_final_layouts[i];
         }
     }
 
@@ -7600,6 +7584,12 @@ void VulkanReplayConsumerBase::OverrideCmdBeginRenderPass2(
             auto image_view_info = object_info_table_.GetImageViewInfo(image_view_id);
             command_buffer_info->image_layout_barriers[image_view_info->image_id] =
                 render_pass_info->attachment_description_final_layouts[i];
+
+            const ImageViewInfo* img_view_info = object_info_table_.GetImageViewInfo(image_view_id);
+            assert(image_view_info != nullptr);
+            ImageInfo* img_info = object_info_table_.GetImageInfo(img_view_info->image_id);
+            assert(img_info);
+            img_info->intermediate_layout = render_pass_info->attachment_description_final_layouts[i];
         }
     }
 
@@ -8148,6 +8138,144 @@ VkResult VulkanReplayConsumerBase::CreateSwapchainImage(const DeviceInfo*       
     return result;
 }
 
+void VulkanReplayConsumerBase::UpdateDescriptorSetInfoWithTemplate(DescriptorSetInfo*                     desc_set_info,
+                                                                   const DescriptorUpdateTemplateInfo*    template_info,
+                                                                   const DescriptorUpdateTemplateDecoder* decoder) const
+{
+    if (desc_set_info != nullptr)
+    {
+        size_t image_info_count        = 0;
+        size_t buffer_info_count       = 0;
+        size_t texel_buffer_view_count = 0;
+        size_t accel_struct_count      = 0;
+
+        for (const auto& entry : template_info->entries)
+        {
+            const VkDescriptorType type          = entry.descriptorType;
+            const uint32_t         binding_index = entry.dstBinding;
+            const uint32_t         count         = entry.descriptorCount;
+
+            desc_set_info->descriptors[binding_index].desc_type = type;
+
+            switch (type)
+            {
+                case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+                case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+                case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+                case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+                {
+                    const Decoded_VkDescriptorImageInfo* img_desc_info = decoder->GetImageInfoMetaStructPointer();
+                    assert(img_desc_info != nullptr);
+
+                    // Allocate a bit more
+                    if (desc_set_info->descriptors[binding_index].image_info.size() < count)
+                    {
+                        desc_set_info->descriptors[binding_index].image_info.resize(2 * count);
+                    }
+
+                    for (uint32_t i = 0; i < count; ++i)
+                    {
+                        const ImageViewInfo* img_view_info =
+                            object_info_table_.GetImageViewInfo(img_desc_info[image_info_count].imageView);
+                        desc_set_info->descriptors[binding_index].image_info[i] = {
+                            img_view_info, img_desc_info[image_info_count].decoded_value->imageLayout
+                        };
+                        ++image_info_count;
+                    }
+                }
+                break;
+
+                case VK_DESCRIPTOR_TYPE_SAMPLER:
+                {
+                    // Allocate a bit more
+                    if (desc_set_info->descriptors[binding_index].image_info.size() < count)
+                    {
+                        desc_set_info->descriptors[binding_index].image_info.resize(2 * count);
+                    }
+
+                    image_info_count += count;
+                }
+                break;
+
+                case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+                case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+                case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+                case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+                {
+                    const Decoded_VkDescriptorBufferInfo* buf_desc_info = decoder->GetBufferInfoMetaStructPointer();
+                    assert(buf_desc_info != nullptr);
+
+                    // Allocate a bit more
+                    if (desc_set_info->descriptors[binding_index].buffer_info.size() < count)
+                    {
+                        desc_set_info->descriptors[binding_index].buffer_info.resize(2 * count);
+                    }
+
+                    for (uint32_t i = 0; i < count; ++i)
+                    {
+                        const BufferInfo* buf_info =
+                            object_info_table_.GetBufferInfo(buf_desc_info[buffer_info_count].buffer);
+                        assert(buf_info != nullptr);
+
+                        desc_set_info->descriptors[binding_index].buffer_info[i] = {
+                            buf_info,
+                            buf_desc_info[buffer_info_count].decoded_value->offset,
+                            buf_desc_info[buffer_info_count].decoded_value->range
+                        };
+
+                        ++buffer_info_count;
+                    }
+                }
+                break;
+
+                case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+                case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+                {
+                    const format::HandleId* buffer_view_ids = decoder->GetTexelBufferViewHandleIdsPointer();
+                    assert(buffer_view_ids != nullptr);
+
+                    // Allocate a bit more
+                    if (desc_set_info->descriptors[binding_index].texel_buffer_view_info.size() < count)
+                    {
+                        desc_set_info->descriptors[binding_index].texel_buffer_view_info.resize(2 * count);
+                    }
+
+                    for (uint32_t i = 0; i < count; ++i)
+                    {
+                        const BufferViewInfo* buf_view_info =
+                            object_info_table_.GetBufferViewInfo(buffer_view_ids[texel_buffer_view_count]);
+                        assert(buf_view_info != nullptr);
+
+                        desc_set_info->descriptors[binding_index].texel_buffer_view_info[i] = buf_view_info;
+
+                        ++texel_buffer_view_count;
+                    }
+                }
+                break;
+
+                case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
+                {
+                    desc_set_info->descriptors[binding_index].desc_type = type;
+                    accel_struct_count += count;
+                }
+                break;
+
+                default:
+                    GFXRECON_LOG_WARNING("%s() Unrecognized/Unhandled descriptor type (%s)",
+                                         __func__,
+                                         util::ToString<VkDescriptorType>(type).c_str());
+                    break;
+            }
+        }
+
+        // Sanity checks. These should match else we missed something from the template
+        assert(image_info_count == decoder->GetImageInfoCount());
+        assert(buffer_info_count == decoder->GetBufferInfoCount());
+        assert(texel_buffer_view_count == decoder->GetTexelBufferViewCount());
+        assert(accel_struct_count == decoder->GetAccelerationStructureKHRCount());
+    }
+}
+
 void VulkanReplayConsumerBase::Process_vkUpdateDescriptorSetWithTemplate(const ApiCallInfo& call_info,
                                                                          format::HandleId   device,
                                                                          format::HandleId   descriptorSet,
@@ -8167,6 +8295,12 @@ void VulkanReplayConsumerBase::Process_vkUpdateDescriptorSetWithTemplate(const A
     if (update_template_info != nullptr)
     {
         in_descriptorUpdateTemplate = update_template_info->handle;
+    }
+
+    if (options_.dumping_resources)
+    {
+        DescriptorSetInfo* desc_set_info = object_info_table_.GetDescriptorSetInfo(descriptorSet);
+        UpdateDescriptorSetInfoWithTemplate(desc_set_info, update_template_info, pData);
     }
 
     GetDeviceTable(in_device)->UpdateDescriptorSetWithTemplate(
@@ -8219,6 +8353,12 @@ void VulkanReplayConsumerBase::Process_vkUpdateDescriptorSetWithTemplateKHR(cons
     if (update_template_info != nullptr)
     {
         in_descriptorUpdateTemplate = update_template_info->handle;
+    }
+
+    if (options_.dumping_resources)
+    {
+        DescriptorSetInfo* desc_set_info = object_info_table_.GetDescriptorSetInfo(descriptorSet);
+        UpdateDescriptorSetInfoWithTemplate(desc_set_info, update_template_info, pData);
     }
 
     GetDeviceTable(in_device)->UpdateDescriptorSetWithTemplateKHR(
@@ -8291,37 +8431,82 @@ void VulkanReplayConsumerBase::OverrideUpdateDescriptorSets(
     for (uint32_t s = 0; s < descriptor_write_count; ++s)
     {
         DescriptorSetInfo* dst_set_info = GetObjectInfoTable().GetDescriptorSetInfo(writes_meta[s].dstSet);
+        assert(dst_set_info != nullptr);
+
+        DescriptorSetBindingInfo bi;
+        bi.desc_type = in_pDescriptorWrites[s].descriptorType;
+
+        const uint32_t descs_per_write_entry =
+            in_pDescriptorWrites[s].descriptorCount + in_pDescriptorWrites[s].dstArrayElement + 1;
 
         for (uint32_t b = 0; b < in_pDescriptorWrites[s].descriptorCount; ++b)
         {
+
             switch (in_pDescriptorWrites[s].descriptorType)
             {
+                case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
                 case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+                case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+                case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
                 {
-                    descriptor_binding_info bi;
-                    bi.desc_type                = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                    bi.image_info.image_layout  = in_pDescriptorWrites[s].pImageInfo[b].imageLayout;
-                    bi.image_info.image_view_id = writes_meta[s].pImageInfo->GetMetaStructPointer()[b].imageView;
+                    if (bi.image_info.size() < descs_per_write_entry)
+                    {
+                        bi.image_info.resize(descs_per_write_entry);
+                    }
 
-                    dst_set_info->descriptors[in_pDescriptorWrites[s].dstBinding + b] = bi;
+                    for (uint32_t i = 0; i < in_pDescriptorWrites[s].descriptorCount; ++i)
+                    {
+                        const uint32_t arr_idx                 = in_pDescriptorWrites[s].dstArrayElement + i;
+                        bi.image_info[arr_idx].image_layout    = in_pDescriptorWrites[s].pImageInfo[b].imageLayout;
+                        bi.image_info[arr_idx].image_view_info = object_info_table_.GetImageViewInfo(
+                            writes_meta[s].pImageInfo->GetMetaStructPointer()[b].imageView);
+                    }
                 }
                 break;
 
                 case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+                case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+                case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+                case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
                 {
-                    descriptor_binding_info bi;
-                    bi.desc_type             = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                    bi.buffer_info.buffer_id = writes_meta[s].pBufferInfo->GetMetaStructPointer()[b].buffer;
-                    bi.buffer_info.offset    = in_pDescriptorWrites[s].pBufferInfo[b].offset;
-                    bi.buffer_info.range     = in_pDescriptorWrites[s].pBufferInfo[b].range;
+                    if (bi.buffer_info.size() < descs_per_write_entry)
+                    {
+                        bi.buffer_info.resize(descs_per_write_entry);
+                    }
 
-                    dst_set_info->descriptors[in_pDescriptorWrites[s].dstBinding + b] = bi;
+                    for (uint32_t i = 0; i < in_pDescriptorWrites[s].descriptorCount; ++i)
+                    {
+                        const uint32_t arr_idx              = in_pDescriptorWrites[s].dstArrayElement + i;
+                        bi.buffer_info[arr_idx].buffer_info = object_info_table_.GetBufferInfo(
+                            writes_meta[s].pBufferInfo->GetMetaStructPointer()[b].buffer);
+                        bi.buffer_info[arr_idx].offset = in_pDescriptorWrites[s].pBufferInfo[b].offset;
+                        bi.buffer_info[arr_idx].range  = in_pDescriptorWrites[s].pBufferInfo[b].range;
+                    }
+                }
+                break;
+
+                case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+                case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+                {
+                    if (bi.texel_buffer_view_info.size() < descs_per_write_entry)
+                    {
+                        bi.texel_buffer_view_info.resize(descs_per_write_entry);
+                    }
+
+                    for (uint32_t i = 0; i < in_pDescriptorWrites[s].descriptorCount; ++i)
+                    {
+                        const uint32_t arr_idx = in_pDescriptorWrites[s].dstArrayElement + i;
+                        bi.texel_buffer_view_info[arr_idx] =
+                            object_info_table_.GetBufferViewInfo(writes_meta[s].pTexelBufferView.GetPointer()[b]);
+                    }
                 }
                 break;
 
                 default:
                     break;
             }
+
+            dst_set_info->descriptors[in_pDescriptorWrites[s].dstBinding + b] = std::move(bi);
         }
     }
 
