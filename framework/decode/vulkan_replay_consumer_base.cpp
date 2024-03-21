@@ -2146,7 +2146,7 @@ void VulkanReplayConsumerBase::WriteScreenshots(const Decoded_VkPresentInfoKHR* 
 bool VulkanReplayConsumerBase::CheckCommandBufferInfoForFrameBoundary(const CommandBufferInfo* command_buffer_info)
 {
     GFXRECON_ASSERT(command_buffer_info != nullptr);
-    if (command_buffer_info->is_frame_boundary)
+    // if (command_buffer_info->is_frame_boundary)
     {
         if (screenshot_handler_->IsScreenshotFrame())
         {
