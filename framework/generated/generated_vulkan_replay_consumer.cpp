@@ -3033,15 +3033,15 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier2(
     format::HandleId                            commandBuffer,
     StructPointerDecoder<Decoded_VkDependencyInfo>* pDependencyInfo)
 {
-    VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
-    const VkDependencyInfo* in_pDependencyInfo = pDependencyInfo->GetPointer();
+    auto in_commandBuffer = GetObjectInfoTable().GetCommandBufferInfo(commandBuffer);
+
     MapStructHandles(pDependencyInfo->GetMetaStructPointer(), GetObjectInfoTable());
 
-    GetDeviceTable(in_commandBuffer)->CmdPipelineBarrier2(in_commandBuffer, in_pDependencyInfo);
+    OverrideCmdPipelineBarrier2(GetDeviceTable(in_commandBuffer->handle)->CmdPipelineBarrier2, in_commandBuffer, pDependencyInfo);
 
     if (options_.dumping_resources)
     {
-        resource_dumper.Process_vkCmdPipelineBarrier2(call_info, GetDeviceTable(in_commandBuffer)->CmdPipelineBarrier2, in_commandBuffer, in_pDependencyInfo);
+        resource_dumper.Process_vkCmdPipelineBarrier2(call_info, GetDeviceTable(in_commandBuffer->handle)->CmdPipelineBarrier2, in_commandBuffer->handle, pDependencyInfo->GetPointer());
     }
 }
 
@@ -5693,15 +5693,15 @@ void VulkanReplayConsumer::Process_vkCmdPipelineBarrier2KHR(
     format::HandleId                            commandBuffer,
     StructPointerDecoder<Decoded_VkDependencyInfo>* pDependencyInfo)
 {
-    VkCommandBuffer in_commandBuffer = MapHandle<CommandBufferInfo>(commandBuffer, &VulkanObjectInfoTable::GetCommandBufferInfo);
-    const VkDependencyInfo* in_pDependencyInfo = pDependencyInfo->GetPointer();
+    auto in_commandBuffer = GetObjectInfoTable().GetCommandBufferInfo(commandBuffer);
+
     MapStructHandles(pDependencyInfo->GetMetaStructPointer(), GetObjectInfoTable());
 
-    GetDeviceTable(in_commandBuffer)->CmdPipelineBarrier2KHR(in_commandBuffer, in_pDependencyInfo);
+    OverrideCmdPipelineBarrier2KHR(GetDeviceTable(in_commandBuffer->handle)->CmdPipelineBarrier2KHR, in_commandBuffer, pDependencyInfo);
 
     if (options_.dumping_resources)
     {
-        resource_dumper.Process_vkCmdPipelineBarrier2KHR(call_info, GetDeviceTable(in_commandBuffer)->CmdPipelineBarrier2KHR, in_commandBuffer, in_pDependencyInfo);
+        resource_dumper.Process_vkCmdPipelineBarrier2KHR(call_info, GetDeviceTable(in_commandBuffer->handle)->CmdPipelineBarrier2KHR, in_commandBuffer->handle, pDependencyInfo->GetPointer());
     }
 }
 

@@ -420,8 +420,9 @@ static VkResult DumpImageToFile(const ImageInfo*                image_info,
                                 const std::vector<std::string>& filenames,
                                 float                           scale,
                                 util::ScreenshotFormat          image_file_format,
-                                VkImageLayout                   layout   = VK_IMAGE_LAYOUT_MAX_ENUM,
-                                const VkExtent3D*               extent_p = nullptr)
+                                bool                            dump_all_subresources = false,
+                                VkImageLayout                   layout                = VK_IMAGE_LAYOUT_MAX_ENUM,
+                                const VkExtent3D*               extent_p              = nullptr)
 {
     assert(image_info != nullptr);
     assert(device_info != nullptr);
@@ -432,9 +433,10 @@ static VkResult DumpImageToFile(const ImageInfo*                image_info,
     bool                               combined_depth_stencil;
     graphics::GetFormatAspects(image_info->format, &aspects, &combined_depth_stencil);
 
-    assert(aspects.size() == filenames.size());
+    const uint32_t total_files =
+        dump_all_subresources ? (aspects.size() * image_info->layer_count * image_info->level_count) : aspects.size();
+    assert(total_files == filenames.size());
 
-    assert(device_info);
     const PhysicalDeviceInfo* phys_dev_info = object_info_table.GetPhysicalDeviceInfo(device_info->parent_id);
     assert(phys_dev_info);
 
@@ -448,10 +450,10 @@ static VkResult DumpImageToFile(const ImageInfo*                image_info,
                              (extent_p != nullptr) ? extent_p->height : image_info->extent.height,
                              (extent_p != nullptr) ? extent_p->depth : image_info->extent.depth };
 
+    uint32_t f = 0;
     for (size_t i = 0; i < aspects.size(); ++i)
     {
-        const VkImageAspectFlagBits aspect   = aspects[i];
-        std::string                 filename = filenames[i];
+        const VkImageAspectFlagBits aspect = aspects[i];
 
         std::vector<uint8_t>  data;
         std::vector<uint64_t> subresource_offsets;
@@ -487,8 +489,9 @@ static VkResult DumpImageToFile(const ImageInfo*                image_info,
 
         const util::imagewriter::DataFormats output_image_format = VkFormatToImageWriterDataFormat(image_info->format);
 
-        if (image_info->level_count == 1 && image_info->layer_count == 1)
+        if ((image_info->level_count == 1 && image_info->layer_count == 1) || !dump_all_subresources)
         {
+            std::string filename = filenames[f++];
             if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
             {
                 VkExtent3D scaled_extent;
@@ -507,9 +510,9 @@ static VkResult DumpImageToFile(const ImageInfo*                image_info,
                     vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
                 const uint32_t stride = texel_size * scaled_extent.width;
 
+                filename += util::ScreenshotFormatToCStr(image_file_format);
                 if (image_file_format == util::ScreenshotFormat::kBmp)
                 {
-                    filename = filename + std::string(".bmp");
                     util::imagewriter::WriteBmpImage(filename,
                                                      scaled_extent.width,
                                                      scaled_extent.height,
@@ -520,7 +523,6 @@ static VkResult DumpImageToFile(const ImageInfo*                image_info,
                 }
                 else if (image_file_format == util::ScreenshotFormat::kPng)
                 {
-                    filename = filename + std::string(".png");
                     util::imagewriter::WritePngImage(filename,
                                                      scaled_extent.width,
                                                      scaled_extent.height,
@@ -546,8 +548,7 @@ static VkResult DumpImageToFile(const ImageInfo*                image_info,
             {
                 for (uint32_t layer = 0; layer < image_info->layer_count; ++layer)
                 {
-                    std::string sub_resource_filename = filename + std::string("_mip_") + std::to_string(mip) +
-                                                        std::string("_layer_") + std::to_string(layer);
+                    std::string filename = filenames[f++];
 
                     const uint32_t sub_res_idx = mip * image_info->layer_count + layer;
                     const void*    data_offset = reinterpret_cast<const void*>(
@@ -574,10 +575,10 @@ static VkResult DumpImageToFile(const ImageInfo*                image_info,
                         const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, aspect);
                         const uint32_t stride     = texel_size * scaled_extent.width;
 
+                        filename += util::ScreenshotFormatToCStr(image_file_format);
                         if (image_file_format == util::ScreenshotFormat::kBmp)
                         {
-                            sub_resource_filename += ".bmp";
-                            util::imagewriter::WriteBmpImage(sub_resource_filename,
+                            util::imagewriter::WriteBmpImage(filename,
                                                              scaled_extent.width,
                                                              scaled_extent.height,
                                                              subresource_sizes[sub_res_idx],
@@ -587,8 +588,7 @@ static VkResult DumpImageToFile(const ImageInfo*                image_info,
                         }
                         else if (image_file_format == util::ScreenshotFormat::kPng)
                         {
-                            sub_resource_filename += ".png";
-                            util::imagewriter::WritePngImage(sub_resource_filename,
+                            util::imagewriter::WritePngImage(filename,
                                                              scaled_extent.width,
                                                              scaled_extent.height,
                                                              subresource_sizes[sub_res_idx],
@@ -609,6 +609,8 @@ static VkResult DumpImageToFile(const ImageInfo*                image_info,
             }
         }
     }
+
+    assert(f == total_files);
 
     return VK_SUCCESS;
 }
@@ -1835,52 +1837,55 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpDrawCallsAt
 
 #define DEPTH_ATTACHMENT ~0
 
-std::string VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::GenerateRenderTargetImageFilename(
-    VkFormat              format,
-    uint64_t              cmd_buf_index,
-    uint64_t              dc_index,
-    int                   attachment_index,
-    VkImageAspectFlagBits aspect) const
+std::vector<std::string> VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::GenerateRenderTargetImageFilename(
+    VkFormat format, uint64_t cmd_buf_index, uint64_t dc_index, int attachment_index) const
 {
     std::vector<VkImageAspectFlagBits> aspects;
     bool                               combined_depth_stencil;
     graphics::GetFormatAspects(format, &aspects, &combined_depth_stencil);
 
-    std::string aspect_str_whole(util::ToString<VkImageAspectFlagBits>(aspects[0]));
-    std::string aspect_str(aspect_str_whole.begin() + 16, aspect_str_whole.end() - 4);
-    std::string attachment_str =
-        attachment_index != DEPTH_ATTACHMENT ? "_att_" + std::to_string(attachment_index) : "_depth_att_";
+    std::vector<std::string> filenames(aspects.size());
 
-    std::stringstream filename;
-    if (VkFormatToImageWriterDataFormat(format) != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
+    for (size_t i = 0; i < aspects.size(); ++i)
     {
-        if (dump_resources_before)
+        std::string aspect_str_whole(util::ToString<VkImageAspectFlagBits>(aspects[i]));
+        std::string aspect_str(aspect_str_whole.begin() + 16, aspect_str_whole.end() - 4);
+        std::string attachment_str =
+            attachment_index != DEPTH_ATTACHMENT ? "_att_" + std::to_string(attachment_index) : "_depth_att_";
+
+        std::stringstream filename;
+        if (VkFormatToImageWriterDataFormat(format) != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
         {
-            filename << "Draw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << attachment_str
-                     << "_aspect_" << aspect_str << util::ScreenshotFormatToCStr(image_file_format);
+            if (dump_resources_before)
+            {
+                filename << "Draw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << attachment_str
+                         << "_aspect_" << aspect_str;
+            }
+            else
+            {
+                filename << "Draw_" << dc_index << attachment_str << "_aspect_" << aspect_str;
+            }
         }
         else
         {
-            filename << "Draw_" << dc_index << attachment_str << "_aspect_" << aspect_str
-                     << util::ScreenshotFormatToCStr(image_file_format);
+            if (dump_resources_before)
+            {
+                filename << "Draw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << attachment_str << "_"
+                         << util::ToString<VkFormat>(format) << "_aspect_" << aspect_str;
+            }
+            else
+            {
+                filename << "Draw_" << dc_index << attachment_str << "_" << util::ToString<VkFormat>(format)
+                         << "_aspect_" << aspect_str;
+            }
         }
-    }
-    else
-    {
-        if (dump_resources_before)
-        {
-            filename << "Draw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << attachment_str
-                     << "_aspect_" << aspect_str << ".bin";
-        }
-        else
-        {
-            filename << "Draw_" << dc_index << attachment_str << "_aspect_" << aspect_str << ".bin";
-        }
+
+        std::filesystem::path filedirname(dump_resource_path);
+        std::filesystem::path filebasename(filename.str());
+        filenames[i] = (filedirname / filebasename).string();
     }
 
-    std::filesystem::path filedirname(dump_resource_path);
-    std::filesystem::path filebasename(filename.str());
-    return (filedirname / filebasename).string();
+    return filenames;
 }
 
 VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTargetAttachments(uint64_t cmd_buf_index,
@@ -1939,14 +1944,11 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
 
         const ImageInfo* image_info = render_targets[rp][sp].color_att_imgs[i];
 
-        const std::vector<std::string> filenames(
-            1,
-            GenerateRenderTargetImageFilename(
-                image_info->format, cmd_buf_index, dc_index, i, VK_IMAGE_ASPECT_COLOR_BIT));
+        const std::vector<std::string> filenames =
+            GenerateRenderTargetImageFilename(image_info->format, cmd_buf_index, dc_index, i);
 
         const VkExtent3D extent{ render_area[rp].extent.width, render_area[rp].extent.height, 1 };
-
-        VkResult res = DumpImageToFile(image_info,
+        VkResult         res = DumpImageToFile(image_info,
                                        device_info,
                                        device_table,
                                        instance_table,
@@ -1954,6 +1956,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
                                        filenames,
                                        dump_resources_scale,
                                        image_file_format,
+                                       dump_all_image_subresources,
                                        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                                        &extent);
 
@@ -1983,12 +1986,8 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
         bool                               combined_depth_stencil;
         graphics::GetFormatAspects(image_info->format, &aspects, &combined_depth_stencil);
 
-        std::vector<std::string> filenames(aspects.size());
-        for (size_t i = 0; i < aspects.size(); ++i)
-        {
-            filenames[i] = GenerateRenderTargetImageFilename(
-                image_info->format, cmd_buf_index, dc_index, DEPTH_ATTACHMENT, aspects[i]);
-        }
+        const std::vector<std::string> filenames =
+            GenerateRenderTargetImageFilename(image_info->format, cmd_buf_index, dc_index, DEPTH_ATTACHMENT);
 
         const VkExtent3D extent{ render_area[rp].extent.width, render_area[rp].extent.height, 1 };
         VkResult         res = DumpImageToFile(image_info,
@@ -1999,6 +1998,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
                                        filenames,
                                        dump_resources_scale,
                                        image_file_format,
+                                       dump_all_image_subresources,
                                        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                                        &extent);
 
@@ -2093,14 +2093,9 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
     //                                 desc_binding.second.image_info.image_view_info->image_id);
     //                             assert(img_info != nullptr);
 
-    //                             std::vector<VkImageAspectFlagBits> aspects;
-    //                             bool                               combined_depth_stencil;
-    //                             graphics::GetFormatAspects(img_info->format, &aspects, &combined_depth_stencil);
-    //                             for (const auto& aspect : aspects)
+    //                             const std::vector<std::string> filenames = GenerateImageDescriptorFilename(img_info);
+    //                             for (const std::string& filename : filenames)
     //                             {
-    //                                 const std::string filename =
-    //                                     GenerateImageDescriptorFilename(img_info->format, aspect,
-    //                                     img_info->capture_id);
     //                                 output_json_writer->VulkanReplayDumpResourcesJsonData(desc_entry, filename);
     //                             }
     //                         }
@@ -2139,27 +2134,63 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
     return VK_SUCCESS;
 }
 
-std::string VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::GenerateImageDescriptorFilename(
-    VkFormat format, VkImageAspectFlagBits aspect, format::HandleId image_id) const
+std::vector<std::string>
+VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::GenerateImageDescriptorFilename(const ImageInfo* img_info) const
 {
-    std::string       aspect_str_whole(util::ToString<VkImageAspectFlagBits>(aspect));
-    std::string       aspect_str(aspect_str_whole.begin() + 16, aspect_str_whole.end() - 4);
-    std::stringstream filename;
-    if (VkFormatToImageWriterDataFormat(format) != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
-    {
-        filename << "Image_" << image_id << "_aspect_" << aspect_str;
-    }
-    else
-    {
-        std::string whole_format_name = util::ToString<VkFormat>(format);
-        std::string format_name(whole_format_name.begin() + 10, whole_format_name.end());
+    assert(img_info != nullptr);
 
-        filename << "Image_" << image_id << "_" << format_name << "_aspect_" << aspect_str;
+    std::vector<VkImageAspectFlagBits> aspects;
+    bool                               combined_depth_stencil;
+    graphics::GetFormatAspects(img_info->format, &aspects, &combined_depth_stencil);
+
+    const uint32_t total_files =
+        dump_all_image_subresources ? (aspects.size() * img_info->level_count * img_info->layer_count) : aspects.size();
+    std::vector<std::string> filenames(total_files);
+
+    uint32_t f = 0;
+    for (size_t i = 0; i < aspects.size(); ++i)
+    {
+        std::string       aspect_str_whole(util::ToString<VkImageAspectFlagBits>(aspects[i]));
+        std::string       aspect_str(aspect_str_whole.begin() + 16, aspect_str_whole.end() - 4);
+        std::stringstream base_filename;
+
+        if (VkFormatToImageWriterDataFormat(img_info->format) != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
+        {
+            base_filename << "Image_" << img_info->capture_id << "_aspect_" << aspect_str;
+        }
+        else
+        {
+            std::string whole_format_name = util::ToString<VkFormat>(img_info->format);
+            std::string format_name(whole_format_name.begin() + 10, whole_format_name.end());
+
+            base_filename << "Image_" << img_info->capture_id << "_" << format_name << "_aspect_" << aspect_str;
+        }
+
+        if (dump_all_image_subresources && (img_info->level_count > 1 || img_info->layer_count > 1))
+        {
+            for (uint32_t level = 0; level < img_info->level_count; ++level)
+            {
+                for (uint32_t layer = 0; layer < img_info->layer_count; ++layer)
+                {
+                    std::stringstream sub_resources_str;
+                    sub_resources_str << base_filename.str() << "_mip_" << level << "_layer_" << layer;
+                    std::filesystem::path filedirname(dump_resource_path);
+                    std::filesystem::path filebasename(sub_resources_str.str());
+                    filenames[f++] = (filedirname / filebasename).string();
+                }
+            }
+        }
+        else
+        {
+            std::filesystem::path filedirname(dump_resource_path);
+            std::filesystem::path filebasename(base_filename.str());
+            filenames[f++] = (filedirname / filebasename).string();
+        }
     }
 
-    std::filesystem::path filedirname(dump_resource_path);
-    std::filesystem::path filebasename(filename.str());
-    return (filedirname / filebasename).string();
+    assert(f == total_files);
+
+    return std::move(filenames);
 }
 
 std::string VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::GenerateBufferDescriptorFilename(
@@ -2274,20 +2305,7 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpImmutableRe
 
     for (const auto& img_info : image_descriptors)
     {
-        std::vector<uint8_t>  data;
-        std::vector<uint64_t> subresource_offsets;
-        std::vector<uint64_t> subresource_sizes;
-        bool                  scaling_supported;
-
-        std::vector<VkImageAspectFlagBits> aspects;
-        bool                               combined_depth_stencil;
-        graphics::GetFormatAspects(img_info->format, &aspects, &combined_depth_stencil);
-
-        std::vector<std::string> filenames(aspects.size());
-        for (size_t i = 0; i < aspects.size(); ++i)
-        {
-            filenames[i] = GenerateImageDescriptorFilename(img_info->format, aspects[i], img_info->capture_id);
-        }
+        const std::vector<std::string> filenames = GenerateImageDescriptorFilename(img_info);
 
         VkResult res = DumpImageToFile(img_info,
                                        device_info,
@@ -2296,7 +2314,8 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpImmutableRe
                                        object_info_table,
                                        filenames,
                                        dump_resources_scale,
-                                       image_file_format);
+                                       image_file_format,
+                                       dump_all_image_subresources);
 
         if (res != VK_SUCCESS)
         {
@@ -4549,6 +4568,7 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DrawCallsDumpingContext(
     dump_vertex_index_buffers(options.dump_resources_dump_vertex_index_buffer),
     output_json_per_command(options.dump_resources_json_per_command),
     dump_immutable_resources(options.dump_resources_dump_immutable_resources),
+    dump_all_image_subresources(options.dump_resources_dump_all_image_subresources),
     currently_bound_vertex_buffers(bound_vertex_buffers.end()), currently_bound_index_buffer(bound_index_buffers.end())
 {
     must_backup_resources = (dc_indices.size() > 1);
@@ -4892,12 +4912,15 @@ VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DispatchTraceRay
     const VulkanReplayOptions&     options,
     VulkanReplayDumpResourcesJson& dump_json) :
     original_command_buffer_info(nullptr),
-    DR_command_buffer(VK_NULL_HANDLE), dispatch_indices(dispatch_indices), trace_rays_indices(trace_rays_indices),
-    bound_pipelines{ nullptr }, dump_resources_before(options.dump_resources_before),
-    dump_resource_path(options.dump_resources_output_dir), image_file_format(options.dump_resources_image_format),
-    dump_resources_scale(options.dump_resources_scale), device_table(nullptr), instance_table(nullptr),
-    object_info_table(object_info_table), replay_device_phys_mem_props(nullptr), current_dispatch_index(0),
-    current_trace_rays_index(0), dump_json(dump_json), output_json_per_command(options.dump_resources_json_per_command)
+    DR_command_buffer(VK_NULL_HANDLE), dispatch_indices(dispatch_indices),
+    trace_rays_indices(trace_rays_indices), bound_pipelines{ nullptr },
+    dump_resources_before(options.dump_resources_before), dump_resource_path(options.dump_resources_output_dir),
+    image_file_format(options.dump_resources_image_format), dump_resources_scale(options.dump_resources_scale),
+    device_table(nullptr), instance_table(nullptr), object_info_table(object_info_table),
+    replay_device_phys_mem_props(nullptr), current_dispatch_index(0), current_trace_rays_index(0), dump_json(dump_json),
+    output_json_per_command(options.dump_resources_json_per_command),
+    dump_immutable_resources(options.dump_resources_dump_immutable_resources),
+    dump_all_image_subresources(options.dump_resources_dump_all_image_subresources)
 {}
 
 VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::~DispatchTraceRaysDumpingContext()
@@ -5475,14 +5498,17 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpDis
     return VK_SUCCESS;
 }
 
-std::string VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::GenerateDispatchTraceRaysImageFilename(
-    VkFormat              format,
-    bool                  is_dispatch,
-    uint64_t              index,
-    uint32_t              desc_set,
-    uint32_t              desc_binding,
-    bool                  before_cmd,
-    VkImageAspectFlagBits aspect) const
+std::vector<std::string>
+VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::GenerateDispatchTraceRaysImageFilename(
+    VkFormat format,
+    uint32_t levels,
+    uint32_t layers,
+    bool     is_dispatch,
+    uint64_t index,
+    uint32_t desc_set,
+    uint32_t desc_binding,
+    bool     before_cmd,
+    bool     dump_all_subresources) const
 {
     const util::imagewriter::DataFormats output_image_format = VkFormatToImageWriterDataFormat(format);
 
@@ -5490,45 +5516,55 @@ std::string VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::Gene
     bool                               combined_depth_stencil;
     graphics::GetFormatAspects(format, &aspects, &combined_depth_stencil);
 
-    std::string aspect_str_whole(util::ToString<VkImageAspectFlagBits>(aspects[0]));
-    std::string aspect_str(aspect_str_whole.begin() + 16, aspect_str_whole.end() - 4);
+    const uint32_t total_files = dump_all_subresources ? (levels * layers * aspects.size()) : (aspects.size());
 
-    std::stringstream filename;
-    if (before_cmd)
+    std::vector<std::string> filenames(total_files);
+
+    uint32_t f = 0;
+    for (size_t a = 0; a < aspects.size(); ++a)
     {
-        if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
+        std::string aspect_str_whole(util::ToString<VkImageAspectFlagBits>(aspects[a]));
+        std::string aspect_str(aspect_str_whole.begin() + 16, aspect_str_whole.end() - 4);
+
+        std::stringstream filename;
+        if (before_cmd)
         {
             filename << (is_dispatch ? "Dispatch_" : "TraceRays_") << "before_" << index << "_set_" << desc_set
-                     << "_binding_" << desc_binding << "_" << util::ToString<VkFormat>(format).c_str() << "_aspect_"
-                     << aspect_str << util::ScreenshotFormatToCStr(image_file_format);
-        }
-        else
-        {
-            filename << (is_dispatch ? "Dispatch_" : "TraceRays_") << "before_" << index << "_set_" << desc_set
-                     << "_binding_" << desc_binding << "_aspect_" << aspect_str << util::ToString<VkFormat>(format)
-                     << ".bin";
-        }
-    }
-    else
-    {
-        if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
-        {
-            filename << (is_dispatch ? "Dispatch_" : "TraceRays_") << (dump_resources_before ? "after_" : "") << index
-                     << "_set_" << desc_set << "_binding_" << desc_binding << "_"
-                     << util::ToString<VkFormat>(format).c_str() << "_aspect_" << aspect_str
-                     << util::ScreenshotFormatToCStr(image_file_format);
+                     << "_binding_" << desc_binding;
+            if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
+            {
+                filename << "_" << util::ToString<VkFormat>(format).c_str();
+            }
+            filename << "_aspect_" << aspect_str;
         }
         else
         {
             filename << (is_dispatch ? "Dispatch_" : "TraceRays_") << (dump_resources_before ? "after_" : "") << index
-                     << "_set_" << desc_set << "_binding_" << desc_binding << "_aspect_" << aspect_str
-                     << util::ToString<VkFormat>(format).c_str() << ".bin";
+                     << "_set_" << desc_set << "_binding_" << desc_binding;
+            if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
+            {
+                filename << "_" << util::ToString<VkFormat>(format).c_str();
+            }
+            filename << "_aspect_" << aspect_str;
         }
+
+        if (dump_all_subresources)
+        {
+            for (uint32_t level = 0; level < levels; ++level)
+            {
+                for (uint32_t layer = 0; layer < layers; ++layer)
+                {
+                    filename << "_mip_" << level << "_layer_" << layer;
+                }
+            }
+        }
+
+        std::filesystem::path filedirname(dump_resource_path);
+        std::filesystem::path filebasename(filename.str());
+        filenames[f++] = (filedirname / filebasename).string();
     }
 
-    std::filesystem::path filedirname(dump_resource_path);
-    std::filesystem::path filebasename(filename.str());
-    return (filedirname / filebasename).string();
+    return filenames;
 }
 
 std::string VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::GenerateDispatchTraceRaysBufferFilename(
@@ -5610,19 +5646,18 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpMut
             ImageInfo modified_image_info = *mutable_resources_clones_before[index].original_images[i];
             modified_image_info.handle    = mutable_resources_clones_before[index].images[i];
 
-            uint32_t desc_set = mutable_resources_clones_before[index].image_desc_set_binding_pair[i].first;
-            uint32_t binding  = mutable_resources_clones_before[index].image_desc_set_binding_pair[i].second;
+            const uint32_t desc_set = mutable_resources_clones_before[index].image_desc_set_binding_pair[i].first;
+            const uint32_t binding  = mutable_resources_clones_before[index].image_desc_set_binding_pair[i].second;
 
-            std::vector<VkImageAspectFlagBits> aspects;
-            bool                               combined_depth_stencil;
-            graphics::GetFormatAspects(modified_image_info.format, &aspects, &combined_depth_stencil);
-
-            std::vector<std::string> filenames(aspects.size());
-            for (size_t i = 0; i < aspects.size(); ++i)
-            {
-                filenames[i] = GenerateDispatchTraceRaysImageFilename(
-                    modified_image_info.format, is_dispatch, index, desc_set, binding, true, aspects[i]);
-            }
+            std::vector<std::string> filenames = GenerateDispatchTraceRaysImageFilename(modified_image_info.format,
+                                                                                        modified_image_info.level_count,
+                                                                                        modified_image_info.layer_count,
+                                                                                        is_dispatch,
+                                                                                        index,
+                                                                                        desc_set,
+                                                                                        binding,
+                                                                                        true,
+                                                                                        dump_all_image_subresources);
 
             VkResult res = DumpImageToFile(&modified_image_info,
                                            device_info,
@@ -5632,6 +5667,7 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpMut
                                            filenames,
                                            dump_resources_scale,
                                            image_file_format,
+                                           false,
                                            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
             if (res != VK_SUCCESS)
@@ -5639,7 +5675,7 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpMut
                 return res;
             }
 
-            for (size_t i = 0; i < aspects.size(); ++i)
+            for (size_t i = 0; i < filenames.size(); ++i)
             {
                 output_json_writer->VulkanReplayDumpResourcesJsonData(
                     ("RenderTargetImage_" + std::to_string(i)).c_str(), filenames[i]);
@@ -5686,19 +5722,18 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpMut
         ImageInfo modified_image_info = *mutable_resources_clones[index].original_images[i];
         modified_image_info.handle    = mutable_resources_clones[index].images[i];
 
-        uint32_t desc_set = mutable_resources_clones[index].image_desc_set_binding_pair[i].first;
-        uint32_t binding  = mutable_resources_clones[index].image_desc_set_binding_pair[i].second;
+        const uint32_t desc_set = mutable_resources_clones[index].image_desc_set_binding_pair[i].first;
+        const uint32_t binding  = mutable_resources_clones[index].image_desc_set_binding_pair[i].second;
 
-        std::vector<VkImageAspectFlagBits> aspects;
-        bool                               combined_depth_stencil;
-        graphics::GetFormatAspects(modified_image_info.format, &aspects, &combined_depth_stencil);
-
-        std::vector<std::string> filenames(aspects.size());
-        for (size_t i = 0; i < aspects.size(); ++i)
-        {
-            filenames[i] = GenerateDispatchTraceRaysImageFilename(
-                modified_image_info.format, is_dispatch, index, desc_set, binding, true, aspects[i]);
-        }
+        std::vector<std::string> filenames = GenerateDispatchTraceRaysImageFilename(modified_image_info.format,
+                                                                                    modified_image_info.level_count,
+                                                                                    modified_image_info.layer_count,
+                                                                                    is_dispatch,
+                                                                                    index,
+                                                                                    desc_set,
+                                                                                    binding,
+                                                                                    false,
+                                                                                    dump_all_image_subresources);
 
         VkResult res = DumpImageToFile(&modified_image_info,
                                        device_info,
@@ -5708,6 +5743,7 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpMut
                                        filenames,
                                        dump_resources_scale,
                                        image_file_format,
+                                       false,
                                        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
         if (res != VK_SUCCESS)
@@ -5715,7 +5751,7 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpMut
             return res;
         }
 
-        for (size_t i = 0; i < aspects.size(); ++i)
+        for (size_t i = 0; i < filenames.size(); ++i)
         {
             output_json_writer->VulkanReplayDumpResourcesJsonData(("RenderTargetImage_" + std::to_string(i)).c_str(),
                                                                   filenames[i]);

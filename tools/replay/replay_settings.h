@@ -33,7 +33,8 @@ const char kOptions[] =
     "measurement-range,--flush-inside-measurement-range,--vssb|--virtual-swapchain-skip-blit,--use-captured-swapchain-"
     "indices,--dcp,--discard-cached-psos,--use-colorspace-fallback,--use-cached-psos,--dx12-override-object-names,--"
     "offscreen-swapchain-frame-boundary,--dump-resources-before-draw,--dump-resources-dump-depth-attachment,--dump-"
-    "resources-dump-vertex-index-buffers,--dump-resources-json-output-per-command,--dump-resources-dump-immutable-resources";
+    "resources-dump-vertex-index-buffers,--dump-resources-json-output-per-command,--dump-resources-dump-immutable-"
+    "resources,--dump-resources-dump-all-image-subresources";
 const char kArguments[] =
     "--log-level,--log-file,--gpu,--gpu-group,--pause-frame,--wsi,--surface-index,-m|--memory-translation,"
     "--replace-shaders,--screenshots,--denied-messages,--allowed-messages,--screenshot-format,--"
@@ -301,6 +302,8 @@ static void PrintUsage(const char* exe_name)
     GFXRECON_WRITE_CONSOLE("          \t\tcontains the information for all dumped commands.");
     GFXRECON_WRITE_CONSOLE("  --dump-resources-dump-immutable-resources");
     GFXRECON_WRITE_CONSOLE("          \t\tDump immutable immutable shader resources.");
+    GFXRECON_WRITE_CONSOLE("  --dump-resources-dump-all-image-subresources");
+    GFXRECON_WRITE_CONSOLE("          \t\tDump all available mip levels and layers when dumping images.");
 
 #if defined(WIN32)
     GFXRECON_WRITE_CONSOLE("")
