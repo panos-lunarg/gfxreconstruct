@@ -130,6 +130,7 @@ const char kDumpResourcesColorAttIdxArg[]         = "--dump-resources-dump-color
 const char kDumpResourcesDumpVertexIndexBuffers[] = "--dump-resources-dump-vertex-index-buffers";
 const char kDumpResourcesJsonPerCommand[]         = "--dump-resources-json-output-per-command";
 const char kDumpResourcesDumpImmutableResources[] = "--dump-resources-dump-immutable-resources";
+const char kDumpResourcesDumpImageSubresources[]  = "--dump-resources-dump-all-image-subresources";
 
 enum class WsiPlatform
 {
@@ -1027,6 +1028,8 @@ GetVulkanReplayOptions(const gfxrecon::util::ArgumentParser&           arg_parse
     replay_options.dump_resources_json_per_command = arg_parser.IsOptionSet(kDumpResourcesJsonPerCommand);
     replay_options.dump_resources_dump_immutable_resources =
         arg_parser.IsOptionSet(kDumpResourcesDumpImmutableResources);
+    replay_options.dump_resources_dump_all_image_subresources =
+        arg_parser.IsOptionSet(kDumpResourcesDumpImageSubresources);
 
     std::string dr_color_att_idx = arg_parser.GetArgumentValue(kDumpResourcesColorAttIdxArg);
     if (!dr_color_att_idx.empty())

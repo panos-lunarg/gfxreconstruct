@@ -386,14 +386,12 @@ class VulkanReplayDumpResourcesBase
         // One entry per descriptor set
         std::unordered_map<uint32_t, const DescriptorSetInfo*> bound_descriptor_sets_gr;
 
-        std::string GenerateRenderTargetImageFilename(VkFormat              format,
-                                                      uint64_t              cmd_buf_index,
-                                                      uint64_t              dc_index,
-                                                      int                   attachment_index,
-                                                      VkImageAspectFlagBits aspect) const;
+        std::vector<std::string> GenerateRenderTargetImageFilename(VkFormat format,
+                                                                   uint64_t cmd_buf_index,
+                                                                   uint64_t dc_index,
+                                                                   int      attachment_index) const;
 
-        std::string
-        GenerateImageDescriptorFilename(VkFormat format, VkImageAspectFlagBits aspect, format::HandleId image_id) const;
+        std::vector<std::string> GenerateImageDescriptorFilename(const ImageInfo* img_info) const;
 
         std::string GenerateBufferDescriptorFilename(format::HandleId buffer_id) const;
 
@@ -435,6 +433,7 @@ class VulkanReplayDumpResourcesBase
         bool                               dump_vertex_index_buffers;
         bool                               output_json_per_command;
         bool                               dump_immutable_resources;
+        bool                               dump_all_image_subresources;
 
         std::vector<std::vector<VkRenderPass>> render_pass_clones;
 
@@ -877,13 +876,15 @@ class VulkanReplayDumpResourcesBase
 
         bool MustDumpTraceRays(uint64_t index) const;
 
-        std::string GenerateDispatchTraceRaysImageFilename(VkFormat              format,
-                                                           bool                  is_dispatch,
-                                                           uint64_t              index,
-                                                           uint32_t              desc_set,
-                                                           uint32_t              desc_binding,
-                                                           bool                  before_cmd,
-                                                           VkImageAspectFlagBits aspect) const;
+        std::vector<std::string> GenerateDispatchTraceRaysImageFilename(VkFormat format,
+                                                                        uint32_t levels,
+                                                                        uint32_t layers,
+                                                                        bool     is_dispatch,
+                                                                        uint64_t index,
+                                                                        uint32_t desc_set,
+                                                                        uint32_t desc_binding,
+                                                                        bool     before_cmd,
+                                                                        bool     dump_all_subresources) const;
 
         std::string GenerateDispatchTraceRaysBufferFilename(
             bool is_dispatch, uint64_t index, uint32_t desc_set, uint32_t desc_binding, bool before_cmd) const;
@@ -920,6 +921,8 @@ class VulkanReplayDumpResourcesBase
         float                          dump_resources_scale;
         VulkanReplayDumpResourcesJson& dump_json;
         bool                           output_json_per_command;
+        bool                           dump_immutable_resources;
+        bool                           dump_all_image_subresources;
 
         // One entry per pipeline binding point
         const DescriptorSetInfo* bound_descriptor_sets[kBindPoint_count];

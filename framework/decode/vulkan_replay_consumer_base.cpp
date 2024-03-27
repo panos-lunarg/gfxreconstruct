@@ -4955,6 +4955,40 @@ void VulkanReplayConsumerBase::OverrideCmdPipelineBarrier(
     }
 }
 
+void VulkanReplayConsumerBase::OverrideCmdPipelineBarrier2(
+    PFN_vkCmdPipelineBarrier2                       func,
+    CommandBufferInfo*                              command_buffer_info,
+    StructPointerDecoder<Decoded_VkDependencyInfo>* pDependencyInfo)
+{
+    swapchain_->CmdPipelineBarrier2(func, command_buffer_info, pDependencyInfo->GetPointer());
+
+    if (pDependencyInfo != nullptr)
+    {
+        const auto* dependency_info_meta = pDependencyInfo->GetMetaStructPointer();
+        if (dependency_info_meta->pImageMemoryBarriers != nullptr)
+        {
+            const auto* img_barriers_meta = dependency_info_meta->pImageMemoryBarriers->GetMetaStructPointer();
+            for (uint32_t i = 0; i < dependency_info_meta->pImageMemoryBarriers->GetLength(); ++i)
+            {
+                format::HandleId image_id = img_barriers_meta[i].image;
+                command_buffer_info->image_layout_barriers[image_id] =
+                    dependency_info_meta->pImageMemoryBarriers->GetPointer()[i].newLayout;
+
+                ImageInfo* img_info           = object_info_table_.GetImageInfo(image_id);
+                img_info->intermediate_layout = dependency_info_meta->pImageMemoryBarriers->GetPointer()[i].newLayout;
+            }
+        }
+    }
+}
+
+void VulkanReplayConsumerBase::OverrideCmdPipelineBarrier2KHR(
+    PFN_vkCmdPipelineBarrier2                       func,
+    CommandBufferInfo*                              command_buffer_info,
+    StructPointerDecoder<Decoded_VkDependencyInfo>* pDependencyInfo)
+{
+    OverrideCmdPipelineBarrier2(func, command_buffer_info, pDependencyInfo);
+}
+
 VkResult VulkanReplayConsumerBase::OverrideCreateDescriptorUpdateTemplate(
     PFN_vkCreateDescriptorUpdateTemplate                                      func,
     VkResult                                                                  original_result,

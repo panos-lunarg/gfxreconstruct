@@ -699,6 +699,14 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                     uint32_t                                                   imageMemoryBarrierCount,
                                     const StructPointerDecoder<Decoded_VkImageMemoryBarrier>*  pImageMemoryBarriers);
 
+    void OverrideCmdPipelineBarrier2(PFN_vkCmdPipelineBarrier2                       func,
+                                     CommandBufferInfo*                              command_buffer_info,
+                                     StructPointerDecoder<Decoded_VkDependencyInfo>* pDependencyInfo);
+
+    void OverrideCmdPipelineBarrier2KHR(PFN_vkCmdPipelineBarrier2                       func,
+                                        CommandBufferInfo*                              command_buffer_info,
+                                        StructPointerDecoder<Decoded_VkDependencyInfo>* pDependencyInfo);
+
     VkResult OverrideCreateDescriptorUpdateTemplate(
         PFN_vkCreateDescriptorUpdateTemplate                                      func,
         VkResult                                                                  original_result,
