@@ -54,10 +54,6 @@ class VulkanReplayDumpResourcesBase
                                 const encode::DeviceTable*   device_table,
                                 const encode::InstanceTable* inst_table);
 
-    void FinalizeDrawCallCommandBuffer(VkCommandBuffer original_command_buffer);
-
-    void FinalizeDispatchRaysCommandBuffer(VkCommandBuffer original_command_buffer);
-
     void OverrideCmdDraw(const ApiCallInfo& call_info,
                          PFN_vkCmdDraw      func,
                          VkCommandBuffer    original_command_buffer,
@@ -910,7 +906,11 @@ class VulkanReplayDumpResourcesBase
 
         void DestroyMutableResourcesClones();
 
-        void FinalizeCommandBuffer();
+        void FinalizeCommandBuffer(bool is_dispatch);
+
+        void SnapshotComputeBoundDescriptors(uint64_t cmd_index);
+
+        void SnapshotRayTracingBoundDescriptors(uint64_t cmd_index);
 
         const CommandBufferInfo*       original_command_buffer_info;
         VkCommandBuffer                DR_command_buffer;
@@ -926,8 +926,9 @@ class VulkanReplayDumpResourcesBase
         bool                           dump_immutable_resources;
         bool                           dump_all_image_subresources;
 
-        // One entry per pipeline binding point
-        const DescriptorSetInfo* bound_descriptor_sets[kBindPoint_count];
+        // One entry per descriptor set for each compute and ray tracing binding points
+        std::unordered_map<uint32_t, const DescriptorSetInfo*> bound_descriptor_sets_compute;
+        std::unordered_map<uint32_t, const DescriptorSetInfo*> bound_descriptor_sets_ray_tracing;
 
         // For each Dispatch/TraceRays that we dump we create a clone of all mutable resources used in the
         // shaders/pipeline and the content of the original resources are copied into the clones
@@ -956,6 +957,11 @@ class VulkanReplayDumpResourcesBase
         const VkPhysicalDeviceMemoryProperties* replay_device_phys_mem_props;
         size_t                                  current_dispatch_index;
         size_t                                  current_trace_rays_index;
+
+        // Keep copies of the descriptor bindings referenced by each command.
+        // One entry per descriptor set
+        std::unordered_map<uint32_t, DescriptorSetInfo::DescriptorBindingsInfo> referenced_descriptors_compute;
+        std::unordered_map<uint32_t, DescriptorSetInfo::DescriptorBindingsInfo> referenced_descriptors_ray_tracing;
     };
 
     std::vector<uint64_t> QueueSubmit_indices_;

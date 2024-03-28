@@ -1193,16 +1193,6 @@ void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::FinalizeCommandBuff
     ++current_cb_index;
 }
 
-void VulkanReplayDumpResourcesBase::FinalizeDrawCallCommandBuffer(VkCommandBuffer original_command_buffer)
-{
-    DrawCallsDumpingContext* context = FindDrawCallCommandBufferContext(original_command_buffer);
-    assert(context);
-
-    context->FinalizeCommandBuffer();
-
-    UpdateRecordingStatus();
-}
-
 void VulkanReplayDumpResourcesBase::OverrideCmdDraw(const ApiCallInfo& call_info,
                                                     PFN_vkCmdDraw      func,
                                                     VkCommandBuffer    original_command_buffer,
@@ -1213,15 +1203,21 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDraw(const ApiCallInfo& call_info
 {
     assert(IsRecording(original_command_buffer));
 
-    const uint64_t dc_index  = call_info.index;
-    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+    const uint64_t           dc_index   = call_info.index;
+    const bool               must_dump  = MustDumpDrawCall(original_command_buffer, dc_index);
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
 
+    // Finalize draw call command buffer before the actual draw call in order
+    // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
     if (dc_context != nullptr && must_dump)
     {
         auto new_entry = dc_context->draw_call_params.emplace(
@@ -1249,7 +1245,11 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDraw(const ApiCallInfo& call_info
 
     if (must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 }
 
@@ -1264,16 +1264,22 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexed(const ApiCallInfo&   
 {
     assert(IsRecording(original_command_buffer));
 
-    const uint64_t dc_index  = call_info.index;
-    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+    const uint64_t           dc_index   = call_info.index;
+    const bool               must_dump  = MustDumpDrawCall(original_command_buffer, dc_index);
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
 
+    // Finalize draw call command buffer before the actual draw call in order
+    // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 
     // Copy vertex attribute info
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
     if (dc_context != nullptr && must_dump)
     {
         auto new_entry =
@@ -1305,7 +1311,11 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexed(const ApiCallInfo&   
 
     if (must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 }
 
@@ -1319,16 +1329,22 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirect(const ApiCallInfo&  
 {
     assert(IsRecording(original_command_buffer));
 
-    const uint64_t dc_index  = call_info.index;
-    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+    const uint64_t           dc_index   = call_info.index;
+    const bool               must_dump  = MustDumpDrawCall(original_command_buffer, dc_index);
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
 
+    // Finalize draw call command buffer before the actual draw call in order
+    // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 
     // Copy vertex attribute info
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
     if (dc_context != nullptr && must_dump)
     {
         auto new_entry = dc_context->draw_call_params.emplace(
@@ -1356,7 +1372,11 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirect(const ApiCallInfo&  
 
     if (must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 }
 
@@ -1370,15 +1390,21 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirect(const ApiCall
 {
     assert(IsRecording(original_command_buffer));
 
-    const uint64_t dc_index  = call_info.index;
-    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+    const uint64_t           dc_index   = call_info.index;
+    const bool               must_dump  = MustDumpDrawCall(original_command_buffer, dc_index);
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
 
+    // Finalize draw call command buffer before the actual draw call in order
+    // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
     if (dc_context != nullptr && must_dump)
     {
         auto new_entry = dc_context->draw_call_params.emplace(
@@ -1407,7 +1433,11 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirect(const ApiCall
 
     if (must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 }
 
@@ -1423,15 +1453,21 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCount(const ApiCallIn
 {
     assert(IsRecording(original_command_buffer));
 
-    const uint64_t dc_index  = call_info.index;
-    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+    const uint64_t           dc_index   = call_info.index;
+    const bool               must_dump  = MustDumpDrawCall(original_command_buffer, dc_index);
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
 
+    // Finalize draw call command buffer before the actual draw call in order
+    // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
     if (dc_context != nullptr && must_dump)
     {
         auto new_entry =
@@ -1471,7 +1507,11 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCount(const ApiCallIn
 
     if (must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 }
 
@@ -1487,15 +1527,21 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCount(const Ap
 {
     assert(IsRecording(original_command_buffer));
 
-    const uint64_t dc_index  = call_info.index;
-    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+    const uint64_t           dc_index   = call_info.index;
+    const bool               must_dump  = MustDumpDrawCall(original_command_buffer, dc_index);
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
 
+    // Finalize draw call command buffer before the actual draw call in order
+    // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
     if (dc_context != nullptr && must_dump)
     {
         auto new_entry = dc_context->draw_call_params.emplace(
@@ -1535,7 +1581,11 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCount(const Ap
 
     if (must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 }
 
@@ -1551,15 +1601,21 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCountKHR(const ApiCal
 {
     assert(IsRecording(original_command_buffer));
 
-    const uint64_t dc_index  = call_info.index;
-    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+    const uint64_t           dc_index   = call_info.index;
+    const bool               must_dump  = MustDumpDrawCall(original_command_buffer, dc_index);
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
 
+    // Finalize draw call command buffer before the actual draw call in order
+    // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
     if (dc_context != nullptr && must_dump)
     {
         auto new_entry =
@@ -1599,7 +1655,11 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCountKHR(const ApiCal
 
     if (must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 }
 
@@ -1615,15 +1675,21 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCountKHR(const
 {
     assert(IsRecording(original_command_buffer));
 
-    const uint64_t dc_index  = call_info.index;
-    const bool     must_dump = MustDumpDrawCall(original_command_buffer, dc_index);
+    const uint64_t           dc_index   = call_info.index;
+    const bool               must_dump  = MustDumpDrawCall(original_command_buffer, dc_index);
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
 
+    // Finalize draw call command buffer before the actual draw call in order
+    // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
     if (dc_context != nullptr && must_dump)
     {
         auto new_entry = dc_context->draw_call_params.emplace(
@@ -1663,7 +1729,11 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCountKHR(const
 
     if (must_dump)
     {
-        FinalizeDrawCallCommandBuffer(original_command_buffer);
+        if (dc_context != nullptr)
+        {
+            dc_context->FinalizeCommandBuffer();
+            UpdateRecordingStatus();
+        }
     }
 }
 
@@ -4453,17 +4523,27 @@ void VulkanReplayDumpResourcesBase::OverrideCmdBindVertexBuffers2(const ApiCallI
     }
 }
 
-void VulkanReplayDumpResourcesBase::FinalizeDispatchRaysCommandBuffer(VkCommandBuffer original_command_buffer)
+void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::FinalizeCommandBuffer(bool is_dispatch)
 {
-    DispatchTraceRaysDumpingContext* context = FindDispatchRaysCommandBufferContext(original_command_buffer);
-    assert(context);
-
-    if (!context->IsRecording())
+    if (is_dispatch)
     {
-        context->FinalizeCommandBuffer();
+        ++current_dispatch_index;
+    }
+    else
+    {
+        ++current_trace_rays_index;
     }
 
-    UpdateRecordingStatus();
+    if (!IsRecording())
+    {
+        assert((dump_resources_before ? (current_dispatch_index / 2) : current_dispatch_index) ==
+                   dispatch_indices.size() &&
+               (dump_resources_before ? (current_trace_rays_index / 2) : current_trace_rays_index) ==
+                   trace_rays_indices.size());
+        assert(DR_command_buffer != VK_NULL_HANDLE);
+
+        device_table->EndCommandBuffer(DR_command_buffer);
+    }
 }
 
 void VulkanReplayDumpResourcesBase::OverrideCmdDispatch(const ApiCallInfo& call_info,
@@ -4504,7 +4584,8 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDispatch(const ApiCallInfo& call_
         if (dr_context->MustDumpDispatch(call_info.index))
         {
             dr_context->CloneDispatchRaysResources(call_info.index, false, true);
-            FinalizeDispatchRaysCommandBuffer(original_command_buffer);
+            dr_context->FinalizeCommandBuffer(true);
+            UpdateRecordingStatus();
         }
     }
 }
@@ -4546,7 +4627,8 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDispatchIndirect(const ApiCallInf
         if (dr_context->MustDumpDispatch(call_info.index))
         {
             dr_context->CloneDispatchRaysResources(call_info.index, false, true);
-            FinalizeDispatchRaysCommandBuffer(original_command_buffer);
+            dr_context->FinalizeCommandBuffer(true);
+            UpdateRecordingStatus();
         }
     }
 }
@@ -4613,7 +4695,8 @@ void VulkanReplayDumpResourcesBase::OverrideCmdTraceRaysKHR(
         if (dr_context->MustDumpTraceRays(call_info.index))
         {
             dr_context->CloneDispatchRaysResources(call_info.index, false, false);
-            FinalizeDispatchRaysCommandBuffer(original_command_buffer);
+            dr_context->FinalizeCommandBuffer(false);
+            UpdateRecordingStatus();
         }
     }
 }
@@ -5081,9 +5164,17 @@ void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::BindDescrip
 {
     PipelineBindPoints bind_point = VkPipelineBindPointToPipelineBindPoint(pipeline_bind_point);
 
-    for (const auto desc_set : descriptor_sets_infos)
+    for (size_t i = 0; i < descriptor_sets_infos.size(); ++i)
     {
-        bound_descriptor_sets[bind_point] = desc_set;
+        if (bind_point == kBindPoint_compute)
+        {
+            bound_descriptor_sets_compute[first_set + i] = descriptor_sets_infos[i];
+        }
+        else
+        {
+            assert(bind_point == kBindPoint_ray_tracing);
+            bound_descriptor_sets_ray_tracing[first_set + i] = descriptor_sets_infos[i];
+        }
     }
 }
 
@@ -5287,18 +5378,22 @@ void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::CloneDispat
     {
         for (const auto& shader_desc_set : shader.second.used_descriptors_info)
         {
-            const uint32_t set = shader_desc_set.first;
+            const uint32_t desc_set_index = shader_desc_set.first;
+
             for (const auto& shader_desc_binding : shader_desc_set.second)
             {
                 // Search for resources that are not marked as read only
                 if (shader_desc_binding.second.accessed && !shader_desc_binding.second.readonly)
                 {
-                    const uint32_t binding = shader_desc_binding.first;
+                    const uint32_t binding_index = shader_desc_binding.first;
 
-                    assert(bound_descriptor_sets[bind_point] != nullptr);
+                    const DescriptorSetInfo* bound_descriptor_sets =
+                        is_dispatch ? bound_descriptor_sets_compute[desc_set_index]
+                                    : bound_descriptor_sets_ray_tracing[desc_set_index];
+                    assert(bound_descriptor_sets != nullptr);
 
-                    const auto& bound_desc_binding = bound_descriptor_sets[bind_point]->descriptors.find(binding);
-                    assert(bound_desc_binding != bound_descriptor_sets[bind_point]->descriptors.end());
+                    const auto& bound_desc_binding = bound_descriptor_sets->descriptors.find(binding_index);
+                    assert(bound_desc_binding != bound_descriptor_sets->descriptors.end());
                     assert(bound_desc_binding->second.desc_type == shader_desc_binding.second.type);
 
                     switch (shader_desc_binding.second.type)
@@ -5332,7 +5427,7 @@ void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::CloneDispat
                                 {
                                     mutable_resources_clones[index].original_images.push_back(img_info);
                                     mutable_resources_clones[index].image_desc_set_binding_pair.push_back(
-                                        std::make_pair(set, binding));
+                                        std::make_pair(desc_set_index, binding_index));
 
                                     new_img_ptr = &*(mutable_resources_clones[index].images.insert(
                                         mutable_resources_clones[index].images.end(), VK_NULL_HANDLE));
@@ -5344,7 +5439,7 @@ void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::CloneDispat
                                 {
                                     mutable_resources_clones_before[index].original_images.push_back(img_info);
                                     mutable_resources_clones_before[index].image_desc_set_binding_pair.push_back(
-                                        std::make_pair(set, binding));
+                                        std::make_pair(desc_set_index, binding_index));
 
                                     new_img_ptr = &*(mutable_resources_clones_before[index].images.insert(
                                         mutable_resources_clones_before[index].images.end(), VK_NULL_HANDLE));
@@ -5398,7 +5493,7 @@ void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::CloneDispat
                                 {
                                     mutable_resources_clones[index].original_buffers.push_back(buf_info);
                                     mutable_resources_clones[index].buffer_desc_set_binding_pair.push_back(
-                                        std::make_pair(set, binding));
+                                        std::make_pair(desc_set_index, binding_index));
 
                                     new_buf_ptr = &*(mutable_resources_clones[index].buffers.insert(
                                         mutable_resources_clones[index].buffers.end(), VK_NULL_HANDLE));
@@ -5410,7 +5505,7 @@ void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::CloneDispat
                                 {
                                     mutable_resources_clones_before[index].original_buffers.push_back(buf_info);
                                     mutable_resources_clones_before[index].buffer_desc_set_binding_pair.push_back(
-                                        std::make_pair(set, binding));
+                                        std::make_pair(desc_set_index, binding_index));
 
                                     new_buf_ptr = &*(mutable_resources_clones_before[index].buffers.insert(
                                         mutable_resources_clones_before[index].buffers.end(), VK_NULL_HANDLE));
@@ -5887,16 +5982,6 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpMut
     return VK_SUCCESS;
 }
 
-void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::FinalizeCommandBuffer()
-{
-    assert((dump_resources_before ? (current_dispatch_index / 2) : current_dispatch_index) == dispatch_indices.size() &&
-           (dump_resources_before ? (current_trace_rays_index / 2) : current_trace_rays_index) ==
-               trace_rays_indices.size());
-    assert(DR_command_buffer != VK_NULL_HANDLE);
-
-    device_table->EndCommandBuffer(DR_command_buffer);
-}
-
 bool VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::IsRecording() const
 {
     if (!dump_resources_before)
@@ -5907,6 +5992,100 @@ bool VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::IsRecording
     {
         return ((current_dispatch_index / 2) < dispatch_indices.size()) ||
                ((current_trace_rays_index / 2) < trace_rays_indices.size());
+    }
+}
+
+void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::SnapshotComputeBoundDescriptors(uint64_t cmd_index)
+{
+    const PipelineInfo* compute_ppl = bound_pipelines[kBindPoint_compute];
+    if (compute_ppl == nullptr)
+    {
+        return;
+    }
+
+    assert(compute_ppl->shaders.size() == 1);
+
+    const auto shader_stage_entry = compute_ppl->shaders.find(VK_SHADER_STAGE_COMPUTE_BIT);
+    if (shader_stage_entry == compute_ppl->shaders.end())
+    {
+        return;
+    }
+
+    const ShaderModuleInfo& compute_shader = shader_stage_entry->second;
+    for (const auto& shader_desc_set : compute_shader.used_descriptors_info)
+    {
+        const uint32_t desc_set_index             = shader_desc_set.first;
+        const auto&    bound_descriptor_set_entry = bound_descriptor_sets_compute.find(desc_set_index);
+        if (bound_descriptor_set_entry == bound_descriptor_sets_compute.end())
+        {
+            continue;
+        }
+
+        const DescriptorSetInfo* bound_descriptor_set = bound_descriptor_set_entry->second;
+
+        for (const auto& shader_desc_binding : shader_desc_set.second)
+        {
+            // if (!shader_desc_binding.second.accessed)
+            // {
+            //     continue;
+            // }
+
+            const uint32_t desc_binding_index = shader_desc_binding.first;
+
+            const auto& bound_descriptor_entry = bound_descriptor_set->descriptors.find(desc_binding_index);
+            if (bound_descriptor_entry == bound_descriptor_set->descriptors.end())
+            {
+                continue;
+            }
+
+            referenced_descriptors_compute[desc_set_index][desc_binding_index] = bound_descriptor_entry->second;
+        }
+    }
+}
+
+void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::SnapshotRayTracingBoundDescriptors(
+    uint64_t cmd_index)
+{
+    const PipelineInfo* ray_tracing_ppl = bound_pipelines[kBindPoint_ray_tracing];
+    if (ray_tracing_ppl == nullptr)
+    {
+        return;
+    }
+
+    assert(ray_tracing_ppl->shaders.size() == 1);
+
+    for (const auto& shader_stage_entry : ray_tracing_ppl->shaders)
+    {
+        const ShaderModuleInfo& rt_stage_shader_info = shader_stage_entry.second;
+        for (const auto& shader_desc_set : rt_stage_shader_info.used_descriptors_info)
+        {
+            const uint32_t desc_set_index             = shader_desc_set.first;
+            const auto&    bound_descriptor_set_entry = bound_descriptor_sets_ray_tracing.find(desc_set_index);
+            if (bound_descriptor_set_entry == bound_descriptor_sets_ray_tracing.end())
+            {
+                continue;
+            }
+
+            const DescriptorSetInfo* bound_descriptor_set = bound_descriptor_set_entry->second;
+
+            for (const auto& shader_desc_binding : shader_desc_set.second)
+            {
+                // if (!shader_desc_binding.second.accessed)
+                // {
+                //     continue;
+                // }
+
+                const uint32_t desc_binding_index = shader_desc_binding.first;
+
+                const auto& bound_descriptor_entry = bound_descriptor_set->descriptors.find(desc_binding_index);
+                if (bound_descriptor_entry == bound_descriptor_set->descriptors.end())
+                {
+                    continue;
+                }
+
+                referenced_descriptors_ray_tracing[desc_set_index][desc_binding_index] = bound_descriptor_entry->second;
+            }
+        }
     }
 }
 
