@@ -830,6 +830,8 @@ class VulkanReplayDumpResourcesBase
 
         VkResult FetchDrawIndirectParams();
 
+        void GenerateOutputJsonDrawCallInfo(uint64_t cmd_buf_index, uint64_t qs_index, uint64_t bcb_index) const;
+
         struct
         {
             std::vector<const ImageInfo*> original_images;
