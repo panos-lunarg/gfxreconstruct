@@ -908,9 +908,9 @@ class VulkanReplayDumpResourcesBase
 
         void FinalizeCommandBuffer(bool is_dispatch);
 
-        void SnapshotComputeBoundDescriptors(uint64_t cmd_index);
+        void SnapshotComputeBoundDescriptors();
 
-        void SnapshotRayTracingBoundDescriptors(uint64_t cmd_index);
+        void SnapshotRayTracingBoundDescriptors();
 
         const CommandBufferInfo*       original_command_buffer_info;
         VkCommandBuffer                DR_command_buffer;
@@ -962,6 +962,12 @@ class VulkanReplayDumpResourcesBase
         // One entry per descriptor set
         std::unordered_map<uint32_t, DescriptorSetInfo::DescriptorBindingsInfo> referenced_descriptors_compute;
         std::unordered_map<uint32_t, DescriptorSetInfo::DescriptorBindingsInfo> referenced_descriptors_ray_tracing;
+
+        std::vector<std::string> GenerateImageDescriptorFilename(const ImageInfo* img_info) const;
+
+        std::string GenerateBufferDescriptorFilename(format::HandleId buffer_id) const;
+
+        VkResult DumpImmutableResources(uint64_t qs_index, uint64_t bcb_index) const;
     };
 
     std::vector<uint64_t> QueueSubmit_indices_;

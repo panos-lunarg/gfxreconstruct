@@ -2358,20 +2358,6 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpImmutableRe
     };
     std::unordered_map<const BufferInfo*, buffer_descriptor_info> buffer_descriptors;
 
-    assert(original_command_buffer_info);
-    assert(original_command_buffer_info->parent_id != format::kNullHandleId);
-    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
-    assert(device_info);
-
-    const PhysicalDeviceInfo* phys_dev_info = object_info_table.GetPhysicalDeviceInfo(device_info->parent_id);
-    assert(phys_dev_info);
-
-    graphics::VulkanResourcesUtil resource_util(device_info->handle,
-                                                device_info->parent,
-                                                *device_table,
-                                                *instance_table,
-                                                *phys_dev_info->replay_device_info->memory_properties);
-
     for (const auto& dc_params : draw_call_params)
     {
         for (const auto& shader_stage : dc_params.second.referenced_descriptors)
@@ -2443,6 +2429,11 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpImmutableRe
         }
     }
 
+    assert(original_command_buffer_info);
+    assert(original_command_buffer_info->parent_id != format::kNullHandleId);
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+    assert(device_info);
+
     for (const auto& img_info : image_descriptors)
     {
         const std::vector<std::string> filenames = GenerateImageDescriptorFilename(img_info);
@@ -2462,6 +2453,15 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpImmutableRe
             return res;
         }
     }
+
+    const PhysicalDeviceInfo* phys_dev_info = object_info_table.GetPhysicalDeviceInfo(device_info->parent_id);
+    assert(phys_dev_info);
+
+    graphics::VulkanResourcesUtil resource_util(device_info->handle,
+                                                device_info->parent,
+                                                *device_table,
+                                                *instance_table,
+                                                *phys_dev_info->replay_device_info->memory_properties);
 
     for (const auto& buf : buffer_descriptors)
     {
@@ -4584,6 +4584,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDispatch(const ApiCallInfo& call_
         if (dr_context->MustDumpDispatch(call_info.index))
         {
             dr_context->CloneDispatchRaysResources(call_info.index, false, true);
+            dr_context->SnapshotComputeBoundDescriptors();
             dr_context->FinalizeCommandBuffer(true);
             UpdateRecordingStatus();
         }
@@ -4627,6 +4628,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDispatchIndirect(const ApiCallInf
         if (dr_context->MustDumpDispatch(call_info.index))
         {
             dr_context->CloneDispatchRaysResources(call_info.index, false, true);
+            dr_context->SnapshotComputeBoundDescriptors();
             dr_context->FinalizeCommandBuffer(true);
             UpdateRecordingStatus();
         }
@@ -4695,6 +4697,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdTraceRaysKHR(
         if (dr_context->MustDumpTraceRays(call_info.index))
         {
             dr_context->CloneDispatchRaysResources(call_info.index, false, false);
+            dr_context->SnapshotRayTracingBoundDescriptors();
             dr_context->FinalizeCommandBuffer(false);
             UpdateRecordingStatus();
         }
@@ -5554,15 +5557,6 @@ void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::CloneDispat
             }
         }
     }
-
-    if (is_dispatch)
-    {
-        ++current_dispatch_index;
-    }
-    else
-    {
-        ++current_trace_rays_index;
-    }
 }
 
 void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DestroyMutableResourcesClones()
@@ -5684,6 +5678,8 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpDis
     {
         DumpMutableResources(bcb_index, tr_index, qs_index, false);
     }
+
+    DumpImmutableResources(qs_index, bcb_index);
 
     return VK_SUCCESS;
 }
@@ -5995,7 +5991,7 @@ bool VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::IsRecording
     }
 }
 
-void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::SnapshotComputeBoundDescriptors(uint64_t cmd_index)
+void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::SnapshotComputeBoundDescriptors()
 {
     const PipelineInfo* compute_ppl = bound_pipelines[kBindPoint_compute];
     if (compute_ppl == nullptr)
@@ -6043,16 +6039,13 @@ void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::SnapshotCom
     }
 }
 
-void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::SnapshotRayTracingBoundDescriptors(
-    uint64_t cmd_index)
+void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::SnapshotRayTracingBoundDescriptors()
 {
     const PipelineInfo* ray_tracing_ppl = bound_pipelines[kBindPoint_ray_tracing];
     if (ray_tracing_ppl == nullptr)
     {
         return;
     }
-
-    assert(ray_tracing_ppl->shaders.size() == 1);
 
     for (const auto& shader_stage_entry : ray_tracing_ppl->shaders)
     {
@@ -6087,6 +6080,279 @@ void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::SnapshotRay
             }
         }
     }
+}
+
+std::vector<std::string>
+VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::GenerateImageDescriptorFilename(
+    const ImageInfo* img_info) const
+{
+    assert(img_info != nullptr);
+
+    std::vector<VkImageAspectFlagBits> aspects;
+    bool                               combined_depth_stencil;
+    graphics::GetFormatAspects(img_info->format, &aspects, &combined_depth_stencil);
+
+    const uint32_t total_files =
+        dump_all_image_subresources ? (aspects.size() * img_info->level_count * img_info->layer_count) : aspects.size();
+    std::vector<std::string> filenames(total_files);
+
+    uint32_t f = 0;
+    for (size_t i = 0; i < aspects.size(); ++i)
+    {
+        std::string       aspect_str_whole(util::ToString<VkImageAspectFlagBits>(aspects[i]));
+        std::string       aspect_str(aspect_str_whole.begin() + 16, aspect_str_whole.end() - 4);
+        std::stringstream base_filename;
+
+        if (VkFormatToImageWriterDataFormat(img_info->format) != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
+        {
+            base_filename << "Image_" << img_info->capture_id << "_aspect_" << aspect_str;
+        }
+        else
+        {
+            std::string whole_format_name = util::ToString<VkFormat>(img_info->format);
+            std::string format_name(whole_format_name.begin() + 10, whole_format_name.end());
+
+            base_filename << "Image_" << img_info->capture_id << "_" << format_name << "_aspect_" << aspect_str;
+        }
+
+        if (dump_all_image_subresources && (img_info->level_count > 1 || img_info->layer_count > 1))
+        {
+            for (uint32_t level = 0; level < img_info->level_count; ++level)
+            {
+                for (uint32_t layer = 0; layer < img_info->layer_count; ++layer)
+                {
+                    std::stringstream sub_resources_str;
+                    sub_resources_str << base_filename.str() << "_mip_" << level << "_layer_" << layer;
+                    std::filesystem::path filedirname(dump_resource_path);
+                    std::filesystem::path filebasename(sub_resources_str.str());
+                    filenames[f++] = (filedirname / filebasename).string();
+                }
+            }
+        }
+        else
+        {
+            std::filesystem::path filedirname(dump_resource_path);
+            std::filesystem::path filebasename(base_filename.str());
+            filenames[f++] = (filedirname / filebasename).string();
+        }
+    }
+
+    assert(f == total_files);
+
+    return std::move(filenames);
+}
+
+std::string VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::GenerateBufferDescriptorFilename(
+    format::HandleId buffer_id) const
+{
+    std::stringstream filename;
+
+    filename << "Buffer_" << buffer_id << ".bin";
+
+    std::filesystem::path filedirname(dump_resource_path);
+    std::filesystem::path filebasename(filename.str());
+    return (filedirname / filebasename).string();
+}
+
+VkResult
+VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DumpImmutableResources(uint64_t qs_index,
+                                                                                       uint64_t bcb_index) const
+{
+    // Create a list of all descriptors referenced by all commands
+    std::unordered_set<const ImageInfo*> image_descriptors;
+
+    struct buffer_descriptor_info
+    {
+        VkDeviceSize offset;
+        VkDeviceSize range;
+    };
+    std::unordered_map<const BufferInfo*, buffer_descriptor_info> buffer_descriptors;
+
+    // Scan through descriptors used in compute commands
+    for (const auto& desc_set : referenced_descriptors_compute)
+    {
+        const uint32_t desc_set_index = desc_set.first;
+
+        for (const auto& desc_binding : desc_set.second)
+        {
+            const uint32_t desc_binding_index = desc_binding.first;
+
+            switch (desc_binding.second.desc_type)
+            {
+                case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+                case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+                case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+                case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+                {
+                    for (size_t i = 0; i < desc_binding.second.image_info.size(); ++i)
+                    {
+                        if (desc_binding.second.image_info[i].image_view_info != nullptr)
+                        {
+                            const ImageInfo* img_info = object_info_table.GetImageInfo(
+                                desc_binding.second.image_info[i].image_view_info->image_id);
+                            assert(img_info);
+
+                            image_descriptors.insert(img_info);
+                        }
+                    }
+                }
+                break;
+
+                case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+                case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+                case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+                case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+                case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+                case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+                {
+                    for (size_t i = 0; i < desc_binding.second.buffer_info.size(); ++i)
+                    {
+                        if (desc_binding.second.buffer_info[i].buffer_info != nullptr)
+                        {
+                            buffer_descriptors.emplace(
+                                std::piecewise_construct,
+                                std::forward_as_tuple(desc_binding.second.buffer_info[i].buffer_info),
+                                std::forward_as_tuple(
+                                    buffer_descriptor_info{ desc_binding.second.buffer_info[i].offset,
+                                                            desc_binding.second.buffer_info[i].range }));
+                        }
+                    }
+                }
+                break;
+
+                case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
+                case VK_DESCRIPTOR_TYPE_SAMPLER:
+                    break;
+
+                default:
+                    GFXRECON_LOG_WARNING_ONCE("%s(): Descriptor type (%s) not handled",
+                                              __func__,
+                                              util::ToString<VkDescriptorType>(desc_binding.second.desc_type).c_str());
+                    break;
+            }
+        }
+    }
+
+    // Scan through descriptors used in ray tracing commands
+    for (const auto& desc_set : referenced_descriptors_ray_tracing)
+    {
+        const uint32_t desc_set_index = desc_set.first;
+
+        for (const auto& desc_binding : desc_set.second)
+        {
+            const uint32_t desc_binding_index = desc_binding.first;
+
+            switch (desc_binding.second.desc_type)
+            {
+                case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+                case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+                case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+                case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+                {
+                    for (size_t i = 0; i < desc_binding.second.image_info.size(); ++i)
+                    {
+                        if (desc_binding.second.image_info[i].image_view_info != nullptr)
+                        {
+                            const ImageInfo* img_info = object_info_table.GetImageInfo(
+                                desc_binding.second.image_info[i].image_view_info->image_id);
+                            assert(img_info);
+
+                            image_descriptors.insert(img_info);
+                        }
+                    }
+                }
+                break;
+
+                case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+                case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+                case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+                case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+                case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+                case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+                {
+                    for (size_t i = 0; i < desc_binding.second.buffer_info.size(); ++i)
+                    {
+                        if (desc_binding.second.buffer_info[i].buffer_info != nullptr)
+                        {
+                            buffer_descriptors.emplace(
+                                std::piecewise_construct,
+                                std::forward_as_tuple(desc_binding.second.buffer_info[i].buffer_info),
+                                std::forward_as_tuple(
+                                    buffer_descriptor_info{ desc_binding.second.buffer_info[i].offset,
+                                                            desc_binding.second.buffer_info[i].range }));
+                        }
+                    }
+                }
+                break;
+
+                case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
+                case VK_DESCRIPTOR_TYPE_SAMPLER:
+                    break;
+
+                default:
+                    GFXRECON_LOG_WARNING_ONCE("%s(): Descriptor type (%s) not handled",
+                                              __func__,
+                                              util::ToString<VkDescriptorType>(desc_binding.second.desc_type).c_str());
+                    break;
+            }
+        }
+    }
+
+    assert(original_command_buffer_info);
+    assert(original_command_buffer_info->parent_id != format::kNullHandleId);
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+    assert(device_info);
+
+    for (const auto& img_info : image_descriptors)
+    {
+        const std::vector<std::string> filenames = GenerateImageDescriptorFilename(img_info);
+
+        VkResult res = DumpImageToFile(img_info,
+                                       device_info,
+                                       device_table,
+                                       instance_table,
+                                       object_info_table,
+                                       filenames,
+                                       dump_resources_scale,
+                                       image_file_format,
+                                       dump_all_image_subresources);
+
+        if (res != VK_SUCCESS)
+        {
+            return res;
+        }
+    }
+
+    const PhysicalDeviceInfo* phys_dev_info = object_info_table.GetPhysicalDeviceInfo(device_info->parent_id);
+    assert(phys_dev_info);
+
+    graphics::VulkanResourcesUtil resource_util(device_info->handle,
+                                                device_info->parent,
+                                                *device_table,
+                                                *instance_table,
+                                                *phys_dev_info->replay_device_info->memory_properties);
+
+    for (const auto& buf : buffer_descriptors)
+    {
+        const BufferInfo*  buffer_info = buf.first;
+        const VkDeviceSize offset      = buf.second.offset;
+        const VkDeviceSize range       = buf.second.range;
+        const VkDeviceSize size        = range == VK_WHOLE_SIZE ? buffer_info->size - offset : range;
+
+        std::vector<uint8_t> data;
+        VkResult             res = resource_util.ReadFromBufferResource(
+            buffer_info->handle, size, offset, buffer_info->queue_family_index, data);
+
+        if (res != VK_SUCCESS)
+        {
+            return res;
+        }
+
+        const std::string filename = GenerateBufferDescriptorFilename(buffer_info->capture_id);
+        util::bufferwriter::WriteBuffer(filename, data.data(), data.size());
+    }
+
+    return VK_SUCCESS;
 }
 
 GFXRECON_END_NAMESPACE(gfxrecon)
