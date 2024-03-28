@@ -110,6 +110,20 @@ static util::imagewriter::DataFormats VkFormatToImageWriterDataFormat(VkFormat f
     }
 }
 
+static const char* ImageFileExtension(VkFormat format, util::ScreenshotFormat image_file_format)
+{
+    const util::imagewriter::DataFormats output_image_format = VkFormatToImageWriterDataFormat(format);
+
+    if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
+    {
+        return util::ScreenshotFormatToCStr(image_file_format);
+    }
+    else
+    {
+        return ".bin";
+    }
+}
+
 static uint32_t GetMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties& memory_properties,
                                    uint32_t                                type_bits,
                                    VkMemoryPropertyFlags                   property_flags)
@@ -1747,6 +1761,27 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpDrawCallsAt
     VkQueue queue, uint64_t qs_index, uint64_t bcb_index, const VkSubmitInfo& submit_info, VkFence fence)
 {
     const size_t n_drawcalls = command_buffers.size();
+
+    VkResult res = VK_SUCCESS;
+
+    // Dump vertex/index buffers
+    if (dump_vertex_index_buffers)
+    {
+        res = DumpVertexIndexBuffers();
+    }
+
+    // Dump immutable resources
+    if (dump_immutable_resources && res == VK_SUCCESS)
+    {
+        res = DumpImmutableResources(qs_index, bcb_index);
+    }
+
+    if (res != VK_SUCCESS)
+    {
+        return res;
+    }
+
+    // Dump render targets
     for (size_t cb = 0; cb < n_drawcalls; ++cb)
     {
         GFXRECON_LOG_INFO("Submitting CB/DC %u of %zu (idx: %" PRIu64 ") for BeginCommandBuffer: %" PRIu64,
@@ -1773,8 +1808,6 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpDrawCallsAt
 
         const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
         assert(device_info);
-
-        VkResult res;
 
         const VkFenceCreateInfo ci = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO, nullptr, 0 };
         VkFence                 submission_fence;
@@ -1817,22 +1850,12 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpDrawCallsAt
         // Dump render targets
         DumpRenderTargetAttachments(cb, qs_index, bcb_index);
 
+        GenerateOutputJsonDrawCallInfo(cb, qs_index, bcb_index);
+
         if (!output_json_per_command)
         {
             dump_json.VulkanReplayDumpResourcesJsonBlockEnd();
         }
-    }
-
-    // Dump vertex attributes
-    VkResult res = VK_SUCCESS;
-    if (dump_vertex_index_buffers)
-    {
-        res = DumpVertexIndexBuffers();
-    }
-
-    if (dump_immutable_resources && res == VK_SUCCESS)
-    {
-        res = DumpImmutableResources(qs_index, bcb_index);
     }
 
     return res;
@@ -1873,13 +1896,13 @@ std::vector<std::string> VulkanReplayDumpResourcesBase::DrawCallsDumpingContext:
         {
             if (dump_resources_before)
             {
-                filename << "Draw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << attachment_str << "_"
+                filename << "Draw_" << ((cmd_buf_index % 2) ? "after_" : "before_") << dc_index << attachment_str
                          << util::ToString<VkFormat>(format) << "_aspect_" << aspect_str;
             }
             else
             {
-                filename << "Draw_" << dc_index << attachment_str << "_" << util::ToString<VkFormat>(format)
-                         << "_aspect_" << aspect_str;
+                filename << "Draw_" << dc_index << attachment_str << util::ToString<VkFormat>(format) << "_aspect_"
+                         << aspect_str;
             }
         }
 
@@ -1891,35 +1914,14 @@ std::vector<std::string> VulkanReplayDumpResourcesBase::DrawCallsDumpingContext:
     return filenames;
 }
 
-VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTargetAttachments(uint64_t cmd_buf_index,
-                                                                                             uint64_t qs_index,
-                                                                                             uint64_t bcb_index) const
+void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::GenerateOutputJsonDrawCallInfo(uint64_t cmd_buf_index,
+                                                                                            uint64_t qs_index,
+                                                                                            uint64_t bcb_index) const
 {
-    assert(device_table != nullptr);
-
     const size_t                dc_index = dc_indices[CmdBufToDCVectorIndex(cmd_buf_index)];
     const RenderPassSubpassPair RP_index = GetRenderPassIndex(dc_index);
     const uint64_t              rp       = RP_index.first;
     const uint64_t              sp       = RP_index.second;
-
-    if (!render_targets[rp][sp].color_att_imgs.size() && render_targets[rp][sp].depth_att_img == nullptr)
-    {
-        return VK_SUCCESS;
-    }
-
-    assert(original_command_buffer_info);
-    assert(original_command_buffer_info->parent_id != format::kNullHandleId);
-    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
-    assert(device_info);
-
-    const PhysicalDeviceInfo* phys_dev_info = object_info_table.GetPhysicalDeviceInfo(device_info->parent_id);
-    assert(phys_dev_info);
-
-    graphics::VulkanResourcesUtil resource_util(device_info->handle,
-                                                device_info->parent,
-                                                *device_table,
-                                                *instance_table,
-                                                *phys_dev_info->replay_device_info->memory_properties);
 
     VulkanReplayDumpResourcesJson  draw_call_output_json;
     VulkanReplayDumpResourcesJson* output_json_writer;
@@ -1936,7 +1938,6 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
         output_json_writer = &dump_json;
     }
 
-    // Dump color attachments
     for (size_t i = 0; i < render_targets[rp][sp].color_att_imgs.size(); ++i)
     {
         if (color_attachment_to_dump != kUnspecifiedColorAttachment &&
@@ -1950,24 +1951,6 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
         const std::vector<std::string> filenames =
             GenerateRenderTargetImageFilename(image_info->format, cmd_buf_index, dc_index, i);
 
-        const VkExtent3D extent{ render_area[rp].extent.width, render_area[rp].extent.height, 1 };
-        VkResult         res = DumpImageToFile(image_info,
-                                       device_info,
-                                       device_table,
-                                       instance_table,
-                                       object_info_table,
-                                       filenames,
-                                       dump_resources_scale,
-                                       image_file_format,
-                                       dump_all_image_subresources,
-                                       VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                                       &extent);
-
-        if (res != VK_SUCCESS)
-        {
-            return res;
-        }
-
         output_json_writer->VulkanReplayDumpResourcesJsonData("DrawIndex", dc_index);
         output_json_writer->VulkanReplayDumpResourcesJsonData("BeginCommandBufferIndex", bcb_index);
         output_json_writer->VulkanReplayDumpResourcesJsonData("QueueSubmitIndex", qs_index);
@@ -1975,42 +1958,13 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
                                                               filenames[0]);
     }
 
-    // Dump depth attachment
     if (dump_depth && render_targets[rp][sp].depth_att_img != nullptr)
     {
-        const ImageInfo* image_info = render_targets[rp][sp].depth_att_img;
-
-        std::vector<uint8_t>  data;
-        std::vector<uint64_t> subresource_offsets;
-        std::vector<uint64_t> subresource_sizes;
-        bool                  scaling_supported;
-
-        std::vector<VkImageAspectFlagBits> aspects;
-        bool                               combined_depth_stencil;
-        graphics::GetFormatAspects(image_info->format, &aspects, &combined_depth_stencil);
-
+        const ImageInfo*               image_info = render_targets[rp][sp].depth_att_img;
         const std::vector<std::string> filenames =
             GenerateRenderTargetImageFilename(image_info->format, cmd_buf_index, dc_index, DEPTH_ATTACHMENT);
 
-        const VkExtent3D extent{ render_area[rp].extent.width, render_area[rp].extent.height, 1 };
-        VkResult         res = DumpImageToFile(image_info,
-                                       device_info,
-                                       device_table,
-                                       instance_table,
-                                       object_info_table,
-                                       filenames,
-                                       dump_resources_scale,
-                                       image_file_format,
-                                       dump_all_image_subresources,
-                                       VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                                       &extent);
-
-        if (res != VK_SUCCESS)
-        {
-            return res;
-        }
-
-        for (size_t i = 0; i < aspects.size(); ++i)
+        for (size_t i = 0; i < filenames.size(); ++i)
         {
             output_json_writer->VulkanReplayDumpResourcesJsonData("RenderTargetDepth_", filenames[i]);
         }
@@ -2054,84 +2008,198 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTarge
     }
 
     // Emit in json output the references to dumped immutable descriptors
-    // if (dump_immutable_resources)
-    // {
-    //     const auto& dc_param_entry = draw_call_params.find(dc_index);
-    //     assert(dc_param_entry != draw_call_params.end());
-    //     if (dc_param_entry != draw_call_params.end())
-    //     {
-    //         const DrawCallParameters& dc_param = dc_param_entry->second;
-    //         for (const auto& shader_stage : dc_param.referenced_descriptors)
-    //         {
-    //             for (const auto& desc_set : shader_stage.second)
-    //             {
-    //                 const uint32_t desc_set_index = desc_set.first;
+    if (dump_immutable_resources)
+    {
+        const auto& dc_param_entry = draw_call_params.find(dc_index);
+        assert(dc_param_entry != draw_call_params.end());
+        if (dc_param_entry != draw_call_params.end())
+        {
+            const DrawCallParameters& dc_param = dc_param_entry->second;
+            for (const auto& shader_stage : dc_param.referenced_descriptors)
+            {
+                for (const auto& desc_set : shader_stage.second)
+                {
+                    const uint32_t desc_set_index = desc_set.first;
 
-    //                 for (const auto& desc_binding : desc_set.second)
-    //                 {
-    //                     const uint32_t desc_set_binding_index = desc_binding.first;
+                    for (const auto& desc_binding : desc_set.second)
+                    {
+                        const uint32_t desc_set_binding_index = desc_binding.first;
 
-    //                     const std::string shader_stage_name_whole =
-    //                         util::ToString<VkShaderStageFlagBits>(shader_stage.first);
-    //                     std::string shader_stage_name(shader_stage_name_whole.begin() + 10,
-    //                                                   shader_stage_name_whole.end() - 4);
-    //                     std::transform(shader_stage_name.begin(),
-    //                                    shader_stage_name.end(),
-    //                                    shader_stage_name.begin(),
-    //                                    [](unsigned char c) { return std::tolower(c); });
+                        const std::string shader_stage_name_whole =
+                            util::ToString<VkShaderStageFlagBits>(shader_stage.first);
+                        std::string shader_stage_name(shader_stage_name_whole.begin() + 10,
+                                                      shader_stage_name_whole.end() - 4);
+                        std::transform(shader_stage_name.begin(),
+                                       shader_stage_name.end(),
+                                       shader_stage_name.begin(),
+                                       [](unsigned char c) { return std::tolower(c); });
 
-    //                     const std::string desc_entry = "Descriptor_" + shader_stage_name + "_desc_set_" +
-    //                                                    std::to_string(desc_set_index) + "_binding_" +
-    //                                                    std::to_string(desc_set_binding_index);
+                        std::string desc_entry = "Descriptor_" + shader_stage_name + "_desc_set_" +
+                                                 std::to_string(desc_set_index) + "_binding_" +
+                                                 std::to_string(desc_set_binding_index);
 
-    //                     switch (desc_binding.second.desc_type)
-    //                     {
-    //                         case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
-    //                         case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
-    //                         case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
-    //                         case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
-    //                         {
-    //                             assert(desc_binding.second.image_info.image_view_info != nullptr);
-    //                             const ImageInfo* img_info = object_info_table.GetImageInfo(
-    //                                 desc_binding.second.image_info.image_view_info->image_id);
-    //                             assert(img_info != nullptr);
+                        switch (desc_binding.second.desc_type)
+                        {
+                            case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+                            case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+                            case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+                            case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+                            {
+                                for (size_t img = 0; img < desc_binding.second.image_info.size(); ++img)
+                                {
+                                    if (desc_binding.second.image_info[img].image_view_info == nullptr)
+                                    {
+                                        continue;
+                                    }
 
-    //                             const std::vector<std::string> filenames = GenerateImageDescriptorFilename(img_info);
-    //                             for (const std::string& filename : filenames)
-    //                             {
-    //                                 output_json_writer->VulkanReplayDumpResourcesJsonData(desc_entry, filename);
-    //                             }
-    //                         }
-    //                         break;
+                                    const ImageInfo* img_info = object_info_table.GetImageInfo(
+                                        desc_binding.second.image_info[img].image_view_info->image_id);
+                                    assert(img_info != nullptr);
 
-    //                         case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
-    //                         case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
-    //                         case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
-    //                         case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
-    //                         case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
-    //                         case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
-    //                         {
-    //                             const BufferInfo* buf_info = desc_binding.second.buffer_info.buffer_info;
-    //                             assert(buf_info);
+                                    desc_entry += "[" + std::to_string(img) + "]";
 
-    //                             const std::string filename = GenerateBufferDescriptorFilename(buf_info->capture_id);
-    //                             output_json_writer->VulkanReplayDumpResourcesJsonData(desc_entry, filename);
-    //                         }
-    //                         break;
+                                    std::vector<std::string> filenames = GenerateImageDescriptorFilename(img_info);
+                                    for (std::string& filename : filenames)
+                                    {
+                                        filename += ImageFileExtension(img_info->format, image_file_format);
+                                        output_json_writer->VulkanReplayDumpResourcesJsonData(desc_entry, filename);
+                                    }
+                                }
+                            }
+                            break;
 
-    //                         default:
-    //                             break;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+                            case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+                            case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+                            case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+                            case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+                            case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+                            case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+                            {
+                                for (size_t buf = 0; buf < desc_binding.second.image_info.size(); ++buf)
+                                {
+                                    const BufferInfo* buf_info = desc_binding.second.buffer_info[buf].buffer_info;
+                                    if (buf_info == nullptr)
+                                    {
+                                        continue;
+                                    }
+
+                                    desc_entry += "[" + std::to_string(buf) + "]";
+
+                                    const std::string filename = GenerateBufferDescriptorFilename(buf_info->capture_id);
+                                    output_json_writer->VulkanReplayDumpResourcesJsonData(desc_entry, filename);
+                                }
+                            }
+                            break;
+
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     if (output_json_per_command)
     {
         draw_call_output_json.VulkanReplayDumpResourcesJsonBlockEnd();
         draw_call_output_json.VulkanReplayDumpResourcesJsonClose();
+    }
+}
+
+VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpRenderTargetAttachments(uint64_t cmd_buf_index,
+                                                                                             uint64_t qs_index,
+                                                                                             uint64_t bcb_index) const
+{
+    assert(device_table != nullptr);
+
+    const size_t                dc_index = dc_indices[CmdBufToDCVectorIndex(cmd_buf_index)];
+    const RenderPassSubpassPair RP_index = GetRenderPassIndex(dc_index);
+    const uint64_t              rp       = RP_index.first;
+    const uint64_t              sp       = RP_index.second;
+
+    if (!render_targets[rp][sp].color_att_imgs.size() && render_targets[rp][sp].depth_att_img == nullptr)
+    {
+        return VK_SUCCESS;
+    }
+
+    assert(original_command_buffer_info);
+    assert(original_command_buffer_info->parent_id != format::kNullHandleId);
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+    assert(device_info);
+
+    const PhysicalDeviceInfo* phys_dev_info = object_info_table.GetPhysicalDeviceInfo(device_info->parent_id);
+    assert(phys_dev_info);
+
+    graphics::VulkanResourcesUtil resource_util(device_info->handle,
+                                                device_info->parent,
+                                                *device_table,
+                                                *instance_table,
+                                                *phys_dev_info->replay_device_info->memory_properties);
+
+    // Dump color attachments
+    for (size_t i = 0; i < render_targets[rp][sp].color_att_imgs.size(); ++i)
+    {
+        if (color_attachment_to_dump != kUnspecifiedColorAttachment &&
+            static_cast<size_t>(color_attachment_to_dump) != i)
+        {
+            continue;
+        }
+
+        const ImageInfo* image_info = render_targets[rp][sp].color_att_imgs[i];
+
+        const std::vector<std::string> filenames =
+            GenerateRenderTargetImageFilename(image_info->format, cmd_buf_index, dc_index, i);
+
+        const VkExtent3D extent{ render_area[rp].extent.width, render_area[rp].extent.height, 1 };
+        VkResult         res = DumpImageToFile(image_info,
+                                       device_info,
+                                       device_table,
+                                       instance_table,
+                                       object_info_table,
+                                       filenames,
+                                       dump_resources_scale,
+                                       image_file_format,
+                                       dump_all_image_subresources,
+                                       VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                                       &extent);
+
+        if (res != VK_SUCCESS)
+        {
+            return res;
+        }
+    }
+
+    // Dump depth attachment
+    if (dump_depth && render_targets[rp][sp].depth_att_img != nullptr)
+    {
+        const ImageInfo* image_info = render_targets[rp][sp].depth_att_img;
+
+        std::vector<uint8_t>  data;
+        std::vector<uint64_t> subresource_offsets;
+        std::vector<uint64_t> subresource_sizes;
+        bool                  scaling_supported;
+
+        const std::vector<std::string> filenames =
+            GenerateRenderTargetImageFilename(image_info->format, cmd_buf_index, dc_index, DEPTH_ATTACHMENT);
+
+        const VkExtent3D extent{ render_area[rp].extent.width, render_area[rp].extent.height, 1 };
+        VkResult         res = DumpImageToFile(image_info,
+                                       device_info,
+                                       device_table,
+                                       instance_table,
+                                       object_info_table,
+                                       filenames,
+                                       dump_resources_scale,
+                                       image_file_format,
+                                       dump_all_image_subresources,
+                                       VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                                       &extent);
+
+        if (res != VK_SUCCESS)
+        {
+            return res;
+        }
     }
 
     return VK_SUCCESS;
