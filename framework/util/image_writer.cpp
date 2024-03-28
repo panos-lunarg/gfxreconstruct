@@ -232,6 +232,23 @@ static const uint8_t* ConvertIntoTemporaryBuffer(
 
     switch (format)
     {
+        case kFormat_R8:
+        {
+            const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
+
+            for (uint32_t y = 0; y < height; ++y)
+            {
+                for (uint32_t x = 0; x < width; ++x)
+                {
+                    const uint8_t r = bytes[y * width + x];
+
+                    const uint32_t rgba    = (0xff << 24) | (r << 16) | (r << 8) | r;
+                    *(temp_buffer++) = rgba;
+                }
+            }
+        }
+        break;
+
         case kFormat_RGB:
         {
             const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
@@ -546,77 +563,70 @@ bool WriteBmpImage(const std::string& filename,
         row_pitch = pitch;
     }
 
-    // BMP image data doesn't require row padding, so compute size with height * width * kImageBpp, not row_pitch *
-    // height.
-    uint32_t bmp_image_size = height * width * kImageBpp;
-    if (bmp_image_size <= data_size)
+    FILE*   file   = nullptr;
+    int32_t result = util::platform::FileOpen(&file, filename.c_str(), "wb");
+
+    if ((result == 0) && (file != nullptr))
     {
-        FILE*   file   = nullptr;
-        int32_t result = util::platform::FileOpen(&file, filename.c_str(), "wb");
+        BmpFileHeader file_header;
+        BmpInfoHeader info_header;
 
-        if ((result == 0) && (file != nullptr))
+        file_header.type      = ('M' << 8) | 'B';
+        file_header.reserved1 = 0;
+        file_header.reserved2 = 0;
+        file_header.off_bits  = sizeof(file_header) + sizeof(info_header);
+        file_header.size      = (height * width * kImageBpp) + file_header.off_bits;
+
+        info_header.size             = sizeof(info_header);
+        info_header.width            = width;
+        info_header.height           = height;
+        info_header.planes           = 1;
+        info_header.bit_count        = kBmpBitCount;
+        info_header.compression      = 0;
+        info_header.size_image       = 0;
+        info_header.x_pels_per_meter = 0;
+        info_header.y_pels_per_meter = 0;
+        info_header.clr_used         = 0;
+        info_header.clr_important    = 0;
+
+        size_t ret = util::platform::FileWrite(&file_header, sizeof(file_header), 1, file);
+        CheckFwriteRetVal(ret, 1, file);
+
+        ret = util::platform::FileWrite(&info_header, sizeof(info_header), 1, file);
+        CheckFwriteRetVal(ret, 1, file);
+
+        // Y needs to be inverted when writing the bitmap data.
+        auto height_1 = height - 1;
+
+        if (format == kFormat_BGR || format == kFormat_BGRA)
         {
-            BmpFileHeader file_header;
-            BmpInfoHeader info_header;
-
-            file_header.type      = ('M' << 8) | 'B';
-            file_header.reserved1 = 0;
-            file_header.reserved2 = 0;
-            file_header.off_bits  = sizeof(file_header) + sizeof(info_header);
-            file_header.size      = bmp_image_size + file_header.off_bits;
-
-            info_header.size             = sizeof(info_header);
-            info_header.width            = width;
-            info_header.height           = height;
-            info_header.planes           = 1;
-            info_header.bit_count        = kBmpBitCount;
-            info_header.compression      = 0;
-            info_header.size_image       = 0;
-            info_header.x_pels_per_meter = 0;
-            info_header.y_pels_per_meter = 0;
-            info_header.clr_used         = 0;
-            info_header.clr_important    = 0;
-
-            size_t ret = util::platform::FileWrite(&file_header, sizeof(file_header), 1, file);
-            CheckFwriteRetVal(ret, 1, file);
-
-            ret = util::platform::FileWrite(&info_header, sizeof(info_header), 1, file);
-            CheckFwriteRetVal(ret, 1, file);
-
-            // Y needs to be inverted when writing the bitmap data.
-            auto height_1 = height - 1;
-
-            if (format == kFormat_BGR || format == kFormat_BGRA)
+            for (uint32_t y = 0; y < height; ++y)
             {
-                for (uint32_t y = 0; y < height; ++y)
-                {
-                    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
-                    ret = util::platform::FileWrite(&bytes[(height_1 - y) * row_pitch], 1, width * kImageBpp, file);
+                const uint8_t* bytes = reinterpret_cast<const uint8_t*>(data);
+                ret = util::platform::FileWrite(&bytes[(height_1 - y) * row_pitch], 1, width * kImageBpp, file);
 
-                    CheckFwriteRetVal(ret, width * kImageBpp, file);
-                }
+                CheckFwriteRetVal(ret, width * kImageBpp, file);
             }
-            else
-            {
-                const uint8_t* bytes = ConvertIntoTemporaryBuffer(width, height, data, &row_pitch, format, false);
-                for (uint32_t y = 0; y < height; ++y)
-                {
-                    ret = util::platform::FileWrite(
-                        &bytes[(height_1 - y) * width * kImageBpp], 1, width * kImageBpp, file);
-                }
-            }
-
-            if (!ferror(file))
-            {
-                success = true;
-            }
-
-            util::platform::FileClose(file);
         }
         else
         {
-            GFXRECON_LOG_ERROR("%s() Failed to open file (%s)", __func__, strerror(errno));
+            const uint8_t* bytes = ConvertIntoTemporaryBuffer(width, height, data, &row_pitch, format, false);
+            for (uint32_t y = 0; y < height; ++y)
+            {
+                ret = util::platform::FileWrite(&bytes[(height_1 - y) * width * kImageBpp], 1, width * kImageBpp, file);
+            }
         }
+
+        if (!ferror(file))
+        {
+            success = true;
+        }
+
+        util::platform::FileClose(file);
+    }
+    else
+    {
+        GFXRECON_LOG_ERROR("%s() Failed to open file (%s)", __func__, strerror(errno));
     }
 
     return success;
@@ -635,7 +645,7 @@ bool WritePngImage(const std::string& filename,
     bool success = false;
 
 #ifdef GFXRECON_ENABLE_PNG_SCREENSHOT
-    uint32_t row_pitch = pitch == 0 ? width * kImageBpp : pitch;
+    uint32_t row_pitch               = pitch == 0 ? width * kImageBpp : pitch;
     stbi_write_png_compression_level = 4;
     if (1 == stbi_write_png(filename.c_str(), width, height, kImageBpp, data, row_pitch))
     {
