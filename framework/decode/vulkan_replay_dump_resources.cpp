@@ -5283,153 +5283,182 @@ void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::CloneDispat
     const PipelineInfo* pipeline   = bound_pipelines[bind_point];
     assert(pipeline != nullptr);
 
-    // for (const auto& shader : pipeline->shaders)
-    // {
-    //     for (const auto& shader_desc_set : shader.second.used_descriptors_info)
-    //     {
-    //         const uint32_t set = shader_desc_set.first;
-    //         for (const auto& shader_desc_binding : shader_desc_set.second)
-    //         {
-    //             // Search for resources that are not marked as read only
-    //             if (shader_desc_binding.second.accessed && !shader_desc_binding.second.readonly)
-    //             {
-    //                 const uint32_t binding = shader_desc_binding.first;
+    for (const auto& shader : pipeline->shaders)
+    {
+        for (const auto& shader_desc_set : shader.second.used_descriptors_info)
+        {
+            const uint32_t set = shader_desc_set.first;
+            for (const auto& shader_desc_binding : shader_desc_set.second)
+            {
+                // Search for resources that are not marked as read only
+                if (shader_desc_binding.second.accessed && !shader_desc_binding.second.readonly)
+                {
+                    const uint32_t binding = shader_desc_binding.first;
 
-    //                 assert(bound_descriptor_sets[bind_point] != nullptr);
+                    assert(bound_descriptor_sets[bind_point] != nullptr);
 
-    //                 const auto& bound_desc_binding = bound_descriptor_sets[bind_point]->descriptors.find(binding);
-    //                 assert(bound_desc_binding != bound_descriptor_sets[bind_point]->descriptors.end());
-    //                 assert(bound_desc_binding->second.desc_type == shader_desc_binding.second.type);
+                    const auto& bound_desc_binding = bound_descriptor_sets[bind_point]->descriptors.find(binding);
+                    assert(bound_desc_binding != bound_descriptor_sets[bind_point]->descriptors.end());
+                    assert(bound_desc_binding->second.desc_type == shader_desc_binding.second.type);
 
-    //                 switch (shader_desc_binding.second.type)
-    //                 {
-    //                     case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
-    //                     {
-    //                         assert(bound_desc_binding->second.image_info.image_view_info != nullptr);
+                    switch (shader_desc_binding.second.type)
+                    {
+                        case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+                        {
+                            if (!cloning_before_cmd)
+                            {
+                                mutable_resources_clones.insert({ index, DumpableResourceBackup() });
+                            }
+                            else
+                            {
+                                mutable_resources_clones_before.insert({ index, DumpableResourceBackup() });
+                            }
 
-    //                         const ImageInfo* img_info = object_info_table.GetImageInfo(
-    //                             bound_desc_binding->second.image_info.image_view_info->image_id);
-    //                         assert(img_info);
+                            for (const auto& img_desc : bound_desc_binding->second.image_info)
+                            {
+                                if (img_desc.image_view_info == nullptr)
+                                {
+                                    continue;
+                                }
 
-    //                         VkImage*        new_img_ptr        = nullptr;
-    //                         VkDeviceMemory* new_img_memory_ptr = nullptr;
+                                const ImageInfo* img_info =
+                                    object_info_table.GetImageInfo(img_desc.image_view_info->image_id);
+                                assert(img_info);
 
-    //                         if (!cloning_before_cmd)
-    //                         {
-    //                             mutable_resources_clones.insert({ index, DumpableResourceBackup() });
-    //                             mutable_resources_clones[index].original_images.push_back(img_info);
-    //                             mutable_resources_clones[index].image_desc_set_binding_pair.push_back(
-    //                                 std::make_pair(set, binding));
+                                VkImage*        new_img_ptr        = nullptr;
+                                VkDeviceMemory* new_img_memory_ptr = nullptr;
 
-    //                             new_img_ptr = &*(mutable_resources_clones[index].images.insert(
-    //                                 mutable_resources_clones[index].images.end(), VK_NULL_HANDLE));
+                                if (!cloning_before_cmd)
+                                {
+                                    mutable_resources_clones[index].original_images.push_back(img_info);
+                                    mutable_resources_clones[index].image_desc_set_binding_pair.push_back(
+                                        std::make_pair(set, binding));
 
-    //                             new_img_memory_ptr = &*(mutable_resources_clones[index].image_memories.insert(
-    //                                 mutable_resources_clones[index].image_memories.end(), VK_NULL_HANDLE));
-    //                         }
-    //                         else
-    //                         {
-    //                             mutable_resources_clones_before.insert({ index, DumpableResourceBackup() });
-    //                             mutable_resources_clones_before[index].original_images.push_back(img_info);
-    //                             mutable_resources_clones_before[index].image_desc_set_binding_pair.push_back(
-    //                                 std::make_pair(set, binding));
+                                    new_img_ptr = &*(mutable_resources_clones[index].images.insert(
+                                        mutable_resources_clones[index].images.end(), VK_NULL_HANDLE));
 
-    //                             new_img_ptr = &*(mutable_resources_clones_before[index].images.insert(
-    //                                 mutable_resources_clones_before[index].images.end(), VK_NULL_HANDLE));
+                                    new_img_memory_ptr = &*(mutable_resources_clones[index].image_memories.insert(
+                                        mutable_resources_clones[index].image_memories.end(), VK_NULL_HANDLE));
+                                }
+                                else
+                                {
+                                    mutable_resources_clones_before[index].original_images.push_back(img_info);
+                                    mutable_resources_clones_before[index].image_desc_set_binding_pair.push_back(
+                                        std::make_pair(set, binding));
 
-    //                             new_img_memory_ptr = &*(mutable_resources_clones_before[index].image_memories.insert(
-    //                                 mutable_resources_clones_before[index].image_memories.end(), VK_NULL_HANDLE));
-    //                         }
+                                    new_img_ptr = &*(mutable_resources_clones_before[index].images.insert(
+                                        mutable_resources_clones_before[index].images.end(), VK_NULL_HANDLE));
 
-    //                         assert(new_img_ptr != nullptr);
-    //                         assert(new_img_memory_ptr != nullptr);
+                                    new_img_memory_ptr =
+                                        &*(mutable_resources_clones_before[index].image_memories.insert(
+                                            mutable_resources_clones_before[index].image_memories.end(),
+                                            VK_NULL_HANDLE));
+                                }
 
-    //                         CloneImage(object_info_table,
-    //                                    device_table,
-    //                                    replay_device_phys_mem_props,
-    //                                    img_info,
-    //                                    new_img_ptr,
-    //                                    new_img_memory_ptr);
+                                assert(new_img_ptr != nullptr);
+                                assert(new_img_memory_ptr != nullptr);
 
-    //                         CopyImageResource(img_info, *new_img_ptr);
-    //                     }
-    //                     break;
+                                CloneImage(object_info_table,
+                                           device_table,
+                                           replay_device_phys_mem_props,
+                                           img_info,
+                                           new_img_ptr,
+                                           new_img_memory_ptr);
 
-    //                     case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
-    //                     case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
-    //                     case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
-    //                     {
-    //                         const BufferInfo* buf_info = bound_desc_binding->second.buffer_info.buffer_info;
-    //                         assert(buf_info);
+                                CopyImageResource(img_info, *new_img_ptr);
+                            }
+                        }
+                        break;
 
-    //                         VkBuffer*       new_buf_ptr        = nullptr;
-    //                         VkDeviceMemory* new_buf_memory_ptr = nullptr;
+                        case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+                        case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+                        case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+                        {
+                            if (!cloning_before_cmd)
+                            {
+                                mutable_resources_clones.insert({ index, DumpableResourceBackup() });
+                            }
+                            else
+                            {
+                                mutable_resources_clones_before.insert({ index, DumpableResourceBackup() });
+                            }
 
-    //                         if (!cloning_before_cmd)
-    //                         {
-    //                             mutable_resources_clones.insert({ index, DumpableResourceBackup() });
-    //                             mutable_resources_clones[index].original_buffers.push_back(buf_info);
-    //                             mutable_resources_clones[index].buffer_desc_set_binding_pair.push_back(
-    //                                 std::make_pair(set, binding));
+                            for (const auto& buf_desc : bound_desc_binding->second.buffer_info)
+                            {
+                                const BufferInfo* buf_info = buf_desc.buffer_info;
+                                if (buf_info == nullptr)
+                                {
+                                    continue;
+                                }
 
-    //                             new_buf_ptr = &*(mutable_resources_clones[index].buffers.insert(
-    //                                 mutable_resources_clones[index].buffers.end(), VK_NULL_HANDLE));
+                                VkBuffer*       new_buf_ptr        = nullptr;
+                                VkDeviceMemory* new_buf_memory_ptr = nullptr;
 
-    //                             new_buf_memory_ptr = &*(mutable_resources_clones[index].buffer_memories.insert(
-    //                                 mutable_resources_clones[index].buffer_memories.end(), VK_NULL_HANDLE));
-    //                         }
-    //                         else
-    //                         {
-    //                             mutable_resources_clones_before.insert({ index, DumpableResourceBackup() });
-    //                             mutable_resources_clones_before[index].original_buffers.push_back(buf_info);
-    //                             mutable_resources_clones_before[index].buffer_desc_set_binding_pair.push_back(
-    //                                 std::make_pair(set, binding));
+                                if (!cloning_before_cmd)
+                                {
+                                    mutable_resources_clones[index].original_buffers.push_back(buf_info);
+                                    mutable_resources_clones[index].buffer_desc_set_binding_pair.push_back(
+                                        std::make_pair(set, binding));
 
-    //                             new_buf_ptr = &*(mutable_resources_clones_before[index].buffers.insert(
-    //                                 mutable_resources_clones_before[index].buffers.end(), VK_NULL_HANDLE));
+                                    new_buf_ptr = &*(mutable_resources_clones[index].buffers.insert(
+                                        mutable_resources_clones[index].buffers.end(), VK_NULL_HANDLE));
 
-    //                             new_buf_memory_ptr =
-    //                             &*(mutable_resources_clones_before[index].buffer_memories.insert(
-    //                                 mutable_resources_clones_before[index].buffer_memories.end(), VK_NULL_HANDLE));
-    //                         }
+                                    new_buf_memory_ptr = &*(mutable_resources_clones[index].buffer_memories.insert(
+                                        mutable_resources_clones[index].buffer_memories.end(), VK_NULL_HANDLE));
+                                }
+                                else
+                                {
+                                    mutable_resources_clones_before[index].original_buffers.push_back(buf_info);
+                                    mutable_resources_clones_before[index].buffer_desc_set_binding_pair.push_back(
+                                        std::make_pair(set, binding));
 
-    //                         assert(new_buf_ptr != nullptr);
-    //                         assert(new_buf_memory_ptr != nullptr);
+                                    new_buf_ptr = &*(mutable_resources_clones_before[index].buffers.insert(
+                                        mutable_resources_clones_before[index].buffers.end(), VK_NULL_HANDLE));
 
-    //                         CloneBuffer(object_info_table,
-    //                                     device_table,
-    //                                     replay_device_phys_mem_props,
-    //                                     buf_info,
-    //                                     new_buf_ptr,
-    //                                     new_buf_memory_ptr);
+                                    new_buf_memory_ptr =
+                                        &*(mutable_resources_clones_before[index].buffer_memories.insert(
+                                            mutable_resources_clones_before[index].buffer_memories.end(),
+                                            VK_NULL_HANDLE));
+                                }
 
-    //                         CopyBufferResource(buf_info, *new_buf_ptr);
-    //                     }
-    //                     break;
+                                assert(new_buf_ptr != nullptr);
+                                assert(new_buf_memory_ptr != nullptr);
 
-    //                     case VK_DESCRIPTOR_TYPE_SAMPLER:
-    //                     case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
-    //                     case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
-    //                     case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
-    //                     case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
-    //                     case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
-    //                     case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
-    //                     case VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK:
-    //                     case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
-    //                         // These are read only resources
-    //                         break;
+                                CloneBuffer(object_info_table,
+                                            device_table,
+                                            replay_device_phys_mem_props,
+                                            buf_info,
+                                            new_buf_ptr,
+                                            new_buf_memory_ptr);
 
-    //                     default:
-    //                         GFXRECON_LOG_WARNING_ONCE(
-    //                             "%s(): Descriptor type (%s) not handled",
-    //                             __func__,
-    //                             util::ToString<VkDescriptorType>(shader_desc_binding.second.type).c_str());
-    //                         break;
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+                                CopyBufferResource(buf_info, *new_buf_ptr);
+                            }
+                        }
+                        break;
+
+                        case VK_DESCRIPTOR_TYPE_SAMPLER:
+                        case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+                        case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+                        case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+                        case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+                        case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+                        case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+                        case VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK:
+                        case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
+                            // These are read only resources
+                            break;
+
+                        default:
+                            GFXRECON_LOG_WARNING_ONCE(
+                                "%s(): Descriptor type (%s) not handled",
+                                __func__,
+                                util::ToString<VkDescriptorType>(shader_desc_binding.second.type).c_str());
+                            break;
+                    }
+                }
+            }
+        }
+    }
 
     if (is_dispatch)
     {
