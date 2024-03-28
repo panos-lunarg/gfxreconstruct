@@ -64,6 +64,7 @@ struct BmpInfoHeader
 enum DataFormats
 {
     kFormat_UNSPECIFIED = 0,
+    kFormat_R8,
     kFormat_RGB,
     kFormat_RGBA,
     kFormat_BGR,

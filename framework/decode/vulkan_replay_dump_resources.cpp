@@ -69,6 +69,9 @@ static util::imagewriter::DataFormats VkFormatToImageWriterDataFormat(VkFormat f
 {
     switch (format)
     {
+        case VK_FORMAT_R8_UNORM:
+            return util::imagewriter::DataFormats::kFormat_R8;
+
         case VK_FORMAT_R8G8B8_UNORM:
             return util::imagewriter::DataFormats::kFormat_RGB;
 
