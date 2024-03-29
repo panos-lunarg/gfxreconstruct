@@ -143,6 +143,77 @@ static uint32_t GetMemoryTypeIndex(const VkPhysicalDeviceMemoryProperties& memor
     return memory_type_index;
 }
 
+static VkResult CloneImage(VulkanObjectInfoTable&                  object_info_table,
+                           const encode::DeviceTable*              device_table,
+                           const VkPhysicalDeviceMemoryProperties* replay_device_phys_mem_props,
+                           const ImageInfo*                        image_info,
+                           VkImage*                                new_image,
+                           VkDeviceMemory*                         new_image_memory)
+{
+    VkImageCreateInfo ci;
+    ci.sType                 = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    ci.pNext                 = nullptr;
+    ci.flags                 = VkImageCreateFlags(0);
+    ci.imageType             = image_info->type;
+    ci.format                = image_info->format;
+    ci.extent                = image_info->extent;
+    ci.mipLevels             = image_info->level_count;
+    ci.arrayLayers           = image_info->layer_count;
+    ci.samples               = image_info->sample_count;
+    ci.tiling                = image_info->tiling;
+    ci.usage                 = image_info->usage | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+    ci.sharingMode           = VK_SHARING_MODE_EXCLUSIVE;
+    ci.queueFamilyIndexCount = image_info->queue_family_index;
+    ci.pQueueFamilyIndices   = nullptr;
+    ci.initialLayout         = VK_IMAGE_LAYOUT_UNDEFINED;
+
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(image_info->parent_id);
+    VkDevice          device      = device_info->handle;
+
+    assert(device_table);
+    assert(new_image);
+    VkResult res = device_table->CreateImage(device, &ci, nullptr, new_image);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("CreateImage failed with %s", util::ToString<VkResult>(res).c_str());
+        return res;
+    }
+
+    VkMemoryRequirements mem_reqs       = {};
+    VkMemoryAllocateInfo mem_alloc_info = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO, nullptr };
+
+    device_table->GetImageMemoryRequirements(device, *new_image, &mem_reqs);
+    mem_alloc_info.allocationSize = mem_reqs.size;
+
+    assert(replay_device_phys_mem_props);
+    uint32_t index =
+        GetMemoryTypeIndex(*replay_device_phys_mem_props, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    if (index == std::numeric_limits<uint32_t>::max())
+    {
+        GFXRECON_LOG_ERROR("%s failed to find an appropriate memory type", __func__)
+        return VK_ERROR_INITIALIZATION_FAILED;
+    }
+
+    mem_alloc_info.memoryTypeIndex = index;
+
+    assert(new_image_memory);
+    res = device_table->AllocateMemory(device, &mem_alloc_info, nullptr, new_image_memory);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("AllocateMemory failed with %s", util::ToString<VkResult>(res).c_str());
+        return res;
+    }
+
+    res = device_table->BindImageMemory(device, *new_image, *new_image_memory, 0);
+    if (res != VK_SUCCESS)
+    {
+        GFXRECON_LOG_ERROR("BindImageMemory failed with %s", util::ToString<VkResult>(res).c_str());
+        return res;
+    }
+
+    return VK_SUCCESS;
+}
+
 static VkResult CloneBuffer(VulkanObjectInfoTable&                  object_info_table,
                             const encode::DeviceTable*              device_table,
                             const VkPhysicalDeviceMemoryProperties* replay_device_phys_mem_props,
@@ -350,85 +421,6 @@ static uint32_t FindGreatestVertexIndex(const std::vector<uint8_t>& index_data,
     }
 }
 
-VulkanReplayDumpResourcesBase::VulkanReplayDumpResourcesBase(const VulkanReplayOptions& options,
-                                                             VulkanObjectInfoTable&     object_info_table) :
-    QueueSubmit_indices_(options.QueueSubmit_Indices),
-    recording_(false), dump_resources_before_(options.dump_resources_before), object_info_table_(object_info_table),
-    output_json_per_command(options.dump_resources_json_per_command)
-{
-    if (!options.Draw_Indices.size() && !options.Dispatch_Indices.size() && !options.TraceRays_Indices.size())
-    {
-        return;
-    }
-
-    if (!options.dump_resources_json_per_command)
-    {
-        dump_json_.VulkanReplayDumpResourcesJsonOpen(options.filename, options.dump_resources_output_dir);
-    }
-
-    for (size_t i = 0; i < options.BeginCommandBuffer_Indices.size(); ++i)
-    {
-        const uint64_t bcb_index = options.BeginCommandBuffer_Indices[i];
-
-        if (i < options.Draw_Indices.size() && options.Draw_Indices[i].size())
-        {
-            draw_call_contexts.emplace(bcb_index,
-                                       DrawCallsDumpingContext(options.Draw_Indices[i].size() ? options.Draw_Indices[i]
-                                                                                              : std::vector<uint64_t>(),
-                                                               options.RenderPass_Indices[i].size()
-                                                                   ? options.RenderPass_Indices[i]
-                                                                   : std::vector<std::vector<uint64_t>>(),
-                                                               object_info_table,
-                                                               options,
-                                                               dump_json_));
-        }
-
-        if ((i < options.Dispatch_Indices.size() && options.Dispatch_Indices[i].size()) ||
-            (i < options.TraceRays_Indices.size() && options.TraceRays_Indices[i].size()))
-        {
-            dispatch_ray_contexts.emplace(bcb_index,
-                                          DispatchTraceRaysDumpingContext(
-                                              (options.Dispatch_Indices.size() && options.Dispatch_Indices[i].size())
-                                                  ? options.Dispatch_Indices[i]
-                                                  : std::vector<uint64_t>(),
-                                              (options.TraceRays_Indices.size() && options.TraceRays_Indices[i].size())
-                                                  ? options.TraceRays_Indices[i]
-                                                  : std::vector<uint64_t>(),
-                                              object_info_table_,
-                                              options,
-                                              dump_json_));
-        }
-    }
-
-#if defined(__ANDROID__) && defined(DELETE_STALE_DUMP_FILES)
-    // On Android there is an issue with files which are manually deleted (for example from adb shell) then fopen with
-    // "wb" might fail with the error that the file already exists. Deleting the file from code can workaround this
-    DIR* dump_resource_dir = opendir(options.dump_resources_output_dir.c_str());
-    if (dump_resource_dir != nullptr)
-    {
-        struct dirent* dir;
-        while ((dir = readdir(dump_resource_dir)) != nullptr)
-        {
-            const int len = strlen(dir->d_name);
-            if (len > 3)
-            {
-                const char* file_extension = &dir->d_name[len - 3];
-
-                if (!strcmp(file_extension, "bmp") || !strcmp(file_extension, "png") || !strcmp(file_extension, "bin"))
-                {
-                    std::string full_path = options.dump_resources_output_dir + std::string(dir->d_name);
-                    GFXRECON_LOG_INFO("Deleting file %s", full_path.c_str());
-                    if (remove(full_path.c_str()))
-                    {
-                        GFXRECON_LOG_ERROR(" Failed to delete file %s (%s)", dir->d_name, strerror(errno));
-                    }
-                }
-            }
-        }
-    }
-#endif
-}
-
 static VkResult DumpImageToFile(const ImageInfo*                image_info,
                                 const DeviceInfo*               device_info,
                                 const encode::DeviceTable*      device_table,
@@ -632,6 +624,85 @@ static VkResult DumpImageToFile(const ImageInfo*                image_info,
     return VK_SUCCESS;
 }
 
+VulkanReplayDumpResourcesBase::VulkanReplayDumpResourcesBase(const VulkanReplayOptions& options,
+                                                             VulkanObjectInfoTable&     object_info_table) :
+    QueueSubmit_indices_(options.QueueSubmit_Indices),
+    recording_(false), dump_resources_before_(options.dump_resources_before), object_info_table_(object_info_table),
+    output_json_per_command(options.dump_resources_json_per_command)
+{
+    if (!options.Draw_Indices.size() && !options.Dispatch_Indices.size() && !options.TraceRays_Indices.size())
+    {
+        return;
+    }
+
+    if (!options.dump_resources_json_per_command)
+    {
+        dump_json_.VulkanReplayDumpResourcesJsonOpen(options.filename, options.dump_resources_output_dir);
+    }
+
+    for (size_t i = 0; i < options.BeginCommandBuffer_Indices.size(); ++i)
+    {
+        const uint64_t bcb_index = options.BeginCommandBuffer_Indices[i];
+
+        if (i < options.Draw_Indices.size() && options.Draw_Indices[i].size())
+        {
+            draw_call_contexts.emplace(bcb_index,
+                                       DrawCallsDumpingContext(options.Draw_Indices[i].size() ? options.Draw_Indices[i]
+                                                                                              : std::vector<uint64_t>(),
+                                                               options.RenderPass_Indices[i].size()
+                                                                   ? options.RenderPass_Indices[i]
+                                                                   : std::vector<std::vector<uint64_t>>(),
+                                                               object_info_table,
+                                                               options,
+                                                               dump_json_));
+        }
+
+        if ((i < options.Dispatch_Indices.size() && options.Dispatch_Indices[i].size()) ||
+            (i < options.TraceRays_Indices.size() && options.TraceRays_Indices[i].size()))
+        {
+            dispatch_ray_contexts.emplace(bcb_index,
+                                          DispatchTraceRaysDumpingContext(
+                                              (options.Dispatch_Indices.size() && options.Dispatch_Indices[i].size())
+                                                  ? options.Dispatch_Indices[i]
+                                                  : std::vector<uint64_t>(),
+                                              (options.TraceRays_Indices.size() && options.TraceRays_Indices[i].size())
+                                                  ? options.TraceRays_Indices[i]
+                                                  : std::vector<uint64_t>(),
+                                              object_info_table_,
+                                              options,
+                                              dump_json_));
+        }
+    }
+
+#if defined(__ANDROID__) && defined(DELETE_STALE_DUMP_FILES)
+    // On Android there is an issue with files which are manually deleted (for example from adb shell) then fopen with
+    // "wb" might fail with the error that the file already exists. Deleting the file from code can workaround this
+    DIR* dump_resource_dir = opendir(options.dump_resources_output_dir.c_str());
+    if (dump_resource_dir != nullptr)
+    {
+        struct dirent* dir;
+        while ((dir = readdir(dump_resource_dir)) != nullptr)
+        {
+            const int len = strlen(dir->d_name);
+            if (len > 3)
+            {
+                const char* file_extension = &dir->d_name[len - 3];
+
+                if (!strcmp(file_extension, "bmp") || !strcmp(file_extension, "png") || !strcmp(file_extension, "bin"))
+                {
+                    std::string full_path = options.dump_resources_output_dir + std::string(dir->d_name);
+                    GFXRECON_LOG_INFO("Deleting file %s", full_path.c_str());
+                    if (remove(full_path.c_str()))
+                    {
+                        GFXRECON_LOG_ERROR(" Failed to delete file %s (%s)", dir->d_name, strerror(errno));
+                    }
+                }
+            }
+        }
+    }
+#endif
+}
+
 VulkanReplayDumpResourcesBase::DrawCallsDumpingContext*
 VulkanReplayDumpResourcesBase::FindDrawCallCommandBufferContext(VkCommandBuffer original_command_buffer)
 {
@@ -804,394 +875,6 @@ VkResult VulkanReplayDumpResourcesBase::CloneCommandBuffer(uint64_t           bc
     }
 
     return VK_SUCCESS;
-}
-
-VkResult
-VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyIndirectDrawParameters(DrawCallParameters& dc_params)
-{
-    assert(IsDrawCallIndirect(dc_params.type));
-
-    if (IsDrawCallIndirectCount(dc_params.type))
-    {
-        DrawCallParameters::DrawCallParamsUnion::DrawIndirectCountParams& ic_params =
-            dc_params.dc_params_union.draw_indirect_count;
-
-        const uint32_t max_draw_count = ic_params.max_draw_count;
-
-        // Not sure from spec if max_draw_count can be zero. Assume it can
-        if (!max_draw_count)
-        {
-            return VK_SUCCESS;
-        }
-
-        const VkDeviceSize draw_call_params_size =
-            IsDrawCallIndexed(dc_params.type) ? sizeof(DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams)
-                                              : sizeof(DrawCallParameters::DrawCallParamsUnion::DrawParams);
-
-        // Create a buffer to copy the parameters buffer
-        const VkDeviceSize copy_buffer_size = draw_call_params_size * max_draw_count;
-        assert(copy_buffer_size <= ic_params.params_buffer_info->size);
-
-        ic_params.new_params_buffer_size = copy_buffer_size;
-
-        VkResult res = CloneBuffer(object_info_table,
-                                   device_table,
-                                   replay_device_phys_mem_props,
-                                   ic_params.params_buffer_info,
-                                   &ic_params.new_params_buffer,
-                                   &ic_params.new_params_memory,
-                                   copy_buffer_size);
-        if (res != VK_SUCCESS)
-        {
-            return res;
-        }
-
-        // Inject a cmdCopyBuffer to copy the draw params into the new buffer
-        {
-            const uint32_t            param_buffer_stride = ic_params.stride;
-            std::vector<VkBufferCopy> regions(param_buffer_stride ? max_draw_count : 1);
-            if (param_buffer_stride != draw_call_params_size)
-            {
-                VkDeviceSize src_offset = ic_params.params_buffer_offset;
-                VkDeviceSize dst_offset = 0;
-                for (uint32_t i = 0; i < max_draw_count; ++i)
-                {
-                    regions[i].size = draw_call_params_size;
-
-                    regions[i].srcOffset = src_offset;
-                    src_offset += param_buffer_stride;
-
-                    regions[i].dstOffset = dst_offset;
-                    dst_offset += draw_call_params_size;
-                }
-                assert(src_offset == copy_buffer_size);
-            }
-            else
-            {
-                regions[0].size      = copy_buffer_size;
-                regions[0].srcOffset = ic_params.params_buffer_offset;
-                regions[0].dstOffset = 0;
-            }
-
-            VkCommandBuffer cmd_buf = command_buffers[current_cb_index];
-            device_table->CmdCopyBuffer(cmd_buf,
-                                        ic_params.params_buffer_info->handle,
-                                        ic_params.new_params_buffer,
-                                        regions.size(),
-                                        regions.data());
-
-            VkBufferMemoryBarrier buf_barrier;
-            buf_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-            buf_barrier.pNext               = nullptr;
-            buf_barrier.buffer              = ic_params.new_params_buffer;
-            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
-            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_READ_BIT;
-            buf_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            buf_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            buf_barrier.size                = copy_buffer_size;
-            buf_barrier.offset              = 0;
-
-            device_table->CmdPipelineBarrier(cmd_buf,
-                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
-                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
-                                             VkDependencyFlags{ 0 },
-                                             0,
-                                             nullptr,
-                                             1,
-                                             &buf_barrier,
-                                             0,
-                                             nullptr);
-        }
-
-        // Create a buffer to copy the draw count parameter
-        const VkDeviceSize count_buffer_size = sizeof(uint32_t);
-        assert(count_buffer_size <= ic_params.count_buffer_info->size);
-        res = CloneBuffer(object_info_table,
-                          device_table,
-                          replay_device_phys_mem_props,
-                          ic_params.count_buffer_info,
-                          &ic_params.new_count_buffer,
-                          &ic_params.new_count_memory,
-                          count_buffer_size);
-        if (res != VK_SUCCESS)
-        {
-            return res;
-        }
-
-        // Inject a cmdCopyBuffer to copy the count into the new buffer
-        {
-            VkBufferCopy region;
-            region.size      = count_buffer_size;
-            region.srcOffset = ic_params.count_buffer_offset;
-            region.dstOffset = 0;
-
-            VkCommandBuffer cmd_buf = command_buffers[current_cb_index];
-            device_table->CmdCopyBuffer(
-                cmd_buf, ic_params.params_buffer_info->handle, ic_params.new_params_buffer, 1, &region);
-
-            VkBufferMemoryBarrier buf_barrier;
-            buf_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-            buf_barrier.pNext               = nullptr;
-            buf_barrier.buffer              = ic_params.new_count_buffer;
-            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
-            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_READ_BIT;
-            buf_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            buf_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            buf_barrier.size                = count_buffer_size;
-            buf_barrier.offset              = 0;
-
-            device_table->CmdPipelineBarrier(cmd_buf,
-                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
-                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
-                                             VkDependencyFlags{ 0 },
-                                             0,
-                                             nullptr,
-                                             1,
-                                             &buf_barrier,
-                                             0,
-                                             nullptr);
-        }
-    }
-    else
-    {
-        DrawCallParameters::DrawCallParamsUnion::DrawIndirectParams& i_params = dc_params.dc_params_union.draw_indirect;
-
-        const uint32_t draw_count = i_params.draw_count;
-
-        // According to spec drawCount can be zero. Nothing to do in this case
-        if (!draw_count)
-        {
-            return VK_SUCCESS;
-        }
-
-        const VkDeviceSize draw_call_params_size =
-            IsDrawCallIndexed(dc_params.type) ? sizeof(DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams)
-                                              : sizeof(DrawCallParameters::DrawCallParamsUnion::DrawParams);
-
-        // Create a buffer to copy the parameters buffer
-        const VkDeviceSize copy_buffer_size = draw_call_params_size * draw_count;
-        assert(copy_buffer_size <= i_params.params_buffer_info->size);
-
-        i_params.new_params_buffer_size = copy_buffer_size;
-
-        VkResult res = CloneBuffer(object_info_table,
-                                   device_table,
-                                   replay_device_phys_mem_props,
-                                   i_params.params_buffer_info,
-                                   &i_params.new_params_buffer,
-                                   &i_params.new_params_memory,
-                                   copy_buffer_size);
-        if (res != VK_SUCCESS)
-        {
-            return res;
-        }
-
-        // Inject a cmdCopyBuffer to copy the draw params into the new buffer
-        {
-            const uint32_t            param_buffer_stride = i_params.stride;
-            std::vector<VkBufferCopy> regions(param_buffer_stride ? draw_count : 1);
-            if (param_buffer_stride != draw_call_params_size)
-            {
-                VkDeviceSize src_offset = i_params.params_buffer_offset;
-                VkDeviceSize dst_offset = 0;
-                for (uint32_t i = 0; i < draw_count; ++i)
-                {
-                    regions[i].size = draw_call_params_size;
-
-                    regions[i].srcOffset = src_offset;
-                    src_offset += param_buffer_stride;
-
-                    regions[i].dstOffset = dst_offset;
-                    dst_offset += draw_call_params_size;
-                }
-                assert(src_offset == copy_buffer_size);
-            }
-            else
-            {
-                regions[0].size      = copy_buffer_size;
-                regions[0].srcOffset = i_params.params_buffer_offset;
-                regions[0].dstOffset = 0;
-            }
-
-            VkCommandBuffer cmd_buf = command_buffers[current_cb_index];
-            device_table->CmdCopyBuffer(cmd_buf,
-                                        i_params.params_buffer_info->handle,
-                                        i_params.new_params_buffer,
-                                        regions.size(),
-                                        regions.data());
-
-            VkBufferMemoryBarrier buf_barrier;
-            buf_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-            buf_barrier.pNext               = nullptr;
-            buf_barrier.buffer              = i_params.new_params_buffer;
-            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
-            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_READ_BIT;
-            buf_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            buf_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            buf_barrier.size                = copy_buffer_size;
-            buf_barrier.offset              = 0;
-
-            device_table->CmdPipelineBarrier(cmd_buf,
-                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
-                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
-                                             VkDependencyFlags{ 0 },
-                                             0,
-                                             nullptr,
-                                             1,
-                                             &buf_barrier,
-                                             0,
-                                             nullptr);
-        }
-    }
-
-    return VK_SUCCESS;
-}
-
-void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::SnapshotBoundDescriptors(DrawCallParameters& dc_params)
-{
-    const PipelineInfo* gr_pipeline_info = bound_pipelines[kBindPoint_graphics];
-    if (gr_pipeline_info != nullptr)
-    {
-        // Iterate all shader stages
-        for (const auto& shader_stage : gr_pipeline_info->shaders)
-        {
-            const VkShaderStageFlagBits shader_stage_flag = shader_stage.first;
-
-            // Iterate all referenced descriptor sets in each shader stage
-            for (const auto& shader_desc_set : shader_stage.second.used_descriptors_info)
-            {
-                const uint32_t desc_set_index = shader_desc_set.first;
-
-                const auto& ppl_desc_set = bound_descriptor_sets_gr.find(desc_set_index);
-                assert(ppl_desc_set != bound_descriptor_sets_gr.end());
-
-                if (ppl_desc_set == bound_descriptor_sets_gr.end())
-                {
-                    continue;
-                }
-
-                for (const auto& shader_desc_binding : shader_desc_set.second)
-                {
-                    const uint32_t desc_set_binding_index = shader_desc_binding.first;
-
-                    // if (!shader_desc_binding.second.accessed)
-                    // {
-                    //     continue;
-                    // }
-
-                    const auto& ppl_desc_binding = ppl_desc_set->second->descriptors.find(desc_set_binding_index);
-                    assert(ppl_desc_binding != ppl_desc_set->second->descriptors.end());
-                    if (ppl_desc_binding == ppl_desc_set->second->descriptors.end())
-                    {
-                        continue;
-                    }
-
-                    assert(shader_desc_binding.second.type == ppl_desc_binding->second.desc_type);
-
-                    dc_params.referenced_descriptors[shader_stage_flag][desc_set_index][desc_set_binding_index] =
-                        ppl_desc_binding->second;
-                }
-            }
-        }
-
-        // for (const auto& shader_stage : dc_params.referenced_descriptors)
-        // {
-        //     const VkShaderStageFlagBits stage = shader_stage.first;
-        //     for (const auto& desc_set : shader_stage.second)
-        //     {
-        //         const uint32_t desc_set_index = desc_set.first;
-        //         for (const auto& desc_binding : desc_set.second)
-        //         {
-        //             const uint32_t desc_binding_index = desc_binding.first;
-
-        //             // GFXRECON_WRITE_CONSOLE("+++ set: %u binding: %u type: %s",
-        //             //                        desc_set_index,
-        //             //                        desc_binding_index,
-        //             // util::ToString<VkDescriptorType>(desc_binding.second.desc_type).c_str());
-        //         }
-        //     }
-        // }
-    }
-}
-
-void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyVertexInputStateInfo(uint64_t            dc_index,
-                                                                                      DrawCallParameters& dc_params)
-{
-    const PipelineInfo* gr_pipeline_info = bound_pipelines[kBindPoint_graphics];
-    assert(gr_pipeline_info != nullptr);
-
-    // Pipeline has no vertex binding and/or attribute information.
-    // This can be a case of shader generated vertices, or vertex buffer is bound as a UBO
-    if (gr_pipeline_info != nullptr &&
-        (!gr_pipeline_info->vertex_input_attribute_map.size() &&
-         !gr_pipeline_info->vertex_input_attribute_map.size()) &&
-        (!gr_pipeline_info->dynamic_vertex_input && !gr_pipeline_info->dynamic_vertex_binding_stride))
-    {
-        return;
-    }
-
-    // If VK_DYNAMIC_STATE_VERTEX_INPUT_EXT is enabled then get all vertex input state from
-    // vkCmdSetVertexInputEXT
-    if (gr_pipeline_info == nullptr || gr_pipeline_info->dynamic_vertex_input)
-    {
-        currently_bound_vertex_buffers->second.vertex_input_state = dynamic_vertex_input_state;
-    }
-    else
-    {
-        if (gr_pipeline_info)
-        {
-            // Copy vertex input binding state
-            currently_bound_vertex_buffers->second.vertex_input_state.input_binding_map =
-                gr_pipeline_info->vertex_input_binding_map;
-
-            // If VK_DYNAMIC_STATE_VERTEX_INPUT_BINDING_STRIDE_EXT is enabled, ignore strides from
-            // pipeline and get them from vkCmdBindVertexBuffers2EXT instead
-            if (gr_pipeline_info->dynamic_vertex_binding_stride)
-            {
-                for (auto& vb_binding : currently_bound_vertex_buffers->second.vertex_input_state.input_binding_map)
-                {
-                    const uint32_t binding = vb_binding.first;
-                    if (dynamic_vertex_input_state.input_binding_map.find(binding) !=
-                        dynamic_vertex_input_state.input_binding_map.end())
-                    {
-                        vb_binding.second.stride = dynamic_vertex_input_state.input_binding_map[binding].stride;
-                    }
-                }
-            }
-
-            // Copy vertex attributes info
-            currently_bound_vertex_buffers->second.vertex_input_state.input_attribute_map =
-                gr_pipeline_info->vertex_input_attribute_map;
-        }
-    }
-
-    assert(currently_bound_vertex_buffers != bound_vertex_buffers.end());
-
-    currently_bound_vertex_buffers->second.referencing_draw_calls.push_back(dc_index);
-    dc_params.referenced_bind_vertex_buffers = currently_bound_vertex_buffers->first;
-
-    if (IsDrawCallIndexed(dc_params.type))
-    {
-        assert(currently_bound_index_buffer != bound_index_buffers.end());
-
-        currently_bound_index_buffer->second.referencing_draw_calls.push_back(dc_index);
-        dc_params.referenced_bind_index_buffer = currently_bound_index_buffer->first;
-    }
-}
-
-void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::FinalizeCommandBuffer()
-{
-    assert(current_cb_index < command_buffers.size());
-    VkCommandBuffer current_command_buffer = command_buffers[current_cb_index];
-    assert(device_table != nullptr);
-
-    assert(inside_renderpass);
-
-    device_table->CmdEndRenderPass(current_command_buffer);
-    device_table->EndCommandBuffer(current_command_buffer);
-
-    // Increment index of command buffer that is going to be finalized next
-    ++current_cb_index;
 }
 
 void VulkanReplayDumpResourcesBase::OverrideCmdDraw(const ApiCallInfo& call_info,
@@ -1738,6 +1421,713 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCountKHR(const
     }
 }
 
+void VulkanReplayDumpResourcesBase::OverrideCmdBeginRenderPass(
+    const ApiCallInfo&                                   call_info,
+    PFN_vkCmdBeginRenderPass                             func,
+    VkCommandBuffer                                      original_command_buffer,
+    StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* pRenderPassBegin,
+    VkSubpassContents                                    contents)
+{
+    assert(IsRecording(original_command_buffer));
+
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr && dc_context->ShouldHandleRenderPass(call_info.index))
+    {
+        const auto render_pass_info_meta = pRenderPassBegin->GetMetaStructPointer();
+        auto       framebuffer_id        = render_pass_info_meta->framebuffer;
+        auto       render_pass_id        = render_pass_info_meta->renderPass;
+
+        const FramebufferInfo* framebuffer_info = object_info_table_.GetFramebufferInfo(framebuffer_id);
+        assert(framebuffer_info);
+
+        const RenderPassInfo* render_pass_info = object_info_table_.GetRenderPassInfo(render_pass_id);
+        assert(render_pass_info);
+
+        // Do not record vkCmdBeginRenderPass commands in current DrawCall context command buffers.
+        // It will be handled by DrawCallsDumpingContext::BeginRenderPass
+        VkResult res = dc_context->BeginRenderPass(render_pass_info,
+                                                   pRenderPassBegin->GetPointer()->clearValueCount,
+                                                   pRenderPassBegin->GetPointer()->pClearValues,
+                                                   framebuffer_info,
+                                                   pRenderPassBegin->GetPointer()->renderArea,
+                                                   contents);
+        assert(res == VK_SUCCESS);
+    }
+    else if (dc_context != nullptr)
+    {
+        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+        dc_context->GetDrawCallActiveCommandBuffers(first, last);
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it, pRenderPassBegin->GetPointer(), contents);
+        }
+    }
+
+    VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dr_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dr_command_buffer, pRenderPassBegin->GetPointer(), contents);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdBeginRenderPass2(
+    const ApiCallInfo&                                   call_info,
+    PFN_vkCmdBeginRenderPass2                            func,
+    VkCommandBuffer                                      original_command_buffer,
+    StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* pRenderPassBegin,
+    StructPointerDecoder<Decoded_VkSubpassBeginInfo>*    pSubpassBeginInfo)
+{
+    assert(IsRecording(original_command_buffer));
+
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr && dc_context->ShouldHandleRenderPass(call_info.index))
+    {
+        const auto render_pass_info_meta = pRenderPassBegin->GetMetaStructPointer();
+        auto       framebuffer_id        = render_pass_info_meta->framebuffer;
+        auto       render_pass_id        = render_pass_info_meta->renderPass;
+
+        const FramebufferInfo* framebuffer_info = object_info_table_.GetFramebufferInfo(framebuffer_id);
+        assert(framebuffer_info);
+
+        const RenderPassInfo* render_pass_info = object_info_table_.GetRenderPassInfo(render_pass_id);
+        assert(render_pass_info);
+
+        // Do not record vkCmdBeginRenderPass commands in current DrawCall context command buffers.
+        // It will be handled by DrawCallsDumpingContext::BeginRenderPass
+        VkResult res = dc_context->BeginRenderPass(render_pass_info,
+                                                   pRenderPassBegin->GetPointer()->clearValueCount,
+                                                   pRenderPassBegin->GetPointer()->pClearValues,
+                                                   framebuffer_info,
+                                                   pRenderPassBegin->GetPointer()->renderArea,
+                                                   pSubpassBeginInfo->GetPointer()->contents);
+
+        assert(res == VK_SUCCESS);
+    }
+    else if (dc_context != nullptr)
+    {
+        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+        dc_context->GetDrawCallActiveCommandBuffers(first, last);
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it, pRenderPassBegin->GetPointer(), pSubpassBeginInfo->GetPointer());
+        }
+    }
+
+    VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dr_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dr_command_buffer, pRenderPassBegin->GetPointer(), pSubpassBeginInfo->GetPointer());
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdNextSubpass(const ApiCallInfo&   call_info,
+                                                           PFN_vkCmdNextSubpass func,
+                                                           VkCommandBuffer      original_command_buffer,
+                                                           VkSubpassContents    contents)
+{
+    assert(original_command_buffer != VK_NULL_HANDLE);
+    assert(IsRecording(original_command_buffer));
+
+    // Do not record NextSubpass commands in current DrawCall context command buffers.
+    // It will be handled by DrawCallsDumpingContext::NextSubpass
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr && dc_context->ShouldHandleRenderPass(call_info.index))
+    {
+        dc_context->NextSubpass(contents);
+    }
+    else if (dc_context != nullptr)
+    {
+        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+        dc_context->GetDrawCallActiveCommandBuffers(first, last);
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it, contents);
+        }
+    }
+
+    VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dr_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dr_command_buffer, contents);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdNextSubpass2(
+    const ApiCallInfo&                                call_info,
+    PFN_vkCmdNextSubpass2                             func,
+    VkCommandBuffer                                   original_command_buffer,
+    StructPointerDecoder<Decoded_VkSubpassBeginInfo>* pSubpassBeginInfo,
+    StructPointerDecoder<Decoded_VkSubpassEndInfo>*   pSubpassEndInfo)
+{
+    assert(original_command_buffer != VK_NULL_HANDLE);
+    assert(IsRecording(original_command_buffer));
+
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr && dc_context->ShouldHandleRenderPass(call_info.index))
+    {
+        // Do not record NextSubpass commands in current DrawCall context command buffers.
+        // It will be handled by DrawCallsDumpingContext::NextSubpass
+        dc_context->NextSubpass(pSubpassBeginInfo->GetPointer()->contents);
+    }
+    else if (dc_context != nullptr)
+    {
+        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+        dc_context->GetDrawCallActiveCommandBuffers(first, last);
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it, pSubpassBeginInfo->GetPointer(), pSubpassEndInfo->GetPointer());
+        }
+    }
+
+    VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dr_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dr_command_buffer, pSubpassBeginInfo->GetPointer(), pSubpassEndInfo->GetPointer());
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdEndRenderPass(const ApiCallInfo&     call_info,
+                                                             PFN_vkCmdEndRenderPass func,
+                                                             VkCommandBuffer        original_command_buffer)
+{
+    assert(IsRecording(original_command_buffer));
+
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr && dc_context->ShouldHandleRenderPass(call_info.index))
+    {
+        // Do not record EndRenderPass commands in current DrawCall context command buffers.
+        // It will be handled by DrawCallsDumpingContext::EndRenderPass
+        dc_context->EndRenderPass();
+    }
+    else if (dc_context != nullptr)
+    {
+        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+        dc_context->GetDrawCallActiveCommandBuffers(first, last);
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it);
+        }
+    }
+
+    VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dr_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dr_command_buffer);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdEndRenderPass2(
+    const ApiCallInfo&                              call_info,
+    PFN_vkCmdEndRenderPass2                         func,
+    VkCommandBuffer                                 original_command_buffer,
+    StructPointerDecoder<Decoded_VkSubpassEndInfo>* pSubpassEndInfo)
+{
+    assert(IsRecording(original_command_buffer));
+
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr && dc_context->ShouldHandleRenderPass(call_info.index))
+    {
+        // Do not record EndRenderPass commands in current DrawCall context command buffers.
+        // It will be handled by DrawCallsDumpingContext::EndRenderPass
+        dc_context->EndRenderPass();
+    }
+    else if (dc_context != nullptr)
+    {
+        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+        dc_context->GetDrawCallActiveCommandBuffers(first, last);
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it, pSubpassEndInfo->GetPointer());
+        }
+    }
+
+    VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dr_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dr_command_buffer, pSubpassEndInfo->GetPointer());
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdBindPipeline(const ApiCallInfo&    call_info,
+                                                            PFN_vkCmdBindPipeline func,
+                                                            VkCommandBuffer       original_command_buffer,
+                                                            VkPipelineBindPoint   pipelineBindPoint,
+                                                            const PipelineInfo*   pipeline)
+{
+    assert(pipeline);
+    assert(IsRecording(original_command_buffer));
+
+    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+    if (GetDrawCallActiveCommandBuffers(original_command_buffer, first, last))
+    {
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it, pipelineBindPoint, pipeline->handle);
+        }
+
+        DrawCallsDumpingContext* context = FindDrawCallCommandBufferContext(original_command_buffer);
+        assert(context);
+        context->BindPipeline(pipelineBindPoint, pipeline);
+    }
+
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dispatch_rays_command_buffer, pipelineBindPoint, pipeline->handle);
+
+        DispatchTraceRaysDumpingContext* context = FindDispatchRaysCommandBufferContext(original_command_buffer);
+        assert(context);
+        context->BindPipeline(pipelineBindPoint, pipeline);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdBindDescriptorSets(const ApiCallInfo&          call_info,
+                                                                  PFN_vkCmdBindDescriptorSets func,
+                                                                  VkCommandBuffer             original_command_buffer,
+                                                                  VkPipelineBindPoint         pipeline_bind_point,
+                                                                  const PipelineLayoutInfo*   layout_info,
+                                                                  uint32_t                    first_set,
+                                                                  uint32_t                    descriptor_sets_count,
+                                                                  const format::HandleId*     descriptor_sets_ids,
+                                                                  uint32_t                    dynamicOffsetCount,
+                                                                  const uint32_t*             pDynamicOffsets)
+{
+    assert(IsRecording(original_command_buffer));
+    assert(descriptor_sets_ids);
+
+    PipelineBindPoints                    bind_point = VkPipelineBindPointToPipelineBindPoint(pipeline_bind_point);
+    std::vector<VkDescriptorSet>          desc_set_handles(descriptor_sets_count, VK_NULL_HANDLE);
+    std::vector<const DescriptorSetInfo*> desc_set_infos(descriptor_sets_count, nullptr);
+
+    for (uint32_t i = 0; i < descriptor_sets_count; ++i)
+    {
+        const DescriptorSetInfo* desc_set_info = object_info_table_.GetDescriptorSetInfo(descriptor_sets_ids[i]);
+        assert(desc_set_info);
+        desc_set_infos[i]   = desc_set_info;
+        desc_set_handles[i] = desc_set_info->handle;
+    }
+
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context)
+    {
+        dc_context->BindDescriptorSets(
+            pipeline_bind_point, first_set, desc_set_infos, dynamicOffsetCount, pDynamicOffsets);
+    }
+
+    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+    GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
+    for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+    {
+        func(*it,
+             pipeline_bind_point,
+             layout_info->handle,
+             first_set,
+             descriptor_sets_count,
+             desc_set_handles.data(),
+             dynamicOffsetCount,
+             pDynamicOffsets);
+    }
+
+    VkCommandBuffer dr_cmd_buf = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dr_cmd_buf != VK_NULL_HANDLE)
+    {
+        func(dr_cmd_buf,
+             pipeline_bind_point,
+             layout_info->handle,
+             first_set,
+             descriptor_sets_count,
+             desc_set_handles.data(),
+             dynamicOffsetCount,
+             pDynamicOffsets);
+    }
+
+    DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
+    if (dr_context)
+    {
+        dr_context->BindDescriptorSets(
+            pipeline_bind_point, first_set, desc_set_infos, dynamicOffsetCount, pDynamicOffsets);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdBindIndexBuffer(const ApiCallInfo&       call_info,
+                                                               PFN_vkCmdBindIndexBuffer func,
+                                                               VkCommandBuffer          original_command_buffer,
+                                                               const BufferInfo*        buffer,
+                                                               VkDeviceSize             offset,
+                                                               VkIndexType              indexType)
+{
+    // buffer can be VK_NULL_HANDLE/NULL
+    VkBuffer buffer_handle = buffer != nullptr ? buffer->handle : VK_NULL_HANDLE;
+
+    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+    bool found = GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
+    if (found)
+    {
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it, buffer_handle, offset, indexType);
+        }
+    }
+
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dispatch_rays_command_buffer, buffer_handle, offset, indexType);
+    }
+
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr)
+    {
+        dc_context->BindIndexBuffer(call_info.index, buffer, offset, indexType);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdBindIndexBuffer2KHR(const ApiCallInfo&           call_info,
+                                                                   PFN_vkCmdBindIndexBuffer2KHR func,
+                                                                   VkCommandBuffer              original_command_buffer,
+                                                                   const BufferInfo*            buffer,
+                                                                   VkDeviceSize                 offset,
+                                                                   VkDeviceSize                 size,
+                                                                   VkIndexType                  indexType)
+{
+    // buffer can be VK_NULL_HANDLE/NULL
+    VkBuffer buffer_handle = buffer != nullptr ? buffer->handle : VK_NULL_HANDLE;
+
+    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+    bool found = GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
+    if (found)
+    {
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it, buffer_handle, offset, size, indexType);
+        }
+    }
+
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dispatch_rays_command_buffer, buffer_handle, offset, size, indexType);
+    }
+
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr)
+    {
+        dc_context->BindIndexBuffer(call_info.index, buffer, offset, indexType, size);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdBindVertexBuffers(const ApiCallInfo&         call_info,
+                                                                 PFN_vkCmdBindVertexBuffers func,
+                                                                 VkCommandBuffer            original_command_buffer,
+                                                                 uint32_t                   firstBinding,
+                                                                 uint32_t                   bindingCount,
+                                                                 const format::HandleId*    buffer_ids,
+                                                                 const VkDeviceSize*        pOffsets)
+{
+    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+    bool            found = GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+
+    std::vector<const BufferInfo*> buffer_infos(bindingCount, nullptr);
+    std::vector<VkBuffer>          buffer_handles(bindingCount, VK_NULL_HANDLE);
+    if (found || dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        for (uint32_t i = 0; i < bindingCount; ++i)
+        {
+            // Buffer can be VK_NULL_HANDLE
+            const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(buffer_ids[i]);
+
+            buffer_infos[i]   = buffer_info;
+            buffer_handles[i] = buffer_info != nullptr ? buffer_info->handle : VK_NULL_HANDLE;
+        }
+    }
+
+    if (found)
+    {
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it, firstBinding, bindingCount, buffer_handles.data(), pOffsets);
+        }
+    }
+
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dispatch_rays_command_buffer, firstBinding, bindingCount, buffer_handles.data(), pOffsets);
+    }
+
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr && bindingCount)
+    {
+        assert(buffer_infos.size() == bindingCount);
+        dc_context->BindVertexBuffers(call_info.index, firstBinding, buffer_infos, pOffsets);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdSetVertexInputEXT(
+    const ApiCallInfo&                                                   call_info,
+    PFN_vkCmdSetVertexInputEXT                                           func,
+    VkCommandBuffer                                                      original_command_buffer,
+    uint32_t                                                             vertexBindingDescriptionCount,
+    StructPointerDecoder<Decoded_VkVertexInputBindingDescription2EXT>*   pVertexBindingDescriptions,
+    uint32_t                                                             vertexAttributeDescriptionCount,
+    StructPointerDecoder<Decoded_VkVertexInputAttributeDescription2EXT>* pVertexAttributeDescriptions)
+{
+    const VkVertexInputBindingDescription2EXT* in_pVertexBindingDescriptions = pVertexBindingDescriptions->GetPointer();
+    const VkVertexInputAttributeDescription2EXT* in_pVertexAttributeDescriptions =
+        pVertexAttributeDescriptions->GetPointer();
+
+    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+    if (GetDrawCallActiveCommandBuffers(original_command_buffer, first, last))
+    {
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it,
+                 vertexBindingDescriptionCount,
+                 in_pVertexBindingDescriptions,
+                 vertexAttributeDescriptionCount,
+                 in_pVertexAttributeDescriptions);
+        }
+
+        DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+        dc_context->SetVertexInput(vertexBindingDescriptionCount,
+                                   in_pVertexBindingDescriptions,
+                                   vertexAttributeDescriptionCount,
+                                   in_pVertexAttributeDescriptions);
+    }
+
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dispatch_rays_command_buffer,
+             vertexBindingDescriptionCount,
+             in_pVertexBindingDescriptions,
+             vertexAttributeDescriptionCount,
+             in_pVertexAttributeDescriptions);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdBindVertexBuffers2(const ApiCallInfo&          call_info,
+                                                                  PFN_vkCmdBindVertexBuffers2 func,
+                                                                  VkCommandBuffer             original_command_buffer,
+                                                                  uint32_t                    firstBinding,
+                                                                  uint32_t                    bindingCount,
+                                                                  const format::HandleId*     pBuffers_ids,
+                                                                  const VkDeviceSize*         pOffsets,
+                                                                  const VkDeviceSize*         pSizes,
+                                                                  const VkDeviceSize*         pStrides)
+{
+    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+    bool            dc_found = GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+
+    std::vector<VkBuffer> buffer_handles(bindingCount);
+    if (dc_found || dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        for (uint32_t i = 0; i < bindingCount; ++i)
+        {
+            const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(pBuffers_ids[i]);
+            buffer_handles[i]             = (buffer_info != nullptr) ? buffer_info->handle : VK_NULL_HANDLE;
+        }
+    }
+
+    if (dc_found)
+    {
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it, firstBinding, bindingCount, buffer_handles.data(), pOffsets, pSizes, pStrides);
+        }
+
+        DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+        if (dc_context != nullptr && bindingCount)
+        {
+            assert(pBuffers_ids);
+            assert(pOffsets);
+            assert(pSizes);
+            assert(pStrides);
+
+            std::vector<const BufferInfo*> buffer_infos(bindingCount);
+
+            for (uint32_t i = 0; i < bindingCount; ++i)
+            {
+                const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(pBuffers_ids[i]);
+
+                buffer_infos[i] = buffer_info;
+            }
+
+            dc_context->BindVertexBuffers2(call_info.index, firstBinding, buffer_infos, pOffsets, pSizes, pStrides);
+        }
+    }
+
+    if (dispatch_rays_command_buffer)
+    {
+        func(dispatch_rays_command_buffer,
+             firstBinding,
+             bindingCount,
+             buffer_handles.data(),
+             pOffsets,
+             pSizes,
+             pStrides);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdDispatch(const ApiCallInfo& call_info,
+                                                        PFN_vkCmdDispatch  func,
+                                                        VkCommandBuffer    original_command_buffer,
+                                                        uint32_t           groupCountX,
+                                                        uint32_t           groupCountY,
+                                                        uint32_t           groupCountZ)
+{
+    assert(IsRecording(original_command_buffer));
+
+    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+    if (GetDrawCallActiveCommandBuffers(original_command_buffer, first, last))
+    {
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it, groupCountX, groupCountY, groupCountZ);
+        }
+    }
+
+    DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
+    if (dump_resources_before_ && dr_context != nullptr)
+    {
+        if (dr_context->MustDumpDispatch(call_info.index))
+        {
+            dr_context->CloneDispatchRaysResources(call_info.index, true, true);
+        }
+    }
+
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dispatch_rays_command_buffer, groupCountX, groupCountY, groupCountZ);
+    }
+
+    if (dr_context != nullptr)
+    {
+        if (dr_context->MustDumpDispatch(call_info.index))
+        {
+            dr_context->CloneDispatchRaysResources(call_info.index, false, true);
+            dr_context->SnapshotComputeBoundDescriptors();
+            dr_context->FinalizeCommandBuffer(true);
+            UpdateRecordingStatus();
+        }
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdDispatchIndirect(const ApiCallInfo&        call_info,
+                                                                PFN_vkCmdDispatchIndirect func,
+                                                                VkCommandBuffer           original_command_buffer,
+                                                                const BufferInfo*         buffer_info,
+                                                                VkDeviceSize              offset)
+{
+    assert(IsRecording(original_command_buffer));
+
+    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+    if (GetDrawCallActiveCommandBuffers(original_command_buffer, first, last))
+    {
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it, buffer_info->handle, offset);
+        }
+    }
+
+    DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
+    if (dump_resources_before_ && dr_context != nullptr)
+    {
+        if (dr_context->MustDumpDispatch(call_info.index))
+        {
+            dr_context->CloneDispatchRaysResources(call_info.index, true, true);
+        }
+    }
+
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dispatch_rays_command_buffer, buffer_info->handle, offset);
+    }
+
+    if (dr_context != nullptr)
+    {
+        if (dr_context->MustDumpDispatch(call_info.index))
+        {
+            dr_context->CloneDispatchRaysResources(call_info.index, false, true);
+            dr_context->SnapshotComputeBoundDescriptors();
+            dr_context->FinalizeCommandBuffer(true);
+            UpdateRecordingStatus();
+        }
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdTraceRaysKHR(
+    const ApiCallInfo&                                             call_info,
+    PFN_vkCmdTraceRaysKHR                                          func,
+    VkCommandBuffer                                                original_command_buffer,
+    StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pRaygenShaderBindingTable,
+    StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pMissShaderBindingTable,
+    StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pHitShaderBindingTable,
+    StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pCallableShaderBindingTable,
+    uint32_t                                                       width,
+    uint32_t                                                       height,
+    uint32_t                                                       depth)
+{
+    assert(IsRecording(original_command_buffer));
+
+    const VkStridedDeviceAddressRegionKHR* in_pRaygenShaderBindingTable   = pRaygenShaderBindingTable->GetPointer();
+    const VkStridedDeviceAddressRegionKHR* in_pMissShaderBindingTable     = pMissShaderBindingTable->GetPointer();
+    const VkStridedDeviceAddressRegionKHR* in_pHitShaderBindingTable      = pHitShaderBindingTable->GetPointer();
+    const VkStridedDeviceAddressRegionKHR* in_pCallableShaderBindingTable = pCallableShaderBindingTable->GetPointer();
+
+    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
+    if (GetDrawCallActiveCommandBuffers(original_command_buffer, first, last))
+    {
+        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
+        {
+            func(*it,
+                 in_pRaygenShaderBindingTable,
+                 in_pMissShaderBindingTable,
+                 in_pHitShaderBindingTable,
+                 in_pCallableShaderBindingTable,
+                 width,
+                 height,
+                 depth);
+        }
+    }
+
+    DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
+    if (dump_resources_before_ && dr_context != nullptr)
+    {
+        if (dr_context->MustDumpTraceRays(call_info.index))
+        {
+            dr_context->CloneDispatchRaysResources(call_info.index, true, false);
+        }
+    }
+
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dispatch_rays_command_buffer,
+             in_pRaygenShaderBindingTable,
+             in_pMissShaderBindingTable,
+             in_pHitShaderBindingTable,
+             in_pCallableShaderBindingTable,
+             width,
+             height,
+             depth);
+    }
+
+    if (dr_context != nullptr)
+    {
+        if (dr_context->MustDumpTraceRays(call_info.index))
+        {
+            dr_context->CloneDispatchRaysResources(call_info.index, false, false);
+            dr_context->SnapshotRayTracingBoundDescriptors();
+            dr_context->FinalizeCommandBuffer(false);
+            UpdateRecordingStatus();
+        }
+    }
+}
+
 bool VulkanReplayDumpResourcesBase::MustDumpDrawCall(VkCommandBuffer original_command_buffer, uint64_t index) const
 {
     assert(original_command_buffer != VK_NULL_HANDLE);
@@ -1788,6 +2178,729 @@ bool VulkanReplayDumpResourcesBase::MustDumpTraceRays(VkCommandBuffer original_c
     {
         return false;
     }
+}
+
+VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitInfo>& submit_infos,
+                                                    const encode::DeviceTable&       device_table,
+                                                    VkQueue                          queue,
+                                                    VkFence                          fence,
+                                                    uint64_t                         index)
+{
+    bool     pre_submit = false;
+    bool     submitted  = false;
+    VkResult res;
+
+    // First do a submission with all command buffer except the ones we are interested in
+    std::vector<VkSubmitInfo>                 modified_submit_infos = submit_infos;
+    std::vector<std::vector<VkCommandBuffer>> modified_command_buffer_handles(modified_submit_infos.size());
+    for (size_t s = 0; s < modified_submit_infos.size(); s++)
+    {
+        size_t     command_buffer_count   = modified_submit_infos[s].commandBufferCount;
+        const auto command_buffer_handles = modified_submit_infos[s].pCommandBuffers;
+
+        for (uint32_t o = 0; o < command_buffer_count; ++o)
+        {
+            auto bcb_entry = cmd_buf_begin_map_.find(command_buffer_handles[o]);
+            if (bcb_entry != cmd_buf_begin_map_.end())
+            {
+                continue;
+            }
+            else
+            {
+                pre_submit = true;
+                modified_command_buffer_handles[s].push_back(command_buffer_handles[o]);
+            }
+        }
+
+        if (modified_command_buffer_handles[s].size())
+        {
+            modified_submit_infos[s].commandBufferCount = modified_command_buffer_handles[s].size();
+            modified_submit_infos[s].pCommandBuffers    = modified_command_buffer_handles[s].data();
+        }
+        else
+        {
+            modified_submit_infos[s].commandBufferCount = 0;
+            modified_submit_infos[s].pCommandBuffers    = nullptr;
+        }
+    }
+
+    if (pre_submit)
+    {
+        res =
+            device_table.QueueSubmit(queue, modified_submit_infos.size(), modified_submit_infos.data(), VK_NULL_HANDLE);
+        if (res != VK_SUCCESS)
+        {
+            GFXRECON_LOG_ERROR(
+                "(%s:%u) QueueSubmit failed with %s", __FILE__, __LINE__, util::ToString<VkResult>(res).c_str());
+            goto error;
+        }
+
+        // Wait
+        res = device_table.QueueWaitIdle(queue);
+        if (res != VK_SUCCESS)
+        {
+            GFXRECON_LOG_ERROR("QueueWaitIdle failed with %s", util::ToString<VkResult>(res).c_str());
+            goto error;
+        }
+    }
+
+    for (size_t s = 0; s < submit_infos.size(); s++)
+    {
+        size_t     command_buffer_count   = submit_infos[s].commandBufferCount;
+        const auto command_buffer_handles = submit_infos[s].pCommandBuffers;
+
+        for (size_t o = 0; o < command_buffer_count; ++o)
+        {
+            if (pre_submit)
+            {
+                // These semaphores have already been handled. Do not bother with them
+                modified_submit_infos[s].waitSemaphoreCount = 0;
+                modified_submit_infos[s].pSignalSemaphores  = 0;
+            }
+
+            DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(command_buffer_handles[o]);
+            if (dc_context != nullptr)
+            {
+                assert(cmd_buf_begin_map_.find(command_buffer_handles[o]) != cmd_buf_begin_map_.end());
+
+                res = dc_context->DumpDrawCallsAttachments(
+                    queue, index, cmd_buf_begin_map_[command_buffer_handles[o]], modified_submit_infos[s], fence);
+                if (res == VK_SUCCESS)
+                {
+                    submitted = true;
+                }
+                else
+                {
+                    goto error;
+                }
+            }
+
+            DispatchTraceRaysDumpingContext* dr_context =
+                FindDispatchRaysCommandBufferContext(command_buffer_handles[o]);
+            if (dr_context != nullptr)
+            {
+                assert(cmd_buf_begin_map_.find(command_buffer_handles[o]) != cmd_buf_begin_map_.end());
+                res = dr_context->DumpDispatchRaysMutableResources(
+                    queue, index, cmd_buf_begin_map_[command_buffer_handles[o]], modified_submit_infos[s], fence);
+
+                if (res == VK_SUCCESS)
+                {
+                    submitted = true;
+                }
+                else
+                {
+                    goto error;
+                }
+            }
+        }
+    }
+
+    assert(res >= 0);
+
+    // Looks like we didn't submit anything. Do the submission as it would have been done
+    // without further modifications
+    if (!submitted)
+    {
+        res = device_table.QueueSubmit(queue, submit_infos.size(), submit_infos.data(), fence);
+        if (res != VK_SUCCESS)
+        {
+            GFXRECON_LOG_ERROR(
+                "(%s:%u) QueueSubmit failed with %s", __FILE__, __LINE__, util::ToString<VkResult>(res).c_str());
+        }
+    }
+    else
+    {
+        assert(index == QueueSubmit_indices_[0]);
+        QueueSubmit_indices_.erase(QueueSubmit_indices_.begin());
+
+        // Once all submissions are complete terminate process
+        if (QueueSubmit_indices_.size() == 0)
+        {
+            // The code in VulkanReplayDumpResourcesJsonClose would ideally be in
+            // the VulkanReplayDumpResourcesJson destructor. But the destructor
+            // doesn't get called when exit(0) is called, so we call this method
+            // instead.
+            if (!output_json_per_command)
+            {
+                dump_json_.VulkanReplayDumpResourcesJsonClose();
+            }
+
+            exit(0);
+        }
+    }
+
+error:
+    if (res < 0)
+    {
+        GFXRECON_LOG_ERROR("Something went wrong. Terminating.")
+        exit(0);
+    }
+
+    return res;
+}
+
+bool VulkanReplayDumpResourcesBase::DumpingBeginCommandBufferIndex(uint64_t index) const
+{
+    const DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(index);
+
+    if (dc_context == nullptr)
+    {
+        const DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(index);
+        return dr_context != nullptr;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+bool VulkanReplayDumpResourcesBase::GetDrawCallActiveCommandBuffers(VkCommandBuffer original_command_buffer,
+                                                                    cmd_buf_it&     first,
+                                                                    cmd_buf_it&     last) const
+{
+    assert(IsRecording(original_command_buffer));
+
+    const DrawCallsDumpingContext* stack = FindDrawCallCommandBufferContext(original_command_buffer);
+
+    if (stack != nullptr)
+    {
+        stack->GetDrawCallActiveCommandBuffers(first, last);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+VkCommandBuffer
+VulkanReplayDumpResourcesBase::GetDispatchRaysCommandBuffer(VkCommandBuffer original_command_buffer) const
+{
+    assert(IsRecording(original_command_buffer));
+
+    const DispatchTraceRaysDumpingContext* context = FindDispatchRaysCommandBufferContext(original_command_buffer);
+
+    if (context != nullptr)
+    {
+        VkCommandBuffer dr_command_buffer = context->GetDispatchRaysCommandBuffer();
+        assert(dr_command_buffer != VK_NULL_HANDLE);
+
+        return dr_command_buffer;
+    }
+    else
+    {
+        return VK_NULL_HANDLE;
+    }
+}
+
+bool VulkanReplayDumpResourcesBase::UpdateRecordingStatus()
+{
+    assert(recording_);
+
+    for (const auto& entry : draw_call_contexts)
+    {
+        const DrawCallsDumpingContext& dc_context = entry.second;
+        if (dc_context.IsRecording())
+        {
+            return true;
+        }
+    }
+
+    for (const auto& entry : dispatch_ray_contexts)
+    {
+        const DispatchTraceRaysDumpingContext& dr_context = entry.second;
+        if (dr_context.IsRecording())
+        {
+            return true;
+        }
+    }
+
+    return (recording_ = false);
+}
+
+bool VulkanReplayDumpResourcesBase::MustDumpQueueSubmitIndex(uint64_t index) const
+{
+    // Indices should be sorted
+    if (!IsInsideRange(QueueSubmit_indices_, index))
+    {
+        return false;
+    }
+
+    for (size_t i = 0; i < QueueSubmit_indices_.size(); ++i)
+    {
+        if (index == QueueSubmit_indices_[i])
+        {
+            return true;
+        }
+        else if (index > QueueSubmit_indices_[i])
+        {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+bool VulkanReplayDumpResourcesBase::IsRecording(VkCommandBuffer original_command_buffer) const
+{
+    if (recording_)
+    {
+        const DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+        if (dc_context)
+        {
+            if (dc_context->IsRecording())
+            {
+                return true;
+            }
+        }
+
+        const DispatchTraceRaysDumpingContext* dr_context =
+            FindDispatchRaysCommandBufferContext(original_command_buffer);
+        if (dr_context != nullptr)
+        {
+            if (dr_context->IsRecording())
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DrawCallsDumpingContext(
+    const std::vector<uint64_t>&              dc_indices,
+    const std::vector<std::vector<uint64_t>>& rp_indices,
+    VulkanObjectInfoTable&                    object_info_table,
+    const VulkanReplayOptions&                options,
+    VulkanReplayDumpResourcesJson&            dump_json) :
+    original_command_buffer_info(nullptr),
+    current_cb_index(0), dc_indices(dc_indices), RP_indices(rp_indices), active_renderpass(nullptr),
+    active_framebuffer(nullptr), bound_pipelines{ nullptr }, current_renderpass(0), current_subpass(0),
+    dump_resources_before(options.dump_resources_before), aux_command_buffer(VK_NULL_HANDLE), aux_fence(VK_NULL_HANDLE),
+    device_table(nullptr), instance_table(nullptr), object_info_table(object_info_table),
+    replay_device_phys_mem_props(nullptr), dump_resource_path(options.dump_resources_output_dir),
+    image_file_format(options.dump_resources_image_format), dump_resources_scale(options.dump_resources_scale),
+    dump_json(dump_json), dump_depth(options.dump_resources_dump_depth),
+    color_attachment_to_dump(options.dump_resources_color_attachment_index),
+    dump_vertex_index_buffers(options.dump_resources_dump_vertex_index_buffer),
+    output_json_per_command(options.dump_resources_json_per_command),
+    dump_immutable_resources(options.dump_resources_dump_immutable_resources),
+    dump_all_image_subresources(options.dump_resources_dump_all_image_subresources),
+    currently_bound_vertex_buffers(bound_vertex_buffers.end()), currently_bound_index_buffer(bound_index_buffers.end())
+{
+    must_backup_resources = (dc_indices.size() > 1);
+
+    const size_t n_cmd_buffs = dump_resources_before ? 2 * dc_indices.size() : dc_indices.size();
+    command_buffers.resize(n_cmd_buffs, VK_NULL_HANDLE);
+}
+
+VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::~DrawCallsDumpingContext()
+{
+    if (original_command_buffer_info)
+    {
+        const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+
+        if (device_info == nullptr)
+        {
+            return;
+        }
+
+        VkDevice device = device_info->handle;
+        assert(device_table);
+
+        const CommandPoolInfo* pool_info = object_info_table.GetCommandPoolInfo(original_command_buffer_info->pool_id);
+        assert(pool_info);
+
+        if (command_buffers.size())
+        {
+            device_table->FreeCommandBuffers(device, pool_info->handle, command_buffers.size(), command_buffers.data());
+        }
+
+        if (aux_command_buffer != VK_NULL_HANDLE)
+        {
+            device_table->FreeCommandBuffers(device, pool_info->handle, 1, &aux_command_buffer);
+            aux_command_buffer = VK_NULL_HANDLE;
+        }
+
+        if (aux_fence != VK_NULL_HANDLE)
+        {
+            device_table->DestroyFence(device, aux_fence, nullptr);
+        }
+
+        DestroyMutableResourceBackups();
+        ReleaseIndirectDrawParams();
+    }
+}
+
+VkResult
+VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyIndirectDrawParameters(DrawCallParameters& dc_params)
+{
+    assert(IsDrawCallIndirect(dc_params.type));
+
+    if (IsDrawCallIndirectCount(dc_params.type))
+    {
+        DrawCallParameters::DrawCallParamsUnion::DrawIndirectCountParams& ic_params =
+            dc_params.dc_params_union.draw_indirect_count;
+
+        const uint32_t max_draw_count = ic_params.max_draw_count;
+
+        // Not sure from spec if max_draw_count can be zero. Assume it can
+        if (!max_draw_count)
+        {
+            return VK_SUCCESS;
+        }
+
+        const VkDeviceSize draw_call_params_size =
+            IsDrawCallIndexed(dc_params.type) ? sizeof(DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams)
+                                              : sizeof(DrawCallParameters::DrawCallParamsUnion::DrawParams);
+
+        // Create a buffer to copy the parameters buffer
+        const VkDeviceSize copy_buffer_size = draw_call_params_size * max_draw_count;
+        assert(copy_buffer_size <= ic_params.params_buffer_info->size);
+
+        ic_params.new_params_buffer_size = copy_buffer_size;
+
+        VkResult res = CloneBuffer(object_info_table,
+                                   device_table,
+                                   replay_device_phys_mem_props,
+                                   ic_params.params_buffer_info,
+                                   &ic_params.new_params_buffer,
+                                   &ic_params.new_params_memory,
+                                   copy_buffer_size);
+        if (res != VK_SUCCESS)
+        {
+            return res;
+        }
+
+        // Inject a cmdCopyBuffer to copy the draw params into the new buffer
+        {
+            const uint32_t            param_buffer_stride = ic_params.stride;
+            std::vector<VkBufferCopy> regions(param_buffer_stride ? max_draw_count : 1);
+            if (param_buffer_stride != draw_call_params_size)
+            {
+                VkDeviceSize src_offset = ic_params.params_buffer_offset;
+                VkDeviceSize dst_offset = 0;
+                for (uint32_t i = 0; i < max_draw_count; ++i)
+                {
+                    regions[i].size = draw_call_params_size;
+
+                    regions[i].srcOffset = src_offset;
+                    src_offset += param_buffer_stride;
+
+                    regions[i].dstOffset = dst_offset;
+                    dst_offset += draw_call_params_size;
+                }
+                assert(src_offset == copy_buffer_size);
+            }
+            else
+            {
+                regions[0].size      = copy_buffer_size;
+                regions[0].srcOffset = ic_params.params_buffer_offset;
+                regions[0].dstOffset = 0;
+            }
+
+            VkCommandBuffer cmd_buf = command_buffers[current_cb_index];
+            device_table->CmdCopyBuffer(cmd_buf,
+                                        ic_params.params_buffer_info->handle,
+                                        ic_params.new_params_buffer,
+                                        regions.size(),
+                                        regions.data());
+
+            VkBufferMemoryBarrier buf_barrier;
+            buf_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            buf_barrier.pNext               = nullptr;
+            buf_barrier.buffer              = ic_params.new_params_buffer;
+            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
+            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_READ_BIT;
+            buf_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            buf_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            buf_barrier.size                = copy_buffer_size;
+            buf_barrier.offset              = 0;
+
+            device_table->CmdPipelineBarrier(cmd_buf,
+                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                             VkDependencyFlags{ 0 },
+                                             0,
+                                             nullptr,
+                                             1,
+                                             &buf_barrier,
+                                             0,
+                                             nullptr);
+        }
+
+        // Create a buffer to copy the draw count parameter
+        const VkDeviceSize count_buffer_size = sizeof(uint32_t);
+        assert(count_buffer_size <= ic_params.count_buffer_info->size);
+        res = CloneBuffer(object_info_table,
+                          device_table,
+                          replay_device_phys_mem_props,
+                          ic_params.count_buffer_info,
+                          &ic_params.new_count_buffer,
+                          &ic_params.new_count_memory,
+                          count_buffer_size);
+        if (res != VK_SUCCESS)
+        {
+            return res;
+        }
+
+        // Inject a cmdCopyBuffer to copy the count into the new buffer
+        {
+            VkBufferCopy region;
+            region.size      = count_buffer_size;
+            region.srcOffset = ic_params.count_buffer_offset;
+            region.dstOffset = 0;
+
+            VkCommandBuffer cmd_buf = command_buffers[current_cb_index];
+            device_table->CmdCopyBuffer(
+                cmd_buf, ic_params.params_buffer_info->handle, ic_params.new_params_buffer, 1, &region);
+
+            VkBufferMemoryBarrier buf_barrier;
+            buf_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            buf_barrier.pNext               = nullptr;
+            buf_barrier.buffer              = ic_params.new_count_buffer;
+            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
+            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_READ_BIT;
+            buf_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            buf_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            buf_barrier.size                = count_buffer_size;
+            buf_barrier.offset              = 0;
+
+            device_table->CmdPipelineBarrier(cmd_buf,
+                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                             VkDependencyFlags{ 0 },
+                                             0,
+                                             nullptr,
+                                             1,
+                                             &buf_barrier,
+                                             0,
+                                             nullptr);
+        }
+    }
+    else
+    {
+        DrawCallParameters::DrawCallParamsUnion::DrawIndirectParams& i_params = dc_params.dc_params_union.draw_indirect;
+
+        const uint32_t draw_count = i_params.draw_count;
+
+        // According to spec drawCount can be zero. Nothing to do in this case
+        if (!draw_count)
+        {
+            return VK_SUCCESS;
+        }
+
+        const VkDeviceSize draw_call_params_size =
+            IsDrawCallIndexed(dc_params.type) ? sizeof(DrawCallParameters::DrawCallParamsUnion::DrawIndexedParams)
+                                              : sizeof(DrawCallParameters::DrawCallParamsUnion::DrawParams);
+
+        // Create a buffer to copy the parameters buffer
+        const VkDeviceSize copy_buffer_size = draw_call_params_size * draw_count;
+        assert(copy_buffer_size <= i_params.params_buffer_info->size);
+
+        i_params.new_params_buffer_size = copy_buffer_size;
+
+        VkResult res = CloneBuffer(object_info_table,
+                                   device_table,
+                                   replay_device_phys_mem_props,
+                                   i_params.params_buffer_info,
+                                   &i_params.new_params_buffer,
+                                   &i_params.new_params_memory,
+                                   copy_buffer_size);
+        if (res != VK_SUCCESS)
+        {
+            return res;
+        }
+
+        // Inject a cmdCopyBuffer to copy the draw params into the new buffer
+        {
+            const uint32_t            param_buffer_stride = i_params.stride;
+            std::vector<VkBufferCopy> regions(param_buffer_stride ? draw_count : 1);
+            if (param_buffer_stride != draw_call_params_size)
+            {
+                VkDeviceSize src_offset = i_params.params_buffer_offset;
+                VkDeviceSize dst_offset = 0;
+                for (uint32_t i = 0; i < draw_count; ++i)
+                {
+                    regions[i].size = draw_call_params_size;
+
+                    regions[i].srcOffset = src_offset;
+                    src_offset += param_buffer_stride;
+
+                    regions[i].dstOffset = dst_offset;
+                    dst_offset += draw_call_params_size;
+                }
+                assert(src_offset == copy_buffer_size);
+            }
+            else
+            {
+                regions[0].size      = copy_buffer_size;
+                regions[0].srcOffset = i_params.params_buffer_offset;
+                regions[0].dstOffset = 0;
+            }
+
+            VkCommandBuffer cmd_buf = command_buffers[current_cb_index];
+            device_table->CmdCopyBuffer(cmd_buf,
+                                        i_params.params_buffer_info->handle,
+                                        i_params.new_params_buffer,
+                                        regions.size(),
+                                        regions.data());
+
+            VkBufferMemoryBarrier buf_barrier;
+            buf_barrier.sType               = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            buf_barrier.pNext               = nullptr;
+            buf_barrier.buffer              = i_params.new_params_buffer;
+            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_WRITE_BIT;
+            buf_barrier.srcAccessMask       = VK_ACCESS_TRANSFER_READ_BIT;
+            buf_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            buf_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            buf_barrier.size                = copy_buffer_size;
+            buf_barrier.offset              = 0;
+
+            device_table->CmdPipelineBarrier(cmd_buf,
+                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                             VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                             VkDependencyFlags{ 0 },
+                                             0,
+                                             nullptr,
+                                             1,
+                                             &buf_barrier,
+                                             0,
+                                             nullptr);
+        }
+    }
+
+    return VK_SUCCESS;
+}
+
+void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::SnapshotBoundDescriptors(DrawCallParameters& dc_params)
+{
+    const PipelineInfo* gr_pipeline_info = bound_pipelines[kBindPoint_graphics];
+    if (gr_pipeline_info != nullptr)
+    {
+        // Iterate all shader stages
+        for (const auto& shader_stage : gr_pipeline_info->shaders)
+        {
+            const VkShaderStageFlagBits shader_stage_flag = shader_stage.first;
+
+            // Iterate all referenced descriptor sets in each shader stage
+            for (const auto& shader_desc_set : shader_stage.second.used_descriptors_info)
+            {
+                const uint32_t desc_set_index = shader_desc_set.first;
+
+                const auto& ppl_desc_set = bound_descriptor_sets_gr.find(desc_set_index);
+                assert(ppl_desc_set != bound_descriptor_sets_gr.end());
+
+                if (ppl_desc_set == bound_descriptor_sets_gr.end())
+                {
+                    continue;
+                }
+
+                for (const auto& shader_desc_binding : shader_desc_set.second)
+                {
+                    const uint32_t desc_set_binding_index = shader_desc_binding.first;
+
+                    // if (!shader_desc_binding.second.accessed)
+                    // {
+                    //     continue;
+                    // }
+
+                    const auto& ppl_desc_binding = ppl_desc_set->second->descriptors.find(desc_set_binding_index);
+                    assert(ppl_desc_binding != ppl_desc_set->second->descriptors.end());
+                    if (ppl_desc_binding == ppl_desc_set->second->descriptors.end())
+                    {
+                        continue;
+                    }
+
+                    assert(shader_desc_binding.second.type == ppl_desc_binding->second.desc_type);
+
+                    dc_params.referenced_descriptors[shader_stage_flag][desc_set_index][desc_set_binding_index] =
+                        ppl_desc_binding->second;
+                }
+            }
+        }
+    }
+}
+
+void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CopyVertexInputStateInfo(uint64_t            dc_index,
+                                                                                      DrawCallParameters& dc_params)
+{
+    const PipelineInfo* gr_pipeline_info = bound_pipelines[kBindPoint_graphics];
+    assert(gr_pipeline_info != nullptr);
+
+    // Pipeline has no vertex binding and/or attribute information.
+    // This can be a case of shader generated vertices, or vertex buffer is bound as a UBO
+    if (gr_pipeline_info != nullptr &&
+        (!gr_pipeline_info->vertex_input_attribute_map.size() &&
+         !gr_pipeline_info->vertex_input_attribute_map.size()) &&
+        (!gr_pipeline_info->dynamic_vertex_input && !gr_pipeline_info->dynamic_vertex_binding_stride))
+    {
+        return;
+    }
+
+    // If VK_DYNAMIC_STATE_VERTEX_INPUT_EXT is enabled then get all vertex input state from
+    // vkCmdSetVertexInputEXT
+    if (gr_pipeline_info == nullptr || gr_pipeline_info->dynamic_vertex_input)
+    {
+        currently_bound_vertex_buffers->second.vertex_input_state = dynamic_vertex_input_state;
+    }
+    else
+    {
+        if (gr_pipeline_info)
+        {
+            // Copy vertex input binding state
+            currently_bound_vertex_buffers->second.vertex_input_state.input_binding_map =
+                gr_pipeline_info->vertex_input_binding_map;
+
+            // If VK_DYNAMIC_STATE_VERTEX_INPUT_BINDING_STRIDE_EXT is enabled, ignore strides from
+            // pipeline and get them from vkCmdBindVertexBuffers2EXT instead
+            if (gr_pipeline_info->dynamic_vertex_binding_stride)
+            {
+                for (auto& vb_binding : currently_bound_vertex_buffers->second.vertex_input_state.input_binding_map)
+                {
+                    const uint32_t binding = vb_binding.first;
+                    if (dynamic_vertex_input_state.input_binding_map.find(binding) !=
+                        dynamic_vertex_input_state.input_binding_map.end())
+                    {
+                        vb_binding.second.stride = dynamic_vertex_input_state.input_binding_map[binding].stride;
+                    }
+                }
+            }
+
+            // Copy vertex attributes info
+            currently_bound_vertex_buffers->second.vertex_input_state.input_attribute_map =
+                gr_pipeline_info->vertex_input_attribute_map;
+        }
+    }
+
+    assert(currently_bound_vertex_buffers != bound_vertex_buffers.end());
+
+    currently_bound_vertex_buffers->second.referencing_draw_calls.push_back(dc_index);
+    dc_params.referenced_bind_vertex_buffers = currently_bound_vertex_buffers->first;
+
+    if (IsDrawCallIndexed(dc_params.type))
+    {
+        assert(currently_bound_index_buffer != bound_index_buffers.end());
+
+        currently_bound_index_buffer->second.referencing_draw_calls.push_back(dc_index);
+        dc_params.referenced_bind_index_buffer = currently_bound_index_buffer->first;
+    }
+}
+
+void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::FinalizeCommandBuffer()
+{
+    assert(current_cb_index < command_buffers.size());
+    VkCommandBuffer current_command_buffer = command_buffers[current_cb_index];
+    assert(device_table != nullptr);
+
+    assert(inside_renderpass);
+
+    device_table->CmdEndRenderPass(current_command_buffer);
+    device_table->EndCommandBuffer(current_command_buffer);
+
+    // Increment index of command buffer that is going to be finalized next
+    ++current_cb_index;
 }
 
 bool VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::MustDumpDrawCall(uint64_t index) const
@@ -3074,165 +4187,6 @@ VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DumpVertexIndex
     return VK_SUCCESS;
 }
 
-VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitInfo>& submit_infos,
-                                                    const encode::VulkanDeviceTable& device_table,
-                                                    VkQueue                          queue,
-                                                    VkFence                          fence,
-                                                    uint64_t                         index)
-{
-    bool     pre_submit = false;
-    bool     submitted  = false;
-    VkResult res;
-
-    // First do a submission with all command buffer except the ones we are interested in
-    std::vector<VkSubmitInfo>                 modified_submit_infos = submit_infos;
-    std::vector<std::vector<VkCommandBuffer>> modified_command_buffer_handles(modified_submit_infos.size());
-    for (size_t s = 0; s < modified_submit_infos.size(); s++)
-    {
-        size_t     command_buffer_count   = modified_submit_infos[s].commandBufferCount;
-        const auto command_buffer_handles = modified_submit_infos[s].pCommandBuffers;
-
-        for (uint32_t o = 0; o < command_buffer_count; ++o)
-        {
-            auto bcb_entry = cmd_buf_begin_map_.find(command_buffer_handles[o]);
-            if (bcb_entry != cmd_buf_begin_map_.end())
-            {
-                continue;
-            }
-            else
-            {
-                pre_submit = true;
-                modified_command_buffer_handles[s].push_back(command_buffer_handles[o]);
-            }
-        }
-
-        if (modified_command_buffer_handles[s].size())
-        {
-            modified_submit_infos[s].commandBufferCount = modified_command_buffer_handles[s].size();
-            modified_submit_infos[s].pCommandBuffers    = modified_command_buffer_handles[s].data();
-        }
-        else
-        {
-            modified_submit_infos[s].commandBufferCount = 0;
-            modified_submit_infos[s].pCommandBuffers    = nullptr;
-        }
-    }
-
-    if (pre_submit)
-    {
-        res =
-            device_table.QueueSubmit(queue, modified_submit_infos.size(), modified_submit_infos.data(), VK_NULL_HANDLE);
-        if (res != VK_SUCCESS)
-        {
-            GFXRECON_LOG_ERROR(
-                "(%s:%u) QueueSubmit failed with %s", __FILE__, __LINE__, util::ToString<VkResult>(res).c_str());
-            goto error;
-        }
-
-        // Wait
-        res = device_table.QueueWaitIdle(queue);
-        if (res != VK_SUCCESS)
-        {
-            GFXRECON_LOG_ERROR("QueueWaitIdle failed with %s", util::ToString<VkResult>(res).c_str());
-            goto error;
-        }
-    }
-
-    for (size_t s = 0; s < submit_infos.size(); s++)
-    {
-        size_t     command_buffer_count   = submit_infos[s].commandBufferCount;
-        const auto command_buffer_handles = submit_infos[s].pCommandBuffers;
-
-        for (size_t o = 0; o < command_buffer_count; ++o)
-        {
-            if (pre_submit)
-            {
-                // These semaphores have already been handled. Do not bother with them
-                modified_submit_infos[s].waitSemaphoreCount = 0;
-                modified_submit_infos[s].pSignalSemaphores  = 0;
-            }
-
-            DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(command_buffer_handles[o]);
-            if (dc_context != nullptr)
-            {
-                assert(cmd_buf_begin_map_.find(command_buffer_handles[o]) != cmd_buf_begin_map_.end());
-
-                res = dc_context->DumpDrawCallsAttachments(
-                    queue, index, cmd_buf_begin_map_[command_buffer_handles[o]], modified_submit_infos[s], fence);
-                if (res == VK_SUCCESS)
-                {
-                    submitted = true;
-                }
-                else
-                {
-                    goto error;
-                }
-            }
-
-            DispatchTraceRaysDumpingContext* dr_context =
-                FindDispatchRaysCommandBufferContext(command_buffer_handles[o]);
-            if (dr_context != nullptr)
-            {
-                assert(cmd_buf_begin_map_.find(command_buffer_handles[o]) != cmd_buf_begin_map_.end());
-                res = dr_context->DumpDispatchRaysMutableResources(
-                    queue, index, cmd_buf_begin_map_[command_buffer_handles[o]], modified_submit_infos[s], fence);
-
-                if (res == VK_SUCCESS)
-                {
-                    submitted = true;
-                }
-                else
-                {
-                    goto error;
-                }
-            }
-        }
-    }
-
-    assert(res >= 0);
-
-    // Looks like we didn't submit anything. Do the submission as it would have been done
-    // without further modifications
-    if (!submitted)
-    {
-        res = device_table.QueueSubmit(queue, submit_infos.size(), submit_infos.data(), fence);
-        if (res != VK_SUCCESS)
-        {
-            GFXRECON_LOG_ERROR(
-                "(%s:%u) QueueSubmit failed with %s", __FILE__, __LINE__, util::ToString<VkResult>(res).c_str());
-        }
-    }
-    else
-    {
-        assert(index == QueueSubmit_indices_[0]);
-        QueueSubmit_indices_.erase(QueueSubmit_indices_.begin());
-
-        // Once all submissions are complete terminate process
-        if (QueueSubmit_indices_.size() == 0)
-        {
-            // The code in VulkanReplayDumpResourcesJsonClose would ideally be in
-            // the VulkanReplayDumpResourcesJson destructor. But the destructor
-            // doesn't get called when exit(0) is called, so we call this method
-            // instead.
-            if (!output_json_per_command)
-            {
-                dump_json_.VulkanReplayDumpResourcesJsonClose();
-            }
-
-            exit(0);
-        }
-    }
-
-error:
-    if (res < 0)
-    {
-        GFXRECON_LOG_ERROR("Something went wrong. Terminating.")
-        exit(0);
-    }
-
-    return res;
-}
-
 VkResult VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::CloneCommandBuffer(
     CommandBufferInfo*                 orig_cmd_buf_info,
     const encode::VulkanDeviceTable*   dev_table,
@@ -3875,974 +4829,6 @@ void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::SetRenderArea(const
     render_area.push_back(new_render_area);
 }
 
-bool VulkanReplayDumpResourcesBase::DumpingBeginCommandBufferIndex(uint64_t index) const
-{
-    const DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(index);
-
-    if (dc_context == nullptr)
-    {
-        const DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(index);
-        return dr_context != nullptr;
-    }
-    else
-    {
-        return true;
-    }
-}
-
-bool VulkanReplayDumpResourcesBase::GetDrawCallActiveCommandBuffers(VkCommandBuffer original_command_buffer,
-                                                                    cmd_buf_it&     first,
-                                                                    cmd_buf_it&     last) const
-{
-    assert(IsRecording(original_command_buffer));
-
-    const DrawCallsDumpingContext* stack = FindDrawCallCommandBufferContext(original_command_buffer);
-
-    if (stack != nullptr)
-    {
-        stack->GetDrawCallActiveCommandBuffers(first, last);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-VkCommandBuffer
-VulkanReplayDumpResourcesBase::GetDispatchRaysCommandBuffer(VkCommandBuffer original_command_buffer) const
-{
-    assert(IsRecording(original_command_buffer));
-
-    const DispatchTraceRaysDumpingContext* context = FindDispatchRaysCommandBufferContext(original_command_buffer);
-
-    if (context != nullptr)
-    {
-        VkCommandBuffer dr_command_buffer = context->GetDispatchRaysCommandBuffer();
-        assert(dr_command_buffer != VK_NULL_HANDLE);
-
-        return dr_command_buffer;
-    }
-    else
-    {
-        return VK_NULL_HANDLE;
-    }
-}
-
-bool VulkanReplayDumpResourcesBase::UpdateRecordingStatus()
-{
-    assert(recording_);
-
-    for (const auto& entry : draw_call_contexts)
-    {
-        const DrawCallsDumpingContext& dc_context = entry.second;
-        if (dc_context.IsRecording())
-        {
-            return true;
-        }
-    }
-
-    for (const auto& entry : dispatch_ray_contexts)
-    {
-        const DispatchTraceRaysDumpingContext& dr_context = entry.second;
-        if (dr_context.IsRecording())
-        {
-            return true;
-        }
-    }
-
-    return (recording_ = false);
-}
-
-bool VulkanReplayDumpResourcesBase::MustDumpQueueSubmitIndex(uint64_t index) const
-{
-    // Indices should be sorted
-    if (!IsInsideRange(QueueSubmit_indices_, index))
-    {
-        return false;
-    }
-
-    for (size_t i = 0; i < QueueSubmit_indices_.size(); ++i)
-    {
-        if (index == QueueSubmit_indices_[i])
-        {
-            return true;
-        }
-        else if (index > QueueSubmit_indices_[i])
-        {
-            return false;
-        }
-    }
-
-    return false;
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdBeginRenderPass(
-    const ApiCallInfo&                                   call_info,
-    PFN_vkCmdBeginRenderPass                             func,
-    VkCommandBuffer                                      original_command_buffer,
-    StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* pRenderPassBegin,
-    VkSubpassContents                                    contents)
-{
-    assert(IsRecording(original_command_buffer));
-
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    if (dc_context != nullptr && dc_context->ShouldHandleRenderPass(call_info.index))
-    {
-        const auto render_pass_info_meta = pRenderPassBegin->GetMetaStructPointer();
-        auto       framebuffer_id        = render_pass_info_meta->framebuffer;
-        auto       render_pass_id        = render_pass_info_meta->renderPass;
-
-        const FramebufferInfo* framebuffer_info = object_info_table_.GetFramebufferInfo(framebuffer_id);
-        assert(framebuffer_info);
-
-        const RenderPassInfo* render_pass_info = object_info_table_.GetRenderPassInfo(render_pass_id);
-        assert(render_pass_info);
-
-        // Do not record vkCmdBeginRenderPass commands in current DrawCall context command buffers.
-        // It will be handled by DrawCallsDumpingContext::BeginRenderPass
-        VkResult res = dc_context->BeginRenderPass(render_pass_info,
-                                                   pRenderPassBegin->GetPointer()->clearValueCount,
-                                                   pRenderPassBegin->GetPointer()->pClearValues,
-                                                   framebuffer_info,
-                                                   pRenderPassBegin->GetPointer()->renderArea,
-                                                   contents);
-        assert(res == VK_SUCCESS);
-    }
-    else if (dc_context != nullptr)
-    {
-        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-        dc_context->GetDrawCallActiveCommandBuffers(first, last);
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it, pRenderPassBegin->GetPointer(), contents);
-        }
-    }
-
-    VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-    if (dr_command_buffer != VK_NULL_HANDLE)
-    {
-        func(dr_command_buffer, pRenderPassBegin->GetPointer(), contents);
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdBeginRenderPass2(
-    const ApiCallInfo&                                   call_info,
-    PFN_vkCmdBeginRenderPass2                            func,
-    VkCommandBuffer                                      original_command_buffer,
-    StructPointerDecoder<Decoded_VkRenderPassBeginInfo>* pRenderPassBegin,
-    StructPointerDecoder<Decoded_VkSubpassBeginInfo>*    pSubpassBeginInfo)
-{
-    assert(IsRecording(original_command_buffer));
-
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    if (dc_context != nullptr && dc_context->ShouldHandleRenderPass(call_info.index))
-    {
-        const auto render_pass_info_meta = pRenderPassBegin->GetMetaStructPointer();
-        auto       framebuffer_id        = render_pass_info_meta->framebuffer;
-        auto       render_pass_id        = render_pass_info_meta->renderPass;
-
-        const FramebufferInfo* framebuffer_info = object_info_table_.GetFramebufferInfo(framebuffer_id);
-        assert(framebuffer_info);
-
-        const RenderPassInfo* render_pass_info = object_info_table_.GetRenderPassInfo(render_pass_id);
-        assert(render_pass_info);
-
-        // Do not record vkCmdBeginRenderPass commands in current DrawCall context command buffers.
-        // It will be handled by DrawCallsDumpingContext::BeginRenderPass
-        VkResult res = dc_context->BeginRenderPass(render_pass_info,
-                                                   pRenderPassBegin->GetPointer()->clearValueCount,
-                                                   pRenderPassBegin->GetPointer()->pClearValues,
-                                                   framebuffer_info,
-                                                   pRenderPassBegin->GetPointer()->renderArea,
-                                                   pSubpassBeginInfo->GetPointer()->contents);
-
-        assert(res == VK_SUCCESS);
-    }
-    else if (dc_context != nullptr)
-    {
-        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-        dc_context->GetDrawCallActiveCommandBuffers(first, last);
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it, pRenderPassBegin->GetPointer(), pSubpassBeginInfo->GetPointer());
-        }
-    }
-
-    VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-    if (dr_command_buffer != VK_NULL_HANDLE)
-    {
-        func(dr_command_buffer, pRenderPassBegin->GetPointer(), pSubpassBeginInfo->GetPointer());
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdNextSubpass(const ApiCallInfo&   call_info,
-                                                           PFN_vkCmdNextSubpass func,
-                                                           VkCommandBuffer      original_command_buffer,
-                                                           VkSubpassContents    contents)
-{
-    assert(original_command_buffer != VK_NULL_HANDLE);
-    assert(IsRecording(original_command_buffer));
-
-    // Do not record NextSubpass commands in current DrawCall context command buffers.
-    // It will be handled by DrawCallsDumpingContext::NextSubpass
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    if (dc_context != nullptr && dc_context->ShouldHandleRenderPass(call_info.index))
-    {
-        dc_context->NextSubpass(contents);
-    }
-    else if (dc_context != nullptr)
-    {
-        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-        dc_context->GetDrawCallActiveCommandBuffers(first, last);
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it, contents);
-        }
-    }
-
-    VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-    if (dr_command_buffer != VK_NULL_HANDLE)
-    {
-        func(dr_command_buffer, contents);
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdNextSubpass2(
-    const ApiCallInfo&                                call_info,
-    PFN_vkCmdNextSubpass2                             func,
-    VkCommandBuffer                                   original_command_buffer,
-    StructPointerDecoder<Decoded_VkSubpassBeginInfo>* pSubpassBeginInfo,
-    StructPointerDecoder<Decoded_VkSubpassEndInfo>*   pSubpassEndInfo)
-{
-    assert(original_command_buffer != VK_NULL_HANDLE);
-    assert(IsRecording(original_command_buffer));
-
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    if (dc_context != nullptr && dc_context->ShouldHandleRenderPass(call_info.index))
-    {
-        // Do not record NextSubpass commands in current DrawCall context command buffers.
-        // It will be handled by DrawCallsDumpingContext::NextSubpass
-        dc_context->NextSubpass(pSubpassBeginInfo->GetPointer()->contents);
-    }
-    else if (dc_context != nullptr)
-    {
-        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-        dc_context->GetDrawCallActiveCommandBuffers(first, last);
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it, pSubpassBeginInfo->GetPointer(), pSubpassEndInfo->GetPointer());
-        }
-    }
-
-    VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-    if (dr_command_buffer != VK_NULL_HANDLE)
-    {
-        func(dr_command_buffer, pSubpassBeginInfo->GetPointer(), pSubpassEndInfo->GetPointer());
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdEndRenderPass(const ApiCallInfo&     call_info,
-                                                             PFN_vkCmdEndRenderPass func,
-                                                             VkCommandBuffer        original_command_buffer)
-{
-    assert(IsRecording(original_command_buffer));
-
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    if (dc_context != nullptr && dc_context->ShouldHandleRenderPass(call_info.index))
-    {
-        // Do not record EndRenderPass commands in current DrawCall context command buffers.
-        // It will be handled by DrawCallsDumpingContext::EndRenderPass
-        dc_context->EndRenderPass();
-    }
-    else if (dc_context != nullptr)
-    {
-        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-        dc_context->GetDrawCallActiveCommandBuffers(first, last);
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it);
-        }
-    }
-
-    VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-    if (dr_command_buffer != VK_NULL_HANDLE)
-    {
-        func(dr_command_buffer);
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdEndRenderPass2(
-    const ApiCallInfo&                              call_info,
-    PFN_vkCmdEndRenderPass2                         func,
-    VkCommandBuffer                                 original_command_buffer,
-    StructPointerDecoder<Decoded_VkSubpassEndInfo>* pSubpassEndInfo)
-{
-    assert(IsRecording(original_command_buffer));
-
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    if (dc_context != nullptr && dc_context->ShouldHandleRenderPass(call_info.index))
-    {
-        // Do not record EndRenderPass commands in current DrawCall context command buffers.
-        // It will be handled by DrawCallsDumpingContext::EndRenderPass
-        dc_context->EndRenderPass();
-    }
-    else if (dc_context != nullptr)
-    {
-        VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-        dc_context->GetDrawCallActiveCommandBuffers(first, last);
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it, pSubpassEndInfo->GetPointer());
-        }
-    }
-
-    VkCommandBuffer dr_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-    if (dr_command_buffer != VK_NULL_HANDLE)
-    {
-        func(dr_command_buffer, pSubpassEndInfo->GetPointer());
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdBindPipeline(const ApiCallInfo&    call_info,
-                                                            PFN_vkCmdBindPipeline func,
-                                                            VkCommandBuffer       original_command_buffer,
-                                                            VkPipelineBindPoint   pipelineBindPoint,
-                                                            const PipelineInfo*   pipeline)
-{
-    assert(pipeline);
-    assert(IsRecording(original_command_buffer));
-
-    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-    if (GetDrawCallActiveCommandBuffers(original_command_buffer, first, last))
-    {
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it, pipelineBindPoint, pipeline->handle);
-        }
-
-        DrawCallsDumpingContext* context = FindDrawCallCommandBufferContext(original_command_buffer);
-        assert(context);
-        context->BindPipeline(pipelineBindPoint, pipeline);
-    }
-
-    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-    {
-        func(dispatch_rays_command_buffer, pipelineBindPoint, pipeline->handle);
-
-        DispatchTraceRaysDumpingContext* context = FindDispatchRaysCommandBufferContext(original_command_buffer);
-        assert(context);
-        context->BindPipeline(pipelineBindPoint, pipeline);
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdBindDescriptorSets(const ApiCallInfo&          call_info,
-                                                                  PFN_vkCmdBindDescriptorSets func,
-                                                                  VkCommandBuffer             original_command_buffer,
-                                                                  VkPipelineBindPoint         pipeline_bind_point,
-                                                                  const PipelineLayoutInfo*   layout_info,
-                                                                  uint32_t                    first_set,
-                                                                  uint32_t                    descriptor_sets_count,
-                                                                  const format::HandleId*     descriptor_sets_ids,
-                                                                  uint32_t                    dynamicOffsetCount,
-                                                                  const uint32_t*             pDynamicOffsets)
-{
-    assert(IsRecording(original_command_buffer));
-    assert(descriptor_sets_ids);
-
-    PipelineBindPoints                    bind_point = VkPipelineBindPointToPipelineBindPoint(pipeline_bind_point);
-    std::vector<VkDescriptorSet>          desc_set_handles(descriptor_sets_count, VK_NULL_HANDLE);
-    std::vector<const DescriptorSetInfo*> desc_set_infos(descriptor_sets_count, nullptr);
-
-    for (uint32_t i = 0; i < descriptor_sets_count; ++i)
-    {
-        const DescriptorSetInfo* desc_set_info = object_info_table_.GetDescriptorSetInfo(descriptor_sets_ids[i]);
-        assert(desc_set_info);
-        desc_set_infos[i]   = desc_set_info;
-        desc_set_handles[i] = desc_set_info->handle;
-    }
-
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    if (dc_context)
-    {
-        dc_context->BindDescriptorSets(
-            pipeline_bind_point, first_set, desc_set_infos, dynamicOffsetCount, pDynamicOffsets);
-    }
-
-    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-    GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
-    for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-    {
-        func(*it,
-             pipeline_bind_point,
-             layout_info->handle,
-             first_set,
-             descriptor_sets_count,
-             desc_set_handles.data(),
-             dynamicOffsetCount,
-             pDynamicOffsets);
-    }
-
-    VkCommandBuffer dr_cmd_buf = GetDispatchRaysCommandBuffer(original_command_buffer);
-    if (dr_cmd_buf != VK_NULL_HANDLE)
-    {
-        func(dr_cmd_buf,
-             pipeline_bind_point,
-             layout_info->handle,
-             first_set,
-             descriptor_sets_count,
-             desc_set_handles.data(),
-             dynamicOffsetCount,
-             pDynamicOffsets);
-    }
-
-    DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
-    if (dr_context)
-    {
-        dr_context->BindDescriptorSets(
-            pipeline_bind_point, first_set, desc_set_infos, dynamicOffsetCount, pDynamicOffsets);
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdBindIndexBuffer(const ApiCallInfo&       call_info,
-                                                               PFN_vkCmdBindIndexBuffer func,
-                                                               VkCommandBuffer          original_command_buffer,
-                                                               const BufferInfo*        buffer,
-                                                               VkDeviceSize             offset,
-                                                               VkIndexType              indexType)
-{
-    // buffer can be VK_NULL_HANDLE/NULL
-    VkBuffer buffer_handle = buffer != nullptr ? buffer->handle : VK_NULL_HANDLE;
-
-    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-    bool found = GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
-    if (found)
-    {
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it, buffer_handle, offset, indexType);
-        }
-    }
-
-    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-    {
-        func(dispatch_rays_command_buffer, buffer_handle, offset, indexType);
-    }
-
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    if (dc_context != nullptr)
-    {
-        dc_context->BindIndexBuffer(call_info.index, buffer, offset, indexType);
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdBindIndexBuffer2KHR(const ApiCallInfo&           call_info,
-                                                                   PFN_vkCmdBindIndexBuffer2KHR func,
-                                                                   VkCommandBuffer              original_command_buffer,
-                                                                   const BufferInfo*            buffer,
-                                                                   VkDeviceSize                 offset,
-                                                                   VkDeviceSize                 size,
-                                                                   VkIndexType                  indexType)
-{
-    // buffer can be VK_NULL_HANDLE/NULL
-    VkBuffer buffer_handle = buffer != nullptr ? buffer->handle : VK_NULL_HANDLE;
-
-    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-    bool found = GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
-    if (found)
-    {
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it, buffer_handle, offset, size, indexType);
-        }
-    }
-
-    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-    {
-        func(dispatch_rays_command_buffer, buffer_handle, offset, size, indexType);
-    }
-
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    if (dc_context != nullptr)
-    {
-        dc_context->BindIndexBuffer(call_info.index, buffer, offset, indexType, size);
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdBindVertexBuffers(const ApiCallInfo&         call_info,
-                                                                 PFN_vkCmdBindVertexBuffers func,
-                                                                 VkCommandBuffer            original_command_buffer,
-                                                                 uint32_t                   firstBinding,
-                                                                 uint32_t                   bindingCount,
-                                                                 const format::HandleId*    buffer_ids,
-                                                                 const VkDeviceSize*        pOffsets)
-{
-    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-    bool            found = GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
-    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-
-    std::vector<const BufferInfo*> buffer_infos(bindingCount, nullptr);
-    std::vector<VkBuffer>          buffer_handles(bindingCount, VK_NULL_HANDLE);
-    if (found || dispatch_rays_command_buffer != VK_NULL_HANDLE)
-    {
-        for (uint32_t i = 0; i < bindingCount; ++i)
-        {
-            // Buffer can be VK_NULL_HANDLE
-            const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(buffer_ids[i]);
-
-            buffer_infos[i]   = buffer_info;
-            buffer_handles[i] = buffer_info != nullptr ? buffer_info->handle : VK_NULL_HANDLE;
-        }
-    }
-
-    if (found)
-    {
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it, firstBinding, bindingCount, buffer_handles.data(), pOffsets);
-        }
-    }
-
-    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-    {
-        func(dispatch_rays_command_buffer, firstBinding, bindingCount, buffer_handles.data(), pOffsets);
-    }
-
-    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-    if (dc_context != nullptr && bindingCount)
-    {
-        assert(buffer_infos.size() == bindingCount);
-        dc_context->BindVertexBuffers(call_info.index, firstBinding, buffer_infos, pOffsets);
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdSetVertexInputEXT(
-    const ApiCallInfo&                                                   call_info,
-    PFN_vkCmdSetVertexInputEXT                                           func,
-    VkCommandBuffer                                                      original_command_buffer,
-    uint32_t                                                             vertexBindingDescriptionCount,
-    StructPointerDecoder<Decoded_VkVertexInputBindingDescription2EXT>*   pVertexBindingDescriptions,
-    uint32_t                                                             vertexAttributeDescriptionCount,
-    StructPointerDecoder<Decoded_VkVertexInputAttributeDescription2EXT>* pVertexAttributeDescriptions)
-{
-    const VkVertexInputBindingDescription2EXT* in_pVertexBindingDescriptions = pVertexBindingDescriptions->GetPointer();
-    const VkVertexInputAttributeDescription2EXT* in_pVertexAttributeDescriptions =
-        pVertexAttributeDescriptions->GetPointer();
-
-    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-    if (GetDrawCallActiveCommandBuffers(original_command_buffer, first, last))
-    {
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it,
-                 vertexBindingDescriptionCount,
-                 in_pVertexBindingDescriptions,
-                 vertexAttributeDescriptionCount,
-                 in_pVertexAttributeDescriptions);
-        }
-
-        DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-        dc_context->SetVertexInput(vertexBindingDescriptionCount,
-                                   in_pVertexBindingDescriptions,
-                                   vertexAttributeDescriptionCount,
-                                   in_pVertexAttributeDescriptions);
-    }
-
-    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-    {
-        func(dispatch_rays_command_buffer,
-             vertexBindingDescriptionCount,
-             in_pVertexBindingDescriptions,
-             vertexAttributeDescriptionCount,
-             in_pVertexAttributeDescriptions);
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdBindVertexBuffers2(const ApiCallInfo&          call_info,
-                                                                  PFN_vkCmdBindVertexBuffers2 func,
-                                                                  VkCommandBuffer             original_command_buffer,
-                                                                  uint32_t                    firstBinding,
-                                                                  uint32_t                    bindingCount,
-                                                                  const format::HandleId*     pBuffers_ids,
-                                                                  const VkDeviceSize*         pOffsets,
-                                                                  const VkDeviceSize*         pSizes,
-                                                                  const VkDeviceSize*         pStrides)
-{
-    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-    bool            dc_found = GetDrawCallActiveCommandBuffers(original_command_buffer, first, last);
-    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-
-    std::vector<VkBuffer> buffer_handles(bindingCount);
-    if (dc_found || dispatch_rays_command_buffer != VK_NULL_HANDLE)
-    {
-        for (uint32_t i = 0; i < bindingCount; ++i)
-        {
-            const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(pBuffers_ids[i]);
-            buffer_handles[i]             = (buffer_info != nullptr) ? buffer_info->handle : VK_NULL_HANDLE;
-        }
-    }
-
-    if (dc_found)
-    {
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it, firstBinding, bindingCount, buffer_handles.data(), pOffsets, pSizes, pStrides);
-        }
-
-        DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-        if (dc_context != nullptr && bindingCount)
-        {
-            assert(pBuffers_ids);
-            assert(pOffsets);
-            assert(pSizes);
-            assert(pStrides);
-
-            std::vector<const BufferInfo*> buffer_infos(bindingCount);
-
-            for (uint32_t i = 0; i < bindingCount; ++i)
-            {
-                const BufferInfo* buffer_info = object_info_table_.GetBufferInfo(pBuffers_ids[i]);
-
-                buffer_infos[i] = buffer_info;
-            }
-
-            dc_context->BindVertexBuffers2(call_info.index, firstBinding, buffer_infos, pOffsets, pSizes, pStrides);
-        }
-    }
-
-    if (dispatch_rays_command_buffer)
-    {
-        func(dispatch_rays_command_buffer,
-             firstBinding,
-             bindingCount,
-             buffer_handles.data(),
-             pOffsets,
-             pSizes,
-             pStrides);
-    }
-}
-
-void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::FinalizeCommandBuffer(bool is_dispatch)
-{
-    if (is_dispatch)
-    {
-        ++current_dispatch_index;
-    }
-    else
-    {
-        ++current_trace_rays_index;
-    }
-
-    if (!IsRecording())
-    {
-        assert((dump_resources_before ? (current_dispatch_index / 2) : current_dispatch_index) ==
-                   dispatch_indices.size() &&
-               (dump_resources_before ? (current_trace_rays_index / 2) : current_trace_rays_index) ==
-                   trace_rays_indices.size());
-        assert(DR_command_buffer != VK_NULL_HANDLE);
-
-        device_table->EndCommandBuffer(DR_command_buffer);
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdDispatch(const ApiCallInfo& call_info,
-                                                        PFN_vkCmdDispatch  func,
-                                                        VkCommandBuffer    original_command_buffer,
-                                                        uint32_t           groupCountX,
-                                                        uint32_t           groupCountY,
-                                                        uint32_t           groupCountZ)
-{
-    assert(IsRecording(original_command_buffer));
-
-    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-    if (GetDrawCallActiveCommandBuffers(original_command_buffer, first, last))
-    {
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it, groupCountX, groupCountY, groupCountZ);
-        }
-    }
-
-    DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
-    if (dump_resources_before_ && dr_context != nullptr)
-    {
-        if (dr_context->MustDumpDispatch(call_info.index))
-        {
-            dr_context->CloneDispatchRaysResources(call_info.index, true, true);
-        }
-    }
-
-    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-    {
-        func(dispatch_rays_command_buffer, groupCountX, groupCountY, groupCountZ);
-    }
-
-    if (dr_context != nullptr)
-    {
-        if (dr_context->MustDumpDispatch(call_info.index))
-        {
-            dr_context->CloneDispatchRaysResources(call_info.index, false, true);
-            dr_context->SnapshotComputeBoundDescriptors();
-            dr_context->FinalizeCommandBuffer(true);
-            UpdateRecordingStatus();
-        }
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdDispatchIndirect(const ApiCallInfo&        call_info,
-                                                                PFN_vkCmdDispatchIndirect func,
-                                                                VkCommandBuffer           original_command_buffer,
-                                                                const BufferInfo*         buffer_info,
-                                                                VkDeviceSize              offset)
-{
-    assert(IsRecording(original_command_buffer));
-
-    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-    if (GetDrawCallActiveCommandBuffers(original_command_buffer, first, last))
-    {
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it, buffer_info->handle, offset);
-        }
-    }
-
-    DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
-    if (dump_resources_before_ && dr_context != nullptr)
-    {
-        if (dr_context->MustDumpDispatch(call_info.index))
-        {
-            dr_context->CloneDispatchRaysResources(call_info.index, true, true);
-        }
-    }
-
-    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-    {
-        func(dispatch_rays_command_buffer, buffer_info->handle, offset);
-    }
-
-    if (dr_context != nullptr)
-    {
-        if (dr_context->MustDumpDispatch(call_info.index))
-        {
-            dr_context->CloneDispatchRaysResources(call_info.index, false, true);
-            dr_context->SnapshotComputeBoundDescriptors();
-            dr_context->FinalizeCommandBuffer(true);
-            UpdateRecordingStatus();
-        }
-    }
-}
-
-void VulkanReplayDumpResourcesBase::OverrideCmdTraceRaysKHR(
-    const ApiCallInfo&                                             call_info,
-    PFN_vkCmdTraceRaysKHR                                          func,
-    VkCommandBuffer                                                original_command_buffer,
-    StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pRaygenShaderBindingTable,
-    StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pMissShaderBindingTable,
-    StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pHitShaderBindingTable,
-    StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pCallableShaderBindingTable,
-    uint32_t                                                       width,
-    uint32_t                                                       height,
-    uint32_t                                                       depth)
-{
-    assert(IsRecording(original_command_buffer));
-
-    const VkStridedDeviceAddressRegionKHR* in_pRaygenShaderBindingTable   = pRaygenShaderBindingTable->GetPointer();
-    const VkStridedDeviceAddressRegionKHR* in_pMissShaderBindingTable     = pMissShaderBindingTable->GetPointer();
-    const VkStridedDeviceAddressRegionKHR* in_pHitShaderBindingTable      = pHitShaderBindingTable->GetPointer();
-    const VkStridedDeviceAddressRegionKHR* in_pCallableShaderBindingTable = pCallableShaderBindingTable->GetPointer();
-
-    VulkanReplayDumpResourcesBase::cmd_buf_it first, last;
-    if (GetDrawCallActiveCommandBuffers(original_command_buffer, first, last))
-    {
-        for (VulkanReplayDumpResourcesBase::cmd_buf_it it = first; it < last; ++it)
-        {
-            func(*it,
-                 in_pRaygenShaderBindingTable,
-                 in_pMissShaderBindingTable,
-                 in_pHitShaderBindingTable,
-                 in_pCallableShaderBindingTable,
-                 width,
-                 height,
-                 depth);
-        }
-    }
-
-    DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
-    if (dump_resources_before_ && dr_context != nullptr)
-    {
-        if (dr_context->MustDumpTraceRays(call_info.index))
-        {
-            dr_context->CloneDispatchRaysResources(call_info.index, true, false);
-        }
-    }
-
-    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
-    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-    {
-        func(dispatch_rays_command_buffer,
-             in_pRaygenShaderBindingTable,
-             in_pMissShaderBindingTable,
-             in_pHitShaderBindingTable,
-             in_pCallableShaderBindingTable,
-             width,
-             height,
-             depth);
-    }
-
-    if (dr_context != nullptr)
-    {
-        if (dr_context->MustDumpTraceRays(call_info.index))
-        {
-            dr_context->CloneDispatchRaysResources(call_info.index, false, false);
-            dr_context->SnapshotRayTracingBoundDescriptors();
-            dr_context->FinalizeCommandBuffer(false);
-            UpdateRecordingStatus();
-        }
-    }
-}
-
-VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::DrawCallsDumpingContext(
-    const std::vector<uint64_t>&              dc_indices,
-    const std::vector<std::vector<uint64_t>>& rp_indices,
-    VulkanObjectInfoTable&                    object_info_table,
-    const VulkanReplayOptions&                options,
-    VulkanReplayDumpResourcesJson&            dump_json) :
-    original_command_buffer_info(nullptr),
-    current_cb_index(0), dc_indices(dc_indices), RP_indices(rp_indices), active_renderpass(nullptr),
-    active_framebuffer(nullptr), bound_pipelines{ nullptr }, current_renderpass(0), current_subpass(0),
-    dump_resources_before(options.dump_resources_before), aux_command_buffer(VK_NULL_HANDLE), aux_fence(VK_NULL_HANDLE),
-    device_table(nullptr), instance_table(nullptr), object_info_table(object_info_table),
-    replay_device_phys_mem_props(nullptr), dump_resource_path(options.dump_resources_output_dir),
-    image_file_format(options.dump_resources_image_format), dump_resources_scale(options.dump_resources_scale),
-    dump_json(dump_json), dump_depth(options.dump_resources_dump_depth),
-    color_attachment_to_dump(options.dump_resources_color_attachment_index),
-    dump_vertex_index_buffers(options.dump_resources_dump_vertex_index_buffer),
-    output_json_per_command(options.dump_resources_json_per_command),
-    dump_immutable_resources(options.dump_resources_dump_immutable_resources),
-    dump_all_image_subresources(options.dump_resources_dump_all_image_subresources),
-    currently_bound_vertex_buffers(bound_vertex_buffers.end()), currently_bound_index_buffer(bound_index_buffers.end())
-{
-    must_backup_resources = (dc_indices.size() > 1);
-
-    const size_t n_cmd_buffs = dump_resources_before ? 2 * dc_indices.size() : dc_indices.size();
-    command_buffers.resize(n_cmd_buffs, VK_NULL_HANDLE);
-}
-
-VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::~DrawCallsDumpingContext()
-{
-    if (original_command_buffer_info)
-    {
-        const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
-
-        if (device_info == nullptr)
-        {
-            return;
-        }
-
-        VkDevice device = device_info->handle;
-        assert(device_table);
-
-        const CommandPoolInfo* pool_info = object_info_table.GetCommandPoolInfo(original_command_buffer_info->pool_id);
-        assert(pool_info);
-
-        if (command_buffers.size())
-        {
-            device_table->FreeCommandBuffers(device, pool_info->handle, command_buffers.size(), command_buffers.data());
-        }
-
-        if (aux_command_buffer != VK_NULL_HANDLE)
-        {
-            device_table->FreeCommandBuffers(device, pool_info->handle, 1, &aux_command_buffer);
-            aux_command_buffer = VK_NULL_HANDLE;
-        }
-
-        if (aux_fence != VK_NULL_HANDLE)
-        {
-            device_table->DestroyFence(device, aux_fence, nullptr);
-        }
-
-        DestroyMutableResourceBackups();
-        ReleaseIndirectDrawParams();
-    }
-}
-
-static VkResult CloneImage(VulkanObjectInfoTable&                  object_info_table,
-                           const encode::VulkanDeviceTable*        device_table,
-                           const VkPhysicalDeviceMemoryProperties* replay_device_phys_mem_props,
-                           const ImageInfo*                        image_info,
-                           VkImage*                                new_image,
-                           VkDeviceMemory*                         new_image_memory)
-{
-    VkImageCreateInfo ci;
-    ci.sType                 = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    ci.pNext                 = nullptr;
-    ci.flags                 = VkImageCreateFlags(0);
-    ci.imageType             = image_info->type;
-    ci.format                = image_info->format;
-    ci.extent                = image_info->extent;
-    ci.mipLevels             = image_info->level_count;
-    ci.arrayLayers           = image_info->layer_count;
-    ci.samples               = image_info->sample_count;
-    ci.tiling                = image_info->tiling;
-    ci.usage                 = image_info->usage | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-    ci.sharingMode           = VK_SHARING_MODE_EXCLUSIVE;
-    ci.queueFamilyIndexCount = image_info->queue_family_index;
-    ci.pQueueFamilyIndices   = nullptr;
-    ci.initialLayout         = VK_IMAGE_LAYOUT_UNDEFINED;
-
-    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(image_info->parent_id);
-    VkDevice          device      = device_info->handle;
-
-    assert(device_table);
-    assert(new_image);
-    VkResult res = device_table->CreateImage(device, &ci, nullptr, new_image);
-    if (res != VK_SUCCESS)
-    {
-        GFXRECON_LOG_ERROR("CreateImage failed with %s", util::ToString<VkResult>(res).c_str());
-        return res;
-    }
-
-    VkMemoryRequirements mem_reqs       = {};
-    VkMemoryAllocateInfo mem_alloc_info = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO, nullptr };
-
-    device_table->GetImageMemoryRequirements(device, *new_image, &mem_reqs);
-    mem_alloc_info.allocationSize = mem_reqs.size;
-
-    assert(replay_device_phys_mem_props);
-    uint32_t index =
-        GetMemoryTypeIndex(*replay_device_phys_mem_props, mem_reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    if (index == std::numeric_limits<uint32_t>::max())
-    {
-        GFXRECON_LOG_ERROR("%s failed to find an appropriate memory type", __func__)
-        return VK_ERROR_INITIALIZATION_FAILED;
-    }
-
-    mem_alloc_info.memoryTypeIndex = index;
-
-    assert(new_image_memory);
-    res = device_table->AllocateMemory(device, &mem_alloc_info, nullptr, new_image_memory);
-    if (res != VK_SUCCESS)
-    {
-        GFXRECON_LOG_ERROR("AllocateMemory failed with %s", util::ToString<VkResult>(res).c_str());
-        return res;
-    }
-
-    res = device_table->BindImageMemory(device, *new_image, *new_image_memory, 0);
-    if (res != VK_SUCCESS)
-    {
-        GFXRECON_LOG_ERROR("BindImageMemory failed with %s", util::ToString<VkResult>(res).c_str());
-        return res;
-    }
-
-    return VK_SUCCESS;
-}
-
 void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::ReleaseIndirectDrawParams()
 {
     assert(original_command_buffer_info);
@@ -5035,33 +5021,6 @@ uint32_t VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::GetDrawCallActi
     return current_cb_index;
 }
 
-bool VulkanReplayDumpResourcesBase::IsRecording(VkCommandBuffer original_command_buffer) const
-{
-    if (recording_)
-    {
-        const DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
-        if (dc_context)
-        {
-            if (dc_context->IsRecording())
-            {
-                return true;
-            }
-        }
-
-        const DispatchTraceRaysDumpingContext* dr_context =
-            FindDispatchRaysCommandBufferContext(original_command_buffer);
-        if (dr_context != nullptr)
-        {
-            if (dr_context->IsRecording())
-            {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
 VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::DispatchTraceRaysDumpingContext(
     const std::vector<uint64_t>&   dispatch_indices,
     const std::vector<uint64_t>&   trace_rays_indices,
@@ -5154,6 +5113,29 @@ VkResult VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::CloneCo
     replay_device_phys_mem_props = phys_dev_info->replay_device_info->memory_properties.get();
 
     return VK_SUCCESS;
+}
+
+void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::FinalizeCommandBuffer(bool is_dispatch)
+{
+    if (is_dispatch)
+    {
+        ++current_dispatch_index;
+    }
+    else
+    {
+        ++current_trace_rays_index;
+    }
+
+    if (!IsRecording())
+    {
+        assert((dump_resources_before ? (current_dispatch_index / 2) : current_dispatch_index) ==
+                   dispatch_indices.size() &&
+               (dump_resources_before ? (current_trace_rays_index / 2) : current_trace_rays_index) ==
+                   trace_rays_indices.size());
+        assert(DR_command_buffer != VK_NULL_HANDLE);
+
+        device_table->EndCommandBuffer(DR_command_buffer);
+    }
 }
 
 void VulkanReplayDumpResourcesBase::DispatchTraceRaysDumpingContext::BindPipeline(VkPipelineBindPoint bind_point,
