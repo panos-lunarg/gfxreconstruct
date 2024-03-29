@@ -248,8 +248,8 @@ static const uint8_t* ConvertIntoTemporaryBuffer(
                 {
                     const uint8_t r = bytes[y * width + x];
 
-                    const uint32_t rgba    = (0xff << 24) | (r << 16) | (r << 8) | r;
-                    *(temp_buffer++) = rgba;
+                    const uint32_t rgba = (0xff << 24) | (r << 16) | (r << 8) | r;
+                    *(temp_buffer++)    = rgba;
                 }
             }
         }
@@ -725,9 +725,11 @@ bool WritePngImage(const std::string& filename,
     bool success = false;
 
 #ifdef GFXRECON_ENABLE_PNG_SCREENSHOT
+    const uint8_t* bytes = ConvertIntoTemporaryBuffer(width, height, data, &pitch, format, true);
+
     uint32_t row_pitch               = pitch == 0 ? width * kImageBpp : pitch;
     stbi_write_png_compression_level = 4;
-    if (1 == stbi_write_png(filename.c_str(), width, height, kImageBpp, data, row_pitch))
+    if (1 == stbi_write_png(filename.c_str(), width, height, kImageBpp, bytes, row_pitch))
     {
         success = true;
     }
