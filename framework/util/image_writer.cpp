@@ -766,6 +766,73 @@ bool WritePngImageNoAlpha(
         success = true;
     }
 #endif
+
+    return success;
+}
+
+bool WriteAstcImage(const std::string& filename,
+                    uint32_t           width,
+                    uint32_t           height,
+                    uint32_t           depth,
+                    uint32_t           block_size_x,
+                    uint32_t           block_size_y,
+                    uint32_t           block_size_z,
+                    const void*        data,
+                    size_t             size)
+{
+    struct astc_header
+    {
+        uint8_t magic[4];
+        uint8_t block_x;
+        uint8_t block_y;
+        uint8_t block_z;
+        uint8_t dim_x[3];
+        uint8_t dim_y[3];
+        uint8_t dim_z[3];
+    } header;
+
+    header.magic[0] = 0x13;
+    header.magic[1] = 0xab;
+    header.magic[2] = 0xa1;
+    header.magic[3] = 0x5c;
+
+    header.dim_x[0] = width & 0xff;
+    header.dim_x[1] = (width >> 8) & 0xff;
+    header.dim_x[2] = (width >> 16) & 0xff;
+
+    header.dim_y[0] = height & 0xff;
+    header.dim_y[1] = (height >> 8) & 0xff;
+    header.dim_y[2] = (height >> 16) & 0xff;
+
+    header.dim_z[0] = depth & 0xff;
+    header.dim_z[1] = (depth >> 8) & 0xff;
+    header.dim_z[2] = (depth >> 16) & 0xff;
+
+    header.block_x = block_size_x;
+    header.block_y = block_size_y;
+    header.block_z = block_size_z;
+
+    bool    success = false;
+    FILE*   file    = nullptr;
+    int32_t result  = util::platform::FileOpen(&file, filename.c_str(), "wb");
+    if (!result)
+    {
+        assert(file != nullptr);
+
+        util::platform::FileWrite(&header, sizeof(header), 1, file);
+        util::platform::FileWrite(data, size, 1, file);
+        util::platform::FileClose(file);
+
+        if (!ferror(file))
+        {
+            success = true;
+        }
+    }
+    else
+    {
+        GFXRECON_LOG_ERROR("%s() Failed to open file (%s)", __func__, strerror(result));
+    }
+
     return success;
 }
 
