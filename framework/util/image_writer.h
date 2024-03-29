@@ -74,7 +74,8 @@ enum DataFormats
     kFormat_A2B10G10R10,
     kFormat_D32_FLOAT,
     kFormat_D24_UNORM,
-    kFormat_D16_UNORM
+    kFormat_D16_UNORM,
+    kFormat_ASTC
 };
 
 bool WriteBmpImage(const std::string& filename,
@@ -92,6 +93,16 @@ bool WritePngImage(const std::string& filename,
                    const void*        data,
                    uint32_t           pitch  = 0,
                    DataFormats        format = kFormat_BGRA);
+
+bool WriteAstcImage(const std::string& filename,
+                    uint32_t           width,
+                    uint32_t           height,
+                    uint32_t           depth,
+                    uint32_t           block_size_x,
+                    uint32_t           block_size_y,
+                    uint32_t           block_size_z,
+                    const void*        data,
+                    size_t             size);
 
 GFXRECON_END_NAMESPACE(imagewriter)
 GFXRECON_END_NAMESPACE(util)

@@ -45,6 +45,7 @@ enum class ScreenshotFormat : uint32_t
 {
     kBmp = 0,
     kPng = 1,
+    kAstc = 2
 };
 
 static const char* ScreenshotFormatToCStr(ScreenshotFormat format)
@@ -56,6 +57,9 @@ static const char* ScreenshotFormatToCStr(ScreenshotFormat format)
 
         case ScreenshotFormat::kPng:
             return ".png";
+
+        case ScreenshotFormat::kAstc:
+            return ".astc";
 
         default:
             assert(0);
