@@ -78,6 +78,17 @@ enum DataFormats
     kFormat_ASTC
 };
 
+struct AstcFileHeader
+{
+    uint8_t magic[4];
+    uint8_t block_x;
+    uint8_t block_y;
+    uint8_t block_z;
+    uint8_t dim_x[3];
+    uint8_t dim_y[3];
+    uint8_t dim_z[3];
+};
+
 bool WriteBmpImage(const std::string& filename,
                    uint32_t           width,
                    uint32_t           height,
@@ -98,9 +109,9 @@ bool WriteAstcImage(const std::string& filename,
                     uint32_t           width,
                     uint32_t           height,
                     uint32_t           depth,
-                    uint32_t           block_size_x,
-                    uint32_t           block_size_y,
-                    uint32_t           block_size_z,
+                    uint8_t            block_size_x,
+                    uint8_t            block_size_y,
+                    uint8_t            block_size_z,
                     const void*        data,
                     size_t             size);
 

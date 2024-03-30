@@ -122,16 +122,29 @@ static util::imagewriter::DataFormats VkFormatToImageWriterDataFormat(VkFormat f
 
 static const char* ImageFileExtension(VkFormat format, util::ScreenshotFormat image_file_format)
 {
-    if (IsFormatAstcCompressed(format))
-    {
-        return ".astc";
-    }
-
     const util::imagewriter::DataFormats output_image_format = VkFormatToImageWriterDataFormat(format);
 
     if (output_image_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED)
     {
-        return util::ScreenshotFormatToCStr(image_file_format);
+        if (output_image_format == util::imagewriter::DataFormats::kFormat_ASTC)
+        {
+            return ".astc";
+        }
+        else
+        {
+            switch (image_file_format)
+            {
+                case util::ScreenshotFormat::kBmp:
+                    return ".bmp";
+
+                case util::ScreenshotFormat::kPng:
+                    return ".png";
+
+                default:
+                    assert(0);
+                    return ".bmp";
+            }
+        }
     }
     else
     {
@@ -538,10 +551,7 @@ static VkResult DumpImageToFile(const ImageInfo*                image_info,
                     vkuFormatElementSizeWithAspect(image_info->format, VK_IMAGE_ASPECT_COLOR_BIT);
                 const uint32_t stride = texel_size * scaled_extent.width;
 
-                filename += util::ScreenshotFormatToCStr(
-                    output_image_format == util::imagewriter::DataFormats::kFormat_ASTC ? util::ScreenshotFormat::kAstc
-                                                                                        : image_file_format);
-
+                filename += ImageFileExtension(image_info->format, image_file_format);
                 if (output_image_format == util::imagewriter::DataFormats::kFormat_ASTC)
                 {
                     VKU_FORMAT_INFO format_info = vkuGetFormatInfo(image_info->format);
@@ -623,11 +633,7 @@ static VkResult DumpImageToFile(const ImageInfo*                image_info,
                         const uint32_t texel_size = vkuFormatElementSizeWithAspect(image_info->format, aspect);
                         const uint32_t stride     = texel_size * scaled_extent.width;
 
-                        filename += util::ScreenshotFormatToCStr(output_image_format ==
-                                                                         util::imagewriter::DataFormats::kFormat_ASTC
-                                                                     ? util::ScreenshotFormat::kAstc
-                                                                     : image_file_format);
-
+                        filename += ImageFileExtension(image_info->format, image_file_format);
                         if (output_image_format == util::imagewriter::DataFormats::kFormat_ASTC)
                         {
                             VKU_FORMAT_INFO format_info = vkuGetFormatInfo(image_info->format);
