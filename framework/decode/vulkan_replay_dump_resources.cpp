@@ -681,6 +681,45 @@ static VkResult DumpImageToFile(const ImageInfo*                image_info,
     return VK_SUCCESS;
 }
 
+static bool CheckDescriptorCompatibility(VkDescriptorType desc_type_a, VkDescriptorType desc_type_b)
+{
+    switch (desc_type_a)
+    {
+        case VK_DESCRIPTOR_TYPE_SAMPLER:
+        case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+        case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+        case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+        case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+        case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+        case VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK:
+        case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
+        case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV:
+        case VK_DESCRIPTOR_TYPE_SAMPLE_WEIGHT_IMAGE_QCOM:
+        case VK_DESCRIPTOR_TYPE_BLOCK_MATCH_IMAGE_QCOM:
+        case VK_DESCRIPTOR_TYPE_MUTABLE_EXT:
+        case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+            return desc_type_a == desc_type_b;
+
+        case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+            return desc_type_a == desc_type_b || desc_type_b == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+
+        case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+            return desc_type_a == desc_type_b || desc_type_b == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+
+        case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+            return desc_type_a == desc_type_b || desc_type_b == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+
+        case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+            return desc_type_a == desc_type_b || desc_type_b == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+
+        default:
+            assert(0);
+            GFXRECON_LOG_ERROR(
+                "%s() Unrecognized/unhandled index type (%u)", __func__, static_cast<uint32_t>(desc_type_a));
+            return false;
+    }
+}
+
 VulkanReplayDumpResourcesBase::VulkanReplayDumpResourcesBase(const VulkanReplayOptions& options,
                                                              VulkanObjectInfoTable&     object_info_table) :
     QueueSubmit_indices_(options.QueueSubmit_Indices),
@@ -2873,7 +2912,20 @@ void VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::SnapshotBoundDescri
                         continue;
                     }
 
-                    assert(shader_desc_binding.second.type == ppl_desc_binding->second.desc_type);
+                    if (!CheckDescriptorCompatibility(shader_desc_binding.second.type,
+                                                      ppl_desc_binding->second.desc_type))
+                    {
+                        GFXRECON_LOG_WARNING("Descriptors are incompatible:");
+                        GFXRECON_LOG_WARNING("shader stage: %s",
+                                             util::ToString<VkShaderStageFlagBits>(shader_stage_flag).c_str());
+                        GFXRECON_LOG_WARNING("desc_set_index: %u", desc_set_index);
+                        GFXRECON_LOG_WARNING("desc_set_binding_index: %u", desc_set_binding_index);
+                        GFXRECON_LOG_WARNING("shader_desc_binding.second.type: %s",
+                                             util::ToString<VkDescriptorType>(shader_desc_binding.second.type).c_str());
+                        GFXRECON_LOG_WARNING(
+                            "ppl_desc_binding->second.desc_type: %s",
+                            util::ToString<VkDescriptorType>(ppl_desc_binding->second.desc_type).c_str());
+                    }
 
                     dc_params.referenced_descriptors[shader_stage_flag][desc_set_index][desc_set_binding_index] =
                         ppl_desc_binding->second;
@@ -3468,7 +3520,7 @@ VulkanReplayDumpResourcesBase::DrawCallsDumpingContext::GenerateImageDescriptorF
         std::string       aspect_str(aspect_str_whole.begin() + 16, aspect_str_whole.end() - 4);
         std::stringstream base_filename;
 
-        static util::imagewriter::DataFormats output_format = VkFormatToImageWriterDataFormat(img_info->format);
+        const util::imagewriter::DataFormats output_format = VkFormatToImageWriterDataFormat(img_info->format);
         if (output_format != util::imagewriter::DataFormats::kFormat_UNSPECIFIED &&
             output_format != util::imagewriter::DataFormats::kFormat_ASTC)
         {
