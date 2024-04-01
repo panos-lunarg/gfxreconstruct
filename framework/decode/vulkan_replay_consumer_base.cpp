@@ -5242,8 +5242,6 @@ static bool SPIRVReflectPerformReflectionOnShaderModule(ShaderModuleInfo*       
             const uint32_t   count    = binding->count;
             const bool       is_array = binding->array.dims_count > 0;
 
-            assert((count > 1 && is_array) || (count == 1 && !is_array));
-
             shader_info->used_descriptors_info[binding->set].emplace(
                 binding->binding,
                 ShaderModuleInfo::ShaderDescriptorInfo(type, readonly, binding->accessed, count, is_array));

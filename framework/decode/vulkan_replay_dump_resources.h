@@ -370,7 +370,7 @@ class VulkanReplayDumpResourcesBase
 
         uint32_t GetDrawCallActiveCommandBuffers(cmd_buf_it& first, cmd_buf_it& last) const;
 
-        VkResult DumpDrawCallsAttachments(
+        VkResult DumpDrawCalls(
             VkQueue queue, uint64_t qs_index, uint64_t bcb_index, const VkSubmitInfo& submit_info, VkFence fence);
 
         VkResult DumpRenderTargetAttachments(uint64_t cmd_buf_index, uint64_t qs_index, uint64_t bcb_index) const;
@@ -656,7 +656,7 @@ class VulkanReplayDumpResourcesBase
                     // Pointers that will point to host allocated memory and filled with the draw params
                     // read back after executing on the gpu. Because of the union a data structure
                     // with a non default destructor (vector/unique_ptr) cannot be used and we will
-                    // handle the memory allocation ourselves.
+                    // handle the memory managment ourselves.
                     // One of these pointer will be used, depending on whether the draw call is indexed
                     // or not.
                     DrawParams*        draw_params;
@@ -684,7 +684,7 @@ class VulkanReplayDumpResourcesBase
                     // Pointers that will point to host allocated memory and filled with the draw params
                     // read back after executing on the gpu. Because of the union a data structure
                     // with a non default destructor (vector/unique_ptr) cannot be used and we will
-                    // handle the memory allocation ourselves.
+                    // handle the memory managment ourselves.
                     // One of these pointer will be used, depending on whether the draw call is indexed
                     // or not.
                     DrawParams*        draw_params;
@@ -820,7 +820,7 @@ class VulkanReplayDumpResourcesBase
 
         void CopyVertexInputStateInfo(uint64_t dc_index, DrawCallParameters& dc_params);
 
-        VkResult CopyIndirectDrawParameters(DrawCallParameters& dc_params);
+        VkResult CopyDrawIndirectParameters(DrawCallParameters& dc_params);
 
         void SnapshotBoundDescriptors(DrawCallParameters& dc_params);
 
@@ -874,18 +874,23 @@ class VulkanReplayDumpResourcesBase
 
         bool MustDumpTraceRays(uint64_t index) const;
 
-        std::vector<std::string> GenerateDispatchTraceRaysImageFilename(VkFormat format,
-                                                                        uint32_t levels,
-                                                                        uint32_t layers,
-                                                                        bool     is_dispatch,
-                                                                        uint64_t index,
-                                                                        uint32_t desc_set,
-                                                                        uint32_t desc_binding,
-                                                                        bool     before_cmd,
-                                                                        bool     dump_all_subresources) const;
+        std::vector<std::string> GenerateDispatchTraceRaysImageFilename(VkFormat              format,
+                                                                        uint32_t              levels,
+                                                                        uint32_t              layers,
+                                                                        bool                  is_dispatch,
+                                                                        uint64_t              index,
+                                                                        uint32_t              desc_set,
+                                                                        uint32_t              desc_binding,
+                                                                        VkShaderStageFlagBits stage,
+                                                                        bool                  before_cmd,
+                                                                        bool dump_all_subresources) const;
 
-        std::string GenerateDispatchTraceRaysBufferFilename(
-            bool is_dispatch, uint64_t index, uint32_t desc_set, uint32_t desc_binding, bool before_cmd) const;
+        std::string GenerateDispatchTraceRaysBufferFilename(bool                  is_dispatch,
+                                                            uint64_t              index,
+                                                            uint32_t              desc_set,
+                                                            uint32_t              desc_binding,
+                                                            VkShaderStageFlagBits stage,
+                                                            bool                  before_cmd) const;
 
         void BindDescriptorSets(VkPipelineBindPoint                          pipeline_bind_point,
                                 uint32_t                                     first_set,
@@ -895,7 +900,7 @@ class VulkanReplayDumpResourcesBase
 
         void CloneDispatchRaysResources(uint64_t index, bool cloning_before_cmd, bool is_dispatch);
 
-        VkResult DumpDispatchRaysMutableResources(
+        VkResult DumpDispatchTraceRays(
             VkQueue queue, uint64_t qs_index, uint64_t bcb_index, const VkSubmitInfo& submit_info, VkFence fence);
 
         VkResult DumpMutableResources(uint64_t bcb_index, uint64_t index, uint64_t qs_index, bool is_dispatch);
@@ -907,10 +912,6 @@ class VulkanReplayDumpResourcesBase
         void DestroyMutableResourcesClones();
 
         void FinalizeCommandBuffer(bool is_dispatch);
-
-        void SnapshotComputeBoundDescriptors();
-
-        void SnapshotRayTracingBoundDescriptors();
 
         const CommandBufferInfo*       original_command_buffer_info;
         VkCommandBuffer                DR_command_buffer;
@@ -940,12 +941,182 @@ class VulkanReplayDumpResourcesBase
             std::vector<VkImage>                       images;
             std::vector<VkDeviceMemory>                image_memories;
             std::vector<std::pair<uint32_t, uint32_t>> image_desc_set_binding_pair;
+            std::vector<VkShaderStageFlagBits>         image_shader_stage;
 
             std::vector<const BufferInfo*>             original_buffers;
             std::vector<VkBuffer>                      buffers;
             std::vector<VkDeviceMemory>                buffer_memories;
             std::vector<std::pair<uint32_t, uint32_t>> buffer_desc_set_binding_pair;
+            std::vector<VkShaderStageFlagBits>         buffer_shader_stage;
         };
+
+        enum DispatchTypes
+        {
+            kDispatch,
+            kDispatchIndirect,
+            kDispatchBase
+        };
+
+        struct DispatchParameters
+        {
+            union DispatchParamsUnion
+            {
+                struct DispatchParams
+                {
+                    uint32_t groupCountX;
+                    uint32_t groupCountY;
+                    uint32_t groupCountZ;
+                };
+
+                DispatchParams dispatch;
+
+                struct DispatchBaseParams
+                {
+                    uint32_t baseGroupX;
+                    uint32_t baseGroupY;
+                    uint32_t baseGroupZ;
+                    uint32_t groupCountX;
+                    uint32_t groupCountY;
+                    uint32_t groupCountZ;
+                };
+
+                DispatchBaseParams dispatch_base;
+
+                struct DispatchIndirect
+                {
+                    const BufferInfo* params_buffer_info;
+                    VkDeviceSize      params_buffer_offset;
+
+                    VkBuffer       new_params_buffer;
+                    VkDeviceMemory new_params_memory;
+
+                    // Pointers that will point to host allocated memory and filled with the dispatch
+                    // params read back after executing on the gpu. Because of the union a data
+                    // structure with a non default destructor (vector/unique_ptr) cannot be used
+                    // and we will handle the memory managment ourselves.
+                    DispatchParams* dispatch_params;
+                };
+
+                DispatchIndirect dispatch_indirect;
+
+                DispatchParamsUnion(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) :
+                    dispatch{ groupCountX, groupCountY, groupCountZ }
+                {}
+
+                DispatchParamsUnion(const BufferInfo* params_buffer_info, VkDeviceSize offset) :
+                    dispatch_indirect{ params_buffer_info, offset, VK_NULL_HANDLE, VK_NULL_HANDLE, nullptr }
+                {}
+
+                DispatchParamsUnion(uint32_t baseGroupX,
+                                    uint32_t baseGroupY,
+                                    uint32_t baseGroupZ,
+                                    uint32_t groupCountX,
+                                    uint32_t groupCountY,
+                                    uint32_t groupCountZ) :
+                    dispatch_base{ baseGroupX, baseGroupY, baseGroupZ, groupCountX, groupCountY, groupCountZ }
+                {}
+            } dispatch_params_union;
+
+            DispatchParameters(DispatchTypes type, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) :
+                dispatch_params_union{ groupCountX, groupCountY, groupCountZ }, type(type)
+            {
+                assert(type == kDispatch);
+            }
+
+            DispatchParameters(DispatchTypes type, const BufferInfo* params_buffer_info, VkDeviceSize offset) :
+                dispatch_params_union{ params_buffer_info, offset }, type(type)
+            {
+                assert(type == kDispatchIndirect);
+            }
+
+            DispatchParameters(DispatchTypes type,
+                               uint32_t      baseGroupX,
+                               uint32_t      baseGroupY,
+                               uint32_t      baseGroupZ,
+                               uint32_t      groupCountX,
+                               uint32_t      groupCountY,
+                               uint32_t      groupCountZ) :
+                dispatch_params_union{ baseGroupX, baseGroupY, baseGroupZ, groupCountX, groupCountY, groupCountZ },
+                type(type)
+            {
+                assert(type == kDispatchBase);
+            }
+
+            DispatchTypes type;
+
+            std::unordered_map<uint32_t, DescriptorSetInfo::DescriptorBindingsInfo> referenced_descriptors;
+        };
+
+        enum TraceRaysTypes
+        {
+            kTraceRays,
+            kTraceRaysIndirect
+        };
+
+        struct TraceRaysParameters
+        {
+            union TraceRaysParamsUnion
+            {
+                struct TraceRaysParams
+                {
+                    uint32_t width;
+                    uint32_t height;
+                    uint32_t depth;
+                };
+
+                TraceRaysParams trace_rays;
+
+                struct TraceRaysIndirect
+                {
+                    const BufferInfo* params_buffer_info;
+                    VkDeviceSize      params_buffer_offset;
+
+                    TraceRaysParams trace_rays_params;
+                };
+
+                TraceRaysIndirect trace_rays_indirect;
+
+                TraceRaysParamsUnion(uint32_t width, uint32_t height, uint32_t depth) :
+                    trace_rays{ width, height, depth }
+                {}
+
+                TraceRaysParamsUnion(const BufferInfo* params_buffer_info, VkDeviceSize params_buffer_offset) :
+                    trace_rays_indirect{ params_buffer_info, params_buffer_offset }
+                {}
+            } trace_rays_params_union;
+
+            TraceRaysParameters(TraceRaysTypes                         type,
+                                const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable,
+                                const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable,
+                                const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable,
+                                const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable,
+                                uint32_t                               width,
+                                uint32_t                               height,
+                                uint32_t                               depth) :
+                trace_rays_params_union(width, height, depth),
+                type(type), pRaygenShaderBindingTable(pRaygenShaderBindingTable),
+                pMissShaderBindingTable(pMissShaderBindingTable), pHitShaderBindingTable(pHitShaderBindingTable),
+                pCallableShaderBindingTable(pCallableShaderBindingTable)
+            {
+                assert(type == kTraceRays);
+            }
+
+            TraceRaysTypes                         type;
+            const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable;
+            const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable;
+            const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable;
+            const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable;
+
+            std::unordered_map<VkShaderStageFlagBits,
+                               std::unordered_map<uint32_t, DescriptorSetInfo::DescriptorBindingsInfo>>
+                referenced_descriptors;
+        };
+
+        // One entry for each dispatch command
+        std::unordered_map<uint64_t, DispatchParameters> dispatch_params;
+
+        // One entry for each trace rays command
+        std::unordered_map<uint64_t, TraceRaysParameters> trace_rays_params;
 
         // This map should hold copies of all mutable resources per Dispach/TraceRays index
         std::unordered_map<uint64_t, DumpableResourceBackup> mutable_resources_clones;
@@ -958,16 +1129,21 @@ class VulkanReplayDumpResourcesBase
         size_t                                  current_dispatch_index;
         size_t                                  current_trace_rays_index;
 
-        // Keep copies of the descriptor bindings referenced by each command.
-        // One entry per descriptor set
-        std::unordered_map<uint32_t, DescriptorSetInfo::DescriptorBindingsInfo> referenced_descriptors_compute;
-        std::unordered_map<uint32_t, DescriptorSetInfo::DescriptorBindingsInfo> referenced_descriptors_ray_tracing;
+        VkResult CopyDispatchIndirectParameters(DispatchParameters& disp_params);
+
+        VkResult FetchIndirectParams();
+
+        void SnapshotBoundDescriptors(DispatchParameters& disp_params);
+
+        void SnapshotBoundDescriptors(TraceRaysParameters& tr_params);
 
         std::vector<std::string> GenerateImageDescriptorFilename(const ImageInfo* img_info) const;
 
         std::string GenerateBufferDescriptorFilename(format::HandleId buffer_id) const;
 
         VkResult DumpImmutableResources(uint64_t qs_index, uint64_t bcb_index) const;
+
+        void GenerateOutputJson(uint64_t qs_index, uint64_t bcb_index) const;
     };
 
     std::vector<uint64_t> QueueSubmit_indices_;
