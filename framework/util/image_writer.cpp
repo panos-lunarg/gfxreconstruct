@@ -726,6 +726,8 @@ bool WritePngImage(const std::string& filename,
     bool success = false;
 
 #ifdef GFXRECON_ENABLE_PNG_SCREENSHOT
+    GFXRECON_LOG_INFO("%s(): Writing file \"%s\"", __func__, filename.c_str())
+
     const uint8_t* bytes = ConvertIntoTemporaryBuffer(width, height, data, &pitch, format, true);
 
     uint32_t row_pitch               = pitch == 0 ? width * kImageBpp : pitch;
@@ -785,6 +787,8 @@ bool WriteAstcImage(const std::string& filename,
     {
         return true;
     }
+
+    GFXRECON_LOG_INFO("%s(): Writing file \"%s\"", __func__, filename.c_str())
 
     AstcFileHeader header;
 
