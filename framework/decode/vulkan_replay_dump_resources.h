@@ -898,8 +898,6 @@ class VulkanReplayDumpResourcesBase
                                 uint32_t                                     dynamicOffsetCount,
                                 const uint32_t*                              pDynamicOffsets);
 
-        void CloneDispatchRaysResources(uint64_t index, bool cloning_before_cmd, bool is_dispatch);
-
         VkResult DumpDispatchTraceRays(
             VkQueue queue, uint64_t qs_index, uint64_t bcb_index, const VkSubmitInfo& submit_info, VkFence fence);
 
@@ -933,9 +931,9 @@ class VulkanReplayDumpResourcesBase
 
         // For each Dispatch/TraceRays that we dump we create a clone of all mutable resources used in the
         // shaders/pipeline and the content of the original resources are copied into the clones
-        struct DumpableResourceBackup
+        struct MutableResourcesBackupContext
         {
-            DumpableResourceBackup() = default;
+            MutableResourcesBackupContext() = default;
 
             std::vector<const ImageInfo*>              original_images;
             std::vector<VkImage>                       images;
@@ -1045,6 +1043,9 @@ class VulkanReplayDumpResourcesBase
             DispatchTypes type;
 
             std::unordered_map<uint32_t, DescriptorSetInfo::DescriptorBindingsInfo> referenced_descriptors;
+
+            MutableResourcesBackupContext mutable_resources_clones;
+            MutableResourcesBackupContext mutable_resources_clones_before;
         };
 
         enum TraceRaysTypes
@@ -1110,17 +1111,23 @@ class VulkanReplayDumpResourcesBase
             std::unordered_map<VkShaderStageFlagBits,
                                std::unordered_map<uint32_t, DescriptorSetInfo::DescriptorBindingsInfo>>
                 referenced_descriptors;
+
+            // Keep copies of all mutable resources that are changed by the dumped commands/shaders
+            MutableResourcesBackupContext mutable_resources_clones;
+            MutableResourcesBackupContext mutable_resources_clones_before;
         };
+
+        VkResult CloneDispatchMutableResources(DispatchParameters& dis_params, bool cloning_before_cmd);
+
+        VkResult CloneTraceRaysMutableResources(TraceRaysParameters& tr_params, bool cloning_before_cmd);
+
+        VkResult CloneMutableResources(MutableResourcesBackupContext& backup_context, bool is_dispatch);
 
         // One entry for each dispatch command
         std::unordered_map<uint64_t, DispatchParameters> dispatch_params;
 
         // One entry for each trace rays command
         std::unordered_map<uint64_t, TraceRaysParameters> trace_rays_params;
-
-        // This map should hold copies of all mutable resources per Dispach/TraceRays index
-        std::unordered_map<uint64_t, DumpableResourceBackup> mutable_resources_clones;
-        std::unordered_map<uint64_t, DumpableResourceBackup> mutable_resources_clones_before;
 
         const encode::VulkanDeviceTable*        device_table;
         const encode::VulkanInstanceTable*      instance_table;
