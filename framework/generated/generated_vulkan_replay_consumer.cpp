@@ -3193,7 +3193,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginRendering(
 
     if (options_.dumping_resources)
     {
-        resource_dumper.Process_vkCmdBeginRendering(call_info, GetDeviceTable(in_commandBuffer)->CmdBeginRendering, in_commandBuffer, in_pRenderingInfo);
+        resource_dumper.Process_vkCmdBeginRendering(call_info, GetDeviceTable(in_commandBuffer)->CmdBeginRendering, in_commandBuffer, pRenderingInfo);
     }
 }
 
@@ -4316,7 +4316,7 @@ void VulkanReplayConsumer::Process_vkCmdBeginRenderingKHR(
 
     if (options_.dumping_resources)
     {
-        resource_dumper.Process_vkCmdBeginRenderingKHR(call_info, GetDeviceTable(in_commandBuffer)->CmdBeginRenderingKHR, in_commandBuffer, in_pRenderingInfo);
+        resource_dumper.Process_vkCmdBeginRenderingKHR(call_info, GetDeviceTable(in_commandBuffer)->CmdBeginRenderingKHR, in_commandBuffer, pRenderingInfo);
     }
 }
 
