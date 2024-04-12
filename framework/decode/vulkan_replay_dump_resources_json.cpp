@@ -47,7 +47,8 @@ void VulkanReplayDumpResourcesJson::VulkanReplayDumpResourcesJsonOpen(const std:
     outfile = outfile + "_rd.json";
 
     gfxrecon::util::platform::FileOpen(&jsonFileHandle_, outfile.c_str(), "w");
-    if (!jsonFileHandle_) {
+    if (!jsonFileHandle_)
+    {
         GFXRECON_LOG_FATAL("Could not open dump resources outfile file %s", outfile.c_str());
         exit(1);
     }

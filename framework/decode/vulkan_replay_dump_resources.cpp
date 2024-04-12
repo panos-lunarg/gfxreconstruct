@@ -250,10 +250,10 @@ VulkanReplayDumpResourcesBase::FindDispatchRaysCommandBufferContext(VkCommandBuf
     return context;
 }
 
-VkResult VulkanReplayDumpResourcesBase::CloneCommandBuffer(uint64_t                     bcb_index,
-                                                           CommandBufferInfo*           original_command_buffer_info,
-                                                           const encode::DeviceTable*   device_table,
-                                                           const encode::InstanceTable* inst_table)
+VkResult VulkanReplayDumpResourcesBase::CloneCommandBuffer(uint64_t           bcb_index,
+                                                           CommandBufferInfo* original_command_buffer_info,
+                                                           const encode::VulkanDeviceTable*   device_table,
+                                                           const encode::VulkanInstanceTable* inst_table)
 {
     assert(device_table);
     assert(inst_table);
@@ -1686,7 +1686,7 @@ bool VulkanReplayDumpResourcesBase::MustDumpTraceRays(VkCommandBuffer original_c
 }
 
 VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitInfo>& submit_infos,
-                                                    const encode::DeviceTable&       device_table,
+                                                    const encode::VulkanDeviceTable& device_table,
                                                     VkQueue                          queue,
                                                     VkFence                          fence,
                                                     uint64_t                         index)

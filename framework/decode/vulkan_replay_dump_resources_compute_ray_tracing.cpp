@@ -89,9 +89,9 @@ DispatchTraceRaysDumpingContext::~DispatchTraceRaysDumpingContext()
     }
 }
 
-VkResult DispatchTraceRaysDumpingContext::CloneCommandBuffer(CommandBufferInfo*           orig_cmd_buf_info,
-                                                             const encode::DeviceTable*   dev_table,
-                                                             const encode::InstanceTable* inst_table)
+VkResult DispatchTraceRaysDumpingContext::CloneCommandBuffer(CommandBufferInfo*                 orig_cmd_buf_info,
+                                                             const encode::VulkanDeviceTable*   dev_table,
+                                                             const encode::VulkanInstanceTable* inst_table)
 {
     assert(orig_cmd_buf_info);
     assert(dev_table);

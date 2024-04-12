@@ -46,8 +46,8 @@ class VulkanResourcesUtil
 
     VulkanResourcesUtil(VkDevice                                device,
                         VkPhysicalDevice                        physical_device,
-                        const encode::DeviceTable&              device_table,
-                        const encode::InstanceTable&            instance_table,
+                        const encode::VulkanDeviceTable&        device_table,
+                        const encode::VulkanInstanceTable&      instance_table,
                         const VkPhysicalDeviceMemoryProperties& memory_properties) :
         device_(device),
         physical_device_(physical_device), device_table_(device_table), instance_table_(instance_table),
@@ -265,8 +265,8 @@ class VulkanResourcesUtil
 
     VkDevice                                device_;
     VkPhysicalDevice                        physical_device_;
-    const encode::DeviceTable&              device_table_;
-    const encode::InstanceTable&            instance_table_;
+    const encode::VulkanDeviceTable&        device_table_;
+    const encode::VulkanInstanceTable&      instance_table_;
     const VkPhysicalDeviceMemoryProperties& memory_properties_;
     uint32_t                                queue_family_index_;
     VkCommandPool                           command_pool_;

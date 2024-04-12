@@ -97,6 +97,13 @@ bool WriteBmpImage(const std::string& filename,
                    uint32_t           pitch       = 0,
                    DataFormats        data_format = kFormat_BGRA);
 
+bool WriteBmpImageNoAlpha(const std::string& filename,
+                          uint32_t           width,
+                          uint32_t           height,
+                          uint64_t           data_size,
+                          const void*        data,
+                          uint32_t           pitch = 0);
+
 bool WritePngImage(const std::string& filename,
                    uint32_t           width,
                    uint32_t           height,
@@ -114,6 +121,13 @@ bool WriteAstcImage(const std::string& filename,
                     uint8_t            block_size_z,
                     const void*        data,
                     size_t             size);
+
+bool WritePngImageNoAlpha(const std::string& filename,
+                          uint32_t           width,
+                          uint32_t           height,
+                          uint64_t           data_size,
+                          const void*        data,
+                          uint32_t           pitch = 0);
 
 GFXRECON_END_NAMESPACE(imagewriter)
 GFXRECON_END_NAMESPACE(util)
