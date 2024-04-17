@@ -1037,6 +1037,11 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                        StructPointerDecoder<Decoded_VkAllocationCallbacks>*   allocator_decoder,
                                        HandlePointerDecoder<VkFramebuffer>*                   frame_buffer_decoder);
 
+    void OverrideFrameBoundaryANDROID(PFN_vkFrameBoundaryANDROID func,
+                                      const DeviceInfo*          device_info,
+                                      const SemaphoreInfo*       semaphore_info,
+                                      const ImageInfo*           image_info);
+
     const VulkanReplayOptions options_;
 
   private:
