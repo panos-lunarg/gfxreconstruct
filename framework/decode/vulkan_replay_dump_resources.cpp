@@ -1307,6 +1307,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDispatch(const ApiCallInfo& call_
         assert(dr_context != nullptr);
 
         dr_context->CloneDispatchMutableResources(disp_index, true);
+        dr_context->FinalizeCommandBuffer(true);
     }
 
     CommandBufferIterator first, last;
@@ -1357,6 +1358,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDispatchIndirect(const ApiCallInf
         assert(dr_context != nullptr);
 
         dr_context->CloneDispatchMutableResources(disp_index, true);
+        dr_context->FinalizeCommandBuffer(true);
     }
 
     CommandBufferIterator first, last;
@@ -1423,6 +1425,14 @@ void VulkanReplayDumpResourcesBase::OverrideCmdTraceRaysKHR(
                                                  depth);
     }
 
+    if (dump_resources_before_ && must_dump)
+    {
+        assert(dr_context != nullptr);
+
+        dr_context->CloneTraceRaysMutableResources(tr_index, true);
+        dr_context->FinalizeCommandBuffer(true);
+    }
+
     CommandBufferIterator first, last;
     if (GetDrawCallActiveCommandBuffers(original_command_buffer, first, last))
     {
@@ -1437,13 +1447,6 @@ void VulkanReplayDumpResourcesBase::OverrideCmdTraceRaysKHR(
                  height,
                  depth);
         }
-    }
-
-    if (dump_resources_before_ && must_dump)
-    {
-        assert(dr_context != nullptr);
-
-        dr_context->CloneTraceRaysMutableResources(tr_index, true);
     }
 
     VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(original_command_buffer);
