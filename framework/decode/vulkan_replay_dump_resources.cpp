@@ -298,7 +298,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDraw(const ApiCallInfo& call_info
     {
         assert(dc_context != nullptr);
         dc_context->FinalizeCommandBuffer();
-        UpdateRecordingStatus();
+        UpdateRecordingStatus(original_command_buffer);
     }
 
     if (must_dump)
@@ -326,8 +326,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDraw(const ApiCallInfo& call_info
     if (must_dump)
     {
         assert(dc_context != nullptr);
+
         dc_context->FinalizeCommandBuffer();
-        UpdateRecordingStatus();
+        UpdateRecordingStatus(original_command_buffer);
     }
 }
 
@@ -350,11 +351,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexed(const ApiCallInfo&   
     // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        if (dc_context != nullptr)
-        {
-            dc_context->FinalizeCommandBuffer();
-            UpdateRecordingStatus();
-        }
+        assert(dc_context != nullptr);
+        dc_context->FinalizeCommandBuffer();
+        UpdateRecordingStatus(original_command_buffer);
     }
 
     // Copy vertex attribute info
@@ -381,11 +380,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexed(const ApiCallInfo&   
 
     if (must_dump)
     {
-        if (dc_context != nullptr)
-        {
-            dc_context->FinalizeCommandBuffer();
-            UpdateRecordingStatus();
-        }
+        assert(dc_context != nullptr);
+        dc_context->FinalizeCommandBuffer();
+        UpdateRecordingStatus(original_command_buffer);
     }
 }
 
@@ -407,11 +404,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirect(const ApiCallInfo&  
     // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        if (dc_context != nullptr)
-        {
-            dc_context->FinalizeCommandBuffer();
-            UpdateRecordingStatus();
-        }
+        assert(dc_context != nullptr);
+        dc_context->FinalizeCommandBuffer();
+        UpdateRecordingStatus(original_command_buffer);
     }
 
     // Copy vertex attribute info
@@ -438,11 +433,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirect(const ApiCallInfo&  
 
     if (must_dump)
     {
-        if (dc_context != nullptr)
-        {
-            dc_context->FinalizeCommandBuffer();
-            UpdateRecordingStatus();
-        }
+        assert(dc_context != nullptr);
+        dc_context->FinalizeCommandBuffer();
+        UpdateRecordingStatus(original_command_buffer);
     }
 }
 
@@ -464,11 +457,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirect(const ApiCall
     // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        if (dc_context != nullptr)
-        {
-            dc_context->FinalizeCommandBuffer();
-            UpdateRecordingStatus();
-        }
+        assert(dc_context != nullptr);
+        dc_context->FinalizeCommandBuffer();
+        UpdateRecordingStatus(original_command_buffer);
     }
 
     if (dc_context != nullptr && must_dump)
@@ -494,11 +485,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirect(const ApiCall
 
     if (must_dump)
     {
-        if (dc_context != nullptr)
-        {
-            dc_context->FinalizeCommandBuffer();
-            UpdateRecordingStatus();
-        }
+        assert(dc_context != nullptr);
+        dc_context->FinalizeCommandBuffer();
+        UpdateRecordingStatus(original_command_buffer);
     }
 }
 
@@ -522,11 +511,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCount(const ApiCallIn
     // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        if (dc_context != nullptr)
-        {
-            dc_context->FinalizeCommandBuffer();
-            UpdateRecordingStatus();
-        }
+        assert(dc_context != nullptr);
+        dc_context->FinalizeCommandBuffer();
+        UpdateRecordingStatus(original_command_buffer);
     }
 
     if (dc_context != nullptr && must_dump)
@@ -559,11 +546,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCount(const ApiCallIn
 
     if (must_dump)
     {
-        if (dc_context != nullptr)
-        {
-            dc_context->FinalizeCommandBuffer();
-            UpdateRecordingStatus();
-        }
+        assert(dc_context != nullptr);
+        dc_context->FinalizeCommandBuffer();
+        UpdateRecordingStatus(original_command_buffer);
     }
 }
 
@@ -587,11 +572,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCount(const Ap
     // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        if (dc_context != nullptr)
-        {
-            dc_context->FinalizeCommandBuffer();
-            UpdateRecordingStatus();
-        }
+        assert(dc_context != nullptr);
+        dc_context->FinalizeCommandBuffer();
+        UpdateRecordingStatus(original_command_buffer);
     }
 
     if (dc_context != nullptr && must_dump)
@@ -624,11 +607,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCount(const Ap
 
     if (must_dump)
     {
-        if (dc_context != nullptr)
-        {
-            dc_context->FinalizeCommandBuffer();
-            UpdateRecordingStatus();
-        }
+        assert(dc_context != nullptr);
+        dc_context->FinalizeCommandBuffer();
+        UpdateRecordingStatus(original_command_buffer);
     }
 }
 
@@ -652,11 +633,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCountKHR(const ApiCal
     // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        if (dc_context != nullptr)
-        {
-            dc_context->FinalizeCommandBuffer();
-            UpdateRecordingStatus();
-        }
+        assert(dc_context != nullptr);
+        dc_context->FinalizeCommandBuffer();
+        UpdateRecordingStatus(original_command_buffer);
     }
 
     if (dc_context != nullptr && must_dump)
@@ -689,11 +668,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndirectCountKHR(const ApiCal
 
     if (must_dump)
     {
-        if (dc_context != nullptr)
-        {
-            dc_context->FinalizeCommandBuffer();
-            UpdateRecordingStatus();
-        }
+        assert(dc_context != nullptr);
+        dc_context->FinalizeCommandBuffer();
+        UpdateRecordingStatus(original_command_buffer);
     }
 }
 
@@ -717,11 +694,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCountKHR(const
     // to handle dumping render targets before the draw call
     if (dump_resources_before_ && must_dump)
     {
-        if (dc_context != nullptr)
-        {
-            dc_context->FinalizeCommandBuffer();
-            UpdateRecordingStatus();
-        }
+        assert(dc_context != nullptr);
+        dc_context->FinalizeCommandBuffer();
+        UpdateRecordingStatus(original_command_buffer);
     }
 
     if (dc_context != nullptr && must_dump)
@@ -754,11 +729,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDrawIndexedIndirectCountKHR(const
 
     if (must_dump)
     {
-        if (dc_context != nullptr)
-        {
-            dc_context->FinalizeCommandBuffer();
-            UpdateRecordingStatus();
-        }
+        assert(dc_context != nullptr);
+        dc_context->FinalizeCommandBuffer();
+        UpdateRecordingStatus(original_command_buffer);
     }
 }
 
@@ -1358,7 +1331,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDispatch(const ApiCallInfo& call_
         dr_context->CloneDispatchMutableResources(disp_index, false);
         dr_context->SnapshotBoundDescriptorsDispatch(disp_index);
         dr_context->FinalizeCommandBuffer(true);
-        UpdateRecordingStatus();
+        UpdateRecordingStatus(original_command_buffer);
     }
 }
 
@@ -1409,7 +1382,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdDispatchIndirect(const ApiCallInf
         dr_context->CopyDispatchIndirectParameters(disp_index);
         dr_context->SnapshotBoundDescriptorsDispatch(disp_index);
         dr_context->FinalizeCommandBuffer(true);
-        UpdateRecordingStatus();
+        UpdateRecordingStatus(original_command_buffer);
     }
 }
 
@@ -1493,7 +1466,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdTraceRaysKHR(
         dr_context->CloneTraceRaysMutableResources(tr_index, false);
         dr_context->SnapshotBoundDescriptorsTraceRays(tr_index);
         dr_context->FinalizeCommandBuffer(false);
-        UpdateRecordingStatus();
+        UpdateRecordingStatus(original_command_buffer);
     }
 }
 
@@ -1796,8 +1769,9 @@ VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitIn
     }
     else
     {
-        assert(index == QueueSubmit_indices_[0]);
-        QueueSubmit_indices_.erase(QueueSubmit_indices_.begin());
+        auto index_it = QueueSubmit_indices_.find(index);
+        assert(index_it != QueueSubmit_indices_.end());
+        QueueSubmit_indices_.erase(index_it);
 
         // Once all submissions are complete release resources
         if (QueueSubmit_indices_.empty())
@@ -1870,52 +1844,30 @@ VulkanReplayDumpResourcesBase::GetDispatchRaysCommandBuffer(VkCommandBuffer orig
     }
 }
 
-bool VulkanReplayDumpResourcesBase::UpdateRecordingStatus()
+bool VulkanReplayDumpResourcesBase::UpdateRecordingStatus(VkCommandBuffer original_command_buffer)
 {
     assert(recording_);
 
-    for (const auto& entry : draw_call_contexts)
+    const DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr && dc_context->IsRecording())
     {
-        const DrawCallsDumpingContext& dc_context = entry.second;
-        if (dc_context.IsRecording())
-        {
-            return true;
-        }
+        return true;
     }
 
-    for (const auto& entry : dispatch_ray_contexts)
+    const DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
+    if (dr_context != nullptr && dr_context->IsRecording())
     {
-        const DispatchTraceRaysDumpingContext& dr_context = entry.second;
-        if (dr_context.IsRecording())
-        {
-            return true;
-        }
+        return true;
     }
 
-    return (recording_ = false);
+    recording_ = false;
+    return false;
 }
 
 bool VulkanReplayDumpResourcesBase::MustDumpQueueSubmitIndex(uint64_t index) const
 {
     // Indices should be sorted
-    if (!IsInsideRange(QueueSubmit_indices_, index))
-    {
-        return false;
-    }
-
-    for (size_t i = 0; i < QueueSubmit_indices_.size(); ++i)
-    {
-        if (index == QueueSubmit_indices_[i])
-        {
-            return true;
-        }
-        else if (index > QueueSubmit_indices_[i])
-        {
-            return false;
-        }
-    }
-
-    return false;
+    return QueueSubmit_indices_.find(index) != QueueSubmit_indices_.end();
 }
 
 bool VulkanReplayDumpResourcesBase::IsRecording(VkCommandBuffer original_command_buffer) const
