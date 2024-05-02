@@ -21,6 +21,7 @@
 */
 
 #include "decode/vulkan_object_info.h"
+#include "decode/vulkan_replay_dump_resources_compute_ray_tracing.h"
 #include "decode/vulkan_replay_options.h"
 #include "decode/vulkan_replay_dump_resources_json.h"
 #include "format/format.h"
@@ -251,7 +252,6 @@ VkResult VulkanReplayDumpResourcesBase::CloneCommandBuffer(uint64_t           bc
             return res;
         }
 
-        assert(cmd_buf_begin_map_.find(original_command_buffer_info->handle) == cmd_buf_begin_map_.end());
         cmd_buf_begin_map_[original_command_buffer_info->handle] = bcb_index;
         recording_                                               = true;
     }
@@ -267,7 +267,6 @@ VkResult VulkanReplayDumpResourcesBase::CloneCommandBuffer(uint64_t           bc
             return res;
         }
 
-        assert(cmd_buf_begin_map_.find(original_command_buffer_info->handle) == cmd_buf_begin_map_.end());
         cmd_buf_begin_map_[original_command_buffer_info->handle] = bcb_index;
         recording_                                               = true;
     }
@@ -1990,6 +1989,21 @@ VulkanReplayDumpResourcesBase::GetBeginCommandBufferIndexOfCommandBuffer(VkComma
     else
     {
         return 0;
+    }
+}
+
+void VulkanReplayDumpResourcesBase::ResetCommandBuffer(VkCommandBuffer original_command_buffer)
+{
+    DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(original_command_buffer);
+    if (dc_context != nullptr)
+    {
+        dc_context->Release();
+    }
+
+    DispatchTraceRaysDumpingContext* dr_context = FindDispatchRaysCommandBufferContext(original_command_buffer);
+    if (dr_context != nullptr)
+    {
+        dr_context->Release();
     }
 }
 
