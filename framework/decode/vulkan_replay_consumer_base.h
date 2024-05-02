@@ -49,6 +49,7 @@
 #include "application/application.h"
 
 #include "vulkan/vulkan.h"
+#include "vulkan/vulkan_core.h"
 
 #include <algorithm>
 #include <cassert>
@@ -602,6 +603,12 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                    const StructPointerDecoder<Decoded_VkCommandBufferAllocateInfo>* pAllocateInfo,
                                    HandlePointerDecoder<VkCommandBuffer>*                           pCommandBuffers);
 
+    void OverrideFreeCommandBuffers(PFN_vkFreeCommandBuffers               func,
+                                    const DeviceInfo*                      device_info,
+                                    CommandPoolInfo*                       command_pool_info,
+                                    uint32_t                               command_buffer_count,
+                                    HandlePointerDecoder<VkCommandBuffer>* pCommandBuffers);
+
     VkResult OverrideAllocateMemory(PFN_vkAllocateMemory                                       func,
                                     VkResult                                                   original_result,
                                     const DeviceInfo*                                          device_info,
@@ -1016,6 +1023,12 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                         CommandBufferInfo*        command_buffer_info,
                                         VkCommandBufferResetFlags flags);
 
+    VkResult OverrideResetCommandPool(PFN_vkResetCommandPool  func,
+                                      VkResult                original_result,
+                                      const DeviceInfo*       device_info,
+                                      CommandPoolInfo*        pool_info,
+                                      VkCommandPoolResetFlags flags);
+
     void     OverrideCmdDebugMarkerInsertEXT(PFN_vkCmdDebugMarkerInsertEXT                             func,
                                              CommandBufferInfo*                                        command_buffer_info,
                                              StructPointerDecoder<Decoded_VkDebugMarkerMarkerInfoEXT>* marker_info_decoder);
@@ -1238,25 +1251,25 @@ class VulkanReplayConsumerBase : public VulkanConsumer
     typedef std::unordered_map<format::HandleId, HardwareBufferMemoryInfo> HardwareBufferMemoryMap;
 
   private:
-    util::platform::LibraryHandle                                    loader_handle_;
-    PFN_vkGetInstanceProcAddr                                        get_instance_proc_addr_;
-    PFN_vkCreateInstance                                             create_instance_proc_;
-    std::unordered_map<encode::DispatchKey, PFN_vkGetDeviceProcAddr> get_device_proc_addrs_;
-    std::unordered_map<encode::DispatchKey, PFN_vkCreateDevice>      create_device_procs_;
+    util::platform::LibraryHandle                                        loader_handle_;
+    PFN_vkGetInstanceProcAddr                                            get_instance_proc_addr_;
+    PFN_vkCreateInstance                                                 create_instance_proc_;
+    std::unordered_map<encode::DispatchKey, PFN_vkGetDeviceProcAddr>     get_device_proc_addrs_;
+    std::unordered_map<encode::DispatchKey, PFN_vkCreateDevice>          create_device_procs_;
     std::unordered_map<encode::DispatchKey, encode::VulkanInstanceTable> instance_tables_;
     std::unordered_map<encode::DispatchKey, encode::VulkanDeviceTable>   device_tables_;
-    std::function<void(const char*)>                                 fatal_error_handler_;
-    std::shared_ptr<application::Application>                        application_;
-    VulkanObjectInfoTable                                            object_info_table_;
-    bool                                                             loading_trim_state_;
-    bool                                                             replaying_trimmed_capture_;
-    SwapchainImageTracker                                            swapchain_image_tracker_;
-    HardwareBufferMap                                                hardware_buffers_;
-    HardwareBufferMemoryMap                                          hardware_buffer_memory_info_;
-    std::unique_ptr<ScreenshotHandler>                               screenshot_handler_;
-    std::unique_ptr<VulkanSwapchain>                                 swapchain_;
-    std::string                                                      screenshot_file_prefix_;
-    graphics::FpsInfo*                                               fps_info_;
+    std::function<void(const char*)>                                     fatal_error_handler_;
+    std::shared_ptr<application::Application>                            application_;
+    VulkanObjectInfoTable                                                object_info_table_;
+    bool                                                                 loading_trim_state_;
+    bool                                                                 replaying_trimmed_capture_;
+    SwapchainImageTracker                                                swapchain_image_tracker_;
+    HardwareBufferMap                                                    hardware_buffers_;
+    HardwareBufferMemoryMap                                              hardware_buffer_memory_info_;
+    std::unique_ptr<ScreenshotHandler>                                   screenshot_handler_;
+    std::unique_ptr<VulkanSwapchain>                                     swapchain_;
+    std::string                                                          screenshot_file_prefix_;
+    graphics::FpsInfo*                                                   fps_info_;
 
     // Imported semaphores are semaphores that are used to track external memory.
     // During replay, the external memory is not present (we have no Fds or handles to valid

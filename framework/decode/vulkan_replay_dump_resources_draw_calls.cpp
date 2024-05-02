@@ -104,6 +104,7 @@ void DrawCallsDumpingContext::Release()
         {
             device_table->FreeCommandBuffers(device, pool_info->handle, command_buffers.size(), command_buffers.data());
         }
+        command_buffers.clear();
 
         if (aux_command_buffer != VK_NULL_HANDLE)
         {
@@ -117,10 +118,22 @@ void DrawCallsDumpingContext::Release()
         }
 
         DestroyMutableResourceBackups();
-        ReleaseIndirectDrawParams();
+        ReleaseIndirectParams();
 
         original_command_buffer_info = nullptr;
     }
+
+    draw_call_params.clear();
+    dc_indices.clear();
+    RP_indices.clear();
+
+    current_renderpass = 0;
+    current_subpass    = 0;
+    n_subpasses        = 0;
+    current_cb_index   = 0;
+
+    currently_bound_vertex_buffers = bound_vertex_buffers.end();
+    currently_bound_index_buffer   = bound_index_buffers.end();
 }
 
 void DrawCallsDumpingContext::InsertNewDrawParameters(
@@ -846,6 +859,8 @@ VkResult DrawCallsDumpingContext::DumpDrawCalls(
     }
 
     GenerateOutputJsonDrawCallInfo(qs_index, bcb_index);
+
+    ReleaseIndirectParams();
 
     GFXRECON_LOG_INFO("Done.")
     assert(res == VK_SUCCESS);
@@ -3047,7 +3062,7 @@ void DrawCallsDumpingContext::SetRenderArea(const VkRect2D& new_render_area)
     render_area.push_back(new_render_area);
 }
 
-void DrawCallsDumpingContext::ReleaseIndirectDrawParams()
+void DrawCallsDumpingContext::ReleaseIndirectParams()
 {
     assert(original_command_buffer_info);
     assert(original_command_buffer_info->parent_id != format::kNullHandleId);

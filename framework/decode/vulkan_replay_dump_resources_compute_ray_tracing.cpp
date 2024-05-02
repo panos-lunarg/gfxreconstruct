@@ -80,6 +80,7 @@ void DispatchTraceRaysDumpingContext::Release()
             if (device_info)
             {
                 DestroyMutableResourcesClones();
+                ReleaseIndirectParams();
 
                 VkDevice device = device_info->handle;
 
@@ -96,6 +97,13 @@ void DispatchTraceRaysDumpingContext::Release()
 
         original_command_buffer_info = nullptr;
     }
+
+    dispatch_indices.clear();
+    trace_rays_indices.clear();
+    bound_descriptor_sets_compute.clear();
+    bound_descriptor_sets_ray_tracing.clear();
+    dispatch_params.clear();
+    trace_rays_params.clear();
 }
 
 VkResult DispatchTraceRaysDumpingContext::CloneCommandBuffer(CommandBufferInfo*                 orig_cmd_buf_info,
@@ -705,6 +713,55 @@ void DispatchTraceRaysDumpingContext::DestroyMutableResourcesClones()
     }
 }
 
+void DispatchTraceRaysDumpingContext::ReleaseIndirectParams()
+{
+    const DeviceInfo* device_info = object_info_table.GetDeviceInfo(original_command_buffer_info->parent_id);
+    for (auto& dis_params : dispatch_params)
+    {
+        if (dis_params.second.type != kDispatchIndirect)
+        {
+            continue;
+        }
+
+        if (dis_params.second.dispatch_params_union.dispatch_indirect.new_params_buffer != VK_NULL_HANDLE)
+        {
+            device_table->DestroyBuffer(device_info->handle,
+                                        dis_params.second.dispatch_params_union.dispatch_indirect.new_params_buffer,
+                                        nullptr);
+        }
+
+        if (dis_params.second.dispatch_params_union.dispatch_indirect.new_params_memory != VK_NULL_HANDLE)
+        {
+            device_table->FreeMemory(device_info->handle,
+                                     dis_params.second.dispatch_params_union.dispatch_indirect.new_params_memory,
+                                     nullptr);
+        }
+    }
+
+    for (auto& tr_params : trace_rays_params)
+    {
+        if (tr_params.second.type != kTraceRaysIndirect)
+        {
+            continue;
+        }
+
+        if (tr_params.second.trace_rays_params_union.trace_rays_indirect.new_params_buffer != VK_NULL_HANDLE)
+        {
+            device_table->DestroyBuffer(device_info->handle,
+                                        tr_params.second.trace_rays_params_union.trace_rays_indirect.new_params_buffer,
+                                        nullptr);
+        }
+
+        if (tr_params.second.trace_rays_params_union.trace_rays_indirect.new_params_buffer_memory != VK_NULL_HANDLE)
+        {
+            device_table->FreeMemory(
+                device_info->handle,
+                tr_params.second.trace_rays_params_union.trace_rays_indirect.new_params_buffer_memory,
+                nullptr);
+        }
+    }
+}
+
 VkResult DispatchTraceRaysDumpingContext::DumpDispatchTraceRays(
     VkQueue queue, uint64_t qs_index, uint64_t bcb_index, const VkSubmitInfo& submit_info, VkFence fence)
 {
@@ -806,6 +863,8 @@ VkResult DispatchTraceRaysDumpingContext::DumpDispatchTraceRays(
     }
 
     GenerateOutputJson(qs_index, bcb_index);
+
+    ReleaseIndirectParams();
 
     assert(res == VK_SUCCESS);
     return VK_SUCCESS;
