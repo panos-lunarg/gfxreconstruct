@@ -89,14 +89,17 @@ std::string AnnotationTypeToString(const format::AnnotationType& type);
 /// dealing with a simple type or a multi-line struct or array which tabs itself
 /// out.
 template <typename T>
-inline std::string ToString(const T&      obj,
-                            ToStringFlags toStringFlags = kToString_Default,
-                            uint32_t      tabCount      = kToStringDefaultTabCount,
-                            uint32_t      tabSize       = kToStringDefaultTabSize)
+inline std::string ToString(const T& obj, ToStringFlags toStringFlags, uint32_t tabCount, uint32_t tabSize)
 {
     GFXRECON_UNREFERENCED_PARAMETER(toStringFlags);
     GFXRECON_UNREFERENCED_PARAMETER(tabCount);
     GFXRECON_UNREFERENCED_PARAMETER(tabSize);
+    return std::to_string(obj);
+}
+
+template <typename T>
+inline std::string ToString(const T& obj)
+{
     return std::to_string(obj);
 }
 
