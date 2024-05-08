@@ -57,6 +57,16 @@ void        ProcessAppCmd(struct android_app* app, int32_t cmd);
 int32_t     ProcessInputEvent(struct android_app* app, AInputEvent* event);
 void        DestroyActivity(struct android_app* app);
 
+static gfxrecon::decode::FileProcessor file_processor;
+
+extern "C"
+{
+    uint64_t MainGetCurrentBlockIndex()
+    {
+        return file_processor.GetCurrentBlockIndex();
+    }
+}
+
 void android_main(struct android_app* app)
 {
     gfxrecon::util::Log::Init();
@@ -100,8 +110,6 @@ void android_main(struct android_app* app)
 
         try
         {
-            gfxrecon::decode::FileProcessor file_processor;
-
             if (!file_processor.Initialize(filename))
             {
                 GFXRECON_WRITE_CONSOLE("Failed to load file %s.", filename.c_str());

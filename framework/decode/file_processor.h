@@ -91,6 +91,8 @@ class FileProcessor
 
     uint32_t GetCurrentFrameNumber() const { return current_frame_number_; }
 
+    uint64_t GetCurrentBlockIndex() const { return block_index_; }
+
     uint64_t GetNumBytesRead() const { return bytes_read_; }
 
     Error GetErrorState() const { return error_state_; }
