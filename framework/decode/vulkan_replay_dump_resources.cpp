@@ -57,7 +57,7 @@ VulkanReplayDumpResourcesBase::VulkanReplayDumpResourcesBase(const VulkanReplayO
 
     if (!options.dump_resources_json_per_command)
     {
-        dump_json_.Open(options.capture_filename, options.dump_resources_output_dir, options.dump_resources_scale);
+        dump_json_.Open(options.capture_filename, options.dump_resources_output_dir);
     }
 
     for (size_t i = 0; i < options.BeginCommandBuffer_Indices.size(); ++i)
@@ -1784,7 +1784,10 @@ VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitIn
         }
     }
 
-    dump_json_.BlockStart();
+    if (!output_json_per_command)
+    {
+        dump_json_.BlockStart();
+    }
 
     for (size_t s = 0; s < submit_infos.size(); s++)
     {
@@ -1838,9 +1841,12 @@ VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitIn
         }
     }
 
-    dump_json_.BlockEnd();
-
     assert(res == VK_SUCCESS);
+
+    if (!output_json_per_command)
+    {
+        dump_json_.BlockEnd();
+    }
 
     // Looks like we didn't submit anything. Do the submission as it would have been done
     // without further modifications
