@@ -717,6 +717,10 @@ bool WritePngImage(const std::string& filename,
     {
         success = true;
     }
+    else
+    {
+        GFXRECON_LOG_ERROR("%s() Failed to open file (%s)", __func__, strerror(errno));
+    }
 #endif
 
     return success;
@@ -748,6 +752,10 @@ bool WritePngImageNoAlpha(
     if (1 == stbi_write_png(filename.c_str(), width, height, kImageBppNoAlpha, dataNoAlpha.data(), row_pitch_no_alpha))
     {
         success = true;
+    }
+    else
+    {
+        GFXRECON_LOG_ERROR("%s() Failed to open file (%s)", __func__, strerror(errno));
     }
 #endif
 
