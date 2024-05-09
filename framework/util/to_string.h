@@ -90,13 +90,19 @@ std::string AnnotationTypeToString(const format::AnnotationType& type);
 /// out.
 template <typename T>
 inline std::string ToString(const T&      obj,
-                            ToStringFlags toStringFlags = kToString_Default,
-                            uint32_t      tabCount      = kToStringDefaultTabCount,
-                            uint32_t      tabSize       = kToStringDefaultTabSize)
+                            ToStringFlags toStringFlags,
+                            uint32_t      tabCount,
+                            uint32_t      tabSize)
 {
     GFXRECON_UNREFERENCED_PARAMETER(toStringFlags);
     GFXRECON_UNREFERENCED_PARAMETER(tabCount);
     GFXRECON_UNREFERENCED_PARAMETER(tabSize);
+    return std::to_string(obj);
+}
+
+template <typename T>
+inline std::string ToString(const T& obj)
+{
     return std::to_string(obj);
 }
 
