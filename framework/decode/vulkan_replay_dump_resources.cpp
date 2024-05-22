@@ -1816,8 +1816,10 @@ VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitIn
                     queue, index, cmd_buf_begin_map_[command_buffer_handles[o]], modified_submit_infos[s], fence);
                 if (res != VK_SUCCESS)
                 {
-                    GFXRECON_LOG_ERROR("Dumping draw calls failed (%s).", util::ToString<VkResult>(res).c_str())
+                    GFXRECON_LOG_ERROR("Dumping draw calls failed (%s). Terminating.",
+                                       util::ToString<VkResult>(res).c_str())
                     Release();
+                    exit(1);
                     return res;
                 }
 
@@ -1831,9 +1833,10 @@ VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitIn
                     queue, index, cmd_buf_begin_map_[command_buffer_handles[o]], modified_submit_infos[s], fence);
                 if (res != VK_SUCCESS)
                 {
-                    GFXRECON_LOG_ERROR("Dumping dispatch/ray tracing failed (%s).",
+                    GFXRECON_LOG_ERROR("Dumping dispatch/ray tracing failed (%s). Terminating.",
                                        util::ToString<VkResult>(res).c_str())
                     Release();
+                    exit(1);
                     return res;
                 }
 
