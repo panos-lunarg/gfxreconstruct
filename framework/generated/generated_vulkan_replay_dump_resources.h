@@ -767,6 +767,15 @@ void Process_vkCmdPushDescriptorSetKHR(
     uint32_t                                    descriptorWriteCount,
     const VkWriteDescriptorSet*                 pDescriptorWrites);
 
+void Process_vkCmdPushDescriptorSetWithTemplateKHR(
+    const ApiCallInfo&                          call_info,
+    PFN_vkCmdPushDescriptorSetWithTemplateKHR   func,
+    VkCommandBuffer                             commandBuffer,
+    VkDescriptorUpdateTemplate                  descriptorUpdateTemplate,
+    VkPipelineLayout                            layout,
+    uint32_t                                    set,
+    const void*                                 pData);
+
 
 
 void Process_vkCmdBeginRenderPass2KHR(
