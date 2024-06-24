@@ -70,6 +70,16 @@ target_sources(gfxrecon_decode
                    ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_replay_consumer_base.h
                    ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_replay_consumer_base.cpp
                    ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_replay_options.h
+                   ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_replay_dump_resources.h
+                   ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_replay_dump_resources.cpp
+                   ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_replay_dump_resources_common.h
+                   ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_replay_dump_resources_common.cpp
+                   ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_replay_dump_resources_draw_calls.h
+                   ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_replay_dump_resources_draw_calls.cpp
+                   ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_replay_dump_resources_compute_ray_tracing.h
+                   ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_replay_dump_resources_compute_ray_tracing.cpp
+                   ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_replay_dump_resources_json.h
+                   ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_replay_dump_resources_json.cpp
                    ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_resource_allocator.h
                    ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_resource_initializer.h
                    ${GFXRECON_SOURCE_DIR}/framework/decode/vulkan_resource_initializer.cpp
@@ -92,6 +102,8 @@ target_sources(gfxrecon_decode
                    ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_feature_util.cpp
                    ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_replay_consumer.h
                    ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_replay_consumer.cpp
+                   ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_replay_dump_resources.h
+                   ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_replay_dump_resources.cpp
                    ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_struct_decoders_forward.h
                    ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_struct_decoders.h
                    ${GFXRECON_SOURCE_DIR}/framework/generated/generated_vulkan_struct_decoders.cpp
@@ -103,6 +115,16 @@ target_sources(gfxrecon_decode
 
 target_include_directories(gfxrecon_decode
                            PUBLIC
-                               ${GFXRECON_SOURCE_DIR}/framework)
+                               ${CMAKE_BINARY_DIR}
+                               ${GFXRECON_SOURCE_DIR}/framework
+                               ${GFXRECON_SOURCE_DIR}/external/precompiled/android/include)
 
-target_link_libraries(gfxrecon_decode gfxrecon_graphics gfxrecon_format gfxrecon_util vulkan_registry vulkan_memory_allocator platform_specific)
+target_link_libraries(gfxrecon_decode
+                      gfxrecon_graphics
+                      gfxrecon_format
+                      gfxrecon_util
+                      vulkan_registry
+                      vulkan_memory_allocator
+                      platform_specific
+                      nlohmann_json
+                      ${GFXRECON_SOURCE_DIR}/external/precompiled/android/lib/${ANDROID_ABI}/libspirv-reflect-static.a)

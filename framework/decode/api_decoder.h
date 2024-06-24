@@ -44,6 +44,8 @@ struct ApiCallInfo
     /// @see ApiDecoder::SetCurrentBlockIndex() which can pass the block index
     /// to decoders so it is available for any block type, not just API calls.
     uint64_t         index{ 0 };
+
+    /// Thread id of captured function call.
     format::ThreadId thread_id{ 0 };
 };
 

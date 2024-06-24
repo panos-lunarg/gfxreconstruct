@@ -45,13 +45,11 @@
 #include "decode/dx12_tracking_consumer.h"
 #include "graphics/dx12_util.h"
 #endif
+#include "parse_dump_resources_cli.h"
 
 #include <exception>
 #include <memory>
 #include <stdexcept>
-#include <string>
-#include <vector>
-#include <utility>
 
 #if defined(D3D12_SUPPORT)
 
@@ -140,6 +138,14 @@ int main(int argc, const char** argv)
             gfxrecon::decode::VulkanReplayOptions          vulkan_replay_options =
                 GetVulkanReplayOptions(arg_parser, filename, &tracked_object_info_table);
 
+            // Process --dump-resources arg. We do it here so that other gfxr tools that use
+            // the VulkanReplayOptions class won't have to link in the json library.
+            if (!gfxrecon::parse_dump_resources::parse_dump_resources_arg(vulkan_replay_options))
+            {
+                GFXRECON_LOG_FATAL("There was an error while parsing dump resources indices. Terminating.");
+                return -1;
+            }
+
             uint32_t start_frame = 0;
             uint32_t end_frame   = 0;
 
@@ -184,7 +190,7 @@ int main(int argc, const char** argv)
             }
 
 #if defined(D3D12_SUPPORT)
-            gfxrecon::decode::DxReplayOptions    dx_replay_options = GetDxReplayOptions(arg_parser);
+            gfxrecon::decode::DxReplayOptions    dx_replay_options = GetDxReplayOptions(arg_parser, filename);
             gfxrecon::decode::Dx12ReplayConsumer dx12_replay_consumer(application, dx_replay_options);
             gfxrecon::decode::Dx12Decoder        dx12_decoder;
 
