@@ -29,6 +29,8 @@
 
 #include <cassert>
 #include <cinttypes>
+#include <pthread.h>
+#include <sched.h>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(util)
@@ -101,6 +103,7 @@ static LONG WINAPI PageGuardExceptionHandler(PEXCEPTION_POINTERS exception_point
 #include <errno.h>
 #include <signal.h>
 #include <unistd.h>
+#include <unordered_set>
 
 #ifdef __APPLE__
 static constexpr uint32_t MEMPROT_SIGNAL = SIGBUS;
@@ -118,8 +121,71 @@ static stack_t          s_old_stack     = {};
 static uint8_t* s_alt_stack      = nullptr;
 static size_t   s_alt_stack_size = 0;
 
+static int SetThreadAffinity(bool issolate)
+{
+    static std::unordered_set<uint64_t> threads_with_affinity_set;
+
+    const uint64_t tid = util::platform::GetCurrentThreadId();
+    if (threads_with_affinity_set.count(tid))
+    {
+        return 1;
+    }
+
+    GFXRECON_WRITE_CONSOLE("%s(%d) tid: %" PRIu64, __func__, issolate, tid);
+
+    cpu_set_t cpuset;
+    int       ret = sched_getaffinity(0, sizeof(cpuset), &cpuset);
+    if (ret)
+    {
+        GFXRECON_LOG_WARNING("sched_getaffinity failed (%d: %s)", ret, strerror(ret));
+    }
+
+    if (CPU_COUNT(&cpuset) <= 1)
+    {
+        // Only one cpu found (bit unusual?). Nothing to do.
+        assert(0);
+        return 0;
+    }
+
+    for (int c = 0;; ++c)
+    {
+        if (CPU_ISSET(c, &cpuset))
+        {
+            if (issolate)
+            {
+                // Clear all other cpus and keep the first one
+                CPU_ZERO(&cpuset);
+                CPU_SET(c, &cpuset);
+            }
+            else
+            {
+                // Remove first detected cpu from mask and keep the rest
+                CPU_CLR(c, &cpuset);
+            }
+
+            break;
+        }
+    }
+
+    ret = sched_setaffinity(0, sizeof(cpuset), &cpuset);
+    if (ret)
+    {
+        GFXRECON_LOG_WARNING("sched_setaffinity failed (%d: %s)", ret, strerror(ret));
+    }
+
+    threads_with_affinity_set.insert(tid);
+
+    return 0;
+}
+
+#define CHANGE_OTHER_THREADS_AFFINITY
+
 static void PageGuardExceptionHandler(int id, siginfo_t* info, void* data)
 {
+#ifdef CHANGE_OTHER_THREADS_AFFINITY
+    SetThreadAffinity(false);
+#endif
+
     bool              handled = false;
     PageGuardManager* manager = PageGuardManager::Get();
     if ((id == MEMPROT_SIGNAL) && (info->si_addr != nullptr) && (manager != nullptr))
@@ -340,6 +406,8 @@ bool PageGuardManager::CheckSignalHandler()
 
 void* PageGuardManager::SignalHandlerWatcher(void* args)
 {
+    SetThreadAffinity(true);
+
     while (instance_->enable_signal_handler_watcher_ &&
            (instance_->signal_handler_watcher_max_restores_ < 0 ||
             signal_handler_watcher_restores_ < static_cast<uint32_t>(instance_->signal_handler_watcher_max_restores_)))
