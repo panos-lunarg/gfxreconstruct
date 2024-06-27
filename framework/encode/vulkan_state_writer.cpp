@@ -487,6 +487,8 @@ void VulkanStateWriter::WriteFramebufferState(const VulkanStateTable& state_tabl
     state_table.VisitWrappers([&](const vulkan_wrappers::FramebufferWrapper* wrapper) {
         assert(wrapper != nullptr);
 
+        GFXRECON_WRITE_CONSOLE("WriteFramebufferState()")
+
         if (IsFramebufferValid(wrapper, state_table))
         {
             auto render_pass_wrapper = state_table.GetRenderPassWrapper(wrapper->render_pass_id);
@@ -505,7 +507,12 @@ void VulkanStateWriter::WriteFramebufferState(const VulkanStateTable& state_tabl
             }
 
             // Write framebuffer creation call.
+            GFXRECON_WRITE_CONSOLE("  framebuffer creation: %" PRIu64, wrapper->handle_id);
             WriteFunctionCall(wrapper->create_call_id, wrapper->create_parameters.get());
+        }
+        else
+        {
+            GFXRECON_WRITE_CONSOLE("  framebuffer is invalid: %" PRIu64, wrapper->handle_id);
         }
     });
 
@@ -1020,6 +1027,7 @@ void VulkanStateWriter::WriteSwapchainKhrState(const VulkanStateTable& state_tab
             surface_wrapper->handle_id, wrapper->extent.width, wrapper->extent.height, wrapper->pre_transform);
 
         // Write swapchain creation call.
+        GFXRECON_WRITE_CONSOLE("WriteSwapchainKhrState() swapchain creation: %" PRIu64, wrapper->handle_id)
         WriteFunctionCall(wrapper->create_call_id, wrapper->create_parameters.get());
 
         // Write the query for swapchain image count.

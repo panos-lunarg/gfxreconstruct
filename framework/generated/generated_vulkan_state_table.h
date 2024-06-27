@@ -31,6 +31,7 @@
 #define  GFXRECON_GENERATED_VULKAN_STATE_TABLE_H
 
 #include "encode/vulkan_state_table_base.h"
+#include "util/logging.h"
 
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
@@ -61,7 +62,11 @@ class VulkanStateTable : VulkanStateTableBase
     bool InsertWrapper(format::HandleId id, vulkan_wrappers::DisplayModeKHRWrapper* wrapper) { return InsertEntry(id, wrapper, displayModeKHR_map_); }
     bool InsertWrapper(format::HandleId id, vulkan_wrappers::EventWrapper* wrapper) { return InsertEntry(id, wrapper, event_map_); }
     bool InsertWrapper(format::HandleId id, vulkan_wrappers::FenceWrapper* wrapper) { return InsertEntry(id, wrapper, fence_map_); }
-    bool InsertWrapper(format::HandleId id, vulkan_wrappers::FramebufferWrapper* wrapper) { return InsertEntry(id, wrapper, framebuffer_map_); }
+    bool InsertWrapper(format::HandleId id, vulkan_wrappers::FramebufferWrapper* wrapper)
+    {
+     GFXRECON_WRITE_CONSOLE("%s(framebuffer: %" PRIu64 ")", __func__, wrapper->handle_id) ;
+     return InsertEntry(id, wrapper, framebuffer_map_);
+     }
     bool InsertWrapper(format::HandleId id, vulkan_wrappers::ImageWrapper* wrapper) { return InsertEntry(id, wrapper, image_map_); }
     bool InsertWrapper(format::HandleId id, vulkan_wrappers::ImageViewWrapper* wrapper) { return InsertEntry(id, wrapper, imageView_map_); }
     bool InsertWrapper(format::HandleId id, vulkan_wrappers::IndirectCommandsLayoutNVWrapper* wrapper) { return InsertEntry(id, wrapper, indirectCommandsLayoutNV_map_); }
@@ -83,7 +88,11 @@ class VulkanStateTable : VulkanStateTableBase
     bool InsertWrapper(format::HandleId id, vulkan_wrappers::ShaderEXTWrapper* wrapper) { return InsertEntry(id, wrapper, shaderEXT_map_); }
     bool InsertWrapper(format::HandleId id, vulkan_wrappers::ShaderModuleWrapper* wrapper) { return InsertEntry(id, wrapper, shaderModule_map_); }
     bool InsertWrapper(format::HandleId id, vulkan_wrappers::SurfaceKHRWrapper* wrapper) { return InsertEntry(id, wrapper, surfaceKHR_map_); }
-    bool InsertWrapper(format::HandleId id, vulkan_wrappers::SwapchainKHRWrapper* wrapper) { return InsertEntry(id, wrapper, swapchainKHR_map_); }
+    bool InsertWrapper(format::HandleId id, vulkan_wrappers::SwapchainKHRWrapper* wrapper)
+    {
+     GFXRECON_WRITE_CONSOLE("%s(swapchain: %" PRIu64 ")", __func__, wrapper->handle_id) ;
+     return InsertEntry(id, wrapper, swapchainKHR_map_);
+     }
     bool InsertWrapper(format::HandleId id, vulkan_wrappers::ValidationCacheEXTWrapper* wrapper) { return InsertEntry(id, wrapper, validationCacheEXT_map_); }
     bool InsertWrapper(format::HandleId id, vulkan_wrappers::VideoSessionKHRWrapper* wrapper) { return InsertEntry(id, wrapper, videoSessionKHR_map_); }
     bool InsertWrapper(format::HandleId id, vulkan_wrappers::VideoSessionParametersKHRWrapper* wrapper) { return InsertEntry(id, wrapper, videoSessionParametersKHR_map_); }
@@ -107,7 +116,11 @@ class VulkanStateTable : VulkanStateTableBase
     bool RemoveWrapper(const vulkan_wrappers::DisplayModeKHRWrapper* wrapper) { return RemoveEntry(wrapper, displayModeKHR_map_); }
     bool RemoveWrapper(const vulkan_wrappers::EventWrapper* wrapper) { return RemoveEntry(wrapper, event_map_); }
     bool RemoveWrapper(const vulkan_wrappers::FenceWrapper* wrapper) { return RemoveEntry(wrapper, fence_map_); }
-    bool RemoveWrapper(const vulkan_wrappers::FramebufferWrapper* wrapper) { return RemoveEntry(wrapper, framebuffer_map_); }
+    bool RemoveWrapper(const vulkan_wrappers::FramebufferWrapper* wrapper)
+    {
+     GFXRECON_WRITE_CONSOLE("%s(framebuffer: %" PRIu64 ")", __func__, wrapper->handle_id) ;
+     return RemoveEntry(wrapper, framebuffer_map_);
+     }
     bool RemoveWrapper(const vulkan_wrappers::ImageWrapper* wrapper) { return RemoveEntry(wrapper, image_map_); }
     bool RemoveWrapper(const vulkan_wrappers::ImageViewWrapper* wrapper) { return RemoveEntry(wrapper, imageView_map_); }
     bool RemoveWrapper(const vulkan_wrappers::IndirectCommandsLayoutNVWrapper* wrapper) { return RemoveEntry(wrapper, indirectCommandsLayoutNV_map_); }
@@ -129,7 +142,11 @@ class VulkanStateTable : VulkanStateTableBase
     bool RemoveWrapper(const vulkan_wrappers::ShaderEXTWrapper* wrapper) { return RemoveEntry(wrapper, shaderEXT_map_); }
     bool RemoveWrapper(const vulkan_wrappers::ShaderModuleWrapper* wrapper) { return RemoveEntry(wrapper, shaderModule_map_); }
     bool RemoveWrapper(const vulkan_wrappers::SurfaceKHRWrapper* wrapper) { return RemoveEntry(wrapper, surfaceKHR_map_); }
-    bool RemoveWrapper(const vulkan_wrappers::SwapchainKHRWrapper* wrapper) { return RemoveEntry(wrapper, swapchainKHR_map_); }
+    bool RemoveWrapper(const vulkan_wrappers::SwapchainKHRWrapper* wrapper)
+    {
+     GFXRECON_WRITE_CONSOLE("%s(swapchain: %" PRIu64 ")", __func__, wrapper->handle_id) ;
+     return RemoveEntry(wrapper, swapchainKHR_map_);
+    }
     bool RemoveWrapper(const vulkan_wrappers::ValidationCacheEXTWrapper* wrapper) { return RemoveEntry(wrapper, validationCacheEXT_map_); }
     bool RemoveWrapper(const vulkan_wrappers::VideoSessionKHRWrapper* wrapper) { return RemoveEntry(wrapper, videoSessionKHR_map_); }
     bool RemoveWrapper(const vulkan_wrappers::VideoSessionParametersKHRWrapper* wrapper) { return RemoveEntry(wrapper, videoSessionParametersKHR_map_); }
@@ -345,7 +362,11 @@ class VulkanStateHandleTable : VulkanStateTableBase
     bool InsertWrapper(vulkan_wrappers::DisplayModeKHRWrapper* wrapper) { return InsertEntry(wrapper->handle, wrapper, displayModeKHR_map_); }
     bool InsertWrapper(vulkan_wrappers::EventWrapper* wrapper) { return InsertEntry(wrapper->handle, wrapper, event_map_); }
     bool InsertWrapper(vulkan_wrappers::FenceWrapper* wrapper) { return InsertEntry(wrapper->handle, wrapper, fence_map_); }
-    bool InsertWrapper(vulkan_wrappers::FramebufferWrapper* wrapper) { return InsertEntry(wrapper->handle, wrapper, framebuffer_map_); }
+    bool InsertWrapper(vulkan_wrappers::FramebufferWrapper* wrapper)
+    {
+     GFXRECON_WRITE_CONSOLE("%s(framebuffer: %" PRIu64 ")", __func__, wrapper->handle_id) ;
+     return InsertEntry(wrapper->handle, wrapper, framebuffer_map_);
+    }
     bool InsertWrapper(vulkan_wrappers::ImageWrapper* wrapper) { return InsertEntry(wrapper->handle, wrapper, image_map_); }
     bool InsertWrapper(vulkan_wrappers::ImageViewWrapper* wrapper) { return InsertEntry(wrapper->handle, wrapper, imageView_map_); }
     bool InsertWrapper(vulkan_wrappers::IndirectCommandsLayoutNVWrapper* wrapper) { return InsertEntry(wrapper->handle, wrapper, indirectCommandsLayoutNV_map_); }
@@ -367,7 +388,11 @@ class VulkanStateHandleTable : VulkanStateTableBase
     bool InsertWrapper(vulkan_wrappers::ShaderEXTWrapper* wrapper) { return InsertEntry(wrapper->handle, wrapper, shaderEXT_map_); }
     bool InsertWrapper(vulkan_wrappers::ShaderModuleWrapper* wrapper) { return InsertEntry(wrapper->handle, wrapper, shaderModule_map_); }
     bool InsertWrapper(vulkan_wrappers::SurfaceKHRWrapper* wrapper) { return InsertEntry(wrapper->handle, wrapper, surfaceKHR_map_); }
-    bool InsertWrapper(vulkan_wrappers::SwapchainKHRWrapper* wrapper) { return InsertEntry(wrapper->handle, wrapper, swapchainKHR_map_); }
+    bool InsertWrapper(vulkan_wrappers::SwapchainKHRWrapper* wrapper)
+    {
+     GFXRECON_WRITE_CONSOLE("%s(swapchain: %" PRIu64 ")", __func__, wrapper->handle_id) ;
+     return InsertEntry(wrapper->handle, wrapper, swapchainKHR_map_);
+    }
     bool InsertWrapper(vulkan_wrappers::ValidationCacheEXTWrapper* wrapper) { return InsertEntry(wrapper->handle, wrapper, validationCacheEXT_map_); }
     bool InsertWrapper(vulkan_wrappers::VideoSessionKHRWrapper* wrapper) { return InsertEntry(wrapper->handle, wrapper, videoSessionKHR_map_); }
     bool InsertWrapper(vulkan_wrappers::VideoSessionParametersKHRWrapper* wrapper) { return InsertEntry(wrapper->handle, wrapper, videoSessionParametersKHR_map_); }
@@ -450,6 +475,7 @@ class VulkanStateHandleTable : VulkanStateTableBase
     }
     bool RemoveWrapper(const vulkan_wrappers::FramebufferWrapper* wrapper) {
          if (wrapper == nullptr) return false;
+         GFXRECON_WRITE_CONSOLE("%s(framebuffer: %" PRIu64 ")", __func__, wrapper->handle_id) ;
          return RemoveEntry(wrapper->handle, framebuffer_map_);
     }
     bool RemoveWrapper(const vulkan_wrappers::ImageWrapper* wrapper) {
@@ -538,6 +564,7 @@ class VulkanStateHandleTable : VulkanStateTableBase
     }
     bool RemoveWrapper(const vulkan_wrappers::SwapchainKHRWrapper* wrapper) {
          if (wrapper == nullptr) return false;
+         GFXRECON_WRITE_CONSOLE("%s(swapchain: %" PRIu64 ")", __func__, wrapper->handle_id) ;
          return RemoveEntry(wrapper->handle, swapchainKHR_map_);
     }
     bool RemoveWrapper(const vulkan_wrappers::ValidationCacheEXTWrapper* wrapper) {
