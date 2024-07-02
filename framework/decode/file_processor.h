@@ -93,6 +93,8 @@ class FileProcessor
 
     uint64_t GetCurrentBlockIndex() const { return block_index_; }
 
+    bool GetLoadingTrimmedState() const { return loading_trimmed_capture_state_; }
+
     uint64_t GetNumBytesRead() const { return bytes_read_; }
 
     Error GetErrorState() const { return error_state_; }
@@ -166,6 +168,7 @@ class FileProcessor
     uint64_t                            block_limit_;
     bool                                capture_uses_frame_markers_;
     uint64_t                            first_frame_;
+    bool                                loading_trimmed_capture_state_;
 };
 
 GFXRECON_END_NAMESPACE(decode)

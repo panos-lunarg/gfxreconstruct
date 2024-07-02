@@ -65,6 +65,11 @@ extern "C"
     {
         return file_processor.GetCurrentBlockIndex();
     }
+
+    bool MainGetLoadingTrimmedState()
+    {
+        return file_processor.GetLoadingTrimmedState();
+    }
 }
 
 void android_main(struct android_app* app)
