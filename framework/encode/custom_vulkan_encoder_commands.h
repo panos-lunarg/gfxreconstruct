@@ -241,6 +241,26 @@ struct CustomEncoderPreCall<format::ApiCallId::ApiCall_vkCreateSwapchainKHR>
 };
 
 template <>
+struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCreateSwapchainKHR>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanCaptureManager* manager, VkResult result, Args... args)
+    {
+        manager->PostProcess_vkCreateSwapchain(result, args...);
+    }
+};
+
+// template <>
+// struct CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroySwapchainKHR>
+// {
+//     template <typename... Args>
+//     static void Dispatch(VulkanCaptureManager* manager, Args... args)
+//     {
+//         manager->PreProcess_vkDestroySwapchain(args...);
+//     }
+// };
+
+template <>
 struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkAcquireNextImageKHR>
 {
     template <typename... Args>

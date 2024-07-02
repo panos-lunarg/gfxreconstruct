@@ -674,6 +674,12 @@ inline void InitializeState<VkDevice, vulkan_wrappers::SwapchainKHRWrapper, VkSw
     wrapper->pre_transform = create_info->preTransform;
     wrapper->array_layers  = create_info->imageArrayLayers;
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    GFXRECON_WRITE_CONSOLE("  wrapper: %p", wrapper);
+    GFXRECON_WRITE_CONSOLE("  wrapper->handle_id: %" PRIu64, wrapper->handle_id);
+    GFXRECON_WRITE_CONSOLE("  wrapper->surface: %p", wrapper->surface);
+    GFXRECON_WRITE_CONSOLE("  wrapper->create_parameters: %p", wrapper->create_parameters.get());
+
     if ((create_info->queueFamilyIndexCount > 0) && (create_info->pQueueFamilyIndices != nullptr))
     {
         wrapper->queue_family_index = create_info->pQueueFamilyIndices[0];

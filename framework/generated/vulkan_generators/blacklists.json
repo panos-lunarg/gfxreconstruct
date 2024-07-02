@@ -19,7 +19,8 @@
     "vkCreateComputePipelines",
     "vkCreateGraphicsPipelines",
     "vkCreateRayTracingPipelinesNV",
-    "vkCreateRayTracingPipelinesKHR"
+    "vkCreateRayTracingPipelinesKHR",
+    "vkDestroySwapchainKHR"
   ],
   "functions-decoder": [
     "vkDeferredOperationJoinKHR"

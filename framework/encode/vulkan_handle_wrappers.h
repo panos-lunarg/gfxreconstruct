@@ -35,6 +35,7 @@
 #include "util/page_guard_manager.h"
 
 #include "vulkan/vulkan.h"
+#include "vulkan/vulkan_core.h"
 
 #include <limits>
 #include <memory>
@@ -478,6 +479,7 @@ struct SwapchainKHRWrapper : public HandleWrapper<VkSwapchainKHR>
     bool                                              release_full_screen_exclusive_mode{ false };
     bool                                              using_local_dimming_AMD{ false };
     VkBool32                                          local_dimming_enable_AMD{ false };
+    SwapchainKHRWrapper*                              old_swapchain{ nullptr };
 };
 
 struct AccelerationStructureKHRWrapper : public HandleWrapper<VkAccelerationStructureKHR>

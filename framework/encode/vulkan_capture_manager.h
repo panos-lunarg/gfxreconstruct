@@ -42,6 +42,7 @@
 #include "util/defines.h"
 
 #include "vulkan/vulkan.h"
+#include "vulkan/vulkan_core.h"
 
 #include <atomic>
 #include <cassert>
@@ -49,6 +50,7 @@
 #include <mutex>
 #include <set>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
@@ -479,6 +481,15 @@ class VulkanCaptureManager : public ApiCaptureManager
                                       const VkSwapchainCreateInfoKHR* pCreateInfo,
                                       const VkAllocationCallbacks*    pAllocator,
                                       VkSwapchainKHR*                 pSwapchain);
+
+    void PostProcess_vkCreateSwapchain(VkResult                        result,
+                                       VkDevice                        device,
+                                       const VkSwapchainCreateInfoKHR* pCreateInfo,
+                                       const VkAllocationCallbacks*    pAllocator,
+                                       VkSwapchainKHR*                 pSwapchain);
+
+    void
+    PreProcess_vkDestroySwapchain(VkDevice device, VkSwapchainKHR swapchain, const VkAllocationCallbacks* pAllocator);
 
     void PostProcess_vkAcquireNextImageKHR(VkResult result,
                                            VkDevice,
@@ -1264,6 +1275,8 @@ class VulkanCaptureManager : public ApiCaptureManager
     void PostProcess_vkCmdInsertDebugUtilsLabelEXT(VkCommandBuffer             commandBuffer,
                                                    const VkDebugUtilsLabelEXT* pLabelInfo);
 
+    bool IsOldSwapchain(VkSwapchainKHR swapchain) const { return old_swapchains_.count(swapchain); }
+
 #if defined(__ANDROID__)
     void OverrideGetPhysicalDeviceSurfacePresentModesKHR(uint32_t* pPresentModeCount, VkPresentModeKHR* pPresentModes);
 #endif
@@ -1348,6 +1361,7 @@ class VulkanCaptureManager : public ApiCaptureManager
     std::unique_ptr<VulkanStateTracker>             state_tracker_;
     HardwareBufferMap                               hardware_buffers_;
     std::mutex                                      deferred_operation_mutex;
+    std::unordered_set<VkSwapchainKHR>              old_swapchains_;
 };
 
 GFXRECON_END_NAMESPACE(encode)

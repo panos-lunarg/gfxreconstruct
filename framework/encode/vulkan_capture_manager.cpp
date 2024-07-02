@@ -22,6 +22,9 @@
  ** DEALINGS IN THE SOFTWARE.
  */
 
+#include "encode/vulkan_handle_wrappers.h"
+#include "vulkan/vulkan_core.h"
+#include <cstddef>
 #include PROJECT_VERSION_HEADER_FILE
 
 #include "encode/struct_pointer_encoder.h"
@@ -2018,14 +2021,42 @@ void VulkanCaptureManager::PreProcess_vkCreateSwapchain(VkDevice                
     GFXRECON_UNREFERENCED_PARAMETER(pAllocator);
     GFXRECON_UNREFERENCED_PARAMETER(pSwapchain);
 
-    assert(pCreateInfo != nullptr);
-
     if (pCreateInfo)
     {
         WriteResizeWindowCmd2(vulkan_wrappers::GetWrappedId<vulkan_wrappers::SurfaceKHRWrapper>(pCreateInfo->surface),
                               pCreateInfo->imageExtent.width,
                               pCreateInfo->imageExtent.height,
                               pCreateInfo->preTransform);
+    }
+}
+
+void VulkanCaptureManager::PostProcess_vkCreateSwapchain(VkResult                        result,
+                                                         VkDevice                        device,
+                                                         const VkSwapchainCreateInfoKHR* pCreateInfo,
+                                                         const VkAllocationCallbacks*    pAllocator,
+                                                         VkSwapchainKHR*                 pSwapchain)
+{
+    if (result == VK_SUCCESS && pCreateInfo != nullptr)
+    {
+        if (IsCaptureModeTrack())
+        {
+            vulkan_wrappers::SwapchainKHRWrapper* wrapper =
+                vulkan_wrappers::GetWrapper<vulkan_wrappers::SwapchainKHRWrapper>(*pSwapchain);
+
+            GFXRECON_WRITE_CONSOLE("%s()", __func__)
+            GFXRECON_WRITE_CONSOLE(" *pSwapchain: %p", *pSwapchain)
+            GFXRECON_WRITE_CONSOLE(" pCreateInfo->oldSwapchain: %p", pCreateInfo->oldSwapchain)
+            GFXRECON_WRITE_CONSOLE(" wrapper->handle_id: %" PRIu64, wrapper->handle_id)
+
+            if (wrapper != nullptr)
+            {
+                vulkan_wrappers::SwapchainKHRWrapper* old_wrapper =
+                    vulkan_wrappers::GetWrapper<vulkan_wrappers::SwapchainKHRWrapper>(pCreateInfo->oldSwapchain);
+                wrapper->old_swapchain = old_wrapper;
+            }
+
+            old_swapchains_.insert(pCreateInfo->oldSwapchain);
+        }
     }
 }
 

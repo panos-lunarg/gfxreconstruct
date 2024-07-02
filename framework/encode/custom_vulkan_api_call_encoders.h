@@ -93,6 +93,10 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateRayTracingPipelinesKHR(VkDevice            
                                                             const VkAllocationCallbacks*             pAllocator,
                                                             VkPipeline*                              pPipelines);
 
+VKAPI_ATTR void VKAPI_CALL DestroySwapchainKHR(VkDevice                     device,
+                                               VkSwapchainKHR               swapchain,
+                                               const VkAllocationCallbacks* pAllocator);
+
 GFXRECON_END_NAMESPACE(encode)
 GFXRECON_END_NAMESPACE(gfxrecon)
 

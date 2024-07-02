@@ -1218,11 +1218,6 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSwapchainKHR(
     const VkAllocationCallbacks*                pAllocator,
     VkSwapchainKHR*                             pSwapchain);
 
-VKAPI_ATTR void VKAPI_CALL DestroySwapchainKHR(
-    VkDevice                                    device,
-    VkSwapchainKHR                              swapchain,
-    const VkAllocationCallbacks*                pAllocator);
-
 VKAPI_ATTR VkResult VKAPI_CALL GetSwapchainImagesKHR(
     VkDevice                                    device,
     VkSwapchainKHR                              swapchain,

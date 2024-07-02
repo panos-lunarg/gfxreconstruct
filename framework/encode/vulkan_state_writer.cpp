@@ -487,6 +487,11 @@ void VulkanStateWriter::WriteFramebufferState(const VulkanStateTable& state_tabl
     state_table.VisitWrappers([&](const vulkan_wrappers::FramebufferWrapper* wrapper) {
         assert(wrapper != nullptr);
 
+        GFXRECON_WRITE_CONSOLE("%s()", __func__)
+        GFXRECON_WRITE_CONSOLE("  wrapper: %p", wrapper)
+        GFXRECON_WRITE_CONSOLE("  framebuffer: %p", wrapper->handle)
+        GFXRECON_WRITE_CONSOLE("  framebuffer: %" PRIu64, wrapper->handle_id)
+
         if (IsFramebufferValid(wrapper, state_table))
         {
             auto render_pass_wrapper = state_table.GetRenderPassWrapper(wrapper->render_pass_id);
@@ -506,6 +511,10 @@ void VulkanStateWriter::WriteFramebufferState(const VulkanStateTable& state_tabl
 
             // Write framebuffer creation call.
             WriteFunctionCall(wrapper->create_call_id, wrapper->create_parameters.get());
+        }
+        else
+        {
+            GFXRECON_WRITE_CONSOLE("Invalid framebuffer")
         }
     });
 
@@ -1012,6 +1021,12 @@ void VulkanStateWriter::WriteSwapchainKhrState(const VulkanStateTable& state_tab
 {
     state_table.VisitWrappers([&](const vulkan_wrappers::SwapchainKHRWrapper* wrapper) {
         assert(wrapper != nullptr);
+
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+        GFXRECON_WRITE_CONSOLE("  wrapper: %p", wrapper);
+        GFXRECON_WRITE_CONSOLE("  wrapper->handle_id: %" PRIu64, wrapper->handle_id);
+        GFXRECON_WRITE_CONSOLE("  wrapper->surface: %p", wrapper->surface);
+        GFXRECON_WRITE_CONSOLE("  wrapper->create_parameters: %p", wrapper->create_parameters.get());
 
         const vulkan_wrappers::SurfaceKHRWrapper* surface_wrapper = wrapper->surface;
         assert(surface_wrapper != nullptr);
@@ -3244,14 +3259,23 @@ bool VulkanStateWriter::IsImageValid(format::HandleId image_id, const VulkanStat
     bool valid         = false;
     auto image_wrapper = state_table.GetImageWrapper(image_id);
 
+    GFXRECON_WRITE_CONSOLE("%s(image_id: %" PRIu64 ")", __func__, image_id)
+
     if (image_wrapper != nullptr)
     {
         format::HandleId memory_id = image_wrapper->bind_memory_id;
+
+        GFXRECON_WRITE_CONSOLE("  memory_id: %" PRIu64, memory_id)
+        GFXRECON_WRITE_CONSOLE("  memory_wrapper: %p", state_table.GetDeviceMemoryWrapper(memory_id))
 
         if ((memory_id == 0) || (state_table.GetDeviceMemoryWrapper(memory_id) != nullptr))
         {
             valid = true;
         }
+    }
+    else
+    {
+        GFXRECON_WRITE_CONSOLE("  invalid")
     }
 
     return valid;
@@ -3262,9 +3286,17 @@ bool VulkanStateWriter::IsImageViewValid(format::HandleId view_id, const VulkanS
     bool valid              = false;
     auto image_view_wrapper = state_table.GetImageViewWrapper(view_id);
 
+    GFXRECON_WRITE_CONSOLE("%s(view_id: %" PRIu64 ")", __func__, view_id)
     if (image_view_wrapper != nullptr)
     {
+        GFXRECON_WRITE_CONSOLE("  image_view_wrapper->handle: %p", image_view_wrapper->handle)
+        GFXRECON_WRITE_CONSOLE("  image_view_wrapper->handle_id: %" PRIu64, image_view_wrapper->handle_id)
+        GFXRECON_WRITE_CONSOLE("  image_view_wrapper->image_id: %" PRIu64, image_view_wrapper->image_id)
         valid = IsImageValid(image_view_wrapper->image_id, state_table);
+    }
+    else
+    {
+        GFXRECON_WRITE_CONSOLE("  invalid")
     }
 
     return valid;
@@ -3287,6 +3319,8 @@ bool VulkanStateWriter::IsFramebufferValid(const vulkan_wrappers::FramebufferWra
                                            const VulkanStateTable&                    state_table)
 {
     bool valid = true;
+
+    GFXRECON_WRITE_CONSOLE("%s()", __func__)
 
     for (auto view_id : framebuffer_wrapper->image_view_ids)
     {

@@ -37,10 +37,12 @@
 #include "util/memory_output_stream.h"
 
 #include "vulkan/vulkan.h"
+#include "vulkan/vulkan_core.h"
 
 #include <cassert>
 #include <functional>
 #include <mutex>
+#include <unordered_set>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(encode)

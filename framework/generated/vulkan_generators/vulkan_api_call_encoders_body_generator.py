@@ -657,6 +657,7 @@ class VulkanApiCallEncodersBodyGenerator(BaseGenerator):
                             )
                             break
                     if self.is_handle(value.base_type):
+                        expr += indent + 'GFXRECON_WRITE_CONSOLE("%s()", __func__);\n'
                         expr += indent + '{}::CreateWrappedHandles<{}, {}, {}::{}Wrapper>({}, {}, {}, {}, VulkanCaptureManager::GetUniqueId);\n'.format(
                             wrapper_prefix, parent_type, co_parent_type, wrapper_prefix, value.base_type[2:],
                             parent_value, co_parent_value, value.name,
@@ -672,6 +673,7 @@ class VulkanApiCallEncodersBodyGenerator(BaseGenerator):
                         )
                 else:
                     if self.is_handle(value.base_type):
+                        expr += indent + 'GFXRECON_WRITE_CONSOLE("%s()", __func__);\n'
                         expr += indent + '{}::CreateWrappedHandle<{}, {}, {}::{}Wrapper>({}, {}, {}, VulkanCaptureManager::GetUniqueId);\n'.format(
                             wrapper_prefix, parent_type, co_parent_type, wrapper_prefix, value.base_type[2:],
                             parent_value, co_parent_value, value.name
@@ -702,7 +704,7 @@ class VulkanApiCallEncodersBodyGenerator(BaseGenerator):
                         if value.is_array:
                             expr += indent + '{} {name}_unwrapped = {}::UnwrapStructArrayHandles({name}, {}, handle_unwrap_memory);\n'.format(
                                 value.full_type,
-                                wrapper_prefix, 
+                                wrapper_prefix,
                                 value.array_length,
                                 name=value.name
                             )
@@ -738,6 +740,7 @@ class VulkanApiCallEncodersBodyGenerator(BaseGenerator):
 
             wrapper_prefix = self.get_wrapper_prefix_from_type()
 
+            expr += indent + 'GFXRECON_WRITE_CONSOLE("%s()", __func__);\n'
             if handle.is_array:
                 expr += indent + '{}::DestroyWrappedHandles<{}::{}Wrapper>({}, {});\n'.format(
                     wrapper_prefix, wrapper_prefix, handle.base_type[2:], handle.name, handle.array_length

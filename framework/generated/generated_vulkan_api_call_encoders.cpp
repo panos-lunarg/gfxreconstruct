@@ -118,6 +118,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyInstance(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyInstance>::Dispatch(manager, instance, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::InstanceWrapper>(instance);
 }
 
@@ -148,7 +149,8 @@ VKAPI_ATTR VkResult VKAPI_CALL EnumeratePhysicalDevices(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandles<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::PhysicalDeviceWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pPhysicalDevices, (pPhysicalDeviceCount != nullptr) ? (*pPhysicalDeviceCount) : 0, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandles<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::PhysicalDeviceWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pPhysicalDevices, (pPhysicalDeviceCount != nullptr) ? (*pPhysicalDeviceCount) : 0, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -470,6 +472,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDevice(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyDevice>::Dispatch(manager, device, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::DeviceWrapper>(device);
 }
 
@@ -497,6 +500,7 @@ VKAPI_ATTR void VKAPI_CALL GetDeviceQueue(
 
     vulkan_wrappers::GetDeviceTable(device)->GetDeviceQueue(device, queueFamilyIndex, queueIndex, pQueue);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::QueueWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pQueue, VulkanCaptureManager::GetUniqueId);
 
     auto encoder = manager->BeginTrackedApiCallCapture(format::ApiCallId::ApiCall_vkGetDeviceQueue);
@@ -704,6 +708,7 @@ VKAPI_ATTR void VKAPI_CALL FreeMemory(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkFreeMemory>::Dispatch(manager, device, memory, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::DeviceMemoryWrapper>(memory);
 }
 
@@ -1210,7 +1215,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateFence(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::FenceWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pFence, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::FenceWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pFence, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -1268,6 +1274,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyFence(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyFence>::Dispatch(manager, device, fence, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::FenceWrapper>(fence);
 }
 
@@ -1415,7 +1422,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSemaphore(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SemaphoreWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pSemaphore, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SemaphoreWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pSemaphore, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -1473,6 +1481,7 @@ VKAPI_ATTR void VKAPI_CALL DestroySemaphore(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroySemaphore>::Dispatch(manager, device, semaphore, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::SemaphoreWrapper>(semaphore);
 }
 
@@ -1504,7 +1513,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateEvent(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::EventWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pEvent, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::EventWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pEvent, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -1562,6 +1572,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyEvent(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyEvent>::Dispatch(manager, device, event, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::EventWrapper>(event);
 }
 
@@ -1701,7 +1712,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateQueryPool(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::QueryPoolWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pQueryPool, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::QueryPoolWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pQueryPool, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -1759,6 +1771,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyQueryPool(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyQueryPool>::Dispatch(manager, device, queryPool, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::QueryPoolWrapper>(queryPool);
 }
 
@@ -1897,6 +1910,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyBuffer(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyBuffer>::Dispatch(manager, device, buffer, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::BufferWrapper>(buffer);
 }
 
@@ -1931,7 +1945,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateBufferView(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::BufferViewWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pView, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::BufferViewWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pView, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -1989,6 +2004,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyBufferView(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyBufferView>::Dispatch(manager, device, bufferView, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::BufferViewWrapper>(bufferView);
 }
 
@@ -2073,6 +2089,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyImage(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyImage>::Dispatch(manager, device, image, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::ImageWrapper>(image);
 }
 
@@ -2144,7 +2161,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateImageView(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::ImageViewWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pView, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::ImageViewWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pView, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -2202,6 +2220,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyImageView(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyImageView>::Dispatch(manager, device, imageView, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::ImageViewWrapper>(imageView);
 }
 
@@ -2236,7 +2255,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateShaderModule(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::ShaderModuleWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pShaderModule, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::ShaderModuleWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pShaderModule, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -2294,6 +2314,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyShaderModule(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyShaderModule>::Dispatch(manager, device, shaderModule, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::ShaderModuleWrapper>(shaderModule);
 }
 
@@ -2325,7 +2346,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreatePipelineCache(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::PipelineCacheWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pPipelineCache, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::PipelineCacheWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pPipelineCache, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -2383,6 +2405,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyPipelineCache(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyPipelineCache>::Dispatch(manager, device, pipelineCache, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::PipelineCacheWrapper>(pipelineCache);
 }
 
@@ -2507,6 +2530,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyPipeline(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyPipeline>::Dispatch(manager, device, pipeline, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::PipelineWrapper>(pipeline);
 }
 
@@ -2541,7 +2565,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreatePipelineLayout(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::PipelineLayoutWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pPipelineLayout, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::PipelineLayoutWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pPipelineLayout, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -2599,6 +2624,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyPipelineLayout(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyPipelineLayout>::Dispatch(manager, device, pipelineLayout, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::PipelineLayoutWrapper>(pipelineLayout);
 }
 
@@ -2633,7 +2659,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSampler(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SamplerWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pSampler, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SamplerWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pSampler, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -2691,6 +2718,7 @@ VKAPI_ATTR void VKAPI_CALL DestroySampler(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroySampler>::Dispatch(manager, device, sampler, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::SamplerWrapper>(sampler);
 }
 
@@ -2725,7 +2753,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDescriptorSetLayout(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DescriptorSetLayoutWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pSetLayout, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DescriptorSetLayoutWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pSetLayout, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -2783,6 +2812,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDescriptorSetLayout(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyDescriptorSetLayout>::Dispatch(manager, device, descriptorSetLayout, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::DescriptorSetLayoutWrapper>(descriptorSetLayout);
 }
 
@@ -2814,7 +2844,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDescriptorPool(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DescriptorPoolWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pDescriptorPool, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DescriptorPoolWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pDescriptorPool, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -2872,6 +2903,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDescriptorPool(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyDescriptorPool>::Dispatch(manager, device, descriptorPool, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::DescriptorPoolWrapper>(descriptorPool);
 }
 
@@ -2944,7 +2976,8 @@ VKAPI_ATTR VkResult VKAPI_CALL AllocateDescriptorSets(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandles<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::DescriptorPoolWrapper, vulkan_wrappers::DescriptorSetWrapper>(device, pAllocateInfo->descriptorPool, pDescriptorSets, pAllocateInfo->descriptorSetCount, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandles<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::DescriptorPoolWrapper, vulkan_wrappers::DescriptorSetWrapper>(device, pAllocateInfo->descriptorPool, pDescriptorSets, pAllocateInfo->descriptorSetCount, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -3004,6 +3037,7 @@ VKAPI_ATTR VkResult VKAPI_CALL FreeDescriptorSets(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkFreeDescriptorSets>::Dispatch(manager, result, device, descriptorPool, descriptorSetCount, pDescriptorSets);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandles<vulkan_wrappers::DescriptorSetWrapper>(pDescriptorSets, descriptorSetCount);
 
     return result;
@@ -3083,7 +3117,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateFramebuffer(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::FramebufferWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pFramebuffer, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::FramebufferWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pFramebuffer, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -3141,6 +3176,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyFramebuffer(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyFramebuffer>::Dispatch(manager, device, framebuffer, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::FramebufferWrapper>(framebuffer);
 }
 
@@ -3172,7 +3208,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateRenderPass(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::RenderPassWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pRenderPass, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::RenderPassWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pRenderPass, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -3230,6 +3267,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyRenderPass(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyRenderPass>::Dispatch(manager, device, renderPass, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::RenderPassWrapper>(renderPass);
 }
 
@@ -3296,7 +3334,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateCommandPool(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::CommandPoolWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pCommandPool, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::CommandPoolWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pCommandPool, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -3354,6 +3393,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyCommandPool(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyCommandPool>::Dispatch(manager, device, commandPool, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::CommandPoolWrapper>(commandPool);
 }
 
@@ -3425,7 +3465,8 @@ VKAPI_ATTR VkResult VKAPI_CALL AllocateCommandBuffers(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandles<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::CommandPoolWrapper, vulkan_wrappers::CommandBufferWrapper>(device, pAllocateInfo->commandPool, pCommandBuffers, pAllocateInfo->commandBufferCount, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandles<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::CommandPoolWrapper, vulkan_wrappers::CommandBufferWrapper>(device, pAllocateInfo->commandPool, pCommandBuffers, pAllocateInfo->commandBufferCount, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -3484,6 +3525,7 @@ VKAPI_ATTR void VKAPI_CALL FreeCommandBuffers(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkFreeCommandBuffers>::Dispatch(manager, device, commandPool, commandBufferCount, pCommandBuffers);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandles<vulkan_wrappers::CommandBufferWrapper>(pCommandBuffers, commandBufferCount);
 }
 
@@ -5967,6 +6009,7 @@ VKAPI_ATTR void VKAPI_CALL GetDeviceQueue2(
 
     vulkan_wrappers::GetDeviceTable(device)->GetDeviceQueue2(device, pQueueInfo, pQueue);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::QueueWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pQueue, VulkanCaptureManager::GetUniqueId);
 
     auto encoder = manager->BeginTrackedApiCallCapture(format::ApiCallId::ApiCall_vkGetDeviceQueue2);
@@ -6009,7 +6052,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSamplerYcbcrConversion(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SamplerYcbcrConversionWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pYcbcrConversion, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SamplerYcbcrConversionWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pYcbcrConversion, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -6067,6 +6111,7 @@ VKAPI_ATTR void VKAPI_CALL DestroySamplerYcbcrConversion(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroySamplerYcbcrConversion>::Dispatch(manager, device, ycbcrConversion, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::SamplerYcbcrConversionWrapper>(ycbcrConversion);
 }
 
@@ -6101,7 +6146,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDescriptorUpdateTemplate(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DescriptorUpdateTemplateWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pDescriptorUpdateTemplate, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DescriptorUpdateTemplateWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pDescriptorUpdateTemplate, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -6159,6 +6205,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDescriptorUpdateTemplate(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyDescriptorUpdateTemplate>::Dispatch(manager, device, descriptorUpdateTemplate, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::DescriptorUpdateTemplateWrapper>(descriptorUpdateTemplate);
 }
 
@@ -6419,7 +6466,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateRenderPass2(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::RenderPassWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pRenderPass, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::RenderPassWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pRenderPass, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -6898,7 +6946,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreatePrivateDataSlot(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::PrivateDataSlotWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pPrivateDataSlot, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::PrivateDataSlotWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pPrivateDataSlot, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -6956,6 +7005,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyPrivateDataSlot(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyPrivateDataSlot>::Dispatch(manager, device, privateDataSlot, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::PrivateDataSlotWrapper>(privateDataSlot);
 }
 
@@ -8217,6 +8267,7 @@ VKAPI_ATTR void VKAPI_CALL DestroySurfaceKHR(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroySurfaceKHR>::Dispatch(manager, instance, surface, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::SurfaceKHRWrapper>(surface);
 }
 
@@ -8433,7 +8484,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSwapchainKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SwapchainKHRWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pSwapchain, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SwapchainKHRWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pSwapchain, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -8454,44 +8506,6 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSwapchainKHR(
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCreateSwapchainKHR>::Dispatch(manager, result, device, pCreateInfo, pAllocator, pSwapchain);
 
     return result;
-}
-
-VKAPI_ATTR void VKAPI_CALL DestroySwapchainKHR(
-    VkDevice                                    device,
-    VkSwapchainKHR                              swapchain,
-    const VkAllocationCallbacks*                pAllocator)
-{
-    VulkanCaptureManager* manager = VulkanCaptureManager::Get();
-    GFXRECON_ASSERT(manager != nullptr);
-    auto force_command_serialization = manager->GetForceCommandSerialization();
-    std::shared_lock<CommonCaptureManager::ApiCallMutexT> shared_api_call_lock;
-    std::unique_lock<CommonCaptureManager::ApiCallMutexT> exclusive_api_call_lock;
-    if (force_command_serialization)
-    {
-        exclusive_api_call_lock = VulkanCaptureManager::AcquireExclusiveApiCallLock();
-    }
-    else
-    {
-        shared_api_call_lock = VulkanCaptureManager::AcquireSharedApiCallLock();
-    }
-
-    CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroySwapchainKHR>::Dispatch(manager, device, swapchain, pAllocator);
-
-    auto encoder = manager->BeginTrackedApiCallCapture(format::ApiCallId::ApiCall_vkDestroySwapchainKHR);
-    if (encoder)
-    {
-        encoder->EncodeVulkanHandleValue<vulkan_wrappers::DeviceWrapper>(device);
-        encoder->EncodeVulkanHandleValue<vulkan_wrappers::SwapchainKHRWrapper>(swapchain);
-        EncodeStructPtr(encoder, pAllocator);
-        manager->EndDestroyApiCallCapture<vulkan_wrappers::SwapchainKHRWrapper>(swapchain);
-    }
-
-    ScopedDestroyLock exclusive_scoped_lock;
-    vulkan_wrappers::GetDeviceTable(device)->DestroySwapchainKHR(device, swapchain, pAllocator);
-
-    CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroySwapchainKHR>::Dispatch(manager, device, swapchain, pAllocator);
-
-    vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::SwapchainKHRWrapper>(swapchain);
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL GetSwapchainImagesKHR(
@@ -8522,7 +8536,8 @@ VKAPI_ATTR VkResult VKAPI_CALL GetSwapchainImagesKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandles<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::SwapchainKHRWrapper, vulkan_wrappers::ImageWrapper>(device, swapchain, pSwapchainImages, (pSwapchainImageCount != nullptr) ? (*pSwapchainImageCount) : 0, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandles<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::SwapchainKHRWrapper, vulkan_wrappers::ImageWrapper>(device, swapchain, pSwapchainImages, (pSwapchainImageCount != nullptr) ? (*pSwapchainImageCount) : 0, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -8929,7 +8944,8 @@ VKAPI_ATTR VkResult VKAPI_CALL GetDisplayPlaneSupportedDisplaysKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandles<vulkan_wrappers::PhysicalDeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DisplayKHRWrapper>(physicalDevice, vulkan_wrappers::NoParentWrapper::kHandleValue, pDisplays, (pDisplayCount != nullptr) ? (*pDisplayCount) : 0, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandles<vulkan_wrappers::PhysicalDeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DisplayKHRWrapper>(physicalDevice, vulkan_wrappers::NoParentWrapper::kHandleValue, pDisplays, (pDisplayCount != nullptr) ? (*pDisplayCount) : 0, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -9032,7 +9048,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDisplayModeKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::PhysicalDeviceWrapper, vulkan_wrappers::DisplayKHRWrapper, vulkan_wrappers::DisplayModeKHRWrapper>(physicalDevice, display, pMode, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::PhysicalDeviceWrapper, vulkan_wrappers::DisplayKHRWrapper, vulkan_wrappers::DisplayModeKHRWrapper>(physicalDevice, display, pMode, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -9133,7 +9150,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDisplayPlaneSurfaceKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -9188,7 +9206,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSharedSwapchainsKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandles<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SwapchainKHRWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pSwapchains, swapchainCount, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandles<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SwapchainKHRWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pSwapchains, swapchainCount, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -9240,7 +9259,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateXlibSurfaceKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -9331,7 +9351,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateXcbSurfaceKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -9422,7 +9443,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateWaylandSurfaceKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -9511,7 +9533,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateAndroidSurfaceKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -9562,7 +9585,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateWin32SurfaceKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -9739,7 +9763,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateVideoSessionKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::VideoSessionKHRWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pVideoSession, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::VideoSessionKHRWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pVideoSession, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -9797,6 +9822,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyVideoSessionKHR(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyVideoSessionKHR>::Dispatch(manager, device, videoSession, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::VideoSessionKHRWrapper>(videoSession);
 }
 
@@ -9920,7 +9946,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateVideoSessionParametersKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::VideoSessionParametersKHRWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pVideoSessionParameters, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::VideoSessionParametersKHRWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pVideoSessionParameters, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -10016,6 +10043,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyVideoSessionParametersKHR(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyVideoSessionParametersKHR>::Dispatch(manager, device, videoSessionParameters, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::VideoSessionParametersKHRWrapper>(videoSessionParameters);
 }
 
@@ -11176,7 +11204,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDescriptorUpdateTemplateKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DescriptorUpdateTemplateWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pDescriptorUpdateTemplate, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DescriptorUpdateTemplateWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pDescriptorUpdateTemplate, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -11234,6 +11263,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDescriptorUpdateTemplateKHR(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyDescriptorUpdateTemplateKHR>::Dispatch(manager, device, descriptorUpdateTemplate, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::DescriptorUpdateTemplateWrapper>(descriptorUpdateTemplate);
 }
 
@@ -11265,7 +11295,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateRenderPass2KHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::RenderPassWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pRenderPass, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::RenderPassWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pRenderPass, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -12223,7 +12254,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSamplerYcbcrConversionKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SamplerYcbcrConversionWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pYcbcrConversion, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SamplerYcbcrConversionWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pYcbcrConversion, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -12281,6 +12313,7 @@ VKAPI_ATTR void VKAPI_CALL DestroySamplerYcbcrConversionKHR(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroySamplerYcbcrConversionKHR>::Dispatch(manager, device, ycbcrConversion, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::SamplerYcbcrConversionWrapper>(ycbcrConversion);
 }
 
@@ -12943,7 +12976,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDeferredOperationKHR(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DeferredOperationKHRWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pDeferredOperation, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DeferredOperationKHRWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pDeferredOperation, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -13000,6 +13034,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDeferredOperationKHR(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyDeferredOperationKHR>::Dispatch(manager, device, operation, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::DeferredOperationKHRWrapper>(operation);
 }
 
@@ -14703,7 +14738,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDebugReportCallbackEXT(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DebugReportCallbackEXTWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pCallback, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DebugReportCallbackEXTWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pCallback, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -14761,6 +14797,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDebugReportCallbackEXT(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyDebugReportCallbackEXT>::Dispatch(manager, instance, callback, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::DebugReportCallbackEXTWrapper>(callback);
 }
 
@@ -15469,7 +15506,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateStreamDescriptorSurfaceGGP(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -15620,7 +15658,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateViSurfaceNN(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -15849,7 +15888,8 @@ VKAPI_ATTR VkResult VKAPI_CALL GetRandROutputDisplayEXT(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::PhysicalDeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DisplayKHRWrapper>(physicalDevice, vulkan_wrappers::NoParentWrapper::kHandleValue, pDisplay, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::PhysicalDeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DisplayKHRWrapper>(physicalDevice, vulkan_wrappers::NoParentWrapper::kHandleValue, pDisplay, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -15982,7 +16022,8 @@ VKAPI_ATTR VkResult VKAPI_CALL RegisterDeviceEventEXT(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::FenceWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pFence, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::FenceWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pFence, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -16034,7 +16075,8 @@ VKAPI_ATTR VkResult VKAPI_CALL RegisterDisplayEventEXT(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::DisplayKHRWrapper, vulkan_wrappers::FenceWrapper>(device, display, pFence, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::DisplayKHRWrapper, vulkan_wrappers::FenceWrapper>(device, display, pFence, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -16362,7 +16404,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateIOSSurfaceMVK(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -16413,7 +16456,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateMacOSSurfaceMVK(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -16740,7 +16784,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDebugUtilsMessengerEXT(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DebugUtilsMessengerEXTWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pMessenger, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DebugUtilsMessengerEXTWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pMessenger, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -16798,6 +16843,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyDebugUtilsMessengerEXT(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyDebugUtilsMessengerEXT>::Dispatch(manager, instance, messenger, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::DebugUtilsMessengerEXTWrapper>(messenger);
 }
 
@@ -17069,7 +17115,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateValidationCacheEXT(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::ValidationCacheEXTWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pValidationCache, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::ValidationCacheEXTWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pValidationCache, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -17127,6 +17174,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyValidationCacheEXT(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyValidationCacheEXT>::Dispatch(manager, device, validationCache, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::ValidationCacheEXTWrapper>(validationCache);
 }
 
@@ -17356,7 +17404,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateAccelerationStructureNV(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::AccelerationStructureNVWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pAccelerationStructure, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::AccelerationStructureNVWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pAccelerationStructure, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -17414,6 +17463,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyAccelerationStructureNV(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyAccelerationStructureNV>::Dispatch(manager, device, accelerationStructure, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::AccelerationStructureNVWrapper>(accelerationStructure);
 }
 
@@ -18505,7 +18555,8 @@ VKAPI_ATTR VkResult VKAPI_CALL AcquirePerformanceConfigurationINTEL(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::PerformanceConfigurationINTELWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pConfiguration, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::PerformanceConfigurationINTELWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pConfiguration, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -18561,6 +18612,7 @@ VKAPI_ATTR VkResult VKAPI_CALL ReleasePerformanceConfigurationINTEL(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkReleasePerformanceConfigurationINTEL>::Dispatch(manager, result, device, configuration);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::PerformanceConfigurationINTELWrapper>(configuration);
 
     return result;
@@ -18709,7 +18761,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateImagePipeSurfaceFUCHSIA(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -18760,7 +18813,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateMetalSurfaceEXT(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -19150,7 +19204,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateHeadlessSurfaceEXT(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -20077,7 +20132,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateIndirectCommandsLayoutNV(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::IndirectCommandsLayoutNVWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pIndirectCommandsLayout, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::IndirectCommandsLayoutNVWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pIndirectCommandsLayout, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -20135,6 +20191,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyIndirectCommandsLayoutNV(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyIndirectCommandsLayoutNV>::Dispatch(manager, device, indirectCommandsLayout, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::IndirectCommandsLayoutNVWrapper>(indirectCommandsLayout);
 }
 
@@ -20237,7 +20294,8 @@ VKAPI_ATTR VkResult VKAPI_CALL GetDrmDisplayEXT(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::PhysicalDeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DisplayKHRWrapper>(physicalDevice, vulkan_wrappers::NoParentWrapper::kHandleValue, display, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::PhysicalDeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DisplayKHRWrapper>(physicalDevice, vulkan_wrappers::NoParentWrapper::kHandleValue, display, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -20288,7 +20346,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreatePrivateDataSlotEXT(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::PrivateDataSlotWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pPrivateDataSlot, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::PrivateDataSlotWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pPrivateDataSlot, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -20346,6 +20405,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyPrivateDataSlotEXT(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyPrivateDataSlotEXT>::Dispatch(manager, device, privateDataSlot, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::PrivateDataSlotWrapper>(privateDataSlot);
 }
 
@@ -20572,7 +20632,8 @@ VKAPI_ATTR VkResult VKAPI_CALL GetWinrtDisplayNV(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::PhysicalDeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DisplayKHRWrapper>(physicalDevice, vulkan_wrappers::NoParentWrapper::kHandleValue, pDisplay, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::PhysicalDeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::DisplayKHRWrapper>(physicalDevice, vulkan_wrappers::NoParentWrapper::kHandleValue, pDisplay, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -20622,7 +20683,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDirectFBSurfaceEXT(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -21176,7 +21238,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateScreenSurfaceQNX(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::InstanceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::SurfaceKHRWrapper>(instance, vulkan_wrappers::NoParentWrapper::kHandleValue, pSurface, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -21387,7 +21450,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateMicromapEXT(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::MicromapEXTWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pMicromap, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::MicromapEXTWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pMicromap, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -21445,6 +21509,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyMicromapEXT(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyMicromapEXT>::Dispatch(manager, device, micromap, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::MicromapEXTWrapper>(micromap);
 }
 
@@ -23414,7 +23479,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateOpticalFlowSessionNV(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::OpticalFlowSessionNVWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pSession, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandle<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::OpticalFlowSessionNVWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pSession, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -23472,6 +23538,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyOpticalFlowSessionNV(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyOpticalFlowSessionNV>::Dispatch(manager, device, session, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::OpticalFlowSessionNVWrapper>(session);
 }
 
@@ -23584,7 +23651,8 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateShadersEXT(
 
     if (result >= 0)
     {
-        vulkan_wrappers::CreateWrappedHandles<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::ShaderEXTWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pShaders, createInfoCount, VulkanCaptureManager::GetUniqueId);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+    vulkan_wrappers::CreateWrappedHandles<vulkan_wrappers::DeviceWrapper, vulkan_wrappers::NoParentWrapper, vulkan_wrappers::ShaderEXTWrapper>(device, vulkan_wrappers::NoParentWrapper::kHandleValue, pShaders, createInfoCount, VulkanCaptureManager::GetUniqueId);
     }
     else
     {
@@ -23643,6 +23711,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyShaderEXT(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyShaderEXT>::Dispatch(manager, device, shader, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::ShaderEXTWrapper>(shader);
 }
 
@@ -24118,6 +24187,7 @@ VKAPI_ATTR void VKAPI_CALL DestroyAccelerationStructureKHR(
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroyAccelerationStructureKHR>::Dispatch(manager, device, accelerationStructure, pAllocator);
 
+    GFXRECON_WRITE_CONSOLE("%s()", __func__);
     vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::AccelerationStructureKHRWrapper>(accelerationStructure);
 }
 

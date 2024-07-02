@@ -32,12 +32,15 @@
 #include "encode/struct_pointer_encoder.h"
 #include "encode/vulkan_capture_manager.h"
 #include "encode/vulkan_handle_wrapper_util.h"
+#include "encode/vulkan_handle_wrappers.h"
 #include "format/api_call_id.h"
 #include "generated/generated_vulkan_struct_encoders.h"
 #include "generated/generated_vulkan_struct_handle_wrappers.h"
 #include "util/defines.h"
 
 #include <cassert>
+#include <vector>
+#include <vulkan/vulkan_core.h>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(encode)
@@ -779,6 +782,75 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateRayTracingPipelinesKHR(VkDevice            
         pPipelines);
 
     return result;
+}
+
+VKAPI_ATTR void VKAPI_CALL DestroySwapchainKHR(VkDevice                     device,
+                                               VkSwapchainKHR               swapchain,
+                                               const VkAllocationCallbacks* pAllocator)
+{
+    VulkanCaptureManager* manager = VulkanCaptureManager::Get();
+    GFXRECON_ASSERT(manager != nullptr);
+    auto force_command_serialization = manager->GetForceCommandSerialization();
+    std::shared_lock<CommonCaptureManager::ApiCallMutexT> shared_api_call_lock;
+    std::unique_lock<CommonCaptureManager::ApiCallMutexT> exclusive_api_call_lock;
+    if (force_command_serialization)
+    {
+        exclusive_api_call_lock = VulkanCaptureManager::AcquireExclusiveApiCallLock();
+    }
+    else
+    {
+        shared_api_call_lock = VulkanCaptureManager::AcquireSharedApiCallLock();
+    }
+
+    CustomEncoderPreCall<format::ApiCallId::ApiCall_vkDestroySwapchainKHR>::Dispatch(
+        manager, device, swapchain, pAllocator);
+
+    auto encoder = manager->BeginTrackedApiCallCapture(format::ApiCallId::ApiCall_vkDestroySwapchainKHR);
+    if (encoder)
+    {
+        encoder->EncodeVulkanHandleValue<vulkan_wrappers::DeviceWrapper>(device);
+        encoder->EncodeVulkanHandleValue<vulkan_wrappers::SwapchainKHRWrapper>(swapchain);
+        EncodeStructPtr(encoder, pAllocator);
+        manager->EndDestroyApiCallCapture<vulkan_wrappers::SwapchainKHRWrapper>(swapchain);
+    }
+
+    if (!manager->IsOldSwapchain(swapchain))
+    {
+        ScopedDestroyLock exclusive_scoped_lock;
+
+        vulkan_wrappers::SwapchainKHRWrapper* wrapper =
+            vulkan_wrappers::GetWrapper<vulkan_wrappers::SwapchainKHRWrapper>(swapchain);
+
+        if (wrapper != nullptr)
+        {
+            std::vector<vulkan_wrappers::SwapchainKHRWrapper*> retired_swapchains;
+
+            while (wrapper != nullptr && wrapper->old_swapchain != nullptr)
+            {
+                vulkan_wrappers::SwapchainKHRWrapper* old_swapchain = wrapper->old_swapchain;
+                retired_swapchains.push_back(old_swapchain);
+                wrapper = wrapper->old_swapchain;
+            }
+
+            for (auto ret_swap : retired_swapchains)
+            {
+                VkSwapchainKHR old_swapchain = ret_swap->handle;
+                vulkan_wrappers::GetDeviceTable(device)->DestroySwapchainKHR(device, old_swapchain, pAllocator);
+
+                CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroySwapchainKHR>::Dispatch(
+                    manager, device, old_swapchain, pAllocator);
+
+                vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::SwapchainKHRWrapper>(old_swapchain);
+            }
+        }
+
+        vulkan_wrappers::GetDeviceTable(device)->DestroySwapchainKHR(device, swapchain, pAllocator);
+
+        CustomEncoderPostCall<format::ApiCallId::ApiCall_vkDestroySwapchainKHR>::Dispatch(
+            manager, device, swapchain, pAllocator);
+
+        vulkan_wrappers::DestroyWrappedHandle<vulkan_wrappers::SwapchainKHRWrapper>(swapchain);
+    }
 }
 
 GFXRECON_END_NAMESPACE(encode)

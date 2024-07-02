@@ -22,11 +22,14 @@
 
 #include "encode/vulkan_state_tracker.h"
 
+#include "encode/vulkan_handle_wrappers.h"
 #include "encode/vulkan_state_info.h"
 #include "encode/custom_vulkan_struct_handle_wrappers.h"
 #include "encode/vulkan_handle_wrapper_util.h"
 #include "generated/generated_vulkan_struct_trackers.h"
 #include "graphics/vulkan_util.h"
+#include "util/logging.h"
+#include "vulkan/vulkan_core.h"
 
 #include <algorithm>
 

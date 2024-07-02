@@ -32,6 +32,7 @@
 #include "generated/generated_vulkan_dispatch_table.h"
 #include "generated/generated_vulkan_state_table.h"
 #include "util/defines.h"
+#include "util/logging.h"
 
 #include <algorithm>
 #include <iterator>
@@ -54,7 +55,7 @@ static const VkCommandPool    kTempCommandPool =
     UINT64_TO_VK_HANDLE(VkCommandPool, std::numeric_limits<uint64_t>::max() - 2);
 static const format::HandleId kTempCommandPoolId   = std::numeric_limits<format::HandleId>::max() - 2;
 static const format::HandleId kTempCommandBufferId = std::numeric_limits<format::HandleId>::max() - 3;
-typedef format::HandleId (*PFN_GetHandleId)();
+typedef format::HandleId      (*PFN_GetHandleId)();
 
 extern VulkanStateHandleTable state_handle_table_;
 
@@ -90,7 +91,7 @@ format::HandleId GetWrappedId(const typename Wrapper::HandleType& handle)
     auto wrapper = state_handle_table_.GetWrapper<Wrapper>(handle);
     if (wrapper == nullptr)
     {
-        GFXRECON_LOG_WARNING("vulkan_wrappers::GetWrappedId() couldn't find Handle: %" PRIu64
+        GFXRECON_LOG_WARNING("vulkan_wrappers::GetWrappedId() couldn't find Handle: %p"
                              "'s wrapper. It might have been destroyed",
                              handle);
         return format::kNullHandleId;
@@ -108,7 +109,7 @@ Wrapper* GetWrapper(const typename Wrapper::HandleType& handle)
     auto wrapper = state_handle_table_.GetWrapper<Wrapper>(handle);
     if (wrapper == nullptr)
     {
-        GFXRECON_LOG_WARNING("vulkan_wrappers::GetWrapper() couldn't find Handle: %" PRIu64
+        GFXRECON_LOG_WARNING("vulkan_wrappers::GetWrapper() couldn't find Handle: %p"
                              "'s wrapper. It might have been destroyed",
                              handle);
     }
@@ -118,6 +119,7 @@ Wrapper* GetWrapper(const typename Wrapper::HandleType& handle)
 template <typename Wrapper>
 bool RemoveWrapper(const Wrapper* wrapper)
 {
+    GFXRECON_WRITE_CONSOLE("  wraper->handle_id: %" PRIu64, wrapper->handle_id);
     return state_handle_table_.RemoveWrapper(wrapper);
 }
 
@@ -194,7 +196,7 @@ void CreateWrappedDispatchHandle(typename ParentWrapper::HandleType parent,
         }
         if (!state_handle_table_.InsertWrapper(wrapper))
         {
-            GFXRECON_LOG_WARNING("Create a duplicated Handle: %" PRIu64
+            GFXRECON_LOG_WARNING("Create a duplicated Handle: %p"
                                  ". This wrapper can't be written into VulkanStateHandleTable.",
                                  *handle);
         }
@@ -211,9 +213,12 @@ void CreateWrappedNonDispatchHandle(typename Wrapper::HandleType* handle, PFN_Ge
         Wrapper* wrapper   = new Wrapper;
         wrapper->handle    = (*handle);
         wrapper->handle_id = get_id();
+        GFXRECON_WRITE_CONSOLE("  %s()", __func__)
+        GFXRECON_WRITE_CONSOLE("  handle: %p", *handle)
+        GFXRECON_WRITE_CONSOLE("  handle_id: %" PRIu64, wrapper->handle_id)
         if (!state_handle_table_.InsertWrapper(wrapper))
         {
-            GFXRECON_LOG_WARNING("Create a duplicated Handle: %" PRIu64
+            GFXRECON_LOG_WARNING("Create a duplicated Handle: %p"
                                  ". This wrapper can't be written into VulkanStateHandleTable.",
                                  *handle);
         }
