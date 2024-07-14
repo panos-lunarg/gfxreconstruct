@@ -34,6 +34,7 @@
 #include "util/memory_output_stream.h"
 
 #include "vulkan/vulkan.h"
+#include "vulkan/vulkan_core.h"
 
 #include <cassert>
 #include <algorithm>
@@ -648,6 +649,12 @@ inline void InitializeState<VkDevice, vulkan_wrappers::ImageWrapper, VkImageCrea
     {
         wrapper->queue_family_index = create_info->pQueueFamilyIndices[0];
     }
+
+    const VulkanDeviceTable* device_table = vulkan_wrappers::GetDeviceTable(parent_handle);
+    VkMemoryRequirements     image_mem_reqs;
+    assert(wrapper->handle != VK_NULL_HANDLE);
+    device_table->GetImageMemoryRequirements(parent_handle, wrapper->handle, &image_mem_reqs);
+    wrapper->size = image_mem_reqs.size;
 }
 
 template <>
