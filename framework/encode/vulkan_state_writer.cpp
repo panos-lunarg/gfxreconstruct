@@ -1884,6 +1884,8 @@ void VulkanStateWriter::WriteResourceMemoryState(const VulkanStateTable& state_t
     VkDeviceSize         max_resource_size     = 0;
     VkDeviceSize         max_staging_copy_size = 0;
 
+    auto started = std::chrono::high_resolution_clock::now();
+
     size_t buffer_bytes_dumped;
     size_t buffer_bytes_skipped;
     WriteBufferMemoryState(
@@ -1893,14 +1895,6 @@ void VulkanStateWriter::WriteResourceMemoryState(const VulkanStateTable& state_t
     size_t image_bytes_skipped;
     WriteImageMemoryState(
         state_table, &resources, &max_resource_size, &max_staging_copy_size, image_bytes_dumped, image_bytes_skipped);
-
-    GFXRECON_WRITE_CONSOLE("--------------------------------------")
-    GFXRECON_WRITE_CONSOLE("%s()", __func__)
-    GFXRECON_WRITE_CONSOLE("  buffer_bytes_dumped: %zu", buffer_bytes_dumped);
-    GFXRECON_WRITE_CONSOLE("  buffer_bytes_skipped: %zu", buffer_bytes_skipped);
-    GFXRECON_WRITE_CONSOLE("  image_bytes_dumped: %zu", image_bytes_dumped);
-    GFXRECON_WRITE_CONSOLE("  image_bytes_skipped: %zu", image_bytes_skipped);
-    GFXRECON_WRITE_CONSOLE("--------------------------------------")
 
     // Write resource memory content.
     for (const auto& resource_entry : resources)
@@ -1958,6 +1952,18 @@ void VulkanStateWriter::WriteResourceMemoryState(const VulkanStateTable& state_t
             GFXRECON_LOG_ERROR("Failed to create a staging buffer to process trim state");
         }
     }
+
+    auto     done = std::chrono::high_resolution_clock::now();
+    uint32_t time = std::chrono::duration_cast<std::chrono::milliseconds>(done - started).count();
+
+    GFXRECON_WRITE_CONSOLE("--------------------------------------")
+    GFXRECON_WRITE_CONSOLE("%s()", __func__)
+    GFXRECON_WRITE_CONSOLE("  buffer_bytes_dumped: %zu", buffer_bytes_dumped);
+    GFXRECON_WRITE_CONSOLE("  buffer_bytes_skipped: %zu", buffer_bytes_skipped);
+    GFXRECON_WRITE_CONSOLE("  image_bytes_dumped: %zu", image_bytes_dumped);
+    GFXRECON_WRITE_CONSOLE("  image_bytes_skipped: %zu", image_bytes_skipped);
+    GFXRECON_WRITE_CONSOLE("  saved in %u ms", time);
+    GFXRECON_WRITE_CONSOLE("--------------------------------------")
 }
 
 void VulkanStateWriter::WriteMappedMemoryState(const VulkanStateTable& state_table)
