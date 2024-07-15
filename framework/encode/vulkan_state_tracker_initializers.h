@@ -343,7 +343,9 @@ inline void InitializeState<VkDevice, vulkan_wrappers::RenderPassWrapper, VkRend
     {
         for (uint32_t i = 0; i < create_info->attachmentCount; ++i)
         {
-            wrapper->attachment_final_layouts.push_back(create_info->pAttachments[i].finalLayout);
+            wrapper->attachment_info.attachment_final_layouts.push_back(create_info->pAttachments[i].finalLayout);
+            wrapper->attachment_info.store_op.push_back(create_info->pAttachments[i].storeOp);
+            wrapper->attachment_info.stencil_store_op.push_back(create_info->pAttachments[i].stencilStoreOp);
         }
     }
 }
@@ -369,7 +371,9 @@ inline void InitializeState<VkDevice, vulkan_wrappers::RenderPassWrapper, VkRend
     {
         for (uint32_t i = 0; i < create_info->attachmentCount; ++i)
         {
-            wrapper->attachment_final_layouts.push_back(create_info->pAttachments[i].finalLayout);
+            wrapper->attachment_info.attachment_final_layouts.push_back(create_info->pAttachments[i].finalLayout);
+            wrapper->attachment_info.store_op.push_back(create_info->pAttachments[i].storeOp);
+            wrapper->attachment_info.stencil_store_op.push_back(create_info->pAttachments[i].stencilStoreOp);
         }
     }
 }
