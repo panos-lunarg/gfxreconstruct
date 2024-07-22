@@ -279,6 +279,16 @@ class MetadataJsonConsumer : public Base
         WriteBlockEnd();
     }
 
+    virtual void ProcessExecuteBlocksFromFile(uint32_t n_blocks, int64_t offset, const std::string& filename) override
+    {
+        const JsonOptions& json_options = GetJsonOptions();
+        auto&              jdata        = WriteMetaCommandStart("ExecuteBlocksFromFile");
+        FieldToJson(jdata["n_blocks"], n_blocks, json_options);
+        FieldToJson(jdata["offset"], offset, json_options);
+        FieldToJson(jdata["filename"], filename, json_options);
+        WriteBlockEnd();
+    }
+
     /// @}
 };
 
