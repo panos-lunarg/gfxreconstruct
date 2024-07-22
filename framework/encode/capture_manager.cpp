@@ -378,6 +378,7 @@ bool CommonCaptureManager::Initialize(format::ApiFamilyId                   api_
 
         std::string asset_file_name = CreateAssetFilename(base_filename_);
         asset_file_stream_          = std::make_unique<util::FileOutputStream>(asset_file_name, kFileStreamBufferSize);
+        WriteAssetFileHeader();
 
         GFXRECON_WRITE_CONSOLE("asset_file_name: %s", asset_file_name.c_str())
 
@@ -1057,6 +1058,22 @@ void CommonCaptureManager::WriteFileHeader()
     thread_data->block_index_ = block_index_.load();
 }
 
+void CommonCaptureManager::WriteAssetFileHeader()
+{
+    std::vector<format::FileOptionPair> option_list;
+
+    BuildOptionList(file_options_, &option_list);
+
+    format::FileHeader file_header;
+    file_header.fourcc        = GFXRECON_FOURCC;
+    file_header.major_version = 0;
+    file_header.minor_version = 0;
+    file_header.num_options   = static_cast<uint32_t>(option_list.size());
+
+    WriteToFile(&file_header, sizeof(file_header), asset_file_stream_.get());
+    WriteToFile(option_list.data(), option_list.size() * sizeof(format::FileOptionPair), asset_file_stream_.get());
+}
+
 void CommonCaptureManager::BuildOptionList(const format::EnabledOptions&        enabled_options,
                                            std::vector<format::FileOptionPair>* option_list)
 {
@@ -1232,7 +1249,7 @@ void CommonCaptureManager::WriteCreateHeapAllocationCmd(format::ApiFamilyId api_
     }
 }
 
-void CommonCaptureManager::WriteToFile(const void* data, size_t size)
+void CommonCaptureManager::WriteToFile(const void* data, size_t size, util::FileOutputStream* file_stream)
 {
     if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kUserfaultfd)
     {
@@ -1248,10 +1265,12 @@ void CommonCaptureManager::WriteToFile(const void* data, size_t size)
         }
     }
 
-    file_stream_->Write(data, size);
+    util::FileOutputStream* output_stream = (file_stream != nullptr) ? file_stream : file_stream_.get();
+
+    output_stream->Write(data, size);
     if (force_file_flush_)
     {
-        file_stream_->Flush();
+        output_stream->Flush();
     }
 
     if (GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kUserfaultfd)
