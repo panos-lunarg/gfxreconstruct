@@ -59,8 +59,8 @@ void VulkanStateTracker::TrackCommandExecution(vulkan_wrappers::CommandBufferWra
         wrapper->pending_layouts.clear();
         wrapper->recorded_queries.clear();
         wrapper->tlas_build_info_map.clear();
-        wrapper->referenced_assets.buffers.clear();
-        wrapper->referenced_assets.images.clear();
+        wrapper->modified_assets.buffers.clear();
+        wrapper->modified_assets.images.clear();
         for (uint32_t point = vulkan_state_info::kBindPoint_graphics; point != vulkan_state_info::kBindPoint_count;
              ++point)
         {
@@ -107,8 +107,8 @@ void VulkanStateTracker::TrackResetCommandPool(VkCommandPool command_pool)
         entry.second->pending_layouts.clear();
         entry.second->recorded_queries.clear();
         entry.second->tlas_build_info_map.clear();
-        entry.second->referenced_assets.buffers.clear();
-        entry.second->referenced_assets.images.clear();
+        entry.second->modified_assets.buffers.clear();
+        entry.second->modified_assets.images.clear();
         for (uint32_t point = vulkan_state_info::kBindPoint_graphics; point != vulkan_state_info::kBindPoint_count;
              ++point)
         {
@@ -496,7 +496,7 @@ void VulkanStateTracker::TrackBeginRenderPass(VkCommandBuffer command_buffer, co
                 (has_stencil &&
                  wrapper->active_render_pass->attachment_info.stencil_store_op[i] == VK_ATTACHMENT_STORE_OP_STORE))
             {
-                wrapper->referenced_assets.images.push_back(wrapper->render_pass_framebuffer->attachments[i]);
+                wrapper->modified_assets.images.push_back(wrapper->render_pass_framebuffer->attachments[i]);
             }
         }
     }
@@ -2021,7 +2021,7 @@ void VulkanStateTracker::TrackCmdCopyBuffer(VkCommandBuffer     commandBuffer,
             vulkan_wrappers::GetWrapper<vulkan_wrappers::BufferWrapper>(dstBuffer);
         assert(dst_buffer_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.buffers.push_back(dst_buffer_wrapper);
+        cmd_buf_wrapper->modified_assets.buffers.push_back(dst_buffer_wrapper);
     }
 }
 
@@ -2062,7 +2062,7 @@ void VulkanStateTracker::TrackCmdCopyBufferToImage(VkCommandBuffer          comm
             vulkan_wrappers::GetWrapper<vulkan_wrappers::ImageWrapper>(dstImage);
         assert(dst_img_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.images.push_back(dst_img_wrapper);
+        cmd_buf_wrapper->modified_assets.images.push_back(dst_img_wrapper);
     }
 }
 
@@ -2083,7 +2083,7 @@ void VulkanStateTracker::TrackCmdCopyImageToBuffer(VkCommandBuffer          comm
             vulkan_wrappers::GetWrapper<vulkan_wrappers::BufferWrapper>(dstBuffer);
         assert(dst_buffer_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.buffers.push_back(dst_buffer_wrapper);
+        cmd_buf_wrapper->modified_assets.buffers.push_back(dst_buffer_wrapper);
     }
 }
 
@@ -2099,7 +2099,7 @@ void VulkanStateTracker::TrackCmdCopyBuffer2(VkCommandBuffer commandBuffer, cons
             vulkan_wrappers::GetWrapper<vulkan_wrappers::BufferWrapper>(pCopyBufferInfo->dstBuffer);
         assert(dst_buffer_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.buffers.push_back(dst_buffer_wrapper);
+        cmd_buf_wrapper->modified_assets.buffers.push_back(dst_buffer_wrapper);
     }
 }
 
@@ -2115,7 +2115,7 @@ void VulkanStateTracker::TrackCmdCopyImage2(VkCommandBuffer commandBuffer, const
             vulkan_wrappers::GetWrapper<vulkan_wrappers::ImageWrapper>(pCopyImageInfo->dstImage);
         assert(dst_img_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.images.push_back(dst_img_wrapper);
+        cmd_buf_wrapper->modified_assets.images.push_back(dst_img_wrapper);
     }
 }
 
@@ -2133,7 +2133,7 @@ void VulkanStateTracker::TrackCmdCopyBufferToImage2(VkCommandBuffer             
             vulkan_wrappers::GetWrapper<vulkan_wrappers::ImageWrapper>(pCopyBufferToImageInfo->dstImage);
         assert(dst_img_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.images.push_back(dst_img_wrapper);
+        cmd_buf_wrapper->modified_assets.images.push_back(dst_img_wrapper);
     }
 }
 
@@ -2151,7 +2151,7 @@ void VulkanStateTracker::TrackCmdCopyImageToBuffer2(VkCommandBuffer             
             vulkan_wrappers::GetWrapper<vulkan_wrappers::BufferWrapper>(pCopyImageToBufferInfo->dstBuffer);
         assert(dst_buffer_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.buffers.push_back(dst_buffer_wrapper);
+        cmd_buf_wrapper->modified_assets.buffers.push_back(dst_buffer_wrapper);
     }
 }
 
@@ -2167,7 +2167,7 @@ void VulkanStateTracker::TrackCmdCopyBuffer2KHR(VkCommandBuffer commandBuffer, c
             vulkan_wrappers::GetWrapper<vulkan_wrappers::BufferWrapper>(pCopyBufferInfo->dstBuffer);
         assert(dst_buffer_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.buffers.push_back(dst_buffer_wrapper);
+        cmd_buf_wrapper->modified_assets.buffers.push_back(dst_buffer_wrapper);
     }
 }
 
@@ -2183,7 +2183,7 @@ void VulkanStateTracker::TrackCmdCopyImage2KHR(VkCommandBuffer commandBuffer, co
             vulkan_wrappers::GetWrapper<vulkan_wrappers::ImageWrapper>(pCopyImageInfo->dstImage);
         assert(dst_img_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.images.push_back(dst_img_wrapper);
+        cmd_buf_wrapper->modified_assets.images.push_back(dst_img_wrapper);
     }
 }
 
@@ -2201,7 +2201,7 @@ void VulkanStateTracker::TrackCmdCopyBufferToImage2KHR(VkCommandBuffer          
             vulkan_wrappers::GetWrapper<vulkan_wrappers::ImageWrapper>(pCopyBufferToImageInfo->dstImage);
         assert(dst_img_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.images.push_back(dst_img_wrapper);
+        cmd_buf_wrapper->modified_assets.images.push_back(dst_img_wrapper);
     }
 }
 
@@ -2219,7 +2219,7 @@ void VulkanStateTracker::TrackCmdCopyImageToBuffer2KHR(VkCommandBuffer          
             vulkan_wrappers::GetWrapper<vulkan_wrappers::BufferWrapper>(pCopyImageToBufferInfo->dstBuffer);
         assert(dst_buffer_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.buffers.push_back(dst_buffer_wrapper);
+        cmd_buf_wrapper->modified_assets.buffers.push_back(dst_buffer_wrapper);
     }
 }
 
@@ -2242,7 +2242,7 @@ void VulkanStateTracker::TrackCmdBlitImage(VkCommandBuffer    commandBuffer,
             vulkan_wrappers::GetWrapper<vulkan_wrappers::ImageWrapper>(dstImage);
         assert(dst_img_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.images.push_back(dst_img_wrapper);
+        cmd_buf_wrapper->modified_assets.images.push_back(dst_img_wrapper);
     }
 }
 
@@ -2258,7 +2258,7 @@ void VulkanStateTracker::TrackCmdBlitImage2(VkCommandBuffer commandBuffer, const
             vulkan_wrappers::GetWrapper<vulkan_wrappers::ImageWrapper>(pBlitImageInfo->dstImage);
         assert(dst_img_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.images.push_back(dst_img_wrapper);
+        cmd_buf_wrapper->modified_assets.images.push_back(dst_img_wrapper);
     }
 }
 
@@ -2280,7 +2280,7 @@ void VulkanStateTracker::TrackCmdUpdateBuffer(
             vulkan_wrappers::GetWrapper<vulkan_wrappers::BufferWrapper>(dstBuffer);
         assert(dst_buffer_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.buffers.push_back(dst_buffer_wrapper);
+        cmd_buf_wrapper->modified_assets.buffers.push_back(dst_buffer_wrapper);
     }
 }
 
@@ -2297,7 +2297,7 @@ void VulkanStateTracker::TrackCmdFillBuffer(
             vulkan_wrappers::GetWrapper<vulkan_wrappers::BufferWrapper>(dstBuffer);
         assert(dst_buffer_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.buffers.push_back(dst_buffer_wrapper);
+        cmd_buf_wrapper->modified_assets.buffers.push_back(dst_buffer_wrapper);
     }
 }
 
@@ -2318,7 +2318,7 @@ void VulkanStateTracker::TrackCmdClearColorImage(VkCommandBuffer                
             vulkan_wrappers::GetWrapper<vulkan_wrappers::ImageWrapper>(image);
         assert(dst_img_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.images.push_back(dst_img_wrapper);
+        cmd_buf_wrapper->modified_assets.images.push_back(dst_img_wrapper);
     }
 }
 
@@ -2339,7 +2339,7 @@ void VulkanStateTracker::TrackCmdClearDepthStencilImage(VkCommandBuffer         
             vulkan_wrappers::GetWrapper<vulkan_wrappers::ImageWrapper>(image);
         assert(dst_img_wrapper != nullptr);
 
-        cmd_buf_wrapper->referenced_assets.images.push_back(dst_img_wrapper);
+        cmd_buf_wrapper->modified_assets.images.push_back(dst_img_wrapper);
     }
 }
 
@@ -2384,7 +2384,7 @@ void VulkanStateTracker::TrackMappedAssetsWrites(VkCommandBuffer commandBuffer)
                      (img->bind_offset + img->size) <= page_offset_end) ||
                     (img->bind_offset <= page_offset_start && (img->bind_offset + img->size) >= page_offset_end))
                 {
-                    cmd_buf_wrapper->referenced_assets.images.push_back(img);
+                    cmd_buf_wrapper->modified_assets.images.push_back(img);
                     break;
                 }
             }
@@ -2409,7 +2409,7 @@ void VulkanStateTracker::TrackMappedAssetsWrites(VkCommandBuffer commandBuffer)
                     (buf->bind_offset <= page_offset_start &&
                      (buf->bind_offset + buf->created_size) >= page_offset_end))
                 {
-                    cmd_buf_wrapper->referenced_assets.buffers.push_back(buf);
+                    cmd_buf_wrapper->modified_assets.buffers.push_back(buf);
                     break;
                 }
             }
@@ -2458,7 +2458,7 @@ void VulkanStateTracker::TrackPipelineDescriptors(vulkan_wrappers::CommandBuffer
 
                                     if (img_view_wrapper != nullptr && img_view_wrapper->image != nullptr)
                                     {
-                                        command_wrapper->referenced_assets.images.push_back(img_view_wrapper->image);
+                                        command_wrapper->modified_assets.images.push_back(img_view_wrapper->image);
                                     }
                                 }
                             }
@@ -2474,7 +2474,7 @@ void VulkanStateTracker::TrackPipelineDescriptors(vulkan_wrappers::CommandBuffer
                                             descriptor_binding->second.storage_buffers[a].buffer);
                                     if (buf_wrapper != nullptr)
                                     {
-                                        command_wrapper->referenced_assets.buffers.push_back(buf_wrapper);
+                                        command_wrapper->modified_assets.buffers.push_back(buf_wrapper);
                                     }
                                 }
                             }
@@ -2489,7 +2489,7 @@ void VulkanStateTracker::TrackPipelineDescriptors(vulkan_wrappers::CommandBuffer
                                             descriptor_binding->second.storage_texel_buffer_views[a]);
                                     if (buf_view_wrapper != nullptr && buf_view_wrapper->buffer != nullptr)
                                     {
-                                        command_wrapper->referenced_assets.buffers.push_back(buf_view_wrapper->buffer);
+                                        command_wrapper->modified_assets.buffers.push_back(buf_view_wrapper->buffer);
                                     }
                                 }
                             }
@@ -2702,13 +2702,13 @@ void VulkanStateTracker::MarkReferencedAssetsAsDirty(VkCommandBuffer commandBuff
         vulkan_wrappers::GetWrapper<vulkan_wrappers::CommandBufferWrapper>(commandBuffer);
     assert(cmd_buf_wrapper != nullptr);
 
-    for (auto img : cmd_buf_wrapper->referenced_assets.images)
+    for (auto img : cmd_buf_wrapper->modified_assets.images)
     {
         assert(img);
         img->dirty = true;
     }
 
-    for (auto buf : cmd_buf_wrapper->referenced_assets.buffers)
+    for (auto buf : cmd_buf_wrapper->modified_assets.buffers)
     {
         assert(buf);
         buf->dirty = true;
