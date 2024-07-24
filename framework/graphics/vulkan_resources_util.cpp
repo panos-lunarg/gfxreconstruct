@@ -25,7 +25,6 @@
 #include "generated/generated_vulkan_enum_to_string.h"
 #include "util/logging.h"
 
-#include <cinttypes>
 #include <cstdint>
 #include <math.h>
 
@@ -342,27 +341,11 @@ uint64_t VulkanResourcesUtil::GetImageResourceSizesOptimal(VkImage              
         create_info.extent.height = std::max(1u, (extent.height >> m));
         create_info.extent.depth  = std::max(1u, (extent.depth >> m));
 
-        VkImage  temp_image;
-        VkResult result = device_table_.CreateImage(device_, &create_info, nullptr, &temp_image);
-        if (result != VK_SUCCESS)
-        {
-            GFXRECON_LOG_ERROR("VulkanResourcesUtil::%s() Failed creating VkImage", __func__)
-
-            if (subresource_offsets != nullptr)
-            {
-                subresource_offsets->clear();
-            }
-
-            if (subresource_sizes != nullptr)
-            {
-                subresource_sizes->clear();
-            }
-
-            return 0;
-        }
-
-        VkMemoryRequirements memory_requirements;
-        device_table_.GetImageMemoryRequirements(device_, temp_image, &memory_requirements);
+        VkMemoryRequirements2 memory_requirements;
+        const VkDeviceImageMemoryRequirements img_info = {
+            VK_STRUCTURE_TYPE_DEVICE_IMAGE_MEMORY_REQUIREMENTS, nullptr, &create_info, VK_IMAGE_ASPECT_COLOR_BIT
+        };
+        device_table_.GetDeviceImageMemoryRequirements(device_, &img_info, &memory_requirements);
 
         for (uint32_t l = 0; l < array_layers; ++l)
         {
@@ -373,18 +356,16 @@ uint64_t VulkanResourcesUtil::GetImageResourceSizesOptimal(VkImage              
 
             if (subresource_sizes != nullptr)
             {
-                subresource_sizes->push_back(memory_requirements.size);
+                subresource_sizes->push_back(memory_requirements.memoryRequirements.size);
             }
 
-            resource_size += memory_requirements.size;
+            resource_size += memory_requirements.memoryRequirements.size;
 
             if (all_layers_per_level)
             {
                 break;
             }
         }
-
-        device_table_.DestroyImage(device_, temp_image, nullptr);
     }
 
     return resource_size;
