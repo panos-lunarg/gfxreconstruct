@@ -2958,7 +2958,7 @@ VKAPI_ATTR VkResult VKAPI_CALL AllocateDescriptorSets(
         EncodeStructPtr(encoder, pAllocateInfo);
         encoder->EncodeVulkanHandleArray<vulkan_wrappers::DescriptorSetWrapper>(pDescriptorSets, (pAllocateInfo != nullptr) ? (pAllocateInfo->descriptorSetCount) : 0, omit_output_data);
         encoder->EncodeEnumValue(result);
-        manager->EndPoolCreateApiCallCapture<VkDevice, vulkan_wrappers::DescriptorSetWrapper, VkDescriptorSetAllocateInfo>(result, device, (pAllocateInfo != nullptr) ? (pAllocateInfo->descriptorSetCount) : 0, pDescriptorSets, pAllocateInfo);
+        manager->EndPoolCreateApiCallCapture(result, device, (pAllocateInfo != nullptr) ? (pAllocateInfo->descriptorSetCount) : 0, pDescriptorSets, pAllocateInfo);
     }
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkAllocateDescriptorSets>::Dispatch(manager, result, device, pAllocateInfo, pDescriptorSets);
@@ -3439,7 +3439,7 @@ VKAPI_ATTR VkResult VKAPI_CALL AllocateCommandBuffers(
         EncodeStructPtr(encoder, pAllocateInfo);
         encoder->EncodeVulkanHandleArray<vulkan_wrappers::CommandBufferWrapper>(pCommandBuffers, (pAllocateInfo != nullptr) ? (pAllocateInfo->commandBufferCount) : 0, omit_output_data);
         encoder->EncodeEnumValue(result);
-        manager->EndPoolCreateApiCallCapture<VkDevice, vulkan_wrappers::CommandBufferWrapper, VkCommandBufferAllocateInfo>(result, device, (pAllocateInfo != nullptr) ? (pAllocateInfo->commandBufferCount) : 0, pCommandBuffers, pAllocateInfo);
+        manager->EndPoolCreateApiCallCapture(result, device, (pAllocateInfo != nullptr) ? (pAllocateInfo->commandBufferCount) : 0, pCommandBuffers, pAllocateInfo);
     }
 
     CustomEncoderPostCall<format::ApiCallId::ApiCall_vkAllocateCommandBuffers>::Dispatch(manager, result, device, pAllocateInfo, pCommandBuffers);

@@ -481,7 +481,7 @@ class VulkanApiCallEncodersBodyGenerator(BaseGenerator):
 
                 if 'pAllocateInfo->' in length_name:
                     # This is a pool allocation call, which receives one allocate info structure that is shared by all object being allocated.
-                    decl += 'EndPoolCreateApiCallCapture<{}, {}::{}Wrapper, {}>({}, {}, {}, {}, {})'.format(
+                    decl += 'EndPoolCreateApiCallCapture({}, {}, {}, {}, {})'.format(
                         parent_handle.base_type, wrapper_prefix, handle.base_type[2:],
                         info_base_type, return_value, parent_handle.name,
                         length_name, handle.name, info_name
@@ -702,7 +702,7 @@ class VulkanApiCallEncodersBodyGenerator(BaseGenerator):
                         if value.is_array:
                             expr += indent + '{} {name}_unwrapped = {}::UnwrapStructArrayHandles({name}, {}, handle_unwrap_memory);\n'.format(
                                 value.full_type,
-                                wrapper_prefix, 
+                                wrapper_prefix,
                                 value.array_length,
                                 name=value.name
                             )

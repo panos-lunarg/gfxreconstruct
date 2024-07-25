@@ -614,7 +614,6 @@ inline void InitializeState<VkDevice, vulkan_wrappers::BufferWrapper, VkBufferCr
     wrapper->create_parameters = std::move(create_parameters);
 
     wrapper->size = create_info->size;
-    wrapper->size = create_info->size;
 
     // TODO: Do we need to track the queue family that the buffer is actually used with?
     if ((create_info->queueFamilyIndexCount > 0) && (create_info->pQueueFamilyIndices != nullptr))
@@ -654,12 +653,6 @@ inline void InitializeState<VkDevice, vulkan_wrappers::ImageWrapper, VkImageCrea
     {
         wrapper->queue_family_index = create_info->pQueueFamilyIndices[0];
     }
-
-    const VulkanDeviceTable* device_table = vulkan_wrappers::GetDeviceTable(parent_handle);
-    VkMemoryRequirements     image_mem_reqs;
-    assert(wrapper->handle != VK_NULL_HANDLE);
-    device_table->GetImageMemoryRequirements(parent_handle, wrapper->handle, &image_mem_reqs);
-    wrapper->size = image_mem_reqs.size;
 }
 
 template <>

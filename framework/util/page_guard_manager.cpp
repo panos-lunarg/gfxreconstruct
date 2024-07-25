@@ -30,6 +30,7 @@
 
 #include <cassert>
 #include <cinttypes>
+#include <cstdint>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(util)
@@ -737,68 +738,94 @@ void PageGuardManager::LoadActiveWriteStates(MemoryInfo* memory_info)
 #endif
 }
 
-void PageGuardManager::ProcessEntry(uint64_t                  memory_id,
-                                    MemoryInfo*               memory_info,
-                                    const ModifiedMemoryFunc& handle_modified)
+void PageGuardManager::ProcessEntry(uint64_t                        memory_id,
+                                    MemoryInfo*                     memory_info,
+                                    const ModifiedMemoryFunc&       handle_modified,
+                                    const std::map<size_t, size_t>& ranges)
 {
     assert(memory_info != nullptr);
     assert(memory_info->is_modified);
 
-    bool   active_range = false;
-    size_t start_index  = 0;
+    // GFXRECON_WRITE_CONSOLE("%s(memory_id: %" PRIu64 ")", __func__, memory_id)
 
-    memory_info->is_modified = false;
-
-    for (size_t i = 0; i < memory_info->total_pages; ++i)
+    for (const auto range : ranges)
     {
-        // Concatenate dirty pages to handle as large a range as possible with a single modified memory handler
-        // invocation.
-        if (memory_info->status_tracker.IsActiveWriteBlock(i))
-        {
-            memory_info->status_tracker.SetActiveWriteBlock(i, false);
-            memory_info->status_tracker.SetActiveReadBlock(i, false);
+        const size_t first_page = range.first;
+        const size_t last_page  = range.second;
 
-            if (!active_range)
-            {
-                active_range = true;
-                start_index  = i;
-            }
-        }
-        else
+        bool   active_range = false;
+        size_t start_index  = first_page;
+
+        // GFXRECON_WRITE_CONSOLE("-----------")
+        // GFXRECON_WRITE_CONSOLE("  first_page: %zu", first_page)
+        // GFXRECON_WRITE_CONSOLE("  last_page: %zu", last_page)
+        // for (size_t i = first_page; i < memory_info->total_pages && i <= last_page; ++i)
+        // {
+        //     GFXRECON_WRITE_CONSOLE("  page_%zu: %u", i, memory_info->status_tracker.IsActiveWriteBlock(i));
+        // }
+
+        assert(first_page < memory_info->total_pages);
+        assert(first_page <= last_page);
+
+        for (size_t i = first_page; i < memory_info->total_pages && i <= last_page; ++i)
         {
-            // If there was no write operation on the current page, check to see if there was a read operation.
-            // If a read operation triggered the page guard handler, it needs to be reset.
-            // Note that it is only possible to reach this state when enable_shadow_memory_ is true and
-            // enable_read_write_same_page_ is false.
-            if (memory_info->status_tracker.IsActiveReadBlock(i))
+            // Concatenate dirty pages to handle as large a range as possible with a single modified memory handler
+            // invocation.
+            if (memory_info->status_tracker.IsActiveWriteBlock(i))
             {
+                memory_info->status_tracker.SetActiveWriteBlock(i, false);
                 memory_info->status_tracker.SetActiveReadBlock(i, false);
 
-                if (protection_mode_ == kMProtectMode)
+                if (!active_range)
                 {
-                    assert(memory_info->shadow_memory != nullptr);
-
-                    void* page_address =
-                        static_cast<uint8_t*>(memory_info->aligned_address) + (i << system_page_pot_shift_);
-                    size_t segment_size = GetMemorySegmentSize(memory_info, i);
-
-                    SetMemoryProtection(page_address, segment_size, kGuardReadWriteProtect);
+                    active_range = true;
+                    start_index  = i;
                 }
             }
-
-            // If the previous pages were modified by a write operation, process the modified range now.
-            if (active_range)
+            else
             {
-                active_range = false;
+                // If there was no write operation on the current page, check to see if there was a read operation.
+                // If a read operation triggered the page guard handler, it needs to be reset.
+                // Note that it is only possible to reach this state when enable_shadow_memory_ is true and
+                // enable_read_write_same_page_ is false.
+                if (memory_info->status_tracker.IsActiveReadBlock(i))
+                {
+                    memory_info->status_tracker.SetActiveReadBlock(i, false);
 
-                ProcessActiveRange(memory_id, memory_info, start_index, i, handle_modified);
+                    if (protection_mode_ == kMProtectMode)
+                    {
+                        assert(memory_info->shadow_memory != nullptr);
+
+                        void* page_address =
+                            static_cast<uint8_t*>(memory_info->aligned_address) + (i << system_page_pot_shift_);
+                        size_t segment_size = GetMemorySegmentSize(memory_info, i);
+
+                        SetMemoryProtection(page_address, segment_size, kGuardReadWriteProtect);
+                    }
+                }
+
+                // If the previous pages were modified by a write operation, process the modified range now.
+                if (active_range)
+                {
+                    active_range = false;
+
+                    // GFXRECON_WRITE_CONSOLE("  %u", __LINE__)
+                    ProcessActiveRange(memory_id, memory_info, start_index, i, handle_modified);
+                }
             }
+        }
+
+        if (active_range)
+        {
+            // GFXRECON_WRITE_CONSOLE("  %u", __LINE__)
+            assert(last_page + 1 <= memory_info->total_pages);
+            ProcessActiveRange(memory_id, memory_info, start_index, last_page + 1, handle_modified);
         }
     }
 
-    if (active_range)
+    if (!memory_info->status_tracker.HasActiveReadBlock() && !memory_info->status_tracker.HasActiveWriteBlock())
     {
-        ProcessActiveRange(memory_id, memory_info, start_index, memory_info->total_pages, handle_modified);
+        memory_info->is_modified = false;
     }
 }
 
@@ -809,7 +836,11 @@ void PageGuardManager::ProcessActiveRange(uint64_t                  memory_id,
                                           const ModifiedMemoryFunc& handle_modified)
 {
     assert((memory_info != nullptr) && (memory_info->aligned_address != nullptr));
-    assert(end_index > start_index);
+    assert(end_index >= start_index);
+
+    // GFXRECON_WRITE_CONSOLE("%s()", __func__)
+    // GFXRECON_WRITE_CONSOLE("  start_index: %u", start_index)
+    // GFXRECON_WRITE_CONSOLE("  end_index: %u", end_index)
 
     size_t page_count  = end_index - start_index;
     size_t page_offset = start_index << system_page_pot_shift_;
@@ -831,7 +862,10 @@ void PageGuardManager::ProcessActiveRange(uint64_t                  memory_id,
         // to mapped memory.
         if (kMProtectMode == protection_mode_)
         {
-            SetMemoryProtection(guard_address, guard_range, kGuardReadOnlyProtect);
+            if (!SetMemoryProtection(guard_address, guard_range, kGuardReadOnlyProtect))
+            {
+                GFXRECON_LOG_WARNING("Setting memory protection failed")
+            }
         }
         else if (kUserFaultFdMode == protection_mode_)
         {
@@ -1107,6 +1141,21 @@ void* PageGuardManager::AddTrackedMemory(uint64_t  memory_id,
         {
             assert(memory_info_.find(memory_id) == memory_info_.end());
 
+            // clang-format off
+            GFXRECON_WRITE_CONSOLE("%s(memory_id: %" PRIu64 ")", __func__, memory_id)
+            GFXRECON_WRITE_CONSOLE("  mapped_memory: %p - %p", mapped_memory, reinterpret_cast<uint8_t*>(mapped_memory) + mapped_range);
+            GFXRECON_WRITE_CONSOLE("  mapped_range: %zu", mapped_range);
+
+            GFXRECON_WRITE_CONSOLE("  shadow_memory: %p - %p", shadow_memory, reinterpret_cast<uint8_t*>(shadow_memory) + shadow_size);
+            GFXRECON_WRITE_CONSOLE("  shadow_size: %zu", shadow_size);
+
+            GFXRECON_WRITE_CONSOLE("  aligned_address: %p - %p", aligned_address, reinterpret_cast<uint8_t*>(aligned_address) + guard_range);
+            GFXRECON_WRITE_CONSOLE("  guard_range: %zu", guard_range);
+
+            GFXRECON_WRITE_CONSOLE("  aligned_offset: %p", aligned_offset);
+            GFXRECON_WRITE_CONSOLE("  total_pages: %zu", total_pages);
+            // clang-format on
+
             auto entry =
                 memory_info_.emplace(std::piecewise_construct,
                                      std::forward_as_tuple(memory_id),
@@ -1182,6 +1231,8 @@ void PageGuardManager::RemoveTrackedMemory(uint64_t memory_id)
 {
     std::lock_guard<std::mutex> lock(tracked_memory_lock_);
 
+    GFXRECON_WRITE_CONSOLE("%s(memory_id: %" PRIu64 ")", __func__, memory_id)
+
     auto entry = memory_info_.find(memory_id);
     if (entry != memory_info_.end())
     {
@@ -1219,9 +1270,13 @@ void PageGuardManager::FreePersistentShadowMemory(uintptr_t shadow_memory_handle
     }
 }
 
-void PageGuardManager::ProcessMemoryEntry(uint64_t memory_id, const ModifiedMemoryFunc& handle_modified)
+void PageGuardManager::ProcessMemoryEntry(uint64_t                        memory_id,
+                                          const ModifiedMemoryFunc&       handle_modified,
+                                          const std::map<size_t, size_t>& ranges)
 {
     std::lock_guard<std::mutex> lock(tracked_memory_lock_);
+
+    GFXRECON_WRITE_CONSOLE("%s(memory_id: %" PRIu64 ")", __func__, memory_id)
 
     auto entry = memory_info_.find(memory_id);
 
@@ -1244,7 +1299,7 @@ void PageGuardManager::ProcessMemoryEntry(uint64_t memory_id, const ModifiedMemo
 
         if (memory_info->is_modified)
         {
-            ProcessEntry(entry->first, memory_info, handle_modified);
+            ProcessEntry(entry->first, memory_info, handle_modified, ranges);
         }
     }
 
@@ -1255,7 +1310,8 @@ void PageGuardManager::ProcessMemoryEntry(uint64_t memory_id, const ModifiedMemo
     }
 }
 
-void PageGuardManager::ProcessMemoryEntries(const ModifiedMemoryFunc& handle_modified)
+void PageGuardManager::ProcessMemoryEntries(const ModifiedMemoryFunc& handle_modified,
+                                            const std::unordered_map<uint64_t, std::map<size_t, size_t>>& ranges)
 {
     std::lock_guard<std::mutex> lock(tracked_memory_lock_);
 
@@ -1267,6 +1323,12 @@ void PageGuardManager::ProcessMemoryEntries(const ModifiedMemoryFunc& handle_mod
 
     for (auto entry = memory_info_.begin(); entry != memory_info_.end(); ++entry)
     {
+        const auto ranges_entry = ranges.find(entry->first);
+        if (ranges_entry == ranges.end())
+        {
+            continue;
+        }
+
         auto memory_info = &entry->second;
 
         if (memory_info->use_write_watch)
@@ -1278,7 +1340,7 @@ void PageGuardManager::ProcessMemoryEntries(const ModifiedMemoryFunc& handle_mod
 
         if (memory_info->is_modified)
         {
-            ProcessEntry(entry->first, memory_info, handle_modified);
+            ProcessEntry(entry->first, memory_info, handle_modified, ranges_entry->second);
         }
     }
 
@@ -1294,6 +1356,8 @@ bool PageGuardManager::HandleGuardPageViolation(void* address, bool is_write, bo
     assert(protection_mode_ == kMProtectMode);
 
     MemoryInfo* memory_info = nullptr;
+
+    // GFXRECON_WRITE_CONSOLE("%s() page_index: %p", __func__, address);
 
     std::lock_guard<std::mutex> lock(tracked_memory_lock_);
 
@@ -1379,6 +1443,19 @@ void PageGuardManager::GetModifiedMemoryRegions(
     {
         auto new_entry = memories_page_status.emplace(entry.first, entry.second.status_tracker.GetActiveWrites());
     }
+}
+
+bool PageGuardManager::IsMemoryDirty(uint64_t memory_id)
+{
+    std::lock_guard<std::mutex> lock(tracked_memory_lock_);
+
+    const auto entry = memory_info_.find(memory_id);
+    if (entry != memory_info_.end())
+    {
+        return entry->second.is_modified;
+    }
+
+    return false;
 }
 
 GFXRECON_END_NAMESPACE(util)

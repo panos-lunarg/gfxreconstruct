@@ -53,6 +53,26 @@ class PageStatusTracker
 
     void SetAllBlocksActiveWrite() { std::fill(active_writes_.begin(), active_writes_.end(), 1); }
 
+    bool HasActiveWriteBlock()
+    {
+        for (auto page : active_writes_)
+        {
+            if (page)
+                return true;
+        }
+        return false;
+    }
+
+    bool HasActiveReadBlock()
+    {
+        for (auto page : active_reads_)
+        {
+            if (page)
+                return true;
+        }
+        return false;
+    }
+
     PageStatus& GetActiveWrites() { return active_writes_; }
 
   private:

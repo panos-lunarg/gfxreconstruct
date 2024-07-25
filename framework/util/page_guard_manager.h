@@ -32,6 +32,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
@@ -122,9 +123,14 @@ class PageGuardManager
 
     void RemoveTrackedMemory(uint64_t memory_id);
 
-    void ProcessMemoryEntry(uint64_t memory_id, const ModifiedMemoryFunc& handle_modified);
+    void MarkForRemoval(uint64_t memory_id);
 
-    void ProcessMemoryEntries(const ModifiedMemoryFunc& handle_modified);
+    void ProcessMemoryEntry(uint64_t                        memory_id,
+                            const ModifiedMemoryFunc&       handle_modified,
+                            const std::map<size_t, size_t>& ranges);
+
+    void ProcessMemoryEntries(const ModifiedMemoryFunc&                                     handle_modified,
+                              const std::unordered_map<uint64_t, std::map<size_t, size_t>>& ranges);
 
     bool HandleGuardPageViolation(void* address, bool is_write, bool clear_guard);
 
@@ -146,6 +152,8 @@ class PageGuardManager
     void UffdUnblockRtSignal();
 
     void GetModifiedMemoryRegions(std::unordered_map<uint64_t, PageStatusTracker::PageStatus&>& memories_page_status);
+
+    bool IsMemoryDirty(uint64_t memory_id);
 
   protected:
     PageGuardManager();
@@ -241,7 +249,10 @@ class PageGuardManager
     bool   FindMemory(void* address, MemoryInfo** watched_memory_info);
     bool   SetMemoryProtection(void* protect_address, size_t protect_size, uint32_t protect_mask);
     void   LoadActiveWriteStates(MemoryInfo* memory_info);
-    void   ProcessEntry(uint64_t memory_id, MemoryInfo* memory_info, const ModifiedMemoryFunc& handle_modified);
+    void   ProcessEntry(uint64_t                        memory_id,
+                        MemoryInfo*                     memory_info,
+                        const ModifiedMemoryFunc&       handle_modified,
+                        const std::map<size_t, size_t>& ranges);
     void   ProcessActiveRange(uint64_t                  memory_id,
                               MemoryInfo*               memory_info,
                               size_t                    start_index,

@@ -36,6 +36,7 @@
 #include <algorithm>
 #include <iterator>
 #include <cassert>
+#include <memory>
 #include <vector>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
@@ -54,7 +55,7 @@ static const VkCommandPool    kTempCommandPool =
     UINT64_TO_VK_HANDLE(VkCommandPool, std::numeric_limits<uint64_t>::max() - 2);
 static const format::HandleId kTempCommandPoolId   = std::numeric_limits<format::HandleId>::max() - 2;
 static const format::HandleId kTempCommandBufferId = std::numeric_limits<format::HandleId>::max() - 3;
-typedef format::HandleId (*PFN_GetHandleId)();
+typedef format::HandleId      (*PFN_GetHandleId)();
 
 extern VulkanStateHandleTable state_handle_table_;
 
@@ -324,6 +325,7 @@ inline void CreateWrappedHandle<DeviceWrapper, NoParentWrapper, QueueWrapper>(
         wrapper                  = GetWrapper<QueueWrapper>(*handle);
         wrapper->layer_table_ref = &parent_wrapper->layer_table;
         parent_wrapper->child_queues.push_back(wrapper);
+        wrapper->parent_device = parent_wrapper;
     }
 }
 
@@ -585,6 +587,58 @@ inline void DestroyWrappedHandle<CommandPoolWrapper>(VkCommandPool handle)
         }
 
         RemoveWrapper<CommandPoolWrapper>(wrapper);
+        delete wrapper;
+    }
+}
+
+template <>
+inline void DestroyWrappedHandle<ImageWrapper>(VkImage handle)
+{
+    if (handle != VK_NULL_HANDLE)
+    {
+        // Destroy child wrappers.
+        auto wrapper = GetWrapper<ImageWrapper>(handle);
+
+        if (wrapper->bind_memory_wrapper != nullptr)
+        {
+            vulkan_wrappers::DeviceMemoryWrapper* mem_wrapper = wrapper->bind_memory_wrapper;
+
+            mem_wrapper->asset_map_lock.lock();
+            auto entry = mem_wrapper->bound_assets.find(wrapper->bind_offset);
+            if (entry != mem_wrapper->bound_assets.end())
+            {
+                mem_wrapper->bound_assets.erase(entry);
+            }
+            mem_wrapper->asset_map_lock.unlock();
+        }
+
+        RemoveWrapper<ImageWrapper>(wrapper);
+        delete wrapper;
+    }
+}
+
+template <>
+inline void DestroyWrappedHandle<BufferWrapper>(VkBuffer handle)
+{
+    if (handle != VK_NULL_HANDLE)
+    {
+        // Destroy child wrappers.
+        auto wrapper = GetWrapper<BufferWrapper>(handle);
+
+        if (wrapper->bind_memory_wrapper != nullptr)
+        {
+            vulkan_wrappers::DeviceMemoryWrapper* mem_wrapper = wrapper->bind_memory_wrapper;
+
+            mem_wrapper->asset_map_lock.lock();
+            auto entry = mem_wrapper->bound_assets.find(wrapper->bind_offset);
+            if (entry != mem_wrapper->bound_assets.end())
+            {
+                mem_wrapper->bound_assets.erase(entry);
+            }
+            mem_wrapper->asset_map_lock.unlock();
+        }
+
+        RemoveWrapper<BufferWrapper>(wrapper);
         delete wrapper;
     }
 }

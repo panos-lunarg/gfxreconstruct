@@ -38,6 +38,7 @@
 #include "util/memory_output_stream.h"
 
 #include "vulkan/vulkan.h"
+#include "vulkan/vulkan_core.h"
 
 #include <cassert>
 #include <functional>
@@ -98,13 +99,42 @@ class VulkanStateTracker
         }
     }
 
-    template <typename ParentHandle, typename Wrapper, typename AllocateInfo>
-    void AddPoolEntry(ParentHandle                    parent_handle,
-                      uint32_t                        count,
-                      typename Wrapper::HandleType*   new_handles,
-                      const AllocateInfo*             alloc_info,
-                      format::ApiCallId               create_call_id,
-                      const util::MemoryOutputStream* create_parameter_buffer)
+    void AddEntry(VkDevice                               parent_handle,
+                  VkDescriptorSetLayout*                 new_handle,
+                  const VkDescriptorSetLayoutCreateInfo* create_info,
+                  format::ApiCallId                      create_call_id,
+                  const util::MemoryOutputStream*        create_parameter_buffer)
+    {
+        assert(new_handle != nullptr);
+        assert(create_parameter_buffer != nullptr);
+
+        if (*new_handle != VK_NULL_HANDLE)
+        {
+            auto wrapper = vulkan_wrappers::GetWrapper<vulkan_wrappers::DescriptorSetLayoutWrapper>(*new_handle);
+
+            // Adds the handle wrapper to the object state table, filtering for duplicate handle retrieval.
+            std::unique_lock<std::mutex> lock(state_table_mutex_);
+            if (state_table_.InsertWrapper(wrapper->handle_id, wrapper))
+            {
+                // vulkan_state_tracker::InitializeState<VkDevice,
+                //                                       vulkan_wrappers::DescriptorSetLayoutWrapper,
+                //                                       VkDescriptorSetLayoutCreateInfo>(
+                //     parent_handle,
+                //     wrapper,
+                //     create_info,
+                //     create_call_id,
+                //     std::make_shared<util::MemoryOutputStream>(create_parameter_buffer->GetData(),
+                //                                                create_parameter_buffer->GetDataSize()));
+            }
+        }
+    }
+
+    void AddPoolEntry(VkDevice                           parent_handle,
+                      uint32_t                           count,
+                      VkCommandBuffer*                   new_handles,
+                      const VkCommandBufferAllocateInfo* alloc_info,
+                      format::ApiCallId                  create_call_id,
+                      const util::MemoryOutputStream*    create_parameter_buffer)
     {
         assert(new_handles != nullptr);
         assert(create_parameter_buffer != nullptr);
@@ -117,7 +147,7 @@ class VulkanStateTracker
         {
             if (new_handles[i] != VK_NULL_HANDLE)
             {
-                auto wrapper = vulkan_wrappers::GetWrapper<Wrapper>(new_handles[i]);
+                auto wrapper = vulkan_wrappers::GetWrapper<vulkan_wrappers::CommandBufferWrapper>(new_handles[i]);
 
                 // Adds the handle wrapper to the object state table, filtering for duplicate handle retrieval.
                 if (state_table_.InsertWrapper(wrapper->handle_id, wrapper))
@@ -125,6 +155,38 @@ class VulkanStateTracker
                     vulkan_state_tracker::InitializePoolObjectState(
                         parent_handle, wrapper, i, alloc_info, create_call_id, create_parameters);
                 }
+            }
+        }
+    }
+
+    void AddPoolEntry(VkDevice                           parent_handle,
+                      uint32_t                           count,
+                      VkDescriptorSet*                   new_handles,
+                      const VkDescriptorSetAllocateInfo* alloc_info,
+                      format::ApiCallId                  create_call_id,
+                      const util::MemoryOutputStream*    create_parameter_buffer)
+    {
+        assert(new_handles != nullptr);
+        assert(create_parameter_buffer != nullptr);
+
+        // vulkan_state_info::CreateParameters create_parameters = std::make_shared<util::MemoryOutputStream>(
+        //     create_parameter_buffer->GetData(), create_parameter_buffer->GetDataSize());
+
+        std::unique_lock<std::mutex> lock(state_table_mutex_);
+        for (uint32_t i = 0; i < count; ++i)
+        {
+            if (new_handles[i] != VK_NULL_HANDLE)
+            {
+                auto wrapper = vulkan_wrappers::GetWrapper<vulkan_wrappers::DescriptorSetWrapper>(new_handles[i]);
+
+                // Adds the handle wrapper to the object state table, filtering for duplicate handle retrieval.
+                // if (state_table_.InsertWrapper(wrapper->handle_id, wrapper))
+                // {
+                //     vulkan_state_tracker::InitializePoolObjectState(
+                //         parent_handle, wrapper, i, alloc_info, create_call_id, create_parameters);
+                // }
+
+                state_table_.InsertWrapper(wrapper->handle_id, wrapper);
             }
         }
     }
@@ -309,25 +371,6 @@ class VulkanStateTracker
 
     void TrackBufferDeviceAddress(VkDevice device, VkBuffer buffer, VkDeviceAddress address);
 
-    void TrackBufferMemoryBinding(VkDevice       device,
-                                  VkBuffer       buffer,
-                                  VkDeviceMemory memory,
-                                  VkDeviceSize   memoryOffset,
-                                  const void*    bind_info_pnext = nullptr);
-
-    void TrackImageMemoryBinding(VkDevice       device,
-                                 VkImage        image,
-                                 VkDeviceMemory memory,
-                                 VkDeviceSize   memoryOffset,
-                                 const void*    bind_info_pnext = nullptr);
-
-    void TrackMappedMemory(VkDevice         device,
-                           VkDeviceMemory   memory,
-                           void*            mapped_data,
-                           VkDeviceSize     mapped_offset,
-                           VkDeviceSize     mapped_size,
-                           VkMemoryMapFlags mapped_flags);
-
     void TrackBeginRenderPass(VkCommandBuffer command_buffer, const VkRenderPassBeginInfo* begin_info);
 
     void TrackEndRenderPass(VkCommandBuffer command_buffer);
@@ -347,15 +390,6 @@ class VulkanStateTracker
     void TrackCommandBufferSubmissions(uint32_t submit_count, const VkSubmitInfo* submits);
 
     void TrackCommandBufferSubmissions2(uint32_t submit_count, const VkSubmitInfo2* submits);
-
-    void TrackUpdateDescriptorSets(uint32_t                    write_count,
-                                   const VkWriteDescriptorSet* writes,
-                                   uint32_t                    copy_count,
-                                   const VkCopyDescriptorSet*  copies);
-
-    void TrackUpdateDescriptorSetWithTemplate(VkDescriptorSet           set,
-                                              const UpdateTemplateInfo* template_info,
-                                              const void*               data);
 
     void TrackResetDescriptorPool(VkDescriptorPool descriptor_pool);
 
@@ -416,21 +450,6 @@ class VulkanStateTracker
     void TrackSetLocalDimmingAMD(VkDevice device, VkSwapchainKHR swapChain, VkBool32 localDimmingEnable);
 
     void TrackTlasToBlasDependencies(uint32_t command_buffer_count, const VkCommandBuffer* command_buffers);
-
-    void TrackCmdBindDescriptorSets(VkCommandBuffer        commandBuffer,
-                                    VkPipelineBindPoint    pipelineBindPoint,
-                                    VkPipelineLayout       layout,
-                                    uint32_t               firstSet,
-                                    uint32_t               descriptorSetCount,
-                                    const VkDescriptorSet* pDescriptorSets,
-                                    uint32_t               dynamicOffsetCount,
-                                    const uint32_t*        pDynamicOffsets);
-
-    void TrackCmdBindDescriptorSets2KHR(VkCommandBuffer                    commandBuffer,
-                                        const VkBindDescriptorSetsInfoKHR* pBindDescriptorSetsInfo);
-
-    void
-    TrackCmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline);
 
     void TrackCmdCopyBuffer(VkCommandBuffer     commandBuffer,
                             VkBuffer            srcBuffer,
@@ -661,9 +680,9 @@ class VulkanStateTracker
                                                uint32_t        maxDrawCount,
                                                uint32_t        stride);
 
-    void TrackMappedAssetsWrites(VkCommandBuffer commandBuffer);
+    void TrackMappedAssetsWrites(vulkan_wrappers::CommandBufferWrapper* cmd_buf_wrapper);
 
-    void MarkReferencedAssetsAsDirty(VkCommandBuffer commandBuffer);
+    void MarkDirtyAssets(vulkan_wrappers::CommandBufferWrapper* cmd_buf_wrapper);
 
   private:
     template <typename ParentHandle, typename SecondaryHandle, typename Wrapper, typename CreateInfo>
@@ -729,10 +748,6 @@ class VulkanStateTracker
     void DestroyState(vulkan_wrappers::DeviceMemoryWrapper* wrapper);
 
     void DestroyState(vulkan_wrappers::AccelerationStructureKHRWrapper* wrapper);
-
-    void DestroyState(vulkan_wrappers::ImageWrapper* wrapper);
-
-    void DestroyState(vulkan_wrappers::BufferWrapper* wrapper);
 
     void TrackQuerySubmissions(vulkan_wrappers::CommandBufferWrapper* command_wrapper);
 

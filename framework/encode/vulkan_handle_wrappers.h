@@ -138,11 +138,14 @@ struct InstanceWrapper : public HandleWrapper<VkInstance>
     uint32_t                            api_version{ VK_MAKE_VERSION(1, 0, 0) };
 };
 
+struct DeviceWrapper;
 struct QueueWrapper : public HandleWrapper<VkQueue>
 {
     VulkanDeviceTable* layer_table_ref{ nullptr };
+    DeviceWrapper*     parent_device{ nullptr };
 };
 
+struct DeviceMemoryWrapper;
 struct DeviceWrapper : public HandleWrapper<VkDevice>
 {
     VulkanDeviceTable          layer_table;
@@ -173,9 +176,10 @@ struct AssetWrapperBase
     const void*                bind_pnext{ nullptr };
     std::unique_ptr<uint8_t[]> bind_pnext_memory;
 
-    format::HandleId bind_memory_id{ format::kNullHandleId };
-    VkDeviceSize     bind_offset{ 0 };
-    uint32_t         queue_family_index{ 0 };
+    format::HandleId     bind_memory_id{ format::kNullHandleId };
+    DeviceMemoryWrapper* bind_memory_wrapper{ nullptr };
+    VkDeviceSize         bind_offset{ 0 };
+    uint32_t             queue_family_index{ 0 };
 
     VkDeviceSize size{ 0 };
     bool         dirty{ true };
@@ -405,7 +409,13 @@ struct CommandBufferWrapper : public HandleWrapper<VkCommandBuffer>
     std::unordered_map<uint32_t, const DescriptorSetWrapper*>
         bound_descriptors[vulkan_state_info::PipelineBindPoints::kBindPoint_count];
 
+    // This is maintainted by the state tracker and keeps track for assets (Images, Buffer and Descriptor sets)
+    // that are modified by a Queue submission
     std::unordered_set<AssetWrapperBase*> modified_assets;
+
+    std::unordered_set<AssetWrapperBase*> referenced_assets;
+
+    std::vector<CommandBufferWrapper*> secondaries;
 };
 
 struct DeferredOperationKHRWrapper : public HandleWrapper<VkDeferredOperationKHR>

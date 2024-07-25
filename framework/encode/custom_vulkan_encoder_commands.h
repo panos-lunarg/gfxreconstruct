@@ -1411,9 +1411,50 @@ struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCmdDrawIndexedIndirect
 };
 
 template <>
-struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer>
+struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCreateDescriptorSetLayout>
 {
     template <typename... Args>
+    static void Dispatch(VulkanCaptureManager* manager, VkResult result, Args... args)
+    {
+        manager->PostProcess_vkCreateDescriptorSetLayout(result, args...);
+    }
+};
+
+template <>
+struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkAllocateDescriptorSets>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanCaptureManager* manager, VkResult result, Args... args)
+    {
+        manager->PostProcess_vkAllocateDescriptorSets(result, args...);
+    }
+};
+
+template <>
+struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCreateImageView>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanCaptureManager* manager, VkResult result, Args... args)
+    {
+        manager->PostProcess_vkCreateImageView(result, args...);
+    }
+};
+
+template <>
+struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCreateBufferView>
+{
+    template <typename... Args>
+    static void Dispatch(VulkanCaptureManager* manager, VkResult result, Args... args)
+    {
+        manager->PostProcess_vkCreateBufferView(result, args...);
+    }
+};
+
+
+template<>
+struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCmdCopyBuffer>
+{
+    template<typename... Args>
     static void Dispatch(VulkanCaptureManager* manager, Args... args)
     {
         manager->PostProcess_vkCmdCopyBuffer(args...);
@@ -1689,6 +1730,57 @@ struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCmdDrawMeshTasksIndire
         manager->PostProcess_vkCmdDrawMeshTasksIndirectCountEXT(args...);
     }
 };
+
+template <>
+struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers>
+{
+    template<typename... Args>
+    static void Dispatch(VulkanCaptureManager* manager, Args... args)
+    {
+        manager->PostProcess_vkCmdBindVertexBuffers(args...);
+    }
+};
+
+template <>
+struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers2>
+{
+    template<typename... Args>
+    static void Dispatch(VulkanCaptureManager* manager, Args... args)
+    {
+        manager->PostProcess_vkCmdBindVertexBuffers2(args...);
+    }
+};
+
+template <>
+struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCmdBindVertexBuffers2EXT>
+{
+    template<typename... Args>
+    static void Dispatch(VulkanCaptureManager* manager, Args... args)
+    {
+        manager->PostProcess_vkCmdBindVertexBuffers2EXT(args...);
+    }
+};
+
+template <>
+struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCmdBindIndexBuffer>
+{
+    template<typename... Args>
+    static void Dispatch(VulkanCaptureManager* manager, Args... args)
+    {
+        manager->PostProcess_vkCmdBindIndexBuffer(args...);
+    }
+};
+
+template <>
+struct CustomEncoderPostCall<format::ApiCallId::ApiCall_vkCmdBindIndexBuffer2KHR>
+{
+    template<typename... Args>
+    static void Dispatch(VulkanCaptureManager* manager, Args... args)
+    {
+        manager->PostProcess_vkCmdBindIndexBuffer2KHR(args...);
+    }
+};
+
 
 GFXRECON_END_NAMESPACE(encode)
 GFXRECON_END_NAMESPACE(gfxrecon)

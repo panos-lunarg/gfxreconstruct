@@ -1278,7 +1278,7 @@ void CommonCaptureManager::WriteToFile(const void* data, size_t size, util::File
     util::FileOutputStream* output_stream = (file_stream != nullptr) ? file_stream : file_stream_.get();
 
     output_stream->Write(data, size);
-    if (force_file_flush_)
+    // if (force_file_flush_)
     {
         output_stream->Flush();
     }
