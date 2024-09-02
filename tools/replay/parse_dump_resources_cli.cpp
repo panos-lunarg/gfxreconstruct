@@ -457,18 +457,14 @@ bool parse_dump_resources_arg(gfxrecon::decode::VulkanReplayOptions& vulkan_repl
                     vulkan_replay_options.TraceRays_Indices[i].push_back(TraceRays);
                 }
 
-                if (vulkan_replay_options.QueueSubmit_Indices.find(QueueSubmit) !=
-                    vulkan_replay_options.QueueSubmit_Indices.end())
+                auto [itr, inserted] = vulkan_replay_options.QueueSubmit_Indices.insert(QueueSubmit);
+                if (!inserted)
                 {
                     // QueueSubmit value can't be repeated
                     parse_error         = true;
                     parse_error_message = "Bad --dump-resources parameter: QueueSubmit value of " +
                                           std::to_string(QueueSubmit) + " is repeated";
                     break;
-                }
-                else
-                {
-                    vulkan_replay_options.QueueSubmit_Indices.insert(QueueSubmit);
                 }
             }
         }
