@@ -175,7 +175,7 @@ static bool CheckIndicesForErrors(const gfxrecon::decode::VulkanReplayOptions& v
     }
 
     // Each dump command must specify one and only one of draw, tracerays, or dispatch
-    uint64_t loopcount =
+    size_t loopcount =
         std::max(vulkan_replay_options.Draw_Indices.size(), vulkan_replay_options.Dispatch_Indices.size());
     loopcount = std::max(loopcount, vulkan_replay_options.TraceRays_Indices.size());
     for (int i = 0; i < loopcount; i++)
