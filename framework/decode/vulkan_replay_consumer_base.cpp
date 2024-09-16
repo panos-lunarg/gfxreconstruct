@@ -48,6 +48,7 @@
 #include "util/hash.h"
 #include "util/platform.h"
 #include "util/logging.h"
+#include "decode/mark_injected_commands.h"
 
 #include "spirv_reflect.h"
 
@@ -2783,7 +2784,11 @@ void VulkanReplayConsumerBase::OverrideDestroyDevice(
 
         if (screenshot_handler_ != nullptr)
         {
+            decode::BeginInjectedCommands();
+
             screenshot_handler_->DestroyDeviceResources(device, GetDeviceTable(device));
+
+            decode::EndInjectedCommands();
         }
 
         device_info->allocator->Destroy();
@@ -3488,6 +3493,8 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
 
     if (screenshot_handler_ != nullptr)
     {
+        decode::BeginInjectedCommands();
+
         CommandBufferInfo* frame_boundary_command_buffer_info = nullptr;
         for (uint32_t i = 0; i < submitCount; ++i)
         {
@@ -3523,6 +3530,8 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit(PFN_vkQueueSubmit func,
                 }
             }
         }
+
+        decode::EndInjectedCommands();
     }
 
     return result;
@@ -3663,6 +3672,8 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit2(PFN_vkQueueSubmit2 func,
     // Check whether any of the submitted command buffers are frame boundaries.
     if (screenshot_handler_ != nullptr)
     {
+        decode::BeginInjectedCommands();
+
         bool is_frame_boundary = false;
         for (uint32_t i = 0; i < submitCount; ++i)
         {
@@ -3687,6 +3698,8 @@ VkResult VulkanReplayConsumerBase::OverrideQueueSubmit2(PFN_vkQueueSubmit2 func,
                 }
             }
         }
+
+        decode::EndInjectedCommands();
     }
 
     return result;
@@ -3955,6 +3968,8 @@ VkResult VulkanReplayConsumerBase::OverrideAllocateDescriptorSets(
 
         if ((original_result >= 0) && (result == VK_ERROR_OUT_OF_POOL_MEMORY))
         {
+            decode::BeginInjectedCommands();
+
             // Handle case where replay runs out of descriptor pool memory when capture did not by creating a new
             // descriptor pool and attempting the allocation a second time.
             VkDescriptorPool new_pool  = VK_NULL_HANDLE;
@@ -4001,6 +4016,8 @@ VkResult VulkanReplayConsumerBase::OverrideAllocateDescriptorSets(
 
                 result = func(device_info->handle, &modified_allocate_info, pDescriptorSets->GetHandlePointer());
             }
+
+            decode::EndInjectedCommands();
         }
 
         // The information gathered here is only relevant to the dump resources feature
@@ -6683,6 +6700,8 @@ VulkanReplayConsumerBase::OverrideQueuePresentKHR(PFN_vkQueuePresentKHR         
     capture_image_indices_.clear();
     swapchain_infos_.clear();
 
+    decode::BeginInjectedCommands();
+
     if ((screenshot_handler_ != nullptr) && (screenshot_handler_->IsScreenshotFrame()))
     {
         auto meta_info = pPresentInfo->GetMetaStructPointer();
@@ -6930,6 +6949,8 @@ VulkanReplayConsumerBase::OverrideQueuePresentKHR(PFN_vkQueuePresentKHR         
         VkDevice device = MapHandle<DeviceInfo>(queue_info->parent_id, &VulkanObjectInfoTable::GetDeviceInfo);
         GetDeviceTable(device)->DeviceWaitIdle(device);
     }
+
+    decode::EndInjectedCommands();
 
     // Only attempt to find imported or shadow semaphores if we know at least one around.
     if ((!have_imported_semaphores_) && (shadow_semaphores_.empty()) && (modified_present_info.swapchainCount != 0))
@@ -8506,6 +8527,8 @@ void VulkanReplayConsumerBase::OverrideFrameBoundaryANDROID(PFN_vkFrameBoundaryA
 
     if (screenshot_handler_ != nullptr)
     {
+        decode::BeginInjectedCommands();
+
         if (screenshot_handler_->IsScreenshotFrame() && image_info != nullptr)
         {
             const std::string filename_prefix =
@@ -8542,6 +8565,8 @@ void VulkanReplayConsumerBase::OverrideFrameBoundaryANDROID(PFN_vkFrameBoundaryA
         }
 
         screenshot_handler_->EndFrame();
+
+        decode::EndInjectedCommands();
     }
 
     func(device, semaphore, image);
