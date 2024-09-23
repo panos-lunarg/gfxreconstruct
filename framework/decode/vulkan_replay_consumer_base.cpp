@@ -2518,6 +2518,16 @@ VulkanReplayConsumerBase::OverrideCreateInstance(VkResult original_result,
                                                      modified_create_info.ppEnabledExtensionNames +
                                                          modified_create_info.enabledExtensionCount);
         }
+
+        util::MarkingLayersUtil::instance().SetInfoTable(&object_info_table_);
+
+        for (const std::string& name : options_.marking_layers_names)
+        {
+            if (feature_util::IsSupportedLayer(available_layers, name.c_str()))
+            {
+                util::MarkingLayersUtil::instance().AddLayerName(name);
+            }
+        }
     }
 
     return result;
