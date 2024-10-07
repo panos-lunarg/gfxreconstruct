@@ -1791,6 +1791,7 @@ VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitIn
 
     // First do a submission with all command buffer except the ones we are interested in
     std::vector<VkSubmitInfo>                 modified_submit_infos = submit_infos;
+    std::vector<VkCommandBuffer>              original_command_buffers;
     std::vector<std::vector<VkCommandBuffer>> modified_command_buffer_handles(modified_submit_infos.size());
     for (size_t s = 0; s < modified_submit_infos.size(); s++)
     {
@@ -1802,6 +1803,7 @@ VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitIn
             auto bcb_entry = cmd_buf_begin_map_.find(command_buffer_handles[o]);
             if (bcb_entry != cmd_buf_begin_map_.end())
             {
+                original_command_buffers.push_back(command_buffer_handles[o]);
                 continue;
             }
             else
@@ -1864,10 +1866,7 @@ VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitIn
                 modified_submit_infos[s].signalSemaphoreCount = 0;
             }
 
-            DrawCallsDumpingContext*         dc_context = FindDrawCallCommandBufferContext(command_buffer_handles[o]);
-            DispatchTraceRaysDumpingContext* dr_context =
-                FindDispatchRaysCommandBufferContext(command_buffer_handles[o]);
-
+            DrawCallsDumpingContext* dc_context = FindDrawCallCommandBufferContext(command_buffer_handles[o]);
             if (dc_context != nullptr)
             {
                 assert(cmd_buf_begin_map_.find(command_buffer_handles[o]) != cmd_buf_begin_map_.end());
@@ -1886,6 +1885,8 @@ VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitIn
                 submitted = true;
             }
 
+            DispatchTraceRaysDumpingContext* dr_context =
+                FindDispatchRaysCommandBufferContext(command_buffer_handles[o]);
             if (dr_context != nullptr)
             {
                 assert(cmd_buf_begin_map_.find(command_buffer_handles[o]) != cmd_buf_begin_map_.end());
@@ -1933,6 +1934,23 @@ VkResult VulkanReplayDumpResourcesBase::QueueSubmit(const std::vector<VkSubmitIn
         if (QueueSubmit_indices_.empty())
         {
             Release();
+        }
+
+        // After dump resources is finished submit original command buffers
+        if (!original_command_buffers.empty())
+        {
+            const VkSubmitInfo original_command_buffers_submision = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
+                                                                      nullptr,
+                                                                      0,
+                                                                      nullptr,
+                                                                      0,
+                                                                      static_cast<uint32_t>(
+                                                                          original_command_buffers.size()),
+                                                                      original_command_buffers.data(),
+                                                                      0,
+                                                                      nullptr };
+
+            res = device_table.QueueSubmit(queue, 1, &original_command_buffers_submision, fence);
         }
     }
 

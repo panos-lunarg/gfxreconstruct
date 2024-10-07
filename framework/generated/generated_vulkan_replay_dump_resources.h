@@ -362,7 +362,7 @@ void Process_vkCmdBeginQuery(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdBeginQuery                         func,
     VkCommandBuffer                             commandBuffer,
-    VkQueryPool                                 queryPool,
+    const QueryPoolInfo*                        queryPool,
     uint32_t                                    query,
     VkQueryControlFlags                         flags);
 
@@ -370,14 +370,14 @@ void Process_vkCmdEndQuery(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdEndQuery                           func,
     VkCommandBuffer                             commandBuffer,
-    VkQueryPool                                 queryPool,
+    const QueryPoolInfo*                        queryPool,
     uint32_t                                    query);
 
 void Process_vkCmdResetQueryPool(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdResetQueryPool                     func,
     VkCommandBuffer                             commandBuffer,
-    VkQueryPool                                 queryPool,
+    const QueryPoolInfo*                        queryPool,
     uint32_t                                    firstQuery,
     uint32_t                                    queryCount);
 
@@ -393,10 +393,10 @@ void Process_vkCmdCopyQueryPoolResults(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdCopyQueryPoolResults               func,
     VkCommandBuffer                             commandBuffer,
-    VkQueryPool                                 queryPool,
+    const QueryPoolInfo*                        queryPool,
     uint32_t                                    firstQuery,
     uint32_t                                    queryCount,
-    VkBuffer                                    dstBuffer,
+    const BufferInfo*                           dstBuffer,
     VkDeviceSize                                dstOffset,
     VkDeviceSize                                stride,
     VkQueryResultFlags                          flags);
@@ -1068,7 +1068,7 @@ void Process_vkCmdBeginQueryIndexedEXT(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdBeginQueryIndexedEXT               func,
     VkCommandBuffer                             commandBuffer,
-    VkQueryPool                                 queryPool,
+    const QueryPoolInfo*                        queryPool,
     uint32_t                                    query,
     VkQueryControlFlags                         flags,
     uint32_t                                    index);
@@ -1077,7 +1077,7 @@ void Process_vkCmdEndQueryIndexedEXT(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdEndQueryIndexedEXT                 func,
     VkCommandBuffer                             commandBuffer,
-    VkQueryPool                                 queryPool,
+    const QueryPoolInfo*                        queryPool,
     uint32_t                                    query,
     uint32_t                                    index);
 

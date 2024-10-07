@@ -280,6 +280,58 @@ class VulkanReplayDumpResourcesBase
                                     PFN_vkCmdEndRenderingKHR func,
                                     VkCommandBuffer          commandBuffer);
 
+    void OverrideCmdBeginQuery(const ApiCallInfo&   call_info,
+                               PFN_vkCmdBeginQuery  func,
+                               VkCommandBuffer      commandBuffer,
+                               const QueryPoolInfo* queryPool,
+                               uint32_t             query,
+                               VkQueryControlFlags  flags)
+    {}
+
+    void OverrideCmdEndQuery(const ApiCallInfo&   call_info,
+                             PFN_vkCmdEndQuery    func,
+                             VkCommandBuffer      commandBuffer,
+                             const QueryPoolInfo* queryPool,
+                             uint32_t             query)
+    {}
+
+    void OverrideCmdResetQueryPool(const ApiCallInfo&      call_info,
+                                   PFN_vkCmdResetQueryPool func,
+                                   VkCommandBuffer         commandBuffer,
+                                   const QueryPoolInfo*    queryPool,
+                                   uint32_t                firstQuery,
+                                   uint32_t                queryCount)
+    {}
+
+    void OverrideCmdCopyQueryPoolResults(const ApiCallInfo&            call_info,
+                                         PFN_vkCmdCopyQueryPoolResults func,
+                                         VkCommandBuffer               commandBuffer,
+                                         const QueryPoolInfo*          queryPool,
+                                         uint32_t                      firstQuery,
+                                         uint32_t                      queryCount,
+                                         const BufferInfo*             dstBuffer,
+                                         VkDeviceSize                  dstOffset,
+                                         VkDeviceSize                  stride,
+                                         VkQueryResultFlags            flags)
+    {}
+
+    void OverrideCmdBeginQueryIndexedEXT(const ApiCallInfo&            call_info,
+                                         PFN_vkCmdBeginQueryIndexedEXT func,
+                                         VkCommandBuffer               commandBuffer,
+                                         const QueryPoolInfo*          queryPool,
+                                         uint32_t                      query,
+                                         VkQueryControlFlags           flags,
+                                         uint32_t                      index)
+    {}
+
+    void OverrideCmdEndQueryIndexedEXT(const ApiCallInfo&          call_info,
+                                       PFN_vkCmdEndQueryIndexedEXT func,
+                                       VkCommandBuffer             commandBuffer,
+                                       const QueryPoolInfo*        queryPool,
+                                       uint32_t                    query,
+                                       uint32_t                    index)
+    {}
+
     VkResult QueueSubmit(const std::vector<VkSubmitInfo>& modified_submit_infos,
                          const encode::VulkanDeviceTable& device_table,
                          VkQueue                          queue,
