@@ -308,8 +308,7 @@ class CommonCaptureManager
 
     void IncrementBlockIndex(uint64_t blocks)
     {
-        block_index_ += blocks;
-        GetThreadData()->block_index_ = block_index_;
+        GetThreadData()->block_index_ = block_index_.fetch_add(blocks);
     }
 
   protected:
