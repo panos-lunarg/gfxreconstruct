@@ -144,6 +144,8 @@ class VulkanDefaultAllocator : public VulkanResourceAllocator
 
     virtual void UnmapMemory(VkDeviceMemory memory, MemoryData allocator_data) override;
 
+    virtual bool IsMemoryMapped(MemoryData allocator_data) override;
+
     virtual VkResult FlushMappedMemoryRanges(uint32_t                   memory_range_count,
                                              const VkMappedMemoryRange* memory_ranges,
                                              const MemoryData*          allocator_datas) override;

@@ -78,6 +78,26 @@ class PageStatusTracker
 
     bool HasActiveWriteBlock() const { return HasActiveWriteBlock(0, active_writes_.size()); }
 
+    static void OrrOpp(PageStatus&       writes,
+                       size_t            first_page,
+                       const PageStatus& other_writes,
+                       size_t            other_first_page,
+                       size_t            page_count)
+    {
+        assert(first_page < writes.size());
+        assert(first_page + page_count <= writes.size());
+
+        assert(other_first_page < other_writes.size());
+        assert(other_first_page + page_count <= other_writes.size());
+
+        for (size_t p = 0;
+             p < page_count && ((first_page + p) < writes.size()) && ((other_first_page + p) < other_writes.size());
+             ++p)
+        {
+            writes[first_page + p] = writes[first_page + p] || other_writes[other_first_page + p];
+        }
+    }
+
     size_t GetPageCount() const { return active_writes_.size(); }
 
   private:

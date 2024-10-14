@@ -34,6 +34,7 @@
 #include "util/memory_output_stream.h"
 #include "graphics/vulkan_struct_get_pnext.h"
 
+#include "util/platform.h"
 #include "vulkan/vulkan.h"
 #include "vulkan/vulkan_core.h"
 
@@ -608,7 +609,10 @@ inline void InitializeState<VkDevice, vulkan_wrappers::BufferWrapper, VkBufferCr
     wrapper->create_call_id    = create_call_id;
     wrapper->create_parameters = std::move(create_parameters);
 
-    wrapper->size = create_info->size;
+    wrapper->asset_id   = wrapper->handle_id;
+    wrapper->size       = create_info->size;
+    wrapper->dirty_pages.resize(wrapper->size / util::platform::GetSystemPageSize() +
+                                !!(wrapper->size % util::platform::GetSystemPageSize()));
 
     // TODO: Do we need to track the queue family that the buffer is actually used with?
     if ((create_info->queueFamilyIndexCount > 0) && (create_info->pQueueFamilyIndices != nullptr))
@@ -653,7 +657,10 @@ inline void InitializeState<VkDevice, vulkan_wrappers::ImageWrapper, VkImageCrea
     VkMemoryRequirements     image_mem_reqs;
     assert(wrapper->handle != VK_NULL_HANDLE);
     device_table->GetImageMemoryRequirements(parent_handle, wrapper->handle, &image_mem_reqs);
-    wrapper->size = image_mem_reqs.size;
+    wrapper->size     = image_mem_reqs.size;
+    wrapper->asset_id = wrapper->handle_id;
+    wrapper->dirty_pages.resize(wrapper->size / util::platform::GetSystemPageSize() +
+                                !!(wrapper->size % util::platform::GetSystemPageSize()));
 }
 
 template <>

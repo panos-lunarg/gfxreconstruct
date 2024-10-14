@@ -981,7 +981,7 @@ void VulkanStateWriter::WriteDescriptorSetStateWithAssetFile(const VulkanStateTa
                 if (wrapper->dirty)
                 {
                     const int64_t offset                       = asset_file_stream_->GetOffset();
-                    (*asset_file_offsets_)[wrapper->handle_id] = offset;
+                    (*asset_file_offsets_)[wrapper->handle_id] = AssetOffsetInfo{ offset };
                     WriteFunctionCall(
                         wrapper->set_layout_dependency.create_call_id, dep_create_parameters, asset_file_stream_);
                     if (output_stream_ != nullptr)
@@ -994,7 +994,7 @@ void VulkanStateWriter::WriteDescriptorSetStateWithAssetFile(const VulkanStateTa
                     if (output_stream_ != nullptr)
                     {
                         assert((*asset_file_offsets_).find(wrapper->handle_id) != (*asset_file_offsets_).end());
-                        const int64_t offset = (*asset_file_offsets_)[wrapper->handle_id];
+                        const int64_t offset = (*asset_file_offsets_)[wrapper->handle_id].asset_init_offset;
                         WriteExecuteFromFile(asset_file_stream_->GetFilename(), 1, offset);
                     }
                 }
@@ -1014,7 +1014,7 @@ void VulkanStateWriter::WriteDescriptorSetStateWithAssetFile(const VulkanStateTa
         else
         {
             assert((*asset_file_offsets_).find(wrapper->handle_id) != (*asset_file_offsets_).end());
-            offset = (*asset_file_offsets_)[wrapper->handle_id];
+            offset = (*asset_file_offsets_)[wrapper->handle_id].asset_init_offset;
         }
 
         // Filter duplicate calls to vkAllocateDescriptorSets for descriptor sets that were allocated by the same
@@ -1108,7 +1108,7 @@ void VulkanStateWriter::WriteDescriptorSetStateWithAssetFile(const VulkanStateTa
         if (wrapper->dirty)
         {
             wrapper->dirty                             = false;
-            (*asset_file_offsets_)[wrapper->handle_id] = offset;
+            (*asset_file_offsets_)[wrapper->handle_id] = AssetOffsetInfo{ offset };
         }
     });
 
@@ -1652,7 +1652,8 @@ void VulkanStateWriter::ProcessBufferMemory(const vulkan_wrappers::DeviceWrapper
     }
 }
 
-void VulkanStateWriter::ProcessBufferMemoryWithAssetFile(const vulkan_wrappers::DeviceWrapper*  device_wrapper,
+void VulkanStateWriter::ProcessBufferMemoryWithAssetFile(const VulkanStateTable&                state_table,
+                                                         const vulkan_wrappers::DeviceWrapper*  device_wrapper,
                                                          const std::vector<BufferSnapshotInfo>& buffer_snapshot_info,
                                                          graphics::VulkanResourcesUtil&         resource_util)
 {
@@ -1670,10 +1671,26 @@ void VulkanStateWriter::ProcessBufferMemoryWithAssetFile(const vulkan_wrappers::
 
         assert((buffer_wrapper != nullptr));
 
+        // Check to see if we can get asset's resource via a memory mapping.
+        // Otherwise dump using a staging buffer
+        if (!buffer_wrapper->dirty && buffer_wrapper->dump_fill_asset_cmd && snapshot_entry.need_staging_copy)
+        {
+            // VkMemoryPropertyFlags mem_props = GetMemoryProperties(device_wrapper, memory_wrapper);
+            // GFXRECON_WRITE_CONSOLE("  mem_props: 0x%x", mem_props);
+            // GFXRECON_WRITE_CONSOLE("  memory_wrapper->mapped_data: %p", memory_wrapper->mapped_data);
+            // GFXRECON_WRITE_CONSOLE("  memory_wrapper->mapped_offset: %zu", memory_wrapper->mapped_offset);
+            // GFXRECON_WRITE_CONSOLE("  memory_wrapper->mapped_size: %zu", memory_wrapper->mapped_size);
+            // GFXRECON_WRITE_CONSOLE("  Memory not readable for asset: %" PRIu64, buffer_wrapper->asset_id);
+
+            buffer_wrapper->dirty               = true;
+            buffer_wrapper->dump_fill_asset_cmd = false;
+        }
+
         if (buffer_wrapper->dirty)
         {
             assert(memory_wrapper != nullptr);
-            buffer_wrapper->dirty = false;
+            buffer_wrapper->dirty               = false;
+            buffer_wrapper->dump_fill_asset_cmd = false;
 
             if (snapshot_entry.need_staging_copy)
             {
@@ -1754,7 +1771,8 @@ void VulkanStateWriter::ProcessBufferMemoryWithAssetFile(const vulkan_wrappers::
                 const int64_t offset = asset_file_stream_->GetOffset();
                 asset_file_stream_->Write(&upload_cmd, sizeof(upload_cmd));
                 asset_file_stream_->Write(bytes, data_size);
-                (*asset_file_offsets_)[buffer_wrapper->handle_id] = offset;
+                (*asset_file_offsets_)[buffer_wrapper->handle_id].asset_init_offset = offset;
+                (*asset_file_offsets_)[buffer_wrapper->handle_id].page_patches.clear();
 
                 if (output_stream_ != nullptr)
                 {
@@ -1776,11 +1794,26 @@ void VulkanStateWriter::ProcessBufferMemoryWithAssetFile(const vulkan_wrappers::
         }
         else
         {
+            assert((*asset_file_offsets_).find(buffer_wrapper->handle_id) != (*asset_file_offsets_).end());
+
+            // Dump any page patches
+            if (buffer_wrapper->dump_fill_asset_cmd)
+            {
+                WriteFillAssetMemoryCommands(
+                    state_table, buffer_wrapper, (*asset_file_offsets_)[buffer_wrapper->handle_id].page_patches);
+            }
+
             if (output_stream_ != nullptr)
             {
-                assert((*asset_file_offsets_).find(buffer_wrapper->handle_id) != (*asset_file_offsets_).end());
-                const int64_t offset = (*asset_file_offsets_)[buffer_wrapper->handle_id];
+                // Dump ExecuteFromFile for the init buffer/image command
+                int64_t offset = (*asset_file_offsets_)[buffer_wrapper->handle_id].asset_init_offset;
                 WriteExecuteFromFile(asset_file_stream_->GetFilename(), 1, offset);
+
+                // Dump ExecuteFromFile for the asset page patches
+                for (const auto& patch : (*asset_file_offsets_)[buffer_wrapper->handle_id].page_patches)
+                {
+                    WriteExecuteFromFile(asset_file_stream_->GetFilename(), 1, patch.second);
+                }
             }
         }
     }
@@ -1935,7 +1968,8 @@ void VulkanStateWriter::ProcessImageMemory(const vulkan_wrappers::DeviceWrapper*
     }
 }
 
-void VulkanStateWriter::ProcessImageMemoryWithAssetFile(const vulkan_wrappers::DeviceWrapper* device_wrapper,
+void VulkanStateWriter::ProcessImageMemoryWithAssetFile(const VulkanStateTable&               state_table,
+                                                        const vulkan_wrappers::DeviceWrapper* device_wrapper,
                                                         const std::vector<ImageSnapshotInfo>& image_snapshot_info,
                                                         graphics::VulkanResourcesUtil&        resource_util)
 {
@@ -1953,12 +1987,26 @@ void VulkanStateWriter::ProcessImageMemoryWithAssetFile(const vulkan_wrappers::D
 
         assert(image_wrapper != nullptr);
 
+        if (!image_wrapper->dirty && image_wrapper->dump_fill_asset_cmd && snapshot_entry.need_staging_copy)
+        {
+            // VkMemoryPropertyFlags mem_props = GetMemoryProperties(device_wrapper, memory_wrapper);
+            // GFXRECON_WRITE_CONSOLE("  mem_props: 0x%x", mem_props);
+            // GFXRECON_WRITE_CONSOLE("  memory_wrapper->mapped_data: %p", memory_wrapper->mapped_data);
+            // GFXRECON_WRITE_CONSOLE("  memory_wrapper->mapped_offset: %zu", memory_wrapper->mapped_offset);
+            // GFXRECON_WRITE_CONSOLE("  memory_wrapper->mapped_size: %zu", memory_wrapper->mapped_size);
+            // GFXRECON_WRITE_CONSOLE("  Memory not readable for asset: %" PRIu64, image_wrapper->asset_id);
+
+            image_wrapper->dirty               = true;
+            image_wrapper->dump_fill_asset_cmd = false;
+        }
+
         if (image_wrapper->dirty)
         {
             assert((image_wrapper->is_swapchain_image && memory_wrapper == nullptr) ||
                    (!image_wrapper->is_swapchain_image && memory_wrapper != nullptr));
 
-            image_wrapper->dirty = false;
+            image_wrapper->dirty               = false;
+            image_wrapper->dump_fill_asset_cmd = false;
 
             if (snapshot_entry.need_staging_copy)
             {
@@ -2070,8 +2118,10 @@ void VulkanStateWriter::ProcessImageMemoryWithAssetFile(const vulkan_wrappers::D
 
                     upload_cmd.meta_header.block_header.size += levels_size + data_size;
 
-                    const int64_t offset                             = asset_file_stream_->GetOffset();
-                    (*asset_file_offsets_)[image_wrapper->handle_id] = offset;
+                    const int64_t offset = asset_file_stream_->GetOffset();
+                    (*asset_file_offsets_)[image_wrapper->handle_id].asset_init_offset = offset;
+                    (*asset_file_offsets_)[image_wrapper->handle_id].page_patches.clear();
+
                     asset_file_stream_->Write(&upload_cmd, sizeof(upload_cmd));
                     asset_file_stream_->Write(snapshot_entry.level_sizes.data(), levels_size);
                     asset_file_stream_->Write(bytes, data_size);
@@ -2104,11 +2154,26 @@ void VulkanStateWriter::ProcessImageMemoryWithAssetFile(const vulkan_wrappers::D
         }
         else
         {
+            assert((*asset_file_offsets_).find(image_wrapper->handle_id) != (*asset_file_offsets_).end());
+
+            // Dump any page patches
+            if (image_wrapper->dump_fill_asset_cmd)
+            {
+                WriteFillAssetMemoryCommands(
+                    state_table, image_wrapper, (*asset_file_offsets_)[image_wrapper->handle_id].page_patches);
+            }
+
             if (output_stream_ != nullptr)
             {
-                assert((*asset_file_offsets_).find(image_wrapper->handle_id) != (*asset_file_offsets_).end());
-                const int64_t offset = (*asset_file_offsets_)[image_wrapper->handle_id];
+                // Dump ExecuteFromFile for the init buffer/image command
+                int64_t offset = (*asset_file_offsets_)[image_wrapper->handle_id].asset_init_offset;
                 WriteExecuteFromFile(asset_file_stream_->GetFilename(), 1, offset);
+
+                // Dump ExecuteFromFile for the asset page patches
+                for (const auto& patch : (*asset_file_offsets_)[image_wrapper->handle_id].page_patches)
+                {
+                    WriteExecuteFromFile(asset_file_stream_->GetFilename(), 1, patch.second);
+                }
             }
         }
     }
@@ -2399,6 +2464,130 @@ void VulkanStateWriter::WriteImageSubresourceLayouts(const vulkan_wrappers::Imag
     }
 }
 
+static size_t GetSystemPagePotShift()
+{
+    size_t pot_shift = 0;
+    size_t page_size = util::platform::GetSystemPageSize();
+
+    if (page_size != 0)
+    {
+        assert((page_size & (page_size - 1)) == 0);
+        while (page_size != 1)
+        {
+            page_size >>= 1;
+            ++pot_shift;
+        }
+    }
+
+    return pot_shift;
+}
+
+void VulkanStateWriter::ProcessActiveRange(vulkan_wrappers::AssetWrapperBase* asset,
+                                           size_t                             start_index,
+                                           size_t                             end_index,
+                                           const void*                        mapped_memory,
+                                           AssetOffsetInfo::AssetPagePatches& page_patches)
+{
+    const size_t system_page_pot_shift = GetSystemPagePotShift();
+
+    // The offset is calculated from the beginning of the device memory
+    const size_t page_count  = end_index - start_index;
+    const size_t page_offset = asset->bind_offset + (start_index << system_page_pot_shift);
+    const size_t page_range  = page_count << system_page_pot_shift;
+
+    GFXRECON_WRITE_CONSOLE("%s()", __func__)
+    GFXRECON_WRITE_CONSOLE("  asset_id: %" PRIu64, asset->asset_id);
+    GFXRECON_WRITE_CONSOLE("  asset->bind_memory_id: %" PRIu64, asset->bind_memory_id);
+    GFXRECON_WRITE_CONSOLE("  mapped_memory: %p", mapped_memory);
+    GFXRECON_WRITE_CONSOLE("  page_offset: %zu", page_offset);
+    GFXRECON_WRITE_CONSOLE("  page_range: %zu", page_range);
+
+    page_patches[{ start_index, page_count }] = asset_file_stream_->GetOffset();
+
+    assert(asset_file_stream_ != nullptr);
+    WriteFillMemoryCmd(asset->bind_memory_id, page_offset, page_range, mapped_memory, asset_file_stream_);
+}
+
+size_t VulkanStateWriter::ProcessAssetPageStatus(vulkan_wrappers::AssetWrapperBase* asset,
+                                                 const void*                        mapped_memory,
+                                                 AssetOffsetInfo::AssetPagePatches& page_patches)
+{
+    bool   active_range = false;
+    size_t start_index  = 0;
+    size_t n_commands   = 0;
+
+    size_t i = 0;
+    for (; i < asset->dirty_pages.size(); ++i)
+    {
+        if (asset->dirty_pages[i])
+        {
+            asset->dirty_pages[i] = 0;
+
+            if (!active_range)
+            {
+                active_range = true;
+                start_index  = i;
+            }
+        }
+        else
+        {
+            if (active_range)
+            {
+                active_range = false;
+                ProcessActiveRange(asset, start_index, i, mapped_memory, page_patches);
+                ++n_commands;
+            }
+        }
+    }
+
+    if (active_range)
+    {
+        ProcessActiveRange(asset, start_index, i, mapped_memory, page_patches);
+        ++n_commands;
+    }
+
+    return n_commands;
+}
+
+size_t VulkanStateWriter::WriteFillAssetMemoryCommands(const VulkanStateTable&            state_table,
+                                                       vulkan_wrappers::AssetWrapperBase* asset,
+                                                       AssetOffsetInfo::AssetPagePatches& page_patches)
+{
+    assert(asset != nullptr);
+    assert(asset->dump_fill_asset_cmd);
+    assert(!asset->dirty);
+
+    const vulkan_wrappers::DeviceMemoryWrapper* mem_wrapper = state_table.GetDeviceMemoryWrapper(asset->bind_memory_id);
+    assert(mem_wrapper != nullptr);
+
+    const vulkan_wrappers::DeviceWrapper* dev_wrapper = mem_wrapper->parent_device;
+    assert(dev_wrapper != nullptr);
+
+    const void* mapped_data;
+    if (mem_wrapper->mapped_data == nullptr)
+    {
+        void* ptr;
+        dev_wrapper->layer_table.MapMemory(
+            dev_wrapper->handle, mem_wrapper->handle, 0, VK_WHOLE_SIZE, VkMemoryMapFlags(0), &ptr);
+        assert(ptr != nullptr);
+        mapped_data = ptr;
+    }
+    else
+    {
+        mapped_data = mem_wrapper->mapped_data;
+    }
+
+    GFXRECON_WRITE_CONSOLE(" _id: %" PRIu64, asset->asset_id);
+    size_t n_commands = ProcessAssetPageStatus(asset, mapped_data, page_patches);
+
+    if (mem_wrapper->mapped_data == nullptr)
+    {
+        dev_wrapper->layer_table.UnmapMemory(dev_wrapper->handle, mem_wrapper->handle);
+    }
+
+    return n_commands;
+}
+
 void VulkanStateWriter::WriteResourceMemoryState(const VulkanStateTable& state_table, bool write_memory_state)
 {
     DeviceResourceTables resources;
@@ -2451,8 +2640,10 @@ void VulkanStateWriter::WriteResourceMemoryState(const VulkanStateTable& state_t
             {
                 if (asset_file_stream_ != nullptr)
                 {
-                    ProcessBufferMemoryWithAssetFile(device_wrapper, queue_family_entry.second.buffers, resource_util);
-                    ProcessImageMemoryWithAssetFile(device_wrapper, queue_family_entry.second.images, resource_util);
+                    ProcessBufferMemoryWithAssetFile(
+                        state_table, device_wrapper, queue_family_entry.second.buffers, resource_util);
+                    ProcessImageMemoryWithAssetFile(
+                        state_table, device_wrapper, queue_family_entry.second.images, resource_util);
                 }
                 else
                 {
@@ -3346,10 +3537,11 @@ void VulkanStateWriter::WriteFunctionCall(format::ApiCallId         call_id,
 
 // TODO: This is the same code used by CaptureManager to write command data. It could be moved to a format
 // utility.
-void VulkanStateWriter::WriteFillMemoryCmd(format::HandleId memory_id,
-                                           VkDeviceSize     offset,
-                                           VkDeviceSize     size,
-                                           const void*      data)
+void VulkanStateWriter::WriteFillMemoryCmd(format::HandleId        memory_id,
+                                           VkDeviceSize            offset,
+                                           VkDeviceSize            size,
+                                           const void*             data,
+                                           util::FileOutputStream* output_stream)
 {
     GFXRECON_CHECK_CONVERSION_DATA_LOSS(size_t, size);
 
@@ -3383,8 +3575,16 @@ void VulkanStateWriter::WriteFillMemoryCmd(format::HandleId memory_id,
     // Calculate size of packet with compressed or uncompressed data size.
     fill_cmd.meta_header.block_header.size = format::GetMetaDataBlockBaseSize(fill_cmd) + write_size;
 
-    output_stream_->Write(&fill_cmd, sizeof(fill_cmd));
-    output_stream_->Write(write_address, write_size);
+    if (output_stream != nullptr)
+    {
+        output_stream->Write(&fill_cmd, sizeof(fill_cmd));
+        output_stream->Write(write_address, write_size);
+    }
+    else
+    {
+        output_stream_->Write(&fill_cmd, sizeof(fill_cmd));
+        output_stream_->Write(write_address, write_size);
+    }
 
     ++blocks_written_;
 }

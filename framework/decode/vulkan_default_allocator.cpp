@@ -472,6 +472,18 @@ void VulkanDefaultAllocator::UnmapMemory(VkDeviceMemory memory, MemoryData alloc
     functions_.unmap_memory(device_, memory);
 }
 
+bool VulkanDefaultAllocator::IsMemoryMapped(MemoryData allocator_data)
+{
+    if (allocator_data != 0)
+    {
+        auto memory_alloc_info = reinterpret_cast<MemoryAllocInfo*>(allocator_data);
+        return memory_alloc_info->mapped_pointer != nullptr;
+    }
+    {
+        return false;
+    }
+}
+
 VkResult VulkanDefaultAllocator::FlushMappedMemoryRanges(uint32_t                   memory_range_count,
                                                          const VkMappedMemoryRange* memory_ranges,
                                                          const MemoryData*          allocator_datas)

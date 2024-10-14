@@ -313,9 +313,36 @@ void VulkanReplayConsumerBase::ProcessFillMemoryCommand(uint64_t       memory_id
 
         if (allocator != nullptr)
         {
+            // When FillMemory is written during capture mode the memory will be already mapped.
+            // When it is used to patch assets (during frame state setup) then memory will not be mapped.
+            bool needs_mapping = !allocator->IsMemoryMapped(memory_info->allocator_data);
+            if (needs_mapping)
+            {
+                void* mapped_data;
+                result = allocator->MapMemory(memory_info->handle,
+                                              0,
+                                              VK_WHOLE_SIZE,
+                                              VkMemoryMapFlags(0),
+                                              &mapped_data,
+                                              memory_info->allocator_data);
+                if (result != VK_SUCCESS)
+                {
+                    GFXRECON_LOG_WARNING("Skipping memory fill for VkDeviceMemory object (ID = %" PRIu64
+                                         ") that is not associated with a resource allocator",
+                                         memory_id);
+                    return;
+                }
+            }
+
             result = allocator->WriteMappedMemoryRange(memory_info->allocator_data, offset, size, data);
+
+            if (needs_mapping)
+            {
+                allocator->UnmapMemory(memory_info->handle, memory_info->allocator_data);
+            }
         }
-        else
+
+        if (allocator == nullptr || result != VK_SUCCESS)
         {
             GFXRECON_LOG_WARNING("Skipping memory fill for VkDeviceMemory object (ID = %" PRIu64
                                  ") that is not associated with a resource allocator",
@@ -910,9 +937,8 @@ void VulkanReplayConsumerBase::ProcessInitImageCommand(format::HandleId         
             if (data_size > 0)
             {
                 if ((image_info->tiling == VK_IMAGE_TILING_LINEAR) &&
-                    (image_info->memory_property_flags &
-                     (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT)) ==
-                        (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT))
+                    (image_info->memory_property_flags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) ==
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
                 {
                     result = initializer->LoadData(data_size, data, image_info->allocator_data);
 
@@ -4228,9 +4254,9 @@ VkResult VulkanReplayConsumerBase::OverrideAllocateMemory(
 
             VkMemoryAllocateInfo                     modified_allocate_info = (*replay_allocate_info);
             VkMemoryOpaqueCaptureAddressAllocateInfo address_info           = {
-                          VK_STRUCTURE_TYPE_MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO,
-                          modified_allocate_info.pNext,
-                          opaque_address
+                VK_STRUCTURE_TYPE_MEMORY_OPAQUE_CAPTURE_ADDRESS_ALLOCATE_INFO,
+                modified_allocate_info.pNext,
+                opaque_address
             };
             modified_allocate_info.pNext = &address_info;
 

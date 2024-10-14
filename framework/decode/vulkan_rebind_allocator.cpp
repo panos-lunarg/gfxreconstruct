@@ -1063,6 +1063,19 @@ void VulkanRebindAllocator::UnmapMemory(VkDeviceMemory memory, MemoryData alloca
     }
 }
 
+bool VulkanRebindAllocator::IsMemoryMapped(MemoryData allocator_data)
+{
+    if (allocator_data != 0)
+    {
+        auto memory_alloc_info = reinterpret_cast<MemoryAllocInfo*>(allocator_data);
+        return memory_alloc_info->is_mapped;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 VkResult VulkanRebindAllocator::FlushMappedMemoryRanges(uint32_t                   memory_range_count,
                                                         const VkMappedMemoryRange* memory_ranges,
                                                         const MemoryData*          allocator_datas)

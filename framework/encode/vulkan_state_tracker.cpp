@@ -2617,8 +2617,7 @@ void VulkanStateTracker::TrackMappedAssetsWrites(format::HandleId memory_id)
     {
         assert(entry.second.status_tracker.HasActiveWriteBlock());
 
-        const util::PageStatusTracker& page_status = entry.second.status_tracker;
-
+        const util::PageStatusTracker&        page_status     = entry.second.status_tracker;
         vulkan_wrappers::DeviceMemoryWrapper* dev_mem_wrapper = state_table_.GetDeviceMemoryWrapper(entry.first);
         assert(dev_mem_wrapper != nullptr);
 
@@ -2645,7 +2644,11 @@ void VulkanStateTracker::TrackMappedAssetsWrites(format::HandleId memory_id)
 
             if (page_status.HasActiveWriteBlock(first_page, asset_page_count))
             {
-                asset->dirty = true;
+                GFXRECON_WRITE_CONSOLE("  asset_id: %" PRIu64, asset->asset_id)
+                util::PageStatusTracker::OrrOpp(
+                    asset->dirty_pages, 0, page_status.GetActiveWrites(), first_page, asset->dirty_pages.size());
+                asset->dump_fill_asset_cmd = true;
+                assert(util::PageStatusTracker::HasActiveWriteBlock(asset->dirty_pages, 0, asset->dirty_pages.size()));
             }
         }
         dev_mem_wrapper->asset_map_lock.unlock();

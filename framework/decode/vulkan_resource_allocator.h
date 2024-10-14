@@ -197,6 +197,8 @@ class VulkanResourceAllocator
 
     virtual void UnmapMemory(VkDeviceMemory memory, MemoryData allocator_data) = 0;
 
+    virtual bool IsMemoryMapped(MemoryData allocator_data) = 0;
+
     virtual VkResult FlushMappedMemoryRanges(uint32_t                   memory_range_count,
                                              const VkMappedMemoryRange* memory_ranges,
                                              const MemoryData*          allocator_datas) = 0;

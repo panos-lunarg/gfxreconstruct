@@ -33,6 +33,7 @@
 #include "util/defines.h"
 #include "util/memory_output_stream.h"
 #include "util/page_guard_manager.h"
+#include "util/page_status_tracker.h"
 
 #include "vulkan/vulkan.h"
 #include "vulkan/vulkan_core.h"
@@ -199,6 +200,10 @@ struct AssetWrapperBase
     VkDeviceSize                              size{ 0 };
     bool                                      dirty{ true };
     std::unordered_set<DescriptorSetWrapper*> descriptor_sets_bound_to;
+
+    format::HandleId                    asset_id;
+    bool                                dump_fill_asset_cmd{ false };
+    util::PageStatusTracker::PageStatus dirty_pages;
 };
 
 struct BufferWrapper : public HandleWrapper<VkBuffer>, AssetWrapperBase

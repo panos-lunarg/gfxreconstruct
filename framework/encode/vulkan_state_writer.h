@@ -39,6 +39,7 @@
 #include "vulkan/vulkan.h"
 
 #include <cstdint>
+#include <limits>
 #include <set>
 #include <unordered_map>
 #include <vector>
@@ -49,7 +50,19 @@ GFXRECON_BEGIN_NAMESPACE(encode)
 class VulkanStateWriter
 {
   public:
-    using AssetFileOffsetsInfo = std::unordered_map<uint64_t, int64_t>;
+    struct AssetOffsetInfo
+    {
+        // The asset file offset of the Init[Buffer|Image] / vk[Create|Update]DescriptorSets commands
+        int64_t asset_init_offset;
+
+        // Buffers and images can have a subset of their pages dumped instead of dumping the whole asset.
+        // The dirty regions are tracked by the first page and the page count.
+        using AssetPagePatches =
+            std::map<std::pair<size_t /* first page */, size_t /* page count */>, int64_t /* asset file offset */>;
+        AssetPagePatches page_patches;
+    };
+
+    using AssetFileOffsetsInfo = std::unordered_map<uint64_t, AssetOffsetInfo>;
 
   public:
     VulkanStateWriter(util::FileOutputStream*                  output_stream,
@@ -164,7 +177,8 @@ class VulkanStateWriter
                              const std::vector<BufferSnapshotInfo>& buffer_snapshot_info,
                              graphics::VulkanResourcesUtil&         resource_util);
 
-    void ProcessBufferMemoryWithAssetFile(const vulkan_wrappers::DeviceWrapper*  device_wrapper,
+    void ProcessBufferMemoryWithAssetFile(const VulkanStateTable&                state_table,
+                                          const vulkan_wrappers::DeviceWrapper*  device_wrapper,
                                           const std::vector<BufferSnapshotInfo>& buffer_snapshot_info,
                                           graphics::VulkanResourcesUtil&         resource_util);
 
@@ -172,7 +186,8 @@ class VulkanStateWriter
                             const std::vector<ImageSnapshotInfo>& image_snapshot_info,
                             graphics::VulkanResourcesUtil&        resource_util);
 
-    void ProcessImageMemoryWithAssetFile(const vulkan_wrappers::DeviceWrapper* device_wrapper,
+    void ProcessImageMemoryWithAssetFile(const VulkanStateTable&               state_table,
+                                         const vulkan_wrappers::DeviceWrapper* device_wrapper,
                                          const std::vector<ImageSnapshotInfo>& image_snapshot_info,
                                          graphics::VulkanResourcesUtil&        resource_util);
 
@@ -192,6 +207,10 @@ class VulkanStateWriter
                                       VkImageAspectFlags                   aspect_flags);
 
     void WriteResourceMemoryState(const VulkanStateTable& state_table, bool write_memory_state);
+
+    size_t WriteFillAssetMemoryCommands(const VulkanStateTable&            state_table,
+                                        vulkan_wrappers::AssetWrapperBase* asset,
+                                        AssetOffsetInfo::AssetPagePatches& page_patches);
 
     void WriteMappedMemoryState(const VulkanStateTable& state_table);
 
@@ -297,7 +316,21 @@ class VulkanStateWriter
                            util::MemoryOutputStream* parameter_buffer,
                            util::FileOutputStream*   output_stream = nullptr);
 
-    void WriteFillMemoryCmd(format::HandleId memory_id, VkDeviceSize offset, VkDeviceSize size, const void* data);
+    void WriteFillMemoryCmd(format::HandleId        memory_id,
+                            VkDeviceSize            offset,
+                            VkDeviceSize            size,
+                            const void*             data,
+                            util::FileOutputStream* output_stream = nullptr);
+
+    void ProcessActiveRange(vulkan_wrappers::AssetWrapperBase* asset,
+                            size_t                             start_index,
+                            size_t                             end_index,
+                            const void*                        mapped_memory,
+                            AssetOffsetInfo::AssetPagePatches& page_patches);
+
+    size_t ProcessAssetPageStatus(vulkan_wrappers::AssetWrapperBase* asset,
+                                  const void*                        mapped_memory,
+                                  AssetOffsetInfo::AssetPagePatches& page_patches);
 
     void WriteResizeWindowCmd(format::HandleId surface_id, uint32_t width, uint32_t height);
 
