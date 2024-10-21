@@ -169,6 +169,22 @@ std::string InsertFilenamePostfix(const std::string& filename, const std::string
     return filename + postfix;
 }
 
+std::string
+InsertFilenamePostfix(const std::string& filename, const std::string& postfix, const std::string& new_extension)
+{
+    std::string file_part;
+    size_t      sep_index = filename.rfind('.');
+
+    if (sep_index != std::string::npos)
+    {
+        file_part = filename.substr(0, sep_index);
+
+        return file_part + postfix + new_extension;
+    }
+
+    return filename + postfix;
+}
+
 std::string GetBasedir(const std::string& path)
 {
     std::string basedir    = "";

@@ -1071,21 +1071,7 @@ std::string CommonCaptureManager::CreateAssetFile()
 
 std::string CommonCaptureManager::CreateAssetFilename(const std::string& base_filename) const
 {
-    std::string asset_filename = base_filename;
-
-    size_t dot_pos = base_filename.rfind('.');
-    if (dot_pos != std::string::npos)
-    {
-        if (base_filename.substr(dot_pos) == ".gfxr")
-        {
-            asset_filename.replace(dot_pos, 16, "_asset_file.gfxa");
-        }
-    }
-    else
-    {
-        asset_filename += std::string("_asset_file.gfxa");
-    }
-
+    std::string asset_filename = util::filepath::InsertFilenamePostfix(base_filename, "_asset_file", ".gfxa");
     return asset_filename;
 }
 

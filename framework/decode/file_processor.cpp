@@ -28,6 +28,7 @@
 #include "format/format.h"
 #include "format/format_util.h"
 #include "util/compressor.h"
+#include "util/file_path.h"
 #include "util/logging.h"
 #include "util/platform.h"
 
@@ -96,11 +97,7 @@ bool FileProcessor::Initialize(const std::string& filename)
     // Find absolute path of capture file
     if (success)
     {
-        size_t last_slash_pos = filename.find_last_of("\\/");
-        if (last_slash_pos != std::string::npos)
-        {
-            absolute_path_ = filename.substr(0, last_slash_pos + 1);
-        }
+        absolute_path_ = util::filepath::GetBasedir(filename);
     }
 
     return success;
@@ -1984,7 +1981,7 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
             success = success && ReadBytes(filename_c_str.data(), exec_from_file.filename_length);
             if (success)
             {
-                std::string filename = ApplyAbsolutePath(filename_c_str);
+                std::string filename = util::filepath::Join(absolute_path_, filename_c_str);
 
                 // Check for self references
                 if (!filename.compare(file_stack_.top().filename))
