@@ -94,30 +94,11 @@ class FileProcessor
     // Returns false if processing failed.  Use GetErrorState() to determine error condition for failure case.
     bool ProcessAllFrames();
 
-    const std::vector<format::FileOptionPair>& GetFileOptions(const std::string& filename) const
-    {
-        auto file_entry = active_files_.find(filename);
-        assert(file_entry != active_files_.end());
-
-        return file_entry->second.file_options;
-    }
+    const std::vector<format::FileOptionPair>& GetFileOptions() const { return file_options_; }
 
     uint32_t GetCurrentFrameNumber() const { return current_frame_number_; }
 
-    uint64_t GetNumBytesRead() const
-    {
-        if (!file_stack_.empty())
-        {
-            auto file_entry = active_files_.find(file_stack_.top().filename);
-            assert(file_entry != active_files_.end());
-
-            return file_entry->second.bytes_read;
-        }
-        else
-        {
-            return 0;
-        }
-    }
+    uint64_t GetNumBytesRead() const { return bytes_read_; }
 
     Error GetErrorState() const { return error_state_; }
 
@@ -180,6 +161,7 @@ class FileProcessor
     std::vector<ApiDecoder*> decoders_;
     AnnotationHandler*       annotation_handler_;
     Error                    error_state_;
+    uint64_t                 bytes_read_;
 
     /// @brief Incremented at the end of every block successfully processed.
     uint64_t block_index_;
@@ -246,17 +228,18 @@ class FileProcessor
     std::string ApplyAbsolutePath(const std::string& file);
 
   private:
-    format::EnabledOptions enabled_options_;
-    std::vector<uint8_t>   parameter_buffer_;
-    std::vector<uint8_t>   compressed_parameter_buffer_;
-    util::Compressor*      compressor_;
-    uint64_t               api_call_index_;
-    uint64_t               block_limit_;
-    bool                   capture_uses_frame_markers_;
-    uint64_t               first_frame_;
-    bool                   enable_print_block_info_{ false };
-    int64_t                block_index_from_{ 0 };
-    int64_t                block_index_to_{ 0 };
+    std::vector<format::FileOptionPair> file_options_;
+    format::EnabledOptions              enabled_options_;
+    std::vector<uint8_t>                parameter_buffer_;
+    std::vector<uint8_t>                compressed_parameter_buffer_;
+    util::Compressor*                   compressor_;
+    uint64_t                            api_call_index_;
+    uint64_t                            block_limit_;
+    bool                                capture_uses_frame_markers_;
+    uint64_t                            first_frame_;
+    bool                                enable_print_block_info_{ false };
+    int64_t                             block_index_from_{ 0 };
+    int64_t                             block_index_to_{ 0 };
 
     struct ActiveFiles
     {
@@ -264,9 +247,7 @@ class FileProcessor
 
         ActiveFiles(FILE* fd) : fd(fd) {}
 
-        FILE*                               fd{ nullptr };
-        uint64_t                            bytes_read{ 0 };
-        std::vector<format::FileOptionPair> file_options;
+        FILE* fd{ nullptr };
     };
 
     std::unordered_map<std::string, ActiveFiles> active_files_;

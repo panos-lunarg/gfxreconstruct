@@ -45,9 +45,9 @@ GFXRECON_BEGIN_NAMESPACE(decode)
 const uint32_t kFirstFrame = 0;
 
 FileProcessor::FileProcessor() :
-    current_frame_number_(kFirstFrame), error_state_(kErrorInvalidFileDescriptor), annotation_handler_(nullptr),
-    compressor_(nullptr), block_index_(0), api_call_index_(0), block_limit_(0), capture_uses_frame_markers_(false),
-    first_frame_(kFirstFrame + 1)
+    current_frame_number_(kFirstFrame), error_state_(kErrorInvalidFileDescriptor), bytes_read_(0),
+    annotation_handler_(nullptr), compressor_(nullptr), block_index_(0), api_call_index_(0), block_limit_(0),
+    capture_uses_frame_markers_(false), first_frame_(kFirstFrame + 1)
 {}
 
 FileProcessor::FileProcessor(uint64_t block_limit) : FileProcessor()
@@ -222,15 +222,15 @@ bool FileProcessor::ProcessFileHeader()
 
         if (success)
         {
-            active_file.file_options.resize(file_header.num_options);
+            file_options_.resize(file_header.num_options);
 
             size_t option_data_size = file_header.num_options * sizeof(format::FileOptionPair);
 
-            success = ReadBytes(active_file.file_options.data(), option_data_size);
+            success = ReadBytes(file_options_.data(), option_data_size);
 
             if (success)
             {
-                for (const auto& option : active_file.file_options)
+                for (const auto& option : file_options_)
                 {
                     switch (option.key)
                     {
@@ -538,7 +538,7 @@ bool FileProcessor::ReadBytes(void* buffer, size_t buffer_size)
 
     if (util::platform::FileRead(buffer, buffer_size, file_entry->second.fd))
     {
-        file_entry->second.bytes_read += buffer_size;
+        bytes_read_ += buffer_size;
         return true;
     }
     return false;
@@ -554,7 +554,7 @@ bool FileProcessor::SkipBytes(size_t skip_size)
     if (success)
     {
         // These technically count as bytes read/processed.
-        file_entry->second.bytes_read += skip_size;
+        bytes_read_ += skip_size;
     }
 
     return success;
@@ -570,7 +570,7 @@ bool FileProcessor::SeekActiveFile(const std::string& filename, int64_t offset, 
     if (success && origin == util::platform::FileSeekCurrent)
     {
         // These technically count as bytes read/processed.
-        file_entry->second.bytes_read += offset;
+        bytes_read_ += offset;
     }
 
     return success;
