@@ -171,7 +171,7 @@ class FileProcessor
 
         if (!file_stack_.empty())
         {
-            auto file_entry = active_files_.find(file_stack_.top().filename);
+            auto file_entry = active_files_.find(file_stack_.back().filename);
             assert(file_entry != active_files_.end());
 
             return file_entry->second.fd;
@@ -197,7 +197,7 @@ class FileProcessor
     {
         if (!file_stack_.empty())
         {
-            auto file_entry = active_files_.find(file_stack_.top().filename);
+            auto file_entry = active_files_.find(file_stack_.back().filename);
             assert(file_entry != active_files_.end());
 
             return (file_entry->second.fd && !feof(file_entry->second.fd) && !ferror(file_entry->second.fd));

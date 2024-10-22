@@ -214,7 +214,7 @@ bool FileProcessor::ProcessFileHeader()
     bool               success = false;
     format::FileHeader file_header{};
 
-    ActiveFiles& active_file = active_files_[file_stack_.top().filename];
+    ActiveFiles& active_file = active_files_[file_stack_.front().filename];
 
     if (ReadBytes(&file_header, sizeof(file_header)))
     {
@@ -272,7 +272,7 @@ bool FileProcessor::ProcessFileHeader()
 
 void FileProcessor::DecrementRemainingCommands()
 {
-    if (!file_stack_.size())
+    if (file_stack_.empty())
     {
         return;
     }
@@ -284,7 +284,7 @@ void FileProcessor::DecrementRemainingCommands()
         --current_file.remaining_commands;
         if (current_file.remaining_commands == 0)
         {
-            file_stack_.pop();
+            file_stack_.pop_back();
         }
     }
 }
@@ -458,12 +458,12 @@ bool FileProcessor::ProcessBlocks()
                 }
                 else
                 {
-                    assert(file_stack_.size());
+                    assert(!file_stack_.empty());
 
                     ActiveFileContext& current_file = GetCurrentFile();
                     if (current_file.execute_till_eof)
                     {
-                        file_stack_.pop();
+                        file_stack_.pop_back();
                         success = !file_stack_.empty();
                     }
                 }
@@ -533,7 +533,7 @@ bool FileProcessor::ReadCompressedParameterBuffer(size_t  compressed_buffer_size
 
 bool FileProcessor::ReadBytes(void* buffer, size_t buffer_size)
 {
-    auto file_entry = active_files_.find(file_stack_.top().filename);
+    auto file_entry = active_files_.find(file_stack_.back().filename);
     assert(file_entry != active_files_.end());
 
     if (util::platform::FileRead(buffer, buffer_size, file_entry->second.fd))
@@ -546,7 +546,7 @@ bool FileProcessor::ReadBytes(void* buffer, size_t buffer_size)
 
 bool FileProcessor::SkipBytes(size_t skip_size)
 {
-    auto file_entry = active_files_.find(file_stack_.top().filename);
+    auto file_entry = active_files_.find(file_stack_.back().filename);
     assert(file_entry != active_files_.end());
 
     bool success = util::platform::FileSeek(file_entry->second.fd, skip_size, util::platform::FileSeekCurrent);
@@ -562,7 +562,7 @@ bool FileProcessor::SkipBytes(size_t skip_size)
 
 bool FileProcessor::SeekActiveFile(const std::string& filename, int64_t offset, util::platform::FileSeekOrigin origin)
 {
-    auto file_entry = active_files_.find(file_stack_.top().filename);
+    auto file_entry = active_files_.find(file_stack_.back().filename);
     assert(file_entry != active_files_.end());
 
     bool success = util::platform::FileSeek(file_entry->second.fd, offset, origin);
@@ -578,14 +578,14 @@ bool FileProcessor::SeekActiveFile(const std::string& filename, int64_t offset, 
 
 bool FileProcessor::SeekActiveFile(int64_t offset, util::platform::FileSeekOrigin origin)
 {
-    return SeekActiveFile(file_stack_.top().filename, offset, origin);
+    return SeekActiveFile(file_stack_.back().filename, offset, origin);
 }
 
 bool FileProcessor::SetActiveFile(const std::string& filename, bool execute_till_eof)
 {
     if (active_files_.find(filename) != active_files_.end())
     {
-        file_stack_.emplace(filename, execute_till_eof);
+        file_stack_.emplace_back(filename, execute_till_eof);
         return true;
     }
     else
@@ -601,7 +601,7 @@ bool FileProcessor::SetActiveFile(const std::string&             filename,
 {
     if (active_files_.find(filename) != active_files_.end())
     {
-        file_stack_.emplace(filename, execute_till_eof);
+        file_stack_.emplace_back(filename, execute_till_eof);
         return SeekActiveFile(filename, offset, origin);
     }
     else
@@ -612,7 +612,7 @@ bool FileProcessor::SetActiveFile(const std::string&             filename,
 
 void FileProcessor::HandleBlockReadError(Error error_code, const char* error_message)
 {
-    auto file_entry = active_files_.find(file_stack_.top().filename);
+    auto file_entry = active_files_.find(file_stack_.back().filename);
     assert(file_entry != active_files_.end());
 
     // Report incomplete block at end of file as a warning, other I/O errors as an error.
@@ -1984,7 +1984,7 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
                 std::string filename = util::filepath::Join(absolute_path_, filename_c_str);
 
                 // Check for self references
-                if (!filename.compare(file_stack_.top().filename))
+                if (!filename.compare(file_stack_.back().filename))
                 {
                     GFXRECON_LOG_WARNING(
                         "ExecuteBlocksFromFile is referencing itself. Probably this is not intentional.");
@@ -2002,7 +2002,7 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
                     SetActiveFile(
                         filename, exec_from_file.offset, util::platform::FileSeekSet, exec_from_file.n_blocks == 0);
                     // We need to add 1 because it will be decremented right after this function returns
-                    file_stack_.top().remaining_commands = exec_from_file.n_blocks + 1;
+                    file_stack_.back().remaining_commands = exec_from_file.n_blocks + 1;
                 }
             }
         }
