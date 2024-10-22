@@ -34,8 +34,8 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>
+#include <deque>
 #include <string>
-#include <stack>
 #include <unordered_map>
 #include <vector>
 
@@ -104,16 +104,14 @@ class FileProcessor
 
     bool EntireFileWasProcessed() const
     {
-        if (!file_stack_.empty())
+        const auto file_entry = active_files_.find(file_stack_.front().filename);
+        if (file_entry != active_files_.end())
         {
-            auto file_entry = active_files_.find(file_stack_.top().filename);
-            assert(file_entry != active_files_.end());
-
             return (feof(file_entry->second.fd) != 0);
         }
         else
         {
-            return true;
+            return false;
         }
     }
 
@@ -262,7 +260,7 @@ class FileProcessor
         uint32_t    remaining_commands{ 0 };
         bool        execute_till_eof{ false };
     };
-    std::stack<ActiveFileContext> file_stack_;
+    std::deque<ActiveFileContext> file_stack_;
 
     std::string absolute_path_;
 
@@ -271,7 +269,7 @@ class FileProcessor
     {
         assert(file_stack_.size());
 
-        return file_stack_.top();
+        return file_stack_.back();
     }
 };
 
