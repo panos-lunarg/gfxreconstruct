@@ -1054,30 +1054,91 @@ void VulkanStateTracker::TrackUpdateDescriptorSets(uint32_t                    w
                     memcpy(&dst_binding.images[current_dst_array_element],
                            &src_binding.images[current_src_array_element],
                            (sizeof(VkDescriptorImageInfo) * current_copies));
+
+                    for (uint32_t d = 0; d < current_copies; ++d)
+                    {
+                        vulkan_wrappers::ImageViewWrapper* image_view_wrapper =
+                            vulkan_wrappers::GetWrapper<vulkan_wrappers::ImageViewWrapper>(
+                                src_binding.images[d].imageView);
+                        if (image_view_wrapper != nullptr)
+                        {
+                            image_view_wrapper->descriptor_sets_bound_to.insert(dst_wrapper);
+                        }
+
+                        vulkan_wrappers::SamplerWrapper* sampler_wrapper =
+                            vulkan_wrappers::GetWrapper<vulkan_wrappers::SamplerWrapper>(src_binding.images[i].sampler);
+                        if (sampler_wrapper != nullptr)
+                        {
+                            sampler_wrapper->descriptor_sets_bound_to.insert(dst_wrapper);
+                        }
+                    }
                 }
                 if (src_binding.storage_images != nullptr)
                 {
                     memcpy(&dst_binding.storage_images[current_dst_array_element],
                            &src_binding.storage_images[current_src_array_element],
                            (sizeof(VkDescriptorImageInfo) * current_copies));
+
+                    for (uint32_t d = 0; d < current_copies; ++d)
+                    {
+                        vulkan_wrappers::ImageViewWrapper* image_view_wrapper =
+                            vulkan_wrappers::GetWrapper<vulkan_wrappers::ImageViewWrapper>(
+                                src_binding.storage_images[d].imageView);
+                        if (image_view_wrapper != nullptr)
+                        {
+                            image_view_wrapper->descriptor_sets_bound_to.insert(dst_wrapper);
+                        }
+                    }
                 }
                 if (src_binding.buffers != nullptr)
                 {
                     memcpy(&dst_binding.buffers[current_dst_array_element],
                            &src_binding.buffers[current_src_array_element],
                            (sizeof(VkDescriptorBufferInfo) * current_copies));
+
+                    for (uint32_t d = 0; d < current_copies; ++d)
+                    {
+                        vulkan_wrappers::BufferWrapper* buffer_wrapper =
+                            vulkan_wrappers::GetWrapper<vulkan_wrappers::BufferWrapper>(src_binding.buffers[i].buffer);
+                        if (buffer_wrapper != nullptr)
+                        {
+                            buffer_wrapper->descriptor_sets_bound_to.insert(dst_wrapper);
+                        }
+                    }
                 }
                 if (src_binding.storage_buffers != nullptr)
                 {
                     memcpy(&dst_binding.storage_buffers[current_dst_array_element],
                            &src_binding.storage_buffers[current_src_array_element],
                            (sizeof(VkDescriptorBufferInfo) * current_copies));
+
+                    for (uint32_t d = 0; d < current_copies; ++d)
+                    {
+                        vulkan_wrappers::BufferWrapper* buffer_wrapper =
+                            vulkan_wrappers::GetWrapper<vulkan_wrappers::BufferWrapper>(
+                                src_binding.storage_buffers[i].buffer);
+                        if (buffer_wrapper != nullptr)
+                        {
+                            buffer_wrapper->descriptor_sets_bound_to.insert(dst_wrapper);
+                        }
+                    }
                 }
                 if (src_binding.acceleration_structures != nullptr)
                 {
                     memcpy(&dst_binding.acceleration_structures[current_dst_array_element],
                            &src_binding.acceleration_structures[current_src_array_element],
                            (sizeof(VkWriteDescriptorSetAccelerationStructureKHR) * current_copies));
+
+                    for (uint32_t d = 0; d < current_copies; ++d)
+                    {
+                        vulkan_wrappers::AccelerationStructureKHRWrapper* accel_wrapper =
+                            vulkan_wrappers::GetWrapper<vulkan_wrappers::AccelerationStructureKHRWrapper>(
+                                src_binding.acceleration_structures[i]);
+                        if (accel_wrapper != nullptr)
+                        {
+                            accel_wrapper->descriptor_sets_bound_to.insert(dst_wrapper);
+                        }
+                    }
                 }
                 if (src_binding.inline_uniform_block != nullptr)
                 {
@@ -1090,13 +1151,36 @@ void VulkanStateTracker::TrackUpdateDescriptorSets(uint32_t                    w
                     memcpy(&dst_binding.uniform_texel_buffer_views[current_dst_array_element],
                            &src_binding.uniform_texel_buffer_views[current_src_array_element],
                            (sizeof(VkBufferView) * current_copies));
+
+                    for (uint32_t d = 0; d < current_copies; ++d)
+                    {
+                        vulkan_wrappers::BufferViewWrapper* buffer_view_wrapper =
+                            vulkan_wrappers::GetWrapper<vulkan_wrappers::BufferViewWrapper>(
+                                src_binding.uniform_texel_buffer_views[i]);
+                        if (buffer_view_wrapper != nullptr)
+                        {
+                            buffer_view_wrapper->descriptor_sets_bound_to.insert(dst_wrapper);
+                        }
+                    }
                 }
                 if (src_binding.storage_texel_buffer_views != nullptr)
                 {
                     memcpy(&dst_binding.storage_texel_buffer_views[current_dst_array_element],
                            &src_binding.storage_texel_buffer_views[current_src_array_element],
                            (sizeof(VkBufferView) * current_copies));
+
+                    for (uint32_t d = 0; d < current_copies; ++d)
+                    {
+                        vulkan_wrappers::BufferViewWrapper* buffer_view_wrapper =
+                            vulkan_wrappers::GetWrapper<vulkan_wrappers::BufferViewWrapper>(
+                                src_binding.storage_texel_buffer_views[i]);
+                        if (buffer_view_wrapper != nullptr)
+                        {
+                            buffer_view_wrapper->descriptor_sets_bound_to.insert(dst_wrapper);
+                        }
+                    }
                 }
+
                 if (src_binding.mutable_type != nullptr)
                 {
                     memcpy(&dst_binding.mutable_type[current_dst_array_element],
