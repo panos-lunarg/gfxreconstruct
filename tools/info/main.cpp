@@ -817,8 +817,7 @@ void GatherAndPrintAllInfo(const std::string& input_filename)
 
             if (vulkan_detection_consumer.WasVulkanAPIDetected() || print_all_apis)
             {
-                PrintVulkanStats(
-                    vulkan_stats_consumer, file_processor, api_agnostic_stats, annotation_recorder);
+                PrintVulkanStats(vulkan_stats_consumer, file_processor, api_agnostic_stats, annotation_recorder);
 
                 // Add annotations relevant to Vulkan
                 target_annotations.push_back({ "Vulkan version", gfxrecon::format::kOperationAnnotationVulkanVersion });
