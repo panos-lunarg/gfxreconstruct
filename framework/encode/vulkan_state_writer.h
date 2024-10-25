@@ -56,6 +56,7 @@ class VulkanStateWriter
                       util::Compressor*                        compressor,
                       format::ThreadId                         thread_id,
                       util::FileOutputStream*                  asset_file_stream  = nullptr,
+                      const std::string&                       asset_file_name    = "",
                       VulkanStateWriter::AssetFileOffsetsInfo* asset_file_offsets = nullptr);
 
     // Returns number of blocks written to the output_stream.
@@ -386,6 +387,7 @@ class VulkanStateWriter
     uint64_t                 blocks_written_{ 0 };
 
     util::FileOutputStream* asset_file_stream_;
+    std::string             asset_file_name_;
     AssetFileOffsetsInfo*   asset_file_offsets_;
 };
 

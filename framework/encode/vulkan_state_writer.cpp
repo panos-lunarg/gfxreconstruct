@@ -85,10 +85,11 @@ VulkanStateWriter::VulkanStateWriter(util::FileOutputStream*                  ou
                                      util::Compressor*                        compressor,
                                      format::ThreadId                         thread_id,
                                      util::FileOutputStream*                  asset_file_stream,
+                                     const std::string&                       asset_file_name,
                                      VulkanStateWriter::AssetFileOffsetsInfo* asset_file_offsets) :
     output_stream_(output_stream),
     compressor_(compressor), thread_id_(thread_id), encoder_(&parameter_stream_), asset_file_stream_(asset_file_stream),
-    asset_file_offsets_(asset_file_offsets)
+    asset_file_name_(asset_file_name), asset_file_offsets_(asset_file_offsets)
 {
     assert(output_stream != nullptr || asset_file_stream != nullptr);
 }
@@ -986,7 +987,7 @@ void VulkanStateWriter::WriteDescriptorSetStateWithAssetFile(const VulkanStateTa
                         wrapper->set_layout_dependency.create_call_id, dep_create_parameters, asset_file_stream_);
                     if (output_stream_ != nullptr)
                     {
-                        WriteExecuteFromFile(asset_file_stream_->GetFilename(), 1, offset);
+                        WriteExecuteFromFile(asset_file_name_, 1, offset);
                     }
                 }
                 else
@@ -995,7 +996,7 @@ void VulkanStateWriter::WriteDescriptorSetStateWithAssetFile(const VulkanStateTa
                     {
                         assert((*asset_file_offsets_).find(wrapper->handle_id) != (*asset_file_offsets_).end());
                         const int64_t offset = (*asset_file_offsets_)[wrapper->handle_id];
-                        WriteExecuteFromFile(asset_file_stream_->GetFilename(), 1, offset);
+                        WriteExecuteFromFile(asset_file_name_, 1, offset);
                     }
                 }
             }
@@ -1102,7 +1103,7 @@ void VulkanStateWriter::WriteDescriptorSetStateWithAssetFile(const VulkanStateTa
         // as execute till the end of file
         if (output_stream_ != nullptr && n_blocks)
         {
-            WriteExecuteFromFile(asset_file_stream_->GetFilename(), n_blocks, offset);
+            WriteExecuteFromFile(asset_file_name_, n_blocks, offset);
         }
 
         if (wrapper->dirty)
@@ -1761,7 +1762,7 @@ void VulkanStateWriter::ProcessBufferMemoryWithAssetFile(const vulkan_wrappers::
 
                 if (output_stream_ != nullptr)
                 {
-                    WriteExecuteFromFile(asset_file_stream_->GetFilename(), 1, offset);
+                    WriteExecuteFromFile(asset_file_name_, 1, offset);
                 }
 
                 ++blocks_written_;
@@ -1783,7 +1784,7 @@ void VulkanStateWriter::ProcessBufferMemoryWithAssetFile(const vulkan_wrappers::
             {
                 assert((*asset_file_offsets_).find(buffer_wrapper->handle_id) != (*asset_file_offsets_).end());
                 const int64_t offset = (*asset_file_offsets_)[buffer_wrapper->handle_id];
-                WriteExecuteFromFile(asset_file_stream_->GetFilename(), 1, offset);
+                WriteExecuteFromFile(asset_file_name_, 1, offset);
             }
         }
     }
@@ -2081,7 +2082,7 @@ void VulkanStateWriter::ProcessImageMemoryWithAssetFile(const vulkan_wrappers::D
 
                     if (output_stream_ != nullptr)
                     {
-                        WriteExecuteFromFile(asset_file_stream_->GetFilename(), 1, offset);
+                        WriteExecuteFromFile(asset_file_name_, 1, offset);
                     }
 
                     if (!snapshot_entry.need_staging_copy && memory_wrapper->mapped_data == nullptr)
@@ -2111,7 +2112,7 @@ void VulkanStateWriter::ProcessImageMemoryWithAssetFile(const vulkan_wrappers::D
             {
                 assert((*asset_file_offsets_).find(image_wrapper->handle_id) != (*asset_file_offsets_).end());
                 const int64_t offset = (*asset_file_offsets_)[image_wrapper->handle_id];
-                WriteExecuteFromFile(asset_file_stream_->GetFilename(), 1, offset);
+                WriteExecuteFromFile(asset_file_name_, 1, offset);
             }
         }
     }
@@ -3929,6 +3930,8 @@ bool VulkanStateWriter::IsFramebufferValid(const vulkan_wrappers::FramebufferWra
 
 void VulkanStateWriter::WriteExecuteFromFile(const std::string& filename, uint32_t n_blocks, int64_t offset)
 {
+    assert(!filename.empty());
+
     // Remove path from filename
     std::string  relative_file;
     const size_t last_slash_pos = filename.find_last_of("\\/");
