@@ -48,7 +48,8 @@ class ApiCaptureManager
     virtual void WriteTrackedState(util::FileOutputStream* file_stream,
                                    format::ThreadId        thread_id,
                                    util::FileOutputStream* asset_file_stream,
-                                   const std::string&      asset_file_name) = 0;
+                                   const std::string&      asset_file_name,
+                                   bool                    increment_block_index = true) = 0;
     virtual void WriteAssets(util::FileOutputStream* asset_file_stream,
                              const std::string&      asset_file_name,
                              format::ThreadId        thread_id)               = 0;
@@ -187,7 +188,7 @@ class ApiCaptureManager
     uint32_t                          GetCurrentFrame() const { return common_manager_->GetCurrentFrame(); }
     CommonCaptureManager::CaptureMode GetCaptureMode() const { return common_manager_->GetCaptureMode(); }
     void SetCaptureMode(CommonCaptureManager::CaptureMode mode) { common_manager_->SetCaptureMode(mode); }
-    bool                              GetDebugLayerSetting() const { return common_manager_->GetDebugLayerSetting(); }
+    bool GetDebugLayerSetting() const { return common_manager_->GetDebugLayerSetting(); }
     bool GetDebugDeviceLostSetting() const { return common_manager_->GetDebugDeviceLostSetting(); }
     bool GetDisableDxrSetting() const { return common_manager_->GetDisableDxrSetting(); }
     auto GetAccelStructPaddingSetting() const { return common_manager_->GetAccelStructPaddingSetting(); }

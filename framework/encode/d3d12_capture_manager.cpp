@@ -175,10 +175,12 @@ void D3D12CaptureManager::EndCommandListMethodCallCapture(ID3D12CommandList_Wrap
 void D3D12CaptureManager::WriteTrackedState(util::FileOutputStream* file_stream,
                                             format::ThreadId        thread_id,
                                             util::FileOutputStream* asset_file_stream,
-                                            const std::string&      asset_file_name)
+                                            const std::string&      asset_file_name,
+                                            bool                    increment_block_index)
 {
     GFXRECON_UNREFERENCED_PARAMETER(asset_file_stream);
     GFXRECON_UNREFERENCED_PARAMETER(asset_file_name);
+    GFXRECON_UNREFERENCED_PARAMETER(increment_block_index);
 
     Dx12StateWriter state_writer(file_stream, GetCompressor(), thread_id);
     state_tracker_->WriteState(&state_writer, GetCurrentFrame());
@@ -3347,11 +3349,11 @@ bool D3D12CaptureManager::TrimDrawCalls_ID3D12CommandQueue_ExecuteCommandLists(
         if (target_info->find_target_draw_call_count !=
             (trim_draw_calls.draw_call_indices.last - trim_draw_calls.draw_call_indices.first + 1))
         {
-            GFXRECON_LOG_WARNING(
-                "CAPTURE_DRAW_CALLS didn't find the enough draw call count(%d). The indices(%d-%d) might be out of range.",
-                target_info->find_target_draw_call_count,
-                trim_draw_calls.draw_call_indices.first,
-                trim_draw_calls.draw_call_indices.last);
+            GFXRECON_LOG_WARNING("CAPTURE_DRAW_CALLS didn't find the enough draw call count(%d). The indices(%d-%d) "
+                                 "might be out of range.",
+                                 target_info->find_target_draw_call_count,
+                                 trim_draw_calls.draw_call_indices.first,
+                                 trim_draw_calls.draw_call_indices.last);
         }
 
         if (target_info->target_bundle_commandlist_info)
@@ -3657,10 +3659,10 @@ D3D12CaptureManager::GetCommandListsForTrimDrawCalls(ID3D12CommandList_Wrapper* 
                 case graphics::dx12::Dx12DumpResourcePos::kDrawCall:
                     if (trim_draw_calls.draw_call_indices.first != trim_draw_calls.draw_call_indices.last)
                     {
-                        GFXRECON_LOG_FATAL(
-                            "The target draw call is a ExecuteBundle. The draw call indices must be not a range(%d-%d).",
-                            trim_draw_calls.draw_call_indices.first,
-                            trim_draw_calls.draw_call_indices.last);
+                        GFXRECON_LOG_FATAL("The target draw call is a ExecuteBundle. The draw call indices must be not "
+                                           "a range(%d-%d).",
+                                           trim_draw_calls.draw_call_indices.first,
+                                           trim_draw_calls.draw_call_indices.last);
                         GFXRECON_ASSERT(trim_draw_calls.draw_call_indices.first ==
                                         trim_draw_calls.draw_call_indices.last);
                     }

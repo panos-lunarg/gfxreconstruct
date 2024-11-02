@@ -281,6 +281,7 @@ class CommonCaptureManager
                                             const CaptureSettings::TrimDrawCalls& trim_draw_calls);
     void        CreateAssetFile();
     std::string CreateAssetFilename(const std::string& base_filename) const;
+    std::string CreateFrameStateFilename(const std::string& base_filename) const;
     bool        CreateCaptureFile(format::ApiFamilyId api_family, const std::string& base_filename);
     void        WriteCaptureOptions(std::string& operation_annotation);
     void        ActivateTrimming(std::shared_lock<ApiCallMutexT>& current_lock);
@@ -340,6 +341,8 @@ class CommonCaptureManager
                               format::ThreadId        thread_id,
                               uint32_t                n_blocks,
                               int64_t                 offset);
+
+    void WriteSetBlockIndex(util::FileOutputStream& out_stream, format::ThreadId thread_id, uint64_t block_index);
 
   protected:
     std::unique_ptr<util::Compressor> compressor_;

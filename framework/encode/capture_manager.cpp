@@ -106,7 +106,7 @@ CommonCaptureManager::CommonCaptureManager() :
     debug_device_lost_(false), screenshot_prefix_(""), screenshots_enabled_(false), disable_dxr_(false),
     accel_struct_padding_(0), iunknown_wrapping_(false), force_command_serialization_(false), queue_zero_only_(false),
     allow_pipeline_compile_required_(false), quit_after_frame_ranges_(false), use_asset_file_(false), block_index_(0),
-    write_assets_(false), previous_write_assets_(false)
+    write_assets_(false), previous_write_assets_(false), write_state_files_(false)
 {}
 
 CommonCaptureManager::~CommonCaptureManager()
@@ -195,7 +195,7 @@ bool CommonCaptureManager::LockedCreateInstance(ApiCaptureManager*           api
         // NOTE: moved here from CaptureTracker::Initialize... DRY'r than putting it into the API specific
         //       CreateInstances. For actual multiple simulatenous API support we need to ensure all API capture manager
         //       state trackers are in the correct state given the differing settings that may be present.
-        if ((capture_mode_ & kModeTrack) == kModeTrack)
+        if ((capture_mode_ & kModeTrack) == kModeTrack || write_state_files_)
         {
             api_capture_singleton->CreateStateTracker();
         }
@@ -313,6 +313,7 @@ bool CommonCaptureManager::Initialize(format::ApiFamilyId                   api_
     allow_pipeline_compile_required_ = trace_settings.allow_pipeline_compile_required;
     force_fifo_present_mode_         = trace_settings.force_fifo_present_mode;
     use_asset_file_                  = trace_settings.use_asset_file;
+    write_state_files_               = trace_settings.write_state_files;
 
     rv_annotation_info_.gpuva_mask      = trace_settings.rv_anotation_info.gpuva_mask;
     rv_annotation_info_.descriptor_mask = trace_settings.rv_anotation_info.descriptor_mask;
@@ -505,7 +506,7 @@ CommonCaptureManager::ThreadData* CommonCaptureManager::GetThreadData()
 
 bool CommonCaptureManager::IsCaptureModeTrack() const
 {
-    return (GetCaptureMode() & kModeTrack) == kModeTrack;
+    return ((GetCaptureMode() & kModeTrack) == kModeTrack) || write_state_files_;
 }
 bool CommonCaptureManager::IsCaptureModeWrite() const
 {
@@ -740,7 +741,8 @@ void CommonCaptureManager::CheckContinueCaptureForWriteMode(format::ApiFamilyId 
                 {
                     manager_it.first->DestroyStateTracker();
                 }
-                compressor_ = nullptr;
+                compressor_        = nullptr;
+                write_state_files_ = false;
             }
             else if (trim_ranges_[trim_current_range_].first == current_boundary_count)
             {
@@ -940,6 +942,11 @@ void CommonCaptureManager::EndFrame(format::ApiFamilyId api_family, std::shared_
             // Check for start of capture frame range or hotkey trigger to start capture
             CheckStartCaptureForTrackMode(api_family, current_frame_, current_lock);
         }
+    }
+
+    if (IsCaptureModeWrite() && write_state_files_)
+    {
+        WriteFrameStateFile();
     }
 
     // Flush after presents to help avoid capture files with incomplete final blocks.
@@ -1234,12 +1241,15 @@ void CommonCaptureManager::ActivateTrimming(std::shared_lock<ApiCallMutexT>& cur
         auto thread_data = GetThreadData();
         assert(thread_data != nullptr);
 
-        for (auto& manager : api_capture_managers_)
+        if (!write_state_files_)
         {
-            manager.first->WriteTrackedState(file_stream_.get(),
-                                             thread_data->thread_id_,
-                                             use_asset_file_ ? asset_file_stream_.get() : nullptr,
-                                             use_asset_file_ ? asset_file_name_ : "");
+            for (auto& manager : api_capture_managers_)
+            {
+                manager.first->WriteTrackedState(file_stream_.get(),
+                                                 thread_data->thread_id_,
+                                                 use_asset_file_ ? asset_file_stream_.get() : nullptr,
+                                                 use_asset_file_ ? asset_file_name_ : "");
+            }
         }
     }
 
@@ -1247,6 +1257,120 @@ void CommonCaptureManager::ActivateTrimming(std::shared_lock<ApiCallMutexT>& cur
     {
         current_lock.lock();
     }
+}
+
+std::string CommonCaptureManager::CreateFrameStateFilename(const std::string& base_filename) const
+{
+    std::string state_filename = base_filename;
+
+    const std::string state_filename_post = std::string("_state_frame_") + std::to_string(current_frame_);
+
+    size_t dot_pos = base_filename.rfind('.');
+    if (dot_pos != std::string::npos)
+    {
+        if (base_filename.substr(dot_pos) == ".gfxr")
+        {
+            state_filename.insert(dot_pos, state_filename_post);
+        }
+    }
+    else
+    {
+        state_filename += state_filename_post;
+    }
+
+    return state_filename;
+}
+
+void CommonCaptureManager::WriteExecuteFromFile(util::FileOutputStream& out_stream,
+                                                const std::string&      filename,
+                                                format::ThreadId        thread_id,
+                                                uint32_t                n_blocks,
+                                                int64_t                 offset)
+{
+    // Remove path from filename
+    std::string  relative_file;
+    const size_t last_slash_pos = filename.find_last_of("\\/");
+    if (last_slash_pos != std::string::npos)
+    {
+        relative_file = filename.substr(last_slash_pos + 1);
+    }
+    else
+    {
+        relative_file = filename;
+    }
+
+    const size_t filename_length = relative_file.length();
+
+    format::ExecuteBlocksFromFile execute_from_file;
+    execute_from_file.meta_header.block_header.size =
+        format::GetMetaDataBlockBaseSize(execute_from_file) + filename_length;
+    execute_from_file.meta_header.block_header.type = format::kMetaDataBlock;
+    execute_from_file.meta_header.meta_data_id =
+        format::MakeMetaDataId(format::ApiFamilyId::ApiFamily_Vulkan, format::MetaDataType::kExecuteBlocksFromFile);
+    execute_from_file.thread_id       = thread_id;
+    execute_from_file.n_blocks        = n_blocks;
+    execute_from_file.offset          = offset;
+    execute_from_file.filename_length = filename_length;
+
+    out_stream.Write(&execute_from_file, sizeof(execute_from_file));
+    out_stream.Write(relative_file.c_str(), filename_length);
+}
+
+void CommonCaptureManager::WriteSetBlockIndex(util::FileOutputStream& out_stream,
+                                              format::ThreadId        thread_id,
+                                              uint64_t                block_index)
+{
+    format::SetBlockIndexCommand set_block_index;
+    set_block_index.meta_header.block_header.size = format::GetMetaDataBlockBaseSize(set_block_index);
+    set_block_index.meta_header.block_header.type = format::kMetaDataBlock;
+    set_block_index.meta_header.meta_data_id =
+        format::MakeMetaDataId(format::ApiFamilyId::ApiFamily_Vulkan, format::MetaDataType::kSetBlockIndexCommand);
+    set_block_index.thread_id   = thread_id;
+    set_block_index.block_index = block_index;
+
+    out_stream.Write(&set_block_index, sizeof(set_block_index));
+}
+
+bool CommonCaptureManager::WriteFrameStateFile()
+{
+    assert(write_state_files_);
+
+    std::string state_filename = CreateFrameStateFilename(capture_filename_);
+
+    util::FileOutputStream state_file_stream(state_filename, kFileStreamBufferSize);
+    if (!state_file_stream.IsValid())
+    {
+        assert(0);
+        return false;
+    }
+
+    auto thread_data = GetThreadData();
+    assert(thread_data != nullptr);
+
+    WriteFileHeader(&state_file_stream);
+
+    for (auto& manager : api_capture_managers_)
+    {
+        manager.first->WriteTrackedState(&state_file_stream,
+                                         thread_data->thread_id_,
+                                         use_asset_file_ ? asset_file_stream_.get() : nullptr,
+                                         use_asset_file_ ? asset_file_name_ : "",
+                                         false);
+    }
+
+    // Block index needs to be adjusted by -2 in order to take into account the EndFrameand the
+    // SetCurrentBlockIndex meta commands.
+    const uint64_t set_block_index_to = block_index_ - 2;
+    WriteSetBlockIndex(state_file_stream, thread_data->thread_id_, set_block_index_to);
+
+    WriteExecuteFromFile(state_file_stream, capture_filename_, thread_data->thread_id_, 0, file_stream_->GetOffset());
+
+    state_file_stream.Flush();
+
+    GFXRECON_WRITE_CONSOLE("%s() ", __func__)
+    GFXRECON_WRITE_CONSOLE("  block_index_: %" PRIu64, block_index_.load())
+
+    return true;
 }
 
 void CommonCaptureManager::DeactivateTrimming(std::shared_lock<ApiCallMutexT>& current_lock)
@@ -1294,9 +1418,12 @@ void CommonCaptureManager::WriteFileHeader(util::FileOutputStream* file_stream)
                             { option_list.data(), option_list.size() * sizeof(format::FileOptionPair) } },
                           file_stream);
 
-    // File header does not count as a block
-    assert(block_index_ > 0);
-    --block_index_;
+    if (file_stream == nullptr)
+    {
+        // File header does not count as a block
+        assert(block_index_ > 0);
+        --block_index_;
+    }
 
     auto thread_data          = GetThreadData();
     thread_data->block_index_ = block_index_.load();
@@ -1515,8 +1642,11 @@ void CommonCaptureManager::WriteToFile(const void* data, size_t size, util::File
     auto thread_data = GetThreadData();
     assert(thread_data != nullptr);
 
-    ++block_index_;
-    thread_data->block_index_ = block_index_.load();
+    if (file_stream == nullptr)
+    {
+        ++block_index_;
+        thread_data->block_index_ = block_index_.load();
+    }
 }
 
 void CommonCaptureManager::AtExit()

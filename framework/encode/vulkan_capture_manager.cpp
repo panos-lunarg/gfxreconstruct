@@ -104,7 +104,8 @@ void VulkanCaptureManager::DestroyInstance()
 void VulkanCaptureManager::WriteTrackedState(util::FileOutputStream* file_stream,
                                              format::ThreadId        thread_id,
                                              util::FileOutputStream* asset_file_stream,
-                                             const std::string&      asset_file_name)
+                                             const std::string&      asset_file_name,
+                                             bool                    increment_block_index)
 {
     uint64_t n_blocks = state_tracker_->WriteState(
         file_stream,
@@ -115,7 +116,10 @@ void VulkanCaptureManager::WriteTrackedState(util::FileOutputStream* file_stream
         asset_file_stream,
         asset_file_name);
 
-    common_manager_->IncrementBlockIndex(n_blocks);
+    if (increment_block_index)
+    {
+        common_manager_->IncrementBlockIndex(n_blocks);
+    }
 }
 
 void VulkanCaptureManager::WriteAssets(util::FileOutputStream* asset_file_stream,

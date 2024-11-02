@@ -839,7 +839,8 @@ class D3D12CaptureManager : public ApiCaptureManager
     virtual void WriteTrackedState(util::FileOutputStream* file_stream,
                                    format::ThreadId        thread_id,
                                    util::FileOutputStream* asset_file_stream = nullptr,
-                                   const std::string&      asset_file_name   = "") override;
+                                   const std::string&      asset_file_name   = "",
+                                   bool                    increment_block_index = true) override;
 
     virtual void WriteAssets(util::FileOutputStream* assert_file_stream,
                              const std::string&      asset_file_name,
