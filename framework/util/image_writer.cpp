@@ -83,7 +83,6 @@ const uint32_t kImageBpp    = 4;  // Expecting 4 bytes per pixel for 32-bit BGRA
 const uint16_t kBmpBitCountNoAlpha = 24; // Expecting 24-bit BGR bitmap data.
 const uint32_t kImageBppNoAlpha    = 3;  // Expecting 3 bytes per pixel for 32-bit BGRA bitmap data; alpha removed.
 
-static size_t               temporary_buffer_size = 0;
 static std::vector<uint8_t> temporary_buffer;
 
 #define CheckFwriteRetVal(_val_, _file_)                                                              \
@@ -114,11 +113,7 @@ static const uint8_t* ConvertIntoTemporaryBuffer(uint32_t    width,
     }
 
     const uint32_t output_size = height * output_pitch;
-    if (temporary_buffer_size < output_size)
-    {
-        temporary_buffer_size = output_size;
-        temporary_buffer.resize(output_size);
-    }
+    temporary_buffer.resize(output_size);
 
     uint8_t* temp_buffer = temporary_buffer.data();
 
@@ -333,11 +328,7 @@ static uint8_t*
 ExtractAlphaChannel(uint32_t width, uint32_t height, const void* data, uint32_t data_pitch, bool expand_to_rgb)
 {
     const size_t output_size = width * height * (expand_to_rgb ? kImageBppNoAlpha : 1);
-    if (temporary_buffer_size < output_size)
-    {
-        temporary_buffer_size = output_size;
-        temporary_buffer.resize(output_size);
-    }
+    temporary_buffer.resize(output_size);
 
     const uint32_t* pixels      = reinterpret_cast<const uint32_t*>(data);
     uint8_t*        temp_buffer = temporary_buffer.data();
