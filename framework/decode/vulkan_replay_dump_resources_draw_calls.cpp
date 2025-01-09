@@ -869,18 +869,17 @@ VkResult DrawCallsDumpingContext::DumpDrawCalls(
             draw_call_info.device_info                  = device_info;
             draw_call_info.original_command_buffer_info = original_command_buffer_info;
             draw_call_info.bcb_index                    = bcb_index;
-            draw_call_info.cmd_buf_index                = cb;
             draw_call_info.qs_index                     = qs_index;
             draw_call_info.rp                           = rp;
             draw_call_info.sp                           = sp;
-            draw_call_info.dc_index                     = dc_index;
+            draw_call_info.cmd_index                    = dc_index;
             draw_call_info.render_targets               = &render_targets[rp][sp];
 
-            const auto& dc_param_entry = draw_call_params.find(draw_call_info.dc_index);
+            const auto& dc_param_entry = draw_call_params.find(draw_call_info.cmd_index);
             GFXRECON_ASSERT(dc_param_entry != draw_call_params.end());
             draw_call_info.dc_param = &dc_param_entry->second;
 
-            delegate_.DumpDrawCallInfo(draw_call_info);
+            delegate_.DumpDrawCallInfo(draw_call_info, cb);
         }
 
         res = RevertRenderTargetImageLayouts(queue, cb);
@@ -1066,10 +1065,10 @@ VkResult DrawCallsDumpingContext::DumpRenderTargetAttachments(
     res_info_base.instance_table               = instance_table;
     res_info_base.object_info_table            = &object_info_table;
     res_info_base.original_command_buffer_info = original_command_buffer_info;
-    res_info_base.cmd_buf_index                = cmd_buf_index;
+    res_info_base.cmd_index                    = dc_index;
     res_info_base.qs_index                     = qs_index;
     res_info_base.bcb_index                    = bcb_index;
-    res_info_base.dc_index                     = dc_index;
+    res_info_base.before_cmd                   = dump_resources_before && (cmd_buf_index % 2);
     res_info_base.rp                           = rp;
     res_info_base.sp                           = sp;
     res_info_base.image_extent                 = { render_area[rp].extent.width, render_area[rp].extent.height, 1 };
@@ -1239,7 +1238,7 @@ DrawCallsDumpingContext::DumpImmutableDescriptors(uint64_t qs_index, uint64_t bc
     res_info_base.instance_table               = instance_table;
     res_info_base.object_info_table            = &object_info_table;
     res_info_base.original_command_buffer_info = original_command_buffer_info;
-    res_info_base.dc_index                     = dc_index;
+    res_info_base.cmd_index                    = dc_index;
     res_info_base.qs_index                     = qs_index;
     res_info_base.bcb_index                    = bcb_index;
     res_info_base.rp                           = rp;
@@ -1496,7 +1495,7 @@ VkResult DrawCallsDumpingContext::DumpVertexIndexBuffers(uint64_t qs_index, uint
     res_info_base.instance_table               = instance_table;
     res_info_base.object_info_table            = &object_info_table;
     res_info_base.original_command_buffer_info = original_command_buffer_info;
-    res_info_base.dc_index                     = dc_index;
+    res_info_base.cmd_index                    = dc_index;
     res_info_base.qs_index                     = qs_index;
     res_info_base.bcb_index                    = bcb_index;
 
