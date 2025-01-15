@@ -2906,6 +2906,36 @@ VulkanReplayConsumerBase::OverrideCreateDevice(VkResult                  origina
     CreateDeviceInfoState create_state;
     ModifyCreateDeviceInfo(physical_device_info, pCreateInfo, create_state);
 
+    // Check for requested queues compatibility between capture and replay device
+    if (pCreateInfo != nullptr && physical_device_info->replay_device_info != nullptr)
+    {
+        bool incompatible = false;
+        for (uint32_t i = 0; i < create_state.modified_create_info.queueCreateInfoCount; ++i)
+        {
+            if (create_state.modified_create_info.pQueueCreateInfos[i].queueFamilyIndex >
+                physical_device_info->replay_device_info->queue_families_properties.size())
+            {
+                incompatible = true;
+                break;
+            }
+            else if (create_state.modified_create_info.pQueueCreateInfos[i].queueCount >
+                     physical_device_info->replay_device_info
+                         ->queue_families_properties[create_state.modified_create_info.pQueueCreateInfos[i]
+                                                         .queueFamilyIndex]
+                         .queueCount)
+            {
+                incompatible = true;
+                break;
+            }
+        }
+
+        if (incompatible)
+        {
+            GFXRECON_LOG_WARNING_ONCE(
+                "Capture and replay devices have different/incompatible queues. Replay may crash.");
+        }
+    }
+
     VkResult result        = VK_ERROR_INITIALIZATION_FAILED;
     auto     replay_device = pDevice->GetHandlePointer();
     assert(replay_device);
@@ -10638,6 +10668,42 @@ void VulkanReplayConsumerBase::TrackNewPipelineCache(const VulkanDeviceInfo* dev
     for (uint32_t i = 0; i < pipelineCount; ++i)
     {
         pipeline_cache_correspondances_.emplace(pipelines[i], id);
+    }
+}
+
+void VulkanReplayConsumerBase::SetQueueFamiliesProperties(VulkanPhysicalDeviceInfo*      physical_device_info,
+                                                          uint32_t                       queue_family_count,
+                                                          const VkQueueFamilyProperties* families_properties)
+{
+    assert(physical_device_info != nullptr);
+
+    CheckReplayDeviceInfo(physical_device_info);
+    assert(physical_device_info->replay_device_info != nullptr);
+
+    physical_device_info->replay_device_info->queue_families_properties.resize(queue_family_count);
+    for (uint32_t i = 0; i < queue_family_count; ++i)
+    {
+        physical_device_info->replay_device_info->queue_families_properties[i] = families_properties[i];
+    }
+}
+
+void VulkanReplayConsumerBase::OverrideGetPhysicalDeviceQueueFamilyProperties(
+    PFN_vkGetPhysicalDeviceQueueFamilyProperties           func,
+    VulkanPhysicalDeviceInfo*                              physical_device_info,
+    PointerDecoder<uint32_t>*                              pQueueFamilyPropertyCount,
+    StructPointerDecoder<Decoded_VkQueueFamilyProperties>* pQueueFamilyProperties)
+{
+    assert(physical_device_info != nullptr);
+
+    VkPhysicalDevice         physical_device         = physical_device_info->handle;
+    uint32_t*                replay_count_ptr        = pQueueFamilyPropertyCount->GetOutputPointer();
+    VkQueueFamilyProperties* queue_family_properties = pQueueFamilyProperties->GetPointer();
+
+    func(physical_device, replay_count_ptr, queue_family_properties);
+
+    if (replay_count_ptr != nullptr && *replay_count_ptr && queue_family_properties != nullptr)
+    {
+        SetQueueFamiliesProperties(physical_device_info, *replay_count_ptr, queue_family_properties);
     }
 }
 

@@ -1389,6 +1389,12 @@ class VulkanReplayConsumerBase : public VulkanConsumer
                                      VulkanShaderModuleInfo*                                    shader_module_info,
                                      const StructPointerDecoder<Decoded_VkAllocationCallbacks>* pAllocator);
 
+    void OverrideGetPhysicalDeviceQueueFamilyProperties(
+        PFN_vkGetPhysicalDeviceQueueFamilyProperties           func,
+        VulkanPhysicalDeviceInfo*                              physical_device_info,
+        PointerDecoder<uint32_t>*                              pQueueFamilyPropertyCount,
+        StructPointerDecoder<Decoded_VkQueueFamilyProperties>* pQueueFamilyProperties);
+
     std::function<handle_create_result_t<VkPipeline>()>
     AsyncCreateGraphicsPipelines(PFN_vkCreateGraphicsPipelines                               func,
                                  VkResult                                                    returnValue,
@@ -1461,6 +1467,10 @@ class VulkanReplayConsumerBase : public VulkanConsumer
     void SetPhysicalDeviceMemoryProperties(VulkanPhysicalDeviceInfo*               physical_device_info,
                                            const VkPhysicalDeviceMemoryProperties* capture_properties,
                                            const VkPhysicalDeviceMemoryProperties* replay_properties);
+
+    void SetQueueFamiliesProperties(VulkanPhysicalDeviceInfo*      physical_device_info,
+                                    uint32_t                       queue_family_count,
+                                    const VkQueueFamilyProperties* families_properties);
 
     // Can override PhysicalDeviceInfo::handle and PhysicalDeviceInfo::replay_device_info based on comparison between
     // capture and replay physical device properties or GPU override settings.
