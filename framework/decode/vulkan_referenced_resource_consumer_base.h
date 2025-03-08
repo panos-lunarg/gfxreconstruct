@@ -258,6 +258,9 @@ class VulkanReferencedResourceConsumerBase : public VulkanConsumer
 
     bool WasNotOptimizable() { return not_optimizable_; }
 
+    virtual void ProcessOptimizerMessage(format::OptimizerMessage             msg,
+                                         const std::vector<format::HandleId>& handles) override;
+
   protected:
     bool IsStateLoading() const { return loading_state_; }
 

@@ -427,6 +427,8 @@ class VulkanStateWriter
 
     void WriteDebugUtilsState(const VulkanStateTable& state_table);
 
+    void WriteOptimizerMessage(format::OptimizerMessage msg, const std::vector<format::HandleId>& objects);
+
   private:
     util::FileOutputStream*  output_stream_;
     util::Compressor*        compressor_;

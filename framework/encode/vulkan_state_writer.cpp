@@ -39,6 +39,7 @@
 #include <cstdint>
 #include <limits>
 #include <unordered_map>
+#include <vector>
 
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)
 #include <android/hardware_buffer.h>
@@ -1409,6 +1410,9 @@ void VulkanStateWriter::WriteBufferDeviceAddressState(const VulkanStateTable& st
             encoder_.EncodeVkDeviceAddressValue(wrapper->address);
             WriteFunctionCall(call_id, &parameter_stream_);
             parameter_stream_.Clear();
+
+            std::vector<format::HandleId> buffers = {wrapper->handle_id};
+            WriteOptimizerMessage(format::OptimizerMessage::kDoNotOptimize, buffers);
         }
     });
 }
@@ -4393,6 +4397,27 @@ void VulkanStateWriter::WriteDebugUtilsState(const VulkanStateTable& state_table
     state_table.VisitWrappers([&](const vulkan_wrappers::PrivateDataSlotEXTWrapper* wrapper) { write_debug_utils_calls(wrapper); });
     state_table.VisitWrappers([&](const vulkan_wrappers::AccelerationStructureNVWrapper* wrapper) { write_debug_utils_calls(wrapper); });
     // clang-format on
+}
+
+void VulkanStateWriter::WriteOptimizerMessage(format::OptimizerMessage             msg,
+                                              const std::vector<format::HandleId>& objects)
+{
+    format::OptimizerMessageHeader msg_header;
+
+    const size_t objects_size = objects.size() * sizeof(format::HandleId);
+
+    msg_header.meta_header.block_header.size = format::GetMetaDataBlockBaseSize(msg_header) + objects_size;
+    msg_header.meta_header.block_header.type = format::kMetaDataBlock;
+    msg_header.meta_header.meta_data_id =
+        format::MakeMetaDataId(format::ApiFamilyId::ApiFamily_Vulkan, format::MetaDataType::kOptimizerMessageCommand);
+
+    msg_header.thread_id         = thread_data_->thread_id_;
+    msg_header.msg               = msg;
+    msg_header.number_of_handles = static_cast<uint32_t>(objects.size());
+
+    output_stream_->Write(&msg_header, sizeof(msg_header));
+    output_stream_->Write(objects.data(), objects_size);
+    ++blocks_written_;
 }
 
 GFXRECON_END_NAMESPACE(encode)

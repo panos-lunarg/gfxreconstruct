@@ -109,6 +109,8 @@ class MetadataConsumerBase
                                               int64_t            offset,
                                               const std::string& filename)
     {}
+    virtual void ProcessOptimizerMessage(format::OptimizerMessage msg, const std::vector<format::HandleId>& handles)
+    {}
 
     virtual void SetCurrentBlockIndex(uint64_t block_index) {}
 

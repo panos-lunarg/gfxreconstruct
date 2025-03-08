@@ -214,6 +214,10 @@ class VulkanDecoderBase : public ApiDecoder
                                                int64_t            offset,
                                                const std::string& filename) override;
 
+    virtual void DispatchOptimizerCommand(format::ThreadId                     thread_id,
+                                          format::OptimizerMessage             msg,
+                                          const std::vector<format::HandleId>& objects) override;
+
   protected:
     const std::vector<VulkanConsumer*>& GetConsumers() const { return consumers_; }
 

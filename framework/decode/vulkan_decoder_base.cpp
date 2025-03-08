@@ -634,5 +634,17 @@ void VulkanDecoderBase::DispatchExecuteBlocksFromFile(format::ThreadId   thread_
     }
 }
 
+void VulkanDecoderBase::DispatchOptimizerCommand(format::ThreadId                     thread_id,
+                                                 format::OptimizerMessage             msg,
+                                                 const std::vector<format::HandleId>& objects)
+{
+    GFXRECON_UNREFERENCED_PARAMETER(thread_id);
+
+    for (auto consumer : consumers_)
+    {
+        consumer->ProcessOptimizerMessage(msg, objects);
+    }
+}
+
 GFXRECON_END_NAMESPACE(decode)
 GFXRECON_END_NAMESPACE(gfxrecon)

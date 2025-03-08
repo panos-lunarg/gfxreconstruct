@@ -157,7 +157,8 @@ enum class MetaDataType : uint16_t
     kSetEnvironmentVariablesCommand         = 32,
     kViewRelativeLocation                   = 33,
     kExecuteBlocksFromFile                  = 34,
-    kReserved35                             = 35
+    kReserved35                             = 35,
+    kOptimizerMessageCommand                = 36
 };
 
 // MetaDataId is stored in the capture file and its type must be uint32_t to avoid breaking capture file compatibility.
@@ -694,6 +695,20 @@ struct ExecuteBlocksFromFile
 
     // Number of characters in file name
     uint32_t filename_length;
+};
+
+enum OptimizerMessage : uint32_t
+{
+    kDoNotOptimize = 0
+};
+
+struct OptimizerMessageHeader
+{
+    MetaDataHeader meta_header;
+    ThreadId       thread_id;
+
+    OptimizerMessage msg;
+    uint32_t         number_of_handles;
 };
 
 // Restore size_t to normal behavior.

@@ -195,6 +195,10 @@ class ApiDecoder
                                                int64_t            offset,
                                                const std::string& filename){};
 
+    virtual void DispatchOptimizerCommand(format::ThreadId                     thread_id,
+                                          format::OptimizerMessage             msg,
+                                          const std::vector<format::HandleId>& objects){};
+
     virtual void SetCurrentBlockIndex(uint64_t block_index){};
 
     virtual void SetCurrentApiCallId(format::ApiCallId api_call_id){};

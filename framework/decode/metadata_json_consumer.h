@@ -299,6 +299,21 @@ class MetadataJsonConsumer : public Base
         WriteBlockEnd();
     }
 
+    virtual void ProcessOptimizerMessage(format::OptimizerMessage             msg,
+                                         const std::vector<format::HandleId>& handles) override
+    {
+        const JsonOptions& json_options = GetJsonOptions();
+        auto&              jdata        = WriteMetaCommandStart("OptimizerMessage");
+        FieldToJson(jdata["message"], msg, json_options);
+
+        for (const auto handle : handles)
+        {
+            FieldToJson(jdata["handles"], handle, json_options);
+        }
+
+        WriteBlockEnd();
+    }
+
     /// @}
 };
 

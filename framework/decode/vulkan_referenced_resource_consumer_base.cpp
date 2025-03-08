@@ -22,6 +22,7 @@
 
 #include "decode/vulkan_referenced_resource_consumer_base.h"
 
+#include "format/format.h"
 #include "util/logging.h"
 
 #include <cassert>
@@ -1155,6 +1156,23 @@ void VulkanReferencedResourceConsumerBase::PushDescriptorSetWithTemplate(format:
         assert(view_ids != nullptr);
 
         AddTexelBufferViewsToUser(user_id, texel_buffer_view_count, view_ids);
+    }
+}
+
+void VulkanReferencedResourceConsumerBase::ProcessOptimizerMessage(format::OptimizerMessage             msg,
+                                                                   const std::vector<format::HandleId>& handles)
+{
+    for (const auto handle : handles)
+    {
+        switch (msg)
+        {
+            case format::OptimizerMessage::kDoNotOptimize:
+                table_.MarkResourceAsUsed(handle);
+                break;
+
+            default:
+                GFXRECON_LOG_ERROR("Unrecognized message to optimizer: %u", msg);
+        }
     }
 }
 

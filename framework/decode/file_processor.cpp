@@ -2083,6 +2083,31 @@ bool FileProcessor::ProcessMetaData(const format::BlockHeader& block_header, for
             HandleBlockReadError(kErrorReadingBlockData, "Failed to read runtime info meta-data block");
         }
     }
+    else if (meta_data_type == format::MetaDataType::kOptimizerMessageCommand)
+    {
+        format::OptimizerMessageHeader message_header;
+        success = ReadBytes(&message_header.thread_id, sizeof(message_header.thread_id));
+        success = success && ReadBytes(&message_header.msg, sizeof(message_header.msg));
+        success = success && ReadBytes(&message_header.number_of_handles, sizeof(message_header.number_of_handles));
+
+        if (success && message_header.number_of_handles)
+        {
+            std::vector<format::HandleId> handles(message_header.number_of_handles);
+            for (uint32_t i = 0; i < message_header.number_of_handles && success; ++i)
+            {
+                format::HandleId* handle = handles.data() + i;
+                success                  = ReadBytes(handle, sizeof(format::HandleId));
+            }
+
+            if (success)
+            {
+                for (auto decoder : decoders_)
+                {
+                    decoder->DispatchOptimizerCommand(message_header.thread_id, message_header.msg, handles);
+                }
+            }
+        }
+    }
     else
     {
         if ((meta_data_type == format::MetaDataType::kReserved23) ||
