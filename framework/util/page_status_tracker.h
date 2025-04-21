@@ -54,6 +54,7 @@ class PageStatusTracker
     void SetAllBlocksActiveWrite() { std::fill(active_writes_.begin(), active_writes_.end(), 1); }
 
     const PageStatus& GetActiveWrites() const { return active_writes_; }
+    PageStatus&       GetActiveWrites() { return active_writes_; }
 
     static bool HasActiveWriteBlock(const PageStatus& pages, size_t first_page, size_t page_count)
     {

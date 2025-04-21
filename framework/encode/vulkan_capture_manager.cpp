@@ -22,6 +22,7 @@
  ** DEALINGS IN THE SOFTWARE.
  */
 
+#include "encode/capture_settings.h"
 #include "encode/vulkan_handle_wrappers.h"
 #include "vulkan/vulkan_core.h"
 #include <cstdint>
@@ -2341,8 +2342,9 @@ void VulkanCaptureManager::PostProcess_vkMapMemory(VkResult         result,
                     util::PageGuardManager* manager = util::PageGuardManager::Get();
                     assert(manager != nullptr);
 
-                    bool use_shadow_memory = true;
-                    bool use_write_watch   = false;
+                    bool use_shadow_memory =
+                        GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kUserfaultfd ? false : true;
+                    bool use_write_watch = false;
 
                     if (IsPageGuardMemoryModeExternal())
                     {

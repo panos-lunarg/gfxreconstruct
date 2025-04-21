@@ -47,10 +47,12 @@
 #define USERFAULTFD_SUPPORTED 0
 #else
 #include <linux/userfaultfd.h>
+#include <linux/fs.h>
 // Older kernels might not support all features we need from userfaultfd. Check what is available.
-#if defined(UFFD_USER_MODE_ONLY) && defined(UFFDIO_WRITEPROTECT) && defined(UFFDIO_WRITEPROTECT_MODE_WP)
+#if defined(UFFD_USER_MODE_ONLY) && defined(UFFD_FEATURE_WP_ASYNC)
 #define USERFAULTFD_SUPPORTED 1
 #else
+#warning "UFFD does not support all necessary features"
 #define USERFAULTFD_SUPPORTED 0
 #endif
 #endif
@@ -58,7 +60,7 @@
 #if defined(__ANDROID__)
 struct SigchainAction
 {
-    bool (*sc_sigaction)(int, siginfo_t*, void*);
+    bool     (*sc_sigaction)(int, siginfo_t*, void*);
     sigset_t sc_mask;
     uint64_t sc_flags;
 };
@@ -152,10 +154,6 @@ class PageGuardManager
     void FreePersistentShadowMemory(uintptr_t shadow_memory_handle);
 
     const void* GetMappedMemory(uint64_t memory_id) const;
-
-    void UffdBlockRtSignal();
-
-    void UffdUnblockRtSignal();
 
     struct MemoryInfo
     {
@@ -302,14 +300,9 @@ class PageGuardManager
     bool                 uffd_is_init_;
 
 #if USERFAULTFD_SUPPORTED == 1
-    int                          uffd_rt_signal_used_;
-    sigset_t                     uffd_signal_set_;
-    int                          uffd_fd_;
-    pthread_t                    uffd_handler_thread_;
-    static std::atomic<bool>     is_uffd_handler_thread_running_;
-    static std::atomic<bool>     stop_uffd_handler_thread_;
-    std::unique_ptr<uint8_t[]>   uffd_page_size_tmp_buff_;
-    std::unordered_set<uint64_t> uffd_fault_causing_threads;
+    int                             uffd_fd_;
+    int                             pagemap_fd_;
+    std::vector<struct page_region> page_region_output_;
 #endif
 
 #if defined(__ANDROID__)
@@ -318,25 +311,15 @@ class PageGuardManager
     bool                             libsigchain_active_          = false;
 #endif
 
-    bool     InitializeUserFaultFd();
-    void     UffdTerminate();
-    uint32_t UffdBlockFaultingThreads();
-    void     UffdUnblockFaultingThreads(uint32_t n_threads_to_wait);
-    bool     UffdRegisterMemory(const void* address, size_t length);
-    void     UffdUnregisterMemory(const void* address, size_t length);
-    bool     UffdResetRegion(void* guard_address, size_t guard_range);
+    bool InitializeUserFaultFd();
+    void UffdTerminate();
+    bool UffdRegisterMemory(const void* address, size_t length);
+    void UffdUnregisterMemory(const void* address, size_t length);
+    void
+    UffdScanPages(const void* address, size_t n_pages, PageStatusTracker::PageStatus& active_writes, bool clear = true);
 
 #if USERFAULTFD_SUPPORTED == 1
-    bool         UffdInit();
-    bool         UffdSetSignalHandler();
-    void         UffdRemoveSignalHandler();
-    bool         UffdStartHandlerThread();
-    bool         UffdHandleFault(MemoryInfo* memory_info, uint64_t address, uint64_t flags, bool wake_thread);
-    bool         UffdWakeFaultingThread(uint64_t address);
-    void         UffdSignalHandler(int sig);
-    void*        UffdHandlerThread(void* args);
-    static void* UffdHandlerThreadHelper(void* this_);
-    static void  UffdStaticSignalHandler(int sig);
+    bool UffdInit();
 #endif
 };
 

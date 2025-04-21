@@ -1664,35 +1664,11 @@ bool CaptureFileOutputStream::Write(const void* data, size_t len)
 {
     GFXRECON_ASSERT(capture_manager_);
 
-    if (capture_manager_->GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kUserfaultfd)
-    {
-        util::PageGuardManager* manager = util::PageGuardManager::Get();
-        if (manager)
-        {
-            // fwrite hides a lock inside to synchronize writes to files. If a thread is in the middle
-            // of a write to the capture file and the uffd mechanism interupts it, it will cause
-            // a deadlock as uffd will also try to write to the capture file as well. For this
-            // reason RT signal needs to be disabled while writing.
-            // This can be removed once writing to the capture file(s) is delegated to a separate thread.
-            manager->UffdBlockRtSignal();
-        }
-    }
-
     bool ret = FileOutputStream::Write(data, len);
 
     if (capture_manager_->GetForceFileFlush())
     {
         Flush();
-    }
-
-    if (capture_manager_->GetMemoryTrackingMode() == CaptureSettings::MemoryTrackingMode::kUserfaultfd)
-    {
-        util::PageGuardManager* manager = util::PageGuardManager::Get();
-        if (manager)
-        {
-            // Enable again signal
-            manager->UffdUnblockRtSignal();
-        }
     }
 
     return ret;

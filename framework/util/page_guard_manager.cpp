@@ -813,12 +813,21 @@ void PageGuardManager::ProcessEntry(uint64_t                  memory_id,
                                     const ModifiedMemoryFunc& handle_modified)
 {
     assert(memory_info != nullptr);
-    assert(memory_info->is_modified);
 
     bool   active_range = false;
     size_t start_index  = 0;
 
-    memory_info->is_modified = false;
+    if (kUserFaultFdMode == protection_mode_)
+    {
+        GFXRECON_ASSERT(memory_info->is_modified == false);
+
+        UffdScanPages(
+            memory_info->start_address, memory_info->total_pages, memory_info->status_tracker.GetActiveWrites());
+    }
+    else
+    {
+        memory_info->is_modified = false;
+    }
 
     for (size_t i = 0; i < memory_info->total_pages; ++i)
     {
@@ -933,10 +942,6 @@ void PageGuardManager::ProcessActiveRange(uint64_t                  memory_id,
         {
             // Reset page guard to detect both read and write accesses when using shadow memory.
             SetMemoryProtection(guard_address, guard_range, kGuardReadWriteProtect);
-        }
-        else if (kUserFaultFdMode == protection_mode_)
-        {
-            UffdResetRegion(guard_address, page_range);
         }
     }
     else
@@ -1225,7 +1230,14 @@ void* PageGuardManager::AddTrackedMemory(uint64_t  memory_id,
         }
     }
 
-    return (shadow_memory != nullptr) ? shadow_memory : mapped_memory;
+    if (kUserFaultFdMode == protection_mode_ && !use_shadow_memory)
+    {
+        return mapped_memory;
+    }
+    else
+    {
+        return (shadow_memory != nullptr) ? shadow_memory : mapped_memory;
+    }
 }
 
 void PageGuardManager::ReleaseTrackedMemory(const MemoryInfo* memory_info)
@@ -1240,7 +1252,7 @@ void PageGuardManager::ReleaseTrackedMemory(const MemoryInfo* memory_info)
         }
         else
         {
-            UffdUnregisterMemory(memory_info->shadow_memory, memory_info->shadow_range);
+            UffdUnregisterMemory(memory_info->mapped_memory, memory_info->mapped_range);
         }
     }
     if ((memory_info->shadow_memory != nullptr) && memory_info->own_shadow_memory)
@@ -1296,12 +1308,6 @@ void PageGuardManager::ProcessMemoryEntry(uint64_t memory_id, const ModifiedMemo
 
     auto entry = memory_info_.find(memory_id);
 
-    uint32_t n_threads_to_wait = 0;
-    if (protection_mode_ == kUserFaultFdMode)
-    {
-        n_threads_to_wait = UffdBlockFaultingThreads();
-    }
-
     if (entry != memory_info_.end())
     {
         auto memory_info = &entry->second;
@@ -1313,28 +1319,16 @@ void PageGuardManager::ProcessMemoryEntry(uint64_t memory_id, const ModifiedMemo
             LoadActiveWriteStates(memory_info);
         }
 
-        if (memory_info->is_modified)
+        if (memory_info->is_modified || (kUserFaultFdMode == protection_mode_))
         {
             ProcessEntry(entry->first, memory_info, handle_modified);
         }
-    }
-
-    // Unblock threads
-    if (protection_mode_ == kUserFaultFdMode)
-    {
-        UffdUnblockFaultingThreads(n_threads_to_wait);
     }
 }
 
 void PageGuardManager::ProcessMemoryEntries(const ModifiedMemoryFunc& handle_modified)
 {
     std::lock_guard<std::mutex> lock(tracked_memory_lock_);
-
-    uint32_t n_threads_to_wait = 0;
-    if (protection_mode_ == kUserFaultFdMode)
-    {
-        n_threads_to_wait = UffdBlockFaultingThreads();
-    }
 
     for (auto entry = memory_info_.begin(); entry != memory_info_.end(); ++entry)
     {
@@ -1347,16 +1341,10 @@ void PageGuardManager::ProcessMemoryEntries(const ModifiedMemoryFunc& handle_mod
             LoadActiveWriteStates(memory_info);
         }
 
-        if (memory_info->is_modified)
+        if (memory_info->is_modified || (kUserFaultFdMode == protection_mode_))
         {
             ProcessEntry(entry->first, memory_info, handle_modified);
         }
-    }
-
-    // Unblock threads
-    if (protection_mode_ == kUserFaultFdMode)
-    {
-        UffdUnblockFaultingThreads(n_threads_to_wait);
     }
 }
 
