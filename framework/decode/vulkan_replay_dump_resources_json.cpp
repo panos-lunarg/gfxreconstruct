@@ -20,6 +20,7 @@
 ** DEALINGS IN THE SOFTWARE.
 */
 
+#include "decode/vulkan_replay_dump_resources_common.h"
 #include "format/format_util.h"
 #include "Vulkan-Utility-Libraries/vk_format_utils.h"
 #include "util/file_path.h"
@@ -165,58 +166,58 @@ nlohmann::ordered_json& VulkanReplayDumpResourcesJson::GetCurrentSubEntry()
     return current_entry != nullptr ? *current_entry : json_data_;
 }
 
-void VulkanReplayDumpResourcesJson::InsertImageSubresourceInfo(nlohmann::ordered_json& json_entry,
-                                                               VkFormat                image_format,
-                                                               VkImageType             image_type,
-                                                               format::HandleId        image_id,
-                                                               const VkExtent3D&       extent,
-                                                               const std::string&      filename,
-                                                               VkImageAspectFlagBits   aspect,
-                                                               uint32_t                mip_level,
-                                                               uint32_t                array_layer,
-                                                               bool                    separate_alpha,
-                                                               const std::string*      filename_before)
+void VulkanReplayDumpResourcesJson::InsertImageSubresourceInfo(nlohmann::ordered_json&                    json_entry,
+                                                               const DumpedImage::DumpedImageSubresource& subresource,
+                                                               VkFormat                                   format,
+                                                               bool separate_alpha)
 {
-    const std::string aspect_str_whole(util::ToString<VkImageAspectFlagBits>(aspect));
+    const std::string aspect_str_whole(util::ToString<VkImageAspectFlagBits>(subresource.aspect));
     const std::string aspect_str(aspect_str_whole.begin() + 16, aspect_str_whole.end() - 4);
     json_entry["aspect"] = aspect_str;
 
-    json_entry["dimensions"][0] = extent.width;
-    json_entry["dimensions"][1] = extent.height;
-    json_entry["dimensions"][2] = extent.depth;
+    json_entry["dimensions"][0] = subresource.extent.width;
+    json_entry["dimensions"][1] = subresource.extent.height;
+    json_entry["dimensions"][2] = subresource.extent.depth;
 
-    json_entry["mipLevel"]   = mip_level;
-    json_entry["arrayLayer"] = array_layer;
+    json_entry["mipLevel"]   = subresource.level;
+    json_entry["arrayLayer"] = subresource.layer;
 
-    const bool raw_image = !util::filepath::GetFilenameExtension(filename).compare(".bin");
+    const bool raw_image = !util::filepath::GetFilenameExtension(subresource.filename).compare(".bin");
 
-    if (separate_alpha && !raw_image && vkuFormatHasAlpha(image_format))
+    if (separate_alpha && !raw_image && vkuFormatHasAlpha(format))
     {
-        if (filename_before != nullptr)
+        if (!subresource.filename_before.empty())
         {
-            json_entry["beforeFile"]      = *filename_before;
-            json_entry["beforeFileAlpha"] = util::filepath::InsertFilenamePostfix(*filename_before, "_alpha");
-            json_entry["afterFile"]       = filename;
-            json_entry["afterFileAlpha"]  = util::filepath::InsertFilenamePostfix(filename, "_alpha");
+            json_entry["beforeFile"] = subresource.filename_before;
+            json_entry["beforeFileAlpha"] =
+                util::filepath::InsertFilenamePostfix(subresource.filename_before, "_alpha");
+            json_entry["afterFile"]      = subresource.filename;
+            json_entry["afterFileAlpha"] = util::filepath::InsertFilenamePostfix(subresource.filename, "_alpha");
             ;
         }
         else
         {
-            json_entry["file"]      = filename;
-            json_entry["fileAlpha"] = util::filepath::InsertFilenamePostfix(filename, "_alpha");
+            json_entry["file"]      = subresource.filename;
+            json_entry["fileAlpha"] = util::filepath::InsertFilenamePostfix(subresource.filename, "_alpha");
         }
     }
     else
     {
-        if (filename_before != nullptr)
+        if (!subresource.filename_before.empty())
         {
-            json_entry["beforeFile"] = *filename_before;
-            json_entry["afterFile"]  = filename;
+            json_entry["beforeFile"] = subresource.filename_before;
+            json_entry["afterFile"]  = subresource.filename;
         }
         else
         {
-            json_entry["file"] = filename;
+            json_entry["file"] = subresource.filename;
         }
+    }
+
+    if (subresource.compressed_size)
+    {
+        json_entry["uncompressedSize"] = subresource.size;
+        json_entry["size"]             = subresource.compressed_size;
     }
 }
 
