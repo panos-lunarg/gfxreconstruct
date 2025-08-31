@@ -130,14 +130,14 @@ VulkanDeviceAddressTracker::GetBufferInfo(VkDeviceAddress                       
         // find first address equal or greater
         auto address_it = address_map.lower_bound(device_address);
 
-        if (address_it == address_map.end() || address_it->first > device_address)
+        // Not found
+        if (address_it == address_map.end())
         {
-            // not found
-            if (address_it == address_map.begin())
-            {
-                return nullptr;
-            }
+            return nullptr;
+        }
 
+        if (address_it->first > device_address)
+        {
             // decrement iterator, now pointing to the first VkDeviceAddress that is lower than device_address
             address_it--;
         }
