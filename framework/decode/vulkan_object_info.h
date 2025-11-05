@@ -504,6 +504,7 @@ struct VulkanPipelineLayoutInfo : public VulkanObjectInfo<VkPipelineLayout>
 {
     // One per descriptor set
     std::vector<DescriptorBindingLayoutMap> desc_set_layouts;
+    std::vector<VkPushConstantRange>        push_constant_ranges;
 };
 
 struct VulkanPipelineInfo : public VulkanObjectInfoAsync<VkPipeline>
@@ -553,6 +554,9 @@ struct VulkanPipelineInfo : public VulkanObjectInfoAsync<VkPipeline>
 
     // Pipeline layout info
     std::vector<DescriptorBindingLayoutMap> desc_set_layouts;
+
+    // Push constants layout. Used only from Vulkan dump resources
+    std::vector<VkPushConstantRange> push_constant_ranges;
 };
 
 struct VulkanDescriptorPoolInfo : public VulkanPoolInfo<VkDescriptorPool>

@@ -223,6 +223,9 @@ class DefaultVulkanDumpResourcesDelegate : public VulkanDumpResourcesDelegate
 
     std::string GenerateIndexBufferFilename(const DumpedResourceBase& dumped_resource, bool before_command) const;
 
+    // Push constants filename generator
+    std::string GeneratePushConstantFilename(const DumpedResourceBase& dumped_resource, bool before_command) const;
+
     // Json generators
     void GenerateOutputJsonDrawCallInfo(const VulkanDelegateDumpDrawCallContext& draw_call_info);
 
@@ -233,6 +236,9 @@ class DefaultVulkanDumpResourcesDelegate : public VulkanDumpResourcesDelegate
     void GenerateDispatchTraceRaysDescriptorsJsonInfo(nlohmann::ordered_json&    dispatch_json_entry,
                                                       const DumpedResourcesInfo& dumped_resources,
                                                       bool                       is_dispatch);
+
+    void GeneratePushDescriptorsJsonInfo(nlohmann::ordered_json&    dispatch_json_entry,
+                                         const DumpedResourcesInfo& dumped_resources);
 
     VulkanReplayDumpResourcesJson dump_json_;
     const VulkanReplayOptions&    options_;

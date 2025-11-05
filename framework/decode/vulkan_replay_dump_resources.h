@@ -401,6 +401,25 @@ class VulkanReplayDumpResourcesBase
                                     uint32_t                 commandBufferCount,
                                     const VkCommandBuffer*   pCommandBuffers);
 
+    void OverrideCmdPushConstants(const ApiCallInfo&              call_info,
+                                  PFN_vkCmdPushConstants          func,
+                                  VkCommandBuffer                 commandBuffer,
+                                  const VulkanPipelineLayoutInfo* layout,
+                                  VkShaderStageFlags              stageFlags,
+                                  uint32_t                        offset,
+                                  uint32_t                        size,
+                                  const void*                     pValues);
+
+    void OverrideCmdPushConstants2(const ApiCallInfo&                                       call_info,
+                                   PFN_vkCmdPushConstants2                                  func,
+                                   VkCommandBuffer                                          commandBuffer,
+                                   const StructPointerDecoder<Decoded_VkPushConstantsInfo>* pPushConstantsInfo);
+
+    void OverrideCmdPushConstants2KHR(const ApiCallInfo&                                       call_info,
+                                      PFN_vkCmdPushConstants2KHR                               func,
+                                      VkCommandBuffer                                          commandBuffer,
+                                      const StructPointerDecoder<Decoded_VkPushConstantsInfo>* pPushConstantsInfo);
+
     VkResult QueueSubmit(const std::vector<VkSubmitInfo>&   modified_submit_infos,
                          const graphics::VulkanDeviceTable& device_table,
                          VkQueue                            queue,

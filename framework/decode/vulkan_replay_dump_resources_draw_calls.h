@@ -152,6 +152,8 @@ class DrawCallsDumpingContext
 
     VkResult DumpVertexIndexBuffers(uint64_t qs_index, uint64_t bcb_index, uint64_t dc_index);
 
+    VkResult DumpPushConstants(uint64_t qs_index, uint64_t bcb_index, uint64_t dc_index, uint64_t rp, uint64_t sp);
+
     DrawCallParams* InsertNewDrawParameters(
         uint64_t index, uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance);
 
@@ -185,6 +187,12 @@ class DrawCallsDumpingContext
                                                                 uint32_t                max_draw_count,
                                                                 uint32_t                stride,
                                                                 DrawCallType            drawcall_type);
+
+    void PushConstants(const VulkanPipelineLayoutInfo* layout,
+                       VkShaderStageFlags              stageFlags,
+                       uint32_t                        offset,
+                       uint32_t                        size,
+                       const void*                     pValues);
 
     void Release();
 
@@ -661,6 +669,9 @@ class DrawCallsDumpingContext
         bool updated_referenced_descriptors;
 
         DumpedResourcesInfo dumped_resources;
+
+        std::vector<VkPushConstantRange> ppl_layout_push_constant_ranges;
+        std::vector<uint8_t>             pushed_constant_values;
     };
 
   private:
@@ -690,6 +701,9 @@ class DrawCallsDumpingContext
     {
         std::map<DescriptorLocation, const DumpedImage&>  image_descriptors;
         std::map<DescriptorLocation, const DumpedBuffer&> buffer_descriptors;
+
+        std::vector<VkPushConstantRange> ppl_layout_push_constant_ranges;
+        std::vector<uint8_t>             pushed_constant_values;
     };
 
     std::vector<RenderPassDumpedDescriptors> render_pass_dumped_descriptors_;
@@ -697,6 +711,7 @@ class DrawCallsDumpingContext
     VkCommandBuffer                 aux_command_buffer_;
     VkFence                         aux_fence_;
     DumpResourcesCommandBufferLevel command_buffer_level_;
+    PushConstantsData               push_constants_;
 
     const graphics::VulkanDeviceTable*      device_table_;
     const graphics::VulkanInstanceTable*    instance_table_;

@@ -26,10 +26,13 @@
 #include "decode/common_object_info_table.h"
 #include "decode/vulkan_object_info.h"
 #include "decode/vulkan_replay_options.h"
+#include "format/format.h"
 #include "util/logging.h"
 #include "vulkan/vulkan_core.h"
 #include "util/defines.h"
 #include <cstdint>
+#include <limits>
+#include <unordered_map>
 #include <utility>
 #include <list>
 #include <variant>
@@ -93,6 +96,7 @@ enum class DumpResourceType
     kDispatchTraceRaysImageDescriptor,
     kDispatchTraceRaysBufferDescriptor,
     kDispatchTraceRaysInlineUniformBufferDescriptor,
+    kPushConstant
 };
 
 enum ImageDumpResult
@@ -421,6 +425,30 @@ struct DumpedRenderTarget : DumpedResourceBase
     uint32_t location{ 0 };
 };
 
+struct DumpedPushConstant : DumpedResourceBase
+{
+    DumpedPushConstant(DumpResourceType         t,
+                       uint64_t                 bcb,
+                       uint64_t                 cmd,
+                       uint64_t                 qs,
+                       uint64_t                 rp,
+                       uint64_t                 sp,
+                       VkShaderStageFlags       stages,
+                       uint32_t                 o,
+                       uint32_t                 s,
+                       DumpResourcesCommandType rt) :
+        DumpedResourceBase(t, bcb, cmd, qs, rp, sp),
+        stage_flags(stages), offset(o), size(s), resource_type(rt)
+    {}
+
+    VkShaderStageFlags stage_flags;
+    uint32_t           offset;
+    uint32_t           size;
+
+    DumpedBuffer             values;
+    DumpResourcesCommandType resource_type{ DumpResourcesCommandType::kNone };
+};
+
 struct DumpedResourcesInfo
 {
     DumpedResourcesInfo() = default;
@@ -431,6 +459,7 @@ struct DumpedResourcesInfo
 
     std::vector<DumpedVertexIndexBuffer> dumped_vertex_index_buffers;
     std::vector<DumpedRenderTarget>      dumped_render_targets;
+    std::vector<DumpedPushConstant>      dumped_push_descriptors;
 
     // We need to keep references to inserted elements. Use a list instead of a vector
     std::list<DumpedDescriptor> dumped_descriptors;
@@ -593,6 +622,14 @@ enum class DumpResourcesCommandBufferLevel
     kUnknown = 0,
     kPrimary,
     kSecondary
+};
+
+struct PushConstantsData
+{
+    format::HandleId                 layout_id{ format::kNullHandleId };
+    std::vector<VkPushConstantRange> layout_push_constant_ranges;
+
+    std::vector<uint8_t> pushed_values;
 };
 
 #define DEPTH_ATTACHMENT ~0

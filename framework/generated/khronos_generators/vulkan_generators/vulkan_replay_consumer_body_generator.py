@@ -206,7 +206,7 @@ class VulkanReplayConsumerBodyGenerator(
         if is_dump_resources:
             is_dr_override = name in self.DUMP_RESOURCES_OVERRIDES
             if is_override:
-                if self.is_handle(value.base_type) and value.base_type in ["VkPipeline", "VkPipelineLayout"] and name != "vkCmdPushConstants":
+                if self.is_handle(value.base_type) and value.base_type in ["VkPipeline", "VkPipelineLayout"]:
                     return True
             elif is_dr_override:
                 if value.base_type == 'VkPipeline':

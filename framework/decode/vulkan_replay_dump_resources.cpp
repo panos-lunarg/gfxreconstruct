@@ -2267,9 +2267,9 @@ void VulkanReplayDumpResourcesBase::DumpGraphicsPipelineInfos(
         }
 
         // Copy pipeline layout information
+        const auto ppl_layout_info = object_info_table_->GetVkPipelineLayoutInfo(create_info_meta[i].layout);
         if (create_info_meta != nullptr)
         {
-            const auto ppl_layout_info = object_info_table_->GetVkPipelineLayoutInfo(create_info_meta[i].layout);
             if (ppl_layout_info != nullptr)
             {
                 pipeline_info->desc_set_layouts = ppl_layout_info->desc_set_layouts;
@@ -2281,6 +2281,9 @@ void VulkanReplayDumpResourcesBase::DumpGraphicsPipelineInfos(
         {
             pipeline_info->shader_stages |= static_cast<VkShaderStageFlags>(in_p_create_infos[i].pStages[ss].stage);
         }
+
+        // Copy push constants layout
+        pipeline_info->push_constant_ranges = ppl_layout_info->push_constant_ranges;
     }
 }
 
@@ -2389,6 +2392,86 @@ void VulkanReplayDumpResourcesBase::OverrideCmdExecuteCommands(const ApiCallInfo
                 func(dispatch_rays_command_buffer, commandBufferCount, pCommandBuffers);
             }
         }
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdPushConstants(const ApiCallInfo&              call_info,
+                                                             PFN_vkCmdPushConstants          func,
+                                                             VkCommandBuffer                 commandBuffer,
+                                                             const VulkanPipelineLayoutInfo* layout,
+                                                             VkShaderStageFlags              stageFlags,
+                                                             uint32_t                        offset,
+                                                             uint32_t                        size,
+                                                             const void*                     pValues)
+{
+    CommandBufferIterator first, last;
+    bool                  found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
+    if (found)
+    {
+        for (CommandBufferIterator it = first; it < last; ++it)
+        {
+            func(*it, layout->handle, stageFlags, offset, size, pValues);
+        }
+
+        DrawCallsDumpingContext* context = FindDrawCallCommandBufferContext(commandBuffer);
+        GFXRECON_ASSERT(context != nullptr);
+        context->PushConstants(layout, stageFlags, offset, size, pValues);
+    }
+
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dispatch_rays_command_buffer, layout->handle, stageFlags, offset, size, pValues);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdPushConstants2(
+    const ApiCallInfo&                                       call_info,
+    PFN_vkCmdPushConstants2                                  func,
+    VkCommandBuffer                                          commandBuffer,
+    const StructPointerDecoder<Decoded_VkPushConstantsInfo>* pPushConstantsInfo)
+{
+    const VkPushConstantsInfo* in_pPushConstantsInfo = pPushConstantsInfo->GetPointer();
+
+    CommandBufferIterator first, last;
+    bool                  found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
+    if (found)
+    {
+        for (CommandBufferIterator it = first; it < last; ++it)
+        {
+            func(*it, in_pPushConstantsInfo);
+        }
+    }
+
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dispatch_rays_command_buffer, in_pPushConstantsInfo);
+    }
+}
+
+void VulkanReplayDumpResourcesBase::OverrideCmdPushConstants2KHR(
+    const ApiCallInfo&                                       call_info,
+    PFN_vkCmdPushConstants2KHR                               func,
+    VkCommandBuffer                                          commandBuffer,
+    const StructPointerDecoder<Decoded_VkPushConstantsInfo>* pPushConstantsInfo)
+{
+    const VkPushConstantsInfo* in_pPushConstantsInfo = pPushConstantsInfo->GetPointer();
+
+    CommandBufferIterator first, last;
+    bool                  found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
+    if (found)
+    {
+        for (CommandBufferIterator it = first; it < last; ++it)
+        {
+            func(*it, in_pPushConstantsInfo);
+        }
+    }
+
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        func(dispatch_rays_command_buffer, in_pPushConstantsInfo);
     }
 }
 

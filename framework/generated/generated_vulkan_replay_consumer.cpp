@@ -2280,7 +2280,7 @@ void VulkanReplayConsumer::Process_vkCmdPushConstants(
 
     if (options_.dumping_resources)
     {
-        resource_dumper_->Process_vkCmdPushConstants(call_info, GetDeviceTable(in_commandBuffer->handle)->CmdPushConstants, in_commandBuffer->handle, in_layout->handle, stageFlags, offset, size, pValues->GetPointer());
+        resource_dumper_->Process_vkCmdPushConstants(call_info, GetDeviceTable(in_commandBuffer->handle)->CmdPushConstants, in_commandBuffer->handle, in_layout, stageFlags, offset, size, pValues->GetPointer());
     }
 }
 
@@ -3773,7 +3773,7 @@ void VulkanReplayConsumer::Process_vkCmdPushConstants2(
 
     if (options_.dumping_resources)
     {
-        resource_dumper_->Process_vkCmdPushConstants2(call_info, GetDeviceTable(in_commandBuffer)->CmdPushConstants2, in_commandBuffer, in_pPushConstantsInfo);
+        resource_dumper_->Process_vkCmdPushConstants2(call_info, GetDeviceTable(in_commandBuffer)->CmdPushConstants2, in_commandBuffer, pPushConstantsInfo);
     }
 }
 
@@ -6576,7 +6576,7 @@ void VulkanReplayConsumer::Process_vkCmdPushConstants2KHR(
 
     if (options_.dumping_resources)
     {
-        resource_dumper_->Process_vkCmdPushConstants2KHR(call_info, GetDeviceTable(in_commandBuffer)->CmdPushConstants2KHR, in_commandBuffer, in_pPushConstantsInfo);
+        resource_dumper_->Process_vkCmdPushConstants2KHR(call_info, GetDeviceTable(in_commandBuffer)->CmdPushConstants2KHR, in_commandBuffer, pPushConstantsInfo);
     }
 }
 

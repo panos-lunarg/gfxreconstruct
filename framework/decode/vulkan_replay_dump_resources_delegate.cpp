@@ -74,10 +74,12 @@ bool DefaultVulkanDumpResourcesDelegate::DumpResource(const VulkanDelegateDumpRe
         case DumpResourceType::kDispatchTraceRaysBufferDescriptor:
         case DumpResourceType::kInlineUniformBufferDescriptor:
         case DumpResourceType::kDispatchTraceRaysInlineUniformBufferDescriptor:
+        case DumpResourceType::kPushConstant:
             return DumpBufferToFile(delegate_context);
             break;
 
         default:
+            GFXRECON_ASSERT(0);
             break;
     }
 
@@ -148,6 +150,14 @@ bool DefaultVulkanDumpResourcesDelegate::DumpBufferToFile(const VulkanDelegateDu
                                 ? std::get_if<DumpedBuffer>(&dumped_buffer_desc->dumped_resource)
                                 : std::get_if<DumpedBuffer>(&dumped_buffer_desc->dumped_resource_before);
             GFXRECON_ASSERT(dumped_buffer != nullptr);
+        }
+        break;
+
+        case DumpResourceType::kPushConstant:
+        {
+            filename_generator         = &DefaultVulkanDumpResourcesDelegate::GeneratePushConstantFilename;
+            auto* dumped_push_constant = static_cast<DumpedPushConstant*>(dumped_resource);
+            dumped_buffer              = &dumped_push_constant->values;
         }
         break;
 
@@ -612,6 +622,33 @@ std::string DefaultVulkanDumpResourcesDelegate::GenerateIndexBufferFilename(cons
     filename << "indexBuffer_"
              << "qs_" << dumped_resource.qs_index << "_bcb_" << dumped_resource.bcb_index << "_dc_"
              << dumped_resource.cmd_index << index_type_name << ".bin";
+
+    std::filesystem::path filedirname(options_.dump_resources_output_dir);
+    std::filesystem::path filebasename(filename.str());
+    return (filedirname / filebasename).string();
+}
+
+std::string DefaultVulkanDumpResourcesDelegate::GeneratePushConstantFilename(const DumpedResourceBase& dumped_resource,
+                                                                             bool before_command) const
+{
+    GFXRECON_UNREFERENCED_PARAMETER(before_command);
+
+    const DumpedPushConstant& push_constant = static_cast<const DumpedPushConstant&>(dumped_resource);
+
+    std::vector<std::string> stage_names;
+    ShaderStageFlagsToStageNames(push_constant.stage_flags, stage_names);
+
+    std::stringstream filename;
+    filename << capture_filename_ << "_";
+    filename << "pushConstant_";
+
+    for (size_t i = 0; i < stage_names.size() - 1; ++i)
+    {
+        filename << stage_names[i] << " | ";
+    }
+    filename << *(stage_names.end() - 1);
+    filename << "_qs_" << dumped_resource.qs_index << "_bcb_" << dumped_resource.bcb_index << "_dc_"
+             << dumped_resource.cmd_index << ".bin";
 
     std::filesystem::path filedirname(options_.dump_resources_output_dir);
     std::filesystem::path filebasename(filename.str());
@@ -1462,6 +1499,12 @@ void DefaultVulkanDumpResourcesDelegate::GenerateOutputJsonTraceRaysIndex(
         dump_json_.BlockEnd();
         dump_json_.Close();
     }
+}
+
+void DefaultVulkanDumpResourcesDelegate::GeneratePushDescriptorsJsonInfo(nlohmann::ordered_json&    dispatch_json_entry,
+                                                                         const DumpedResourcesInfo& dumped_resources)
+{
+    // for (const auto&)
 }
 
 GFXRECON_END_NAMESPACE(gfxrecon)

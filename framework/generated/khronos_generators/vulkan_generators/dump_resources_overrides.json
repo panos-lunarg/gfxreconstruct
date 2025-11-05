@@ -39,6 +39,9 @@
     "vkCmdBindVertexBuffers2EXT": "OverrideCmdBindVertexBuffers2EXT",
     "vkCmdBindIndexBuffer2KHR": "OverrideCmdBindIndexBuffer2KHR",
     "vkEndCommandBuffer": "OverrideEndCommandBuffer",
-    "vkCmdExecuteCommands": "OverrideCmdExecuteCommands"
+    "vkCmdExecuteCommands": "OverrideCmdExecuteCommands",
+    "vkCmdPushConstants": "OverrideCmdPushConstants",
+    "vkCmdPushConstants2": "OverrideCmdPushConstants2",
+    "vkCmdPushConstants2KHR": "OverrideCmdPushConstants2KHR"
   }
 }

@@ -411,7 +411,7 @@ void Process_vkCmdPushConstants(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdPushConstants                      func,
     VkCommandBuffer                             commandBuffer,
-    VkPipelineLayout                            layout,
+    const VulkanPipelineLayoutInfo*             layout,
     VkShaderStageFlags                          stageFlags,
     uint32_t                                    offset,
     uint32_t                                    size,
@@ -742,7 +742,7 @@ void Process_vkCmdPushConstants2(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdPushConstants2                     func,
     VkCommandBuffer                             commandBuffer,
-    const VkPushConstantsInfo*                  pPushConstantsInfo);
+    StructPointerDecoder<Decoded_VkPushConstantsInfo>* pPushConstantsInfo);
 
 void Process_vkCmdPushDescriptorSet2(
     const ApiCallInfo&                          call_info,
@@ -998,7 +998,7 @@ void Process_vkCmdPushConstants2KHR(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdPushConstants2KHR                  func,
     VkCommandBuffer                             commandBuffer,
-    const VkPushConstantsInfo*                  pPushConstantsInfo);
+    StructPointerDecoder<Decoded_VkPushConstantsInfo>* pPushConstantsInfo);
 
 void Process_vkCmdPushDescriptorSet2KHR(
     const ApiCallInfo&                          call_info,

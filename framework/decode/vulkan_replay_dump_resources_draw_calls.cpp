@@ -56,12 +56,11 @@ DrawCallsDumpingContext::DrawCallsDumpingContext(const CommandIndices*          
                                                  VulkanDumpResourcesDelegate&   delegate,
                                                  const util::Compressor*        compressor) :
     original_command_buffer_info_(nullptr),
-    current_cb_index_(0), dc_subresources_(dc_subresources), active_renderpass_(nullptr),
-    active_framebuffer_(nullptr), bound_gr_pipeline_{ nullptr }, current_renderpass_(0), current_subpass_(0),
-    delegate_(delegate), options_(options), compressor_(compressor), current_render_pass_type_(kNone),
-    aux_command_buffer_(VK_NULL_HANDLE), aux_fence_(VK_NULL_HANDLE),
-    command_buffer_level_(DumpResourcesCommandBufferLevel::kPrimary), device_table_(nullptr), instance_table_(nullptr),
-    object_info_table_(object_info_table),
+    current_cb_index_(0), dc_subresources_(dc_subresources), active_renderpass_(nullptr), active_framebuffer_(nullptr),
+    bound_gr_pipeline_{ nullptr }, current_renderpass_(0), current_subpass_(0), delegate_(delegate), options_(options),
+    compressor_(compressor), current_render_pass_type_(kNone), aux_command_buffer_(VK_NULL_HANDLE),
+    aux_fence_(VK_NULL_HANDLE), command_buffer_level_(DumpResourcesCommandBufferLevel::kPrimary),
+    device_table_(nullptr), instance_table_(nullptr), object_info_table_(object_info_table),
     replay_device_phys_mem_props_(nullptr), secondary_with_dynamic_rendering_{ false }
 {
     if (draw_indices != nullptr)
@@ -497,6 +496,17 @@ VkResult DrawCallsDumpingContext::CopyDrawIndirectParameters(DrawCallParams& dc_
     return VK_SUCCESS;
 }
 
+static void SnapshotPushConstants(DrawCallsDumpingContext::DrawCallParams& dc_params,
+                                  const VulkanPipelineInfo*                bound_pipeline,
+                                  const PushConstantsData&                 push_constants)
+{
+    if (!bound_pipeline->push_constant_ranges.empty())
+    {
+        dc_params.ppl_layout_push_constant_ranges = bound_pipeline->push_constant_ranges;
+        dc_params.pushed_constant_values          = push_constants.pushed_values;
+    }
+}
+
 static void SnapshotBoundDescriptors(DrawCallsDumpingContext::DrawCallParams& dc_params,
                                      const VulkanPipelineInfo*                bound_pipeline,
                                      const BoundDescriptorSets&               bound_descriptor_sets)
@@ -679,6 +689,7 @@ void DrawCallsDumpingContext::SnapshotState(DrawCallParams& dc_params)
     CopyVertexInputStateInfo(
         dc_params, bound_gr_pipeline_, dynamic_vertex_input_state_, bound_vertex_buffers_, bound_index_buffer_);
 
+    SnapshotPushConstants(dc_params, bound_gr_pipeline_, push_constants_);
     // NOTE: for indirect draws, we defer copying the indirect command-buffer until FinalizeCommandBuffer
 }
 
@@ -907,6 +918,16 @@ VkResult DrawCallsDumpingContext::DumpDrawCalls(
             }
         }
 
+        if (is_before_command)
+        {
+            res = DumpPushConstants(qs_index, bcb_index, dc_index, rp, sp);
+            if (res != VK_SUCCESS)
+            {
+                GFXRECON_LOG_ERROR("Dumping push constants failed (%s)", util::ToString<VkResult>(res).c_str())
+                return res;
+            }
+        }
+
         if (!options_.dump_resources_before || options_.dump_resources_before && (cb % 2))
         {
             const auto& dc_param_entry = draw_call_params_.find(dc_index);
@@ -981,7 +1002,7 @@ VkResult DrawCallsDumpingContext::RevertRenderTargetImageLayouts(VkQueue queue, 
     img_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     img_barrier.oldLayout           = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
     img_barrier.subresourceRange    = {
-           VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS
+        VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS
     };
 
     for (size_t i = 0; i < render_targets_[rp][sp].color_att_imgs.size(); ++i)
@@ -3731,6 +3752,71 @@ void DrawCallsDumpingContext::SecondaryUpdateContextFromPrimary(const VulkanPipe
             secondary_dc_params.clear();
         }
     }
+}
+
+void DrawCallsDumpingContext::PushConstants(const VulkanPipelineLayoutInfo* layout,
+                                            VkShaderStageFlags              stageFlags,
+                                            uint32_t                        offset,
+                                            uint32_t                        size,
+                                            const void*                     pValues)
+{
+    if (layout == nullptr || pValues == nullptr)
+    {
+        return;
+    }
+
+    if (layout->capture_id != push_constants_.layout_id)
+    {
+        push_constants_.layout_push_constant_ranges = layout->push_constant_ranges;
+        push_constants_.layout_id                   = layout->capture_id;
+    }
+
+    if (!push_constants_.layout_push_constant_ranges.empty())
+    {
+        push_constants_.pushed_values.resize(offset + size);
+        util::platform::MemoryCopy(push_constants_.pushed_values.data() + offset, size, pValues, size);
+    }
+}
+
+VkResult DrawCallsDumpingContext::DumpPushConstants(
+    uint64_t qs_index, uint64_t bcb_index, uint64_t dc_index, uint64_t rp, uint64_t sp)
+{
+    auto dc_param_entry = draw_call_params_.find(dc_index);
+    GFXRECON_ASSERT(dc_param_entry != draw_call_params_.end());
+    auto& dc_params = dc_param_entry->second;
+
+    const VulkanDelegateDumpResourceContext res_info_base(instance_table_, device_table_, compressor_);
+
+    const VulkanDeviceInfo* device_info = object_info_table_.GetVkDeviceInfo(original_command_buffer_info_->parent_id);
+    assert(device_info);
+
+    if (!dc_params->ppl_layout_push_constant_ranges.empty())
+    {
+        for (const auto& range : dc_params->ppl_layout_push_constant_ranges)
+        {
+            auto& new_constants =
+                dc_params->dumped_resources.dumped_push_descriptors.emplace_back(DumpResourceType::kPushConstant,
+                                                                                 bcb_index,
+                                                                                 dc_index,
+                                                                                 qs_index,
+                                                                                 rp,
+                                                                                 sp,
+                                                                                 range.stageFlags,
+                                                                                 range.offset,
+                                                                                 range.size,
+                                                                                 DumpResourcesCommandType::kGraphics);
+
+            VulkanDelegateDumpResourceContext res_info = res_info_base;
+            res_info.dumped_resource                   = &new_constants;
+            res_info.dumped_data                       = VulkanDelegateBufferDumpedData();
+            auto& dumped_push_constant_data            = std::get<VulkanDelegateBufferDumpedData>(res_info.dumped_data);
+            dumped_push_constant_data.data.assign(dc_params->pushed_constant_values.data() + range.offset,
+                                                  dc_params->pushed_constant_values.data() + range.offset + range.size);
+            delegate_.DumpResource(res_info);
+        }
+    }
+
+    return VK_SUCCESS;
 }
 
 GFXRECON_END_NAMESPACE(gfxrecon)

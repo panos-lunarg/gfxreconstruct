@@ -2217,46 +2217,46 @@ void VulkanReplayConsumerBase::InitializeResourceAllocator(const VulkanPhysicalD
     functions.get_physical_device_memory_properties = instance_table->GetPhysicalDeviceMemoryProperties;
     functions.get_instance_proc_addr                = instance_table->GetInstanceProcAddr;
 
-    functions.allocate_memory                             = device_table->AllocateMemory;
-    functions.free_memory                                 = device_table->FreeMemory;
-    functions.get_device_memory_commitment                = device_table->GetDeviceMemoryCommitment;
-    functions.map_memory                                  = device_table->MapMemory;
-    functions.unmap_memory                                = device_table->UnmapMemory;
-    functions.flush_memory_ranges                         = device_table->FlushMappedMemoryRanges;
-    functions.invalidate_memory_ranges                    = device_table->InvalidateMappedMemoryRanges;
-    functions.create_buffer                               = device_table->CreateBuffer;
-    functions.destroy_buffer                              = device_table->DestroyBuffer;
-    functions.get_buffer_memory_requirements              = device_table->GetBufferMemoryRequirements;
-    functions.bind_buffer_memory                          = device_table->BindBufferMemory;
-    functions.create_image                                = device_table->CreateImage;
-    functions.destroy_image                               = device_table->DestroyImage;
-    functions.get_image_memory_requirements               = device_table->GetImageMemoryRequirements;
-    functions.get_image_subresource_layout                = device_table->GetImageSubresourceLayout;
-    functions.bind_image_memory                           = device_table->BindImageMemory;
-    functions.get_device_proc_addr                        = device_table->GetDeviceProcAddr;
-    functions.get_device_queue                            = device_table->GetDeviceQueue;
-    functions.create_command_pool                         = device_table->CreateCommandPool;
-    functions.allocate_command_buffers                    = device_table->AllocateCommandBuffers;
-    functions.begin_command_buffer                        = device_table->BeginCommandBuffer;
-    functions.cmd_copy_buffer                             = device_table->CmdCopyBuffer;
-    functions.cmd_copy_buffer_to_image                    = device_table->CmdCopyBufferToImage;
-    functions.end_command_buffer                          = device_table->EndCommandBuffer;
-    functions.queue_submit                                = device_table->QueueSubmit;
-    functions.queue_wait_idle                             = device_table->QueueWaitIdle;
-    functions.reset_command_buffer                        = device_table->ResetCommandBuffer;
-    functions.free_command_buffers                        = device_table->FreeCommandBuffers;
-    functions.destroy_command_pool                        = device_table->DestroyCommandPool;
-    functions.create_video_session                        = device_table->CreateVideoSessionKHR;
-    functions.destroy_video_session                       = device_table->DestroyVideoSessionKHR;
-    functions.bind_video_session_memory                   = device_table->BindVideoSessionMemoryKHR;
-    functions.get_video_session_memory_requirements       = device_table->GetVideoSessionMemoryRequirementsKHR;
-    functions.map_memory2                                 = device_table->MapMemory2KHR;
-    functions.unmap_memory2                               = device_table->UnmapMemory2KHR;
-    functions.set_device_memory_priority                  = device_table->SetDeviceMemoryPriorityEXT;
-    functions.get_memory_remote_address_nv                = device_table->GetMemoryRemoteAddressNV;
-    functions.create_acceleration_structure_nv            = device_table->CreateAccelerationStructureNV;
-    functions.destroy_acceleration_structure_nv           = device_table->DestroyAccelerationStructureNV;
-    functions.bind_acceleration_structure_memory_nv       = device_table->BindAccelerationStructureMemoryNV;
+    functions.allocate_memory                       = device_table->AllocateMemory;
+    functions.free_memory                           = device_table->FreeMemory;
+    functions.get_device_memory_commitment          = device_table->GetDeviceMemoryCommitment;
+    functions.map_memory                            = device_table->MapMemory;
+    functions.unmap_memory                          = device_table->UnmapMemory;
+    functions.flush_memory_ranges                   = device_table->FlushMappedMemoryRanges;
+    functions.invalidate_memory_ranges              = device_table->InvalidateMappedMemoryRanges;
+    functions.create_buffer                         = device_table->CreateBuffer;
+    functions.destroy_buffer                        = device_table->DestroyBuffer;
+    functions.get_buffer_memory_requirements        = device_table->GetBufferMemoryRequirements;
+    functions.bind_buffer_memory                    = device_table->BindBufferMemory;
+    functions.create_image                          = device_table->CreateImage;
+    functions.destroy_image                         = device_table->DestroyImage;
+    functions.get_image_memory_requirements         = device_table->GetImageMemoryRequirements;
+    functions.get_image_subresource_layout          = device_table->GetImageSubresourceLayout;
+    functions.bind_image_memory                     = device_table->BindImageMemory;
+    functions.get_device_proc_addr                  = device_table->GetDeviceProcAddr;
+    functions.get_device_queue                      = device_table->GetDeviceQueue;
+    functions.create_command_pool                   = device_table->CreateCommandPool;
+    functions.allocate_command_buffers              = device_table->AllocateCommandBuffers;
+    functions.begin_command_buffer                  = device_table->BeginCommandBuffer;
+    functions.cmd_copy_buffer                       = device_table->CmdCopyBuffer;
+    functions.cmd_copy_buffer_to_image              = device_table->CmdCopyBufferToImage;
+    functions.end_command_buffer                    = device_table->EndCommandBuffer;
+    functions.queue_submit                          = device_table->QueueSubmit;
+    functions.queue_wait_idle                       = device_table->QueueWaitIdle;
+    functions.reset_command_buffer                  = device_table->ResetCommandBuffer;
+    functions.free_command_buffers                  = device_table->FreeCommandBuffers;
+    functions.destroy_command_pool                  = device_table->DestroyCommandPool;
+    functions.create_video_session                  = device_table->CreateVideoSessionKHR;
+    functions.destroy_video_session                 = device_table->DestroyVideoSessionKHR;
+    functions.bind_video_session_memory             = device_table->BindVideoSessionMemoryKHR;
+    functions.get_video_session_memory_requirements = device_table->GetVideoSessionMemoryRequirementsKHR;
+    functions.map_memory2                           = device_table->MapMemory2KHR;
+    functions.unmap_memory2                         = device_table->UnmapMemory2KHR;
+    functions.set_device_memory_priority            = device_table->SetDeviceMemoryPriorityEXT;
+    functions.get_memory_remote_address_nv          = device_table->GetMemoryRemoteAddressNV;
+    functions.create_acceleration_structure_nv      = device_table->CreateAccelerationStructureNV;
+    functions.destroy_acceleration_structure_nv     = device_table->DestroyAccelerationStructureNV;
+    functions.bind_acceleration_structure_memory_nv = device_table->BindAccelerationStructureMemoryNV;
     functions.get_acceleration_structure_memory_requirements_nv =
         device_table->GetAccelerationStructureMemoryRequirementsNV;
     functions.queue_bind_sparse                           = device_table->QueueBindSparse;
@@ -11854,7 +11854,7 @@ std::function<handle_create_result_t<VkPipeline>()> VulkanReplayConsumerBase::As
                  handle_deps      = std::move(handle_deps),
                  pipeline_ids     = std::move(pipeline_ids)]() mutable -> handle_create_result_t<VkPipeline> {
         std::vector<VkPipeline> out_pipelines(createInfoCount);
-        auto     create_infos  = reinterpret_cast<const VkComputePipelineCreateInfo*>(create_info_data.data());
+        auto create_infos = reinterpret_cast<const VkComputePipelineCreateInfo*>(create_info_data.data());
         PushRecaptureHandleIds(pipeline_ids.data(), pipeline_ids.size());
         VkResult replay_result = func(
             device_info->handle, pipeline_cache, createInfoCount, create_infos, in_pAllocator, out_pipelines.data());
@@ -12227,10 +12227,9 @@ VkResult VulkanReplayConsumerBase::OverrideCreatePipelineLayout(
 {
     GFXRECON_ASSERT((device_info != nullptr) && (pCreateInfo != nullptr) && (pPipelineLayout != nullptr));
 
-    VkResult result = func(device_info->handle,
-                           pCreateInfo->GetPointer(),
-                           GetAllocationCallbacks(pAllocator),
-                           pPipelineLayout->GetHandlePointer());
+    const auto* in_pCreateInfo = pCreateInfo->GetPointer();
+    VkResult    result         = func(
+        device_info->handle, in_pCreateInfo, GetAllocationCallbacks(pAllocator), pPipelineLayout->GetHandlePointer());
 
     if (result == VK_SUCCESS && UseExtraDescriptorInfo(device_info))
     {
@@ -12253,6 +12252,13 @@ VkResult VulkanReplayConsumerBase::OverrideCreatePipelineLayout(
             {
                 ppl_layout_info->desc_set_layouts[i] = set_layout_info->bindings_layout;
             }
+        }
+
+        if (in_pCreateInfo->pushConstantRangeCount)
+        {
+            std::copy(in_pCreateInfo->pPushConstantRanges,
+                      in_pCreateInfo->pPushConstantRanges + in_pCreateInfo->pushConstantRangeCount,
+                      std::back_inserter(ppl_layout_info->push_constant_ranges));
         }
     }
 

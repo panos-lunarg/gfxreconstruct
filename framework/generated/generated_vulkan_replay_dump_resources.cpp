@@ -1038,7 +1038,7 @@ void VulkanReplayDumpResources::Process_vkCmdPushConstants(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdPushConstants                      func,
     VkCommandBuffer                             commandBuffer,
-    VkPipelineLayout                            layout,
+    const VulkanPipelineLayoutInfo*             layout,
     VkShaderStageFlags                          stageFlags,
     uint32_t                                    offset,
     uint32_t                                    size,
@@ -1046,21 +1046,7 @@ void VulkanReplayDumpResources::Process_vkCmdPushConstants(
 {
     if (IsRecording(commandBuffer))
     {
-        CommandBufferIterator first, last;
-        bool found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
-        if (found)
-        {
-            for (CommandBufferIterator it = first; it < last; ++it)
-            {
-                 func(*it, layout, stageFlags, offset, size, pValues);
-            }
-        }
-
-        VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
-        if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-        {
-             func(dispatch_rays_command_buffer, layout, stageFlags, offset, size, pValues);
-        }
+        OverrideCmdPushConstants(call_info, func, commandBuffer, layout, stageFlags, offset, size, pValues);
     }
 }
 
@@ -2127,25 +2113,11 @@ void VulkanReplayDumpResources::Process_vkCmdPushConstants2(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdPushConstants2                     func,
     VkCommandBuffer                             commandBuffer,
-    const VkPushConstantsInfo*                  pPushConstantsInfo)
+    StructPointerDecoder<Decoded_VkPushConstantsInfo>* pPushConstantsInfo)
 {
     if (IsRecording(commandBuffer))
     {
-        CommandBufferIterator first, last;
-        bool found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
-        if (found)
-        {
-            for (CommandBufferIterator it = first; it < last; ++it)
-            {
-                 func(*it, pPushConstantsInfo);
-            }
-        }
-
-        VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
-        if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-        {
-             func(dispatch_rays_command_buffer, pPushConstantsInfo);
-        }
+        OverrideCmdPushConstants2(call_info, func, commandBuffer, pPushConstantsInfo);
     }
 }
 
@@ -2983,25 +2955,11 @@ void VulkanReplayDumpResources::Process_vkCmdPushConstants2KHR(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdPushConstants2KHR                  func,
     VkCommandBuffer                             commandBuffer,
-    const VkPushConstantsInfo*                  pPushConstantsInfo)
+    StructPointerDecoder<Decoded_VkPushConstantsInfo>* pPushConstantsInfo)
 {
     if (IsRecording(commandBuffer))
     {
-        CommandBufferIterator first, last;
-        bool found = GetDrawCallActiveCommandBuffers(commandBuffer, first, last);
-        if (found)
-        {
-            for (CommandBufferIterator it = first; it < last; ++it)
-            {
-                 func(*it, pPushConstantsInfo);
-            }
-        }
-
-        VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer(commandBuffer);
-        if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-        {
-             func(dispatch_rays_command_buffer, pPushConstantsInfo);
-        }
+        OverrideCmdPushConstants2KHR(call_info, func, commandBuffer, pPushConstantsInfo);
     }
 }
 
