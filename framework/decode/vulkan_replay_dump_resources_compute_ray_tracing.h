@@ -23,6 +23,7 @@
 #ifndef GFXRECON_GENERATED_VULKAN_REPLAY_DUMP_RESOURCES_COMPUTE_RAY_TRACING_H
 #define GFXRECON_GENERATED_VULKAN_REPLAY_DUMP_RESOURCES_COMPUTE_RAY_TRACING_H
 
+#include "decode/api_decoder.h"
 #include "decode/common_object_info_table.h"
 #include "decode/vulkan_device_address_tracker.h"
 #include "decode/vulkan_replay_dump_resources_common.h"
@@ -32,12 +33,10 @@
 #include "util/compressor.h"
 #include "util/defines.h"
 #include "util/logging.h"
-#include "vulkan/vulkan_core.h"
 
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
@@ -66,6 +65,45 @@ class DispatchTraceRaysDumpingContext
                                 const VkCommandBufferBeginInfo*      begin_info);
 
     VkCommandBuffer GetDispatchRaysCommandBuffer() const { return DR_command_buffer_; }
+
+    void CmdDispatch(const ApiCallInfo& call_info,
+                     PFN_vkCmdDispatch  func,
+                     VkCommandBuffer    original_command_buffer,
+                     uint32_t           groupCountX,
+                     uint32_t           groupCountY,
+                     uint32_t           groupCountZ);
+
+    void CmdDispatchIndirect(const ApiCallInfo&        call_info,
+                             PFN_vkCmdDispatchIndirect func,
+                             VkCommandBuffer           original_command_buffer,
+                             const VulkanBufferInfo*   buffer_info,
+                             VkDeviceSize              offset);
+
+    void CmdTraceRaysKHR(const ApiCallInfo&                                             call_info,
+                         PFN_vkCmdTraceRaysKHR                                          func,
+                         VkCommandBuffer                                                original_command_buffer,
+                         StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pRaygenShaderBindingTable,
+                         StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pMissShaderBindingTable,
+                         StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pHitShaderBindingTable,
+                         StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pCallableShaderBindingTable,
+                         uint32_t                                                       width,
+                         uint32_t                                                       height,
+                         uint32_t                                                       depth);
+
+    void
+    CmdTraceRaysIndirectKHR(const ApiCallInfo&                                             call_info,
+                            PFN_vkCmdTraceRaysIndirectKHR                                  func,
+                            VkCommandBuffer                                                original_command_buffer,
+                            StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pRaygenShaderBindingTable,
+                            StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pMissShaderBindingTable,
+                            StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pHitShaderBindingTable,
+                            StructPointerDecoder<Decoded_VkStridedDeviceAddressRegionKHR>* pCallableShaderBindingTable,
+                            VkDeviceAddress                                                indirectDeviceAddress);
+
+    void CmdTraceRaysIndirect2KHR(const ApiCallInfo&             call_info,
+                                  PFN_vkCmdTraceRaysIndirect2KHR func,
+                                  VkCommandBuffer                original_command_buffer,
+                                  VkDeviceAddress                indirectDeviceAddress);
 
     bool IsRecording() const;
 
