@@ -108,53 +108,55 @@ VulkanReplayDumpResourcesBase::VulkanReplayDumpResourcesBase(const VulkanReplayO
 
         if (has_draw)
         {
-            draw_call_contexts_.emplace(std::piecewise_construct,
-                                        std::forward_as_tuple(bcb_index, qs_index),
-                                        std::forward_as_tuple(&options.Draw_Indices[i],
-                                                              &options.RenderPass_Indices[i],
-                                                              options.DrawSubresources,
-                                                              *object_info_table,
-                                                              options,
-                                                              *active_delegate_,
-                                                              compressor_.get(),
-                                                              acceleration_structures_context_,
-                                                              address_trackers));
+            draw_call_contexts_.emplace(
+                std::piecewise_construct,
+                std::forward_as_tuple(bcb_index, qs_index),
+                std::forward_as_tuple(std::make_unique<DrawCallsDumpingContext>(&options.Draw_Indices[i],
+                                                                                &options.RenderPass_Indices[i],
+                                                                                options.DrawSubresources,
+                                                                                *object_info_table,
+                                                                                options,
+                                                                                *active_delegate_,
+                                                                                compressor_.get(),
+                                                                                acceleration_structures_context_,
+                                                                                address_trackers)));
         }
 
         if (has_dispatch)
         {
-            dispatch_ray_contexts_.emplace(
-                std::piecewise_construct,
-                std::forward_as_tuple(bcb_index, qs_index),
-                std::forward_as_tuple((options.Dispatch_Indices.size() && options.Dispatch_Indices[i].size())
-                                          ? &options.Dispatch_Indices[i]
-                                          : nullptr,
-                                      options.DispatchSubresources,
-                                      (options.TraceRays_Indices.size() && options.TraceRays_Indices[i].size())
-                                          ? &options.TraceRays_Indices[i]
-                                          : nullptr,
-                                      options.TraceRaysSubresources,
-                                      *object_info_table_,
-                                      options,
-                                      *active_delegate_,
-                                      compressor_.get(),
-                                      acceleration_structures_context_,
-                                      address_trackers));
+            dispatch_ray_contexts_.emplace(std::piecewise_construct,
+                                           std::forward_as_tuple(bcb_index, qs_index),
+                                           std::forward_as_tuple(std::make_unique<DispatchTraceRaysDumpingContext>(
+                                               (options.Dispatch_Indices.size() && options.Dispatch_Indices[i].size())
+                                                   ? &options.Dispatch_Indices[i]
+                                                   : nullptr,
+                                               options.DispatchSubresources,
+                                               (options.TraceRays_Indices.size() && options.TraceRays_Indices[i].size())
+                                                   ? &options.TraceRays_Indices[i]
+                                                   : nullptr,
+                                               options.TraceRaysSubresources,
+                                               *object_info_table_,
+                                               options,
+                                               *active_delegate_,
+                                               compressor_.get(),
+                                               acceleration_structures_context_,
+                                               address_trackers)));
         }
 
         if (has_transfer)
         {
-            transfer_contexts_.emplace(std::piecewise_construct,
-                                       std::forward_as_tuple(bcb_index, qs_index),
-                                       std::forward_as_tuple(&options.Transfer_Indices[i],
-                                                             *object_info_table_,
-                                                             instance_tables,
-                                                             device_tables,
-                                                             options,
-                                                             *active_delegate_,
-                                                             address_trackers,
-                                                             acceleration_structures_context_,
-                                                             compressor_.get()));
+            transfer_contexts_.emplace(
+                std::piecewise_construct,
+                std::forward_as_tuple(bcb_index, qs_index),
+                std::forward_as_tuple(std::make_unique<TransferDumpingContext>(&options.Transfer_Indices[i],
+                                                                               *object_info_table_,
+                                                                               instance_tables,
+                                                                               device_tables,
+                                                                               options,
+                                                                               *active_delegate_,
+                                                                               address_trackers,
+                                                                               acceleration_structures_context_,
+                                                                               compressor_.get())));
         }
 
         if (!qs_index && !bcb_index)
@@ -190,15 +192,16 @@ VulkanReplayDumpResourcesBase::VulkanReplayDumpResourcesBase(const VulkanReplayO
                         auto new_primary =
                             draw_call_contexts_.emplace(std::piecewise_construct,
                                                         std::forward_as_tuple(bcb_index, qs_index),
-                                                        std::forward_as_tuple(nullptr,
-                                                                              &options.RenderPass_Indices[i],
-                                                                              options.DrawSubresources,
-                                                                              *object_info_table,
-                                                                              options,
-                                                                              *active_delegate_,
-                                                                              compressor_.get(),
-                                                                              acceleration_structures_context_,
-                                                                              address_trackers));
+                                                        std::forward_as_tuple(std::make_unique<DrawCallsDumpingContext>(
+                                                            nullptr,
+                                                            &options.RenderPass_Indices[i],
+                                                            options.DrawSubresources,
+                                                            *object_info_table,
+                                                            options,
+                                                            *active_delegate_,
+                                                            compressor_.get(),
+                                                            acceleration_structures_context_,
+                                                            address_trackers)));
 
                         primary_dc_contexts = FindDrawCallCommandBufferContext(bcb_index);
                     }
@@ -227,18 +230,20 @@ VulkanReplayDumpResourcesBase::VulkanReplayDumpResourcesBase(const VulkanReplayO
                 {
                     if (primary_disp_contexts.empty())
                     {
-                        dispatch_ray_contexts_.emplace(std::piecewise_construct,
-                                                       std::forward_as_tuple(bcb_index, qs_index),
-                                                       std::forward_as_tuple(nullptr,
-                                                                             options.DispatchSubresources,
-                                                                             nullptr,
-                                                                             options.TraceRaysSubresources,
-                                                                             *object_info_table_,
-                                                                             options,
-                                                                             *active_delegate_,
-                                                                             compressor_.get(),
-                                                                             acceleration_structures_context_,
-                                                                             address_trackers));
+                        dispatch_ray_contexts_.emplace(
+                            std::piecewise_construct,
+                            std::forward_as_tuple(bcb_index, qs_index),
+                            std::forward_as_tuple(
+                                std::make_unique<DispatchTraceRaysDumpingContext>(nullptr,
+                                                                                  options.DispatchSubresources,
+                                                                                  nullptr,
+                                                                                  options.TraceRaysSubresources,
+                                                                                  *object_info_table_,
+                                                                                  options,
+                                                                                  *active_delegate_,
+                                                                                  compressor_.get(),
+                                                                                  acceleration_structures_context_,
+                                                                                  address_trackers)));
 
                         primary_disp_contexts = FindDispatchRaysCommandBufferContext(bcb_index);
                     }
@@ -318,7 +323,7 @@ VulkanReplayDumpResourcesBase::FindDrawCallCommandBufferContext(VkCommandBuffer 
     {
         if (it->first.first == begin_entry->second)
         {
-            contexts.push_back(&it->second);
+            contexts.push_back(it->second.get());
         }
     }
 
@@ -341,7 +346,7 @@ VulkanReplayDumpResourcesBase::FindDrawCallCommandBufferContext(VkCommandBuffer 
     {
         if (it->first.first == bcb_index && it->first.second == qs_index)
         {
-            return &it->second;
+            return it->second.get();
         }
     }
 
@@ -363,7 +368,7 @@ VulkanReplayDumpResourcesBase::FindDrawCallCommandBufferContext(VkCommandBuffer 
     {
         if (it->first.first == begin_entry->second)
         {
-            contexts.push_back(&it->second);
+            contexts.push_back(it->second.get());
         }
     }
 
@@ -378,7 +383,7 @@ std::vector<DrawCallsDumpingContext*> VulkanReplayDumpResourcesBase::FindDrawCal
     {
         if (it->first.first == bcb_id)
         {
-            contexts.push_back(&it->second);
+            contexts.push_back(it->second.get());
         }
     }
 
@@ -394,7 +399,7 @@ VulkanReplayDumpResourcesBase::FindDrawCallCommandBufferContext(uint64_t bcb_id)
     {
         if (it->first.first == bcb_id)
         {
-            contexts.push_back(&it->second);
+            contexts.push_back(it->second.get());
         }
     }
 
@@ -410,7 +415,7 @@ VulkanReplayDumpResourcesBase::FindDispatchRaysCommandBufferContext(uint64_t bcb
     {
         if (it->first.first == bcb_id)
         {
-            contexts.push_back(&it->second);
+            contexts.push_back(it->second.get());
         }
     }
 
@@ -426,7 +431,7 @@ VulkanReplayDumpResourcesBase::FindDispatchRaysCommandBufferContext(uint64_t bcb
     {
         if (it->first.first == bcb_id)
         {
-            contexts.push_back(&it->second);
+            contexts.push_back(it->second.get());
         }
     }
 
@@ -448,7 +453,7 @@ VulkanReplayDumpResourcesBase::FindDispatchRaysCommandBufferContext(VkCommandBuf
     {
         if (it->first.first == bcb_entry->second)
         {
-            contexts.push_back(&it->second);
+            contexts.push_back(it->second.get());
         }
     }
 
@@ -471,7 +476,7 @@ VulkanReplayDumpResourcesBase::FindDispatchRaysCommandBufferContext(VkCommandBuf
     {
         if (it->first.first == bcb_index && it->first.second == qs_index)
         {
-            return &it->second;
+            return it->second.get();
         }
     }
 
@@ -493,7 +498,7 @@ VulkanReplayDumpResourcesBase::FindDispatchRaysCommandBufferContext(VkCommandBuf
     {
         if (it->first.first == bcb_entry->second)
         {
-            contexts.push_back(&it->second);
+            contexts.push_back(it->second.get());
         }
     }
 
@@ -505,10 +510,10 @@ std::vector<TransferDumpingContext*> VulkanReplayDumpResourcesBase::FindTransfer
     std::vector<TransferDumpingContext*> transf_contexts;
     for (auto& transf_context : transfer_contexts_)
     {
-        const CommandIndices& cmd_indices = transf_context.second.GetCommandIndices();
+        const CommandIndices& cmd_indices = transf_context.second->GetCommandIndices();
         if (std::find(cmd_indices.begin(), cmd_indices.end(), cmd_index) != cmd_indices.end())
         {
-            transf_contexts.push_back(&transf_context.second);
+            transf_contexts.push_back(transf_context.second.get());
         }
     }
 
@@ -524,7 +529,7 @@ VulkanReplayDumpResourcesBase::FindTransferContextBcbIndex(uint64_t bcb_index) c
     {
         if (transf_context.first.first == bcb_index)
         {
-            transf_contexts.push_back(&transf_context.second);
+            transf_contexts.push_back(transf_context.second.get());
         }
     }
 
@@ -538,10 +543,10 @@ VulkanReplayDumpResourcesBase::FindTransferContextCmdIndex(uint64_t cmd_index) c
 
     for (const auto& transf_context : transfer_contexts_)
     {
-        const CommandIndices& cmd_indices = transf_context.second.GetCommandIndices();
+        const CommandIndices& cmd_indices = transf_context.second->GetCommandIndices();
         if (std::find(cmd_indices.begin(), cmd_indices.end(), cmd_index) != cmd_indices.end())
         {
-            transf_contexts.push_back(&transf_context.second);
+            transf_contexts.push_back(transf_context.second.get());
         }
     }
 
@@ -555,7 +560,7 @@ std::vector<TransferDumpingContext*> VulkanReplayDumpResourcesBase::FindTransfer
     {
         if (transf_context.first.second == qs_index)
         {
-            transf_contexts.push_back(&transf_context.second);
+            transf_contexts.push_back(transf_context.second.get());
         }
     }
 
@@ -569,7 +574,7 @@ TransferDumpingContext* VulkanReplayDumpResourcesBase::FindTransferContextBcbQsI
     {
         if (transf_context.first.first == bcb_index && transf_context.first.second == qs_index)
         {
-            return &transf_context.second;
+            return transf_context.second.get();
         }
     }
 
@@ -589,7 +594,7 @@ TransferDumpingContext* VulkanReplayDumpResourcesBase::FindTransferContext(VkCom
     {
         if (transf_context.first.first == bcb_entry->second && transf_context.first.second == qs_index)
         {
-            return &transf_context.second;
+            return transf_context.second.get();
         }
     }
 

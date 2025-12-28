@@ -729,13 +729,13 @@ class VulkanReplayDumpResourcesBase
     std::unordered_map<VkCommandBuffer, decode::Index> cb_bcb_map_;
 
     // DrawCall dumping contexts. One per BeginCommandBuffer - QueueSubmit pair
-    std::map<BeginCmdBufQueueSubmitPair, DrawCallsDumpingContext> draw_call_contexts_;
+    std::map<BeginCmdBufQueueSubmitPair, std::unique_ptr<DrawCallsDumpingContext>> draw_call_contexts_;
 
     // Dispatch-TraceRays call dumping contexts. One per BeginCommandBuffer - QueueSubmit pair
-    std::map<BeginCmdBufQueueSubmitPair, DispatchTraceRaysDumpingContext> dispatch_ray_contexts_;
+    std::map<BeginCmdBufQueueSubmitPair, std::unique_ptr<DispatchTraceRaysDumpingContext>> dispatch_ray_contexts_;
 
     // Transfer call dumping contexts. One per BeginCommandBuffer - QueueSubmit pair
-    std::map<BeginCmdBufQueueSubmitPair, TransferDumpingContext> transfer_contexts_;
+    std::map<BeginCmdBufQueueSubmitPair, std::unique_ptr<TransferDumpingContext>> transfer_contexts_;
 
     bool                   recording_;
     bool                   dump_resources_before_;
