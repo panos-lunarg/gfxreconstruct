@@ -54,6 +54,8 @@ class TransferDumpingContext
                            const DumpResourcesAccelerationStructuresContext& acceleration_structures_context,
                            const util::Compressor*                           compressor);
 
+    ~TransferDumpingContext() { Release(); }
+
     VkResult HandleInitBufferCommand(uint64_t         cmd_index,
                                      format::HandleId device_id,
                                      format::HandleId buffer_id,

@@ -1384,13 +1384,6 @@ VkResult DispatchTraceRaysDumpingContext::DumpDispatchTraceRays(VkQueue         
         delegate_.DumpDrawCallInfo(draw_call_info);
     }
 
-    // Clean up references to dumped descriptors in case this command buffer is submitted again
-    dispatch_dumped_descriptors_.buffer_descriptors.clear();
-    dispatch_dumped_descriptors_.image_descriptors.clear();
-
-    trace_rays_dumped_descriptors_.buffer_descriptors.clear();
-    trace_rays_dumped_descriptors_.image_descriptors.clear();
-
     assert(res == VK_SUCCESS);
     return VK_SUCCESS;
 }

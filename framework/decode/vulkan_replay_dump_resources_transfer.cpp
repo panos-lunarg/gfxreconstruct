@@ -2274,8 +2274,6 @@ VkResult TransferDumpingContext::DumpTransferCommands(uint64_t qs_index)
         delegate_.DumpEnd();
     }
 
-    Release();
-
     return VK_SUCCESS;
 }
 

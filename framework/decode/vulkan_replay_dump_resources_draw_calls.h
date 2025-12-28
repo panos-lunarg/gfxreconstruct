@@ -271,8 +271,6 @@ class DrawCallsDumpingContext
 
     void ReleaseIndirectParams();
 
-    void ResetFetchedIndirectParams();
-
     VkResult BackUpMutableResources(VkQueue queue);
 
     VkResult RevertMutableResources(VkQueue queue);

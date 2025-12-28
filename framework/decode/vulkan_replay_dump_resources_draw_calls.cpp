@@ -1188,16 +1188,6 @@ VkResult DrawCallsDumpingContext::DumpDrawCalls(
         }
     }
 
-    // Clean up some state in case this command buffer is submitted again
-    ResetFetchedIndirectParams();
-    for (auto& rpc : render_pass_dumped_descriptors_)
-    {
-        rpc.image_descriptors.clear();
-        rpc.buffer_descriptors.clear();
-    }
-
-    GFXRECON_LOG_INFO("Done.")
-
     return VK_SUCCESS;
 }
 
@@ -3532,53 +3522,6 @@ void DrawCallsDumpingContext::SetRenderTargets(const std::vector<VulkanImageInfo
 void DrawCallsDumpingContext::SetRenderArea(const VkRect2D& new_render_area)
 {
     render_area_.push_back(new_render_area);
-}
-
-void DrawCallsDumpingContext::ResetFetchedIndirectParams()
-{
-    for (auto& dc_param_entry : draw_call_params_)
-    {
-        DrawCallParams& dc_params = *dc_param_entry.second;
-        if (IsDrawCallIndirect(dc_params.type))
-        {
-            if (IsDrawCallIndirectCount(dc_params.type))
-            {
-                DrawCallParams::DrawCallParamsUnion::DrawIndirectCountParams& ic_params =
-                    dc_params.dc_params_union.draw_indirect_count;
-
-                if (ic_params.draw_params != nullptr)
-                {
-                    delete[] ic_params.draw_params;
-                    ic_params.draw_params = nullptr;
-                }
-
-                if (ic_params.draw_indexed_params != nullptr)
-                {
-                    delete[] ic_params.draw_indexed_params;
-                    ic_params.draw_indexed_params = nullptr;
-                }
-
-                ic_params.actual_draw_count = std::numeric_limits<uint32_t>::max();
-            }
-            else
-            {
-                DrawCallParams::DrawCallParamsUnion::DrawIndirectParams& i_params =
-                    dc_params.dc_params_union.draw_indirect;
-
-                if (i_params.draw_params != nullptr)
-                {
-                    delete[] i_params.draw_params;
-                    i_params.draw_params = nullptr;
-                }
-
-                if (i_params.draw_indexed_params != nullptr)
-                {
-                    delete[] i_params.draw_indexed_params;
-                    i_params.draw_indexed_params = nullptr;
-                }
-            }
-        }
-    }
 }
 
 void DrawCallsDumpingContext::ReleaseIndirectParams()
