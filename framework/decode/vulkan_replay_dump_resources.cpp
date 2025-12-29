@@ -2317,7 +2317,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdExecuteCommands(const ApiCallInfo
 
         if (dc_primary_context->ShouldHandleExecuteCommands(call_info.index))
         {
-            uint32_t finalized_primaries = 0;
+            uint32_t executed_secondaries = 0;
             for (uint32_t i = 0; i < commandBufferCount; ++i)
             {
                 const std::vector<DrawCallsDumpingContext*> dc_secondary_contexts =
@@ -2330,17 +2330,16 @@ void VulkanReplayDumpResourcesBase::OverrideCmdExecuteCommands(const ApiCallInfo
                             dc_secondary_context->GetCommandBuffers();
 
                         GFXRECON_ASSERT(secondarys_command_buffers.size() <=
-                                        primary_last - (primary_first + finalized_primaries));
+                                        primary_last - (primary_first + executed_secondaries));
                         for (size_t scb = 0; scb < secondarys_command_buffers.size(); ++scb)
                         {
-                            func(*(primary_first + finalized_primaries), 1, &secondarys_command_buffers[scb]);
-                            dc_primary_context->FinalizeCommandBuffer();
+                            func(*(primary_first + executed_secondaries), 1, &secondarys_command_buffers[scb]);
                             dc_primary_context->MergeRenderPasses(*dc_secondary_context);
-                            ++finalized_primaries;
+                            ++executed_secondaries;
                         }
 
                         // All primaries have been finalized. Nothing else to do
-                        if (finalized_primaries == primary_last - primary_first)
+                        if (executed_secondaries == primary_last - primary_first)
                         {
                             break;
                         }
@@ -2348,7 +2347,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdExecuteCommands(const ApiCallInfo
                 }
                 else
                 {
-                    for (CommandBufferIterator primary_it = (primary_first + finalized_primaries);
+                    for (CommandBufferIterator primary_it = (primary_first + executed_secondaries);
                          primary_it < primary_last;
                          ++primary_it)
                     {
