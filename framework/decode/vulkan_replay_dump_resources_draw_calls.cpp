@@ -4030,5 +4030,65 @@ void DrawCallsDumpingContext::SecondaryUpdateContextFromPrimary(const VulkanPipe
     }
 }
 
+void DrawCallsDumpingContext::CmdExecuteCommands(const ApiCallInfo&       call_info,
+                                                 PFN_vkCmdExecuteCommands func,
+                                                 VkCommandBuffer          commandBuffer,
+                                                 uint32_t                 commandBufferCount,
+                                                 const VkCommandBuffer*   pCommandBuffers)
+{
+    CommandBufferIterator primary_first, primary_last;
+    GetDrawCallActiveCommandBuffers(primary_first, primary_last);
+
+    if (ShouldHandleExecuteCommands(call_info.index))
+    {
+        uint32_t executed_secondaries = 0;
+        for (uint32_t i = 0; i < commandBufferCount; ++i)
+        {
+            auto secondaries_it = secondaries_.find(call_info.index);
+            if (secondaries_it != secondaries_.end())
+            {
+                const std::vector<DrawCallsDumpingContext*>& dc_secondary_contexts = secondaries_it->second;
+                for (auto dc_secondary_context : dc_secondary_contexts)
+                {
+                    const std::vector<VkCommandBuffer>& secondarys_command_buffers =
+                        dc_secondary_context->GetCommandBuffers();
+
+                    GFXRECON_ASSERT(secondarys_command_buffers.size() <=
+                                    primary_last - (primary_first + executed_secondaries));
+                    for (size_t scb = 0; scb < secondarys_command_buffers.size(); ++scb)
+                    {
+                        func(*(primary_first + executed_secondaries), 1, &secondarys_command_buffers[scb]);
+                        MergeRenderPasses(*dc_secondary_context);
+                        ++executed_secondaries;
+                    }
+
+                    // All primaries have been finalized. Nothing else to do
+                    if (executed_secondaries == primary_last - primary_first)
+                    {
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                for (CommandBufferIterator primary_it = (primary_first + executed_secondaries);
+                     primary_it < primary_last;
+                     ++primary_it)
+                {
+                    func(*primary_it, 1, &pCommandBuffers[i]);
+                }
+            }
+        }
+        UpdateSecondaries();
+    }
+    else
+    {
+        for (CommandBufferIterator primary_it = primary_first; primary_it < primary_last; ++primary_it)
+        {
+            func(*primary_it, commandBufferCount, pCommandBuffers);
+        }
+    }
+}
+
 GFXRECON_END_NAMESPACE(gfxrecon)
 GFXRECON_END_NAMESPACE(decode)

@@ -2518,5 +2518,42 @@ void DispatchTraceRaysDumpingContext::BindPipeline(VkPipelineBindPoint bind_poin
     }
 }
 
+void DispatchTraceRaysDumpingContext::CmdExecuteCommands(const ApiCallInfo&       call_info,
+                                                         PFN_vkCmdExecuteCommands func,
+                                                         VkCommandBuffer          commandBuffer,
+                                                         uint32_t                 commandBufferCount,
+                                                         const VkCommandBuffer*   pCommandBuffers)
+{
+    VkCommandBuffer dispatch_rays_command_buffer = GetDispatchRaysCommandBuffer();
+    if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+    {
+        if (ShouldHandleExecuteCommands(call_info.index))
+        {
+            for (uint32_t i = 0; i < commandBufferCount; ++i)
+            {
+                auto secondaries_it = secondaries_.find(call_info.index);
+                if (secondaries_it != secondaries_.end())
+                {
+                    const std::vector<DispatchTraceRaysDumpingContext*>& dr_secondary_contexts = secondaries_it->second;
+                    for (auto dr_secondary_context : dr_secondary_contexts)
+                    {
+                        VkCommandBuffer secondary_command_buffer = dr_secondary_context->GetDispatchRaysCommandBuffer();
+                        func(dispatch_rays_command_buffer, 1, &secondary_command_buffer);
+                    }
+                }
+                else
+                {
+                    func(dispatch_rays_command_buffer, 1, &pCommandBuffers[i]);
+                }
+            }
+            UpdateSecondaries();
+        }
+        else
+        {
+            func(dispatch_rays_command_buffer, commandBufferCount, pCommandBuffers);
+        }
+    }
+}
+
 GFXRECON_END_NAMESPACE(gfxrecon)
 GFXRECON_END_NAMESPACE(decode)

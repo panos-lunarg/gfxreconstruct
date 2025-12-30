@@ -129,6 +129,12 @@ class DrawCallsDumpingContext
                                      uint32_t                              stride,
                                      DrawCallsDumpingContext::DrawCallType drawcall_type);
 
+    void CmdExecuteCommands(const ApiCallInfo&       call_info,
+                            PFN_vkCmdExecuteCommands func,
+                            VkCommandBuffer          commandBuffer,
+                            uint32_t                 commandBufferCount,
+                            const VkCommandBuffer*   pCommandBuffers);
+
     bool IsRecording() const { return recording_; }
 
     bool MustDumpDrawCall(uint64_t index) const;
@@ -195,9 +201,6 @@ class DrawCallsDumpingContext
                          VkIndexType             index_type,
                          VkDeviceSize            size = 0);
 
-    // When this is called for a command buffer that corresponds to a before command, dc_params should be null
-    void FinalizeCommandBuffer(DrawCallParams* dc_params = nullptr);
-
     uint32_t GetDrawCallActiveCommandBuffers(CommandBufferIterator& first, CommandBufferIterator& last) const;
 
     VkResult
@@ -209,6 +212,44 @@ class DrawCallsDumpingContext
     VkResult DumpDescriptors(uint64_t qs_index, uint64_t bcb_index, uint64_t dc_index, uint64_t rp);
 
     VkResult DumpVertexIndexBuffers(uint64_t qs_index, uint64_t bcb_index, uint64_t dc_index);
+
+    void Release();
+
+    const std::vector<VkCommandBuffer>& GetCommandBuffers() const { return command_buffers_; }
+
+    void AssignSecondary(uint64_t execute_commands_index, DrawCallsDumpingContext* secondary_context);
+
+    uint32_t RecaclulateCommandBuffers();
+
+  private:
+    void SetRenderTargets(const std::vector<VulkanImageInfo*>& color_att_imgs,
+                          VulkanImageInfo*                     depth_att_img,
+                          bool                                 new_renderpass);
+
+    void SetRenderArea(const VkRect2D& new_render_area);
+
+    // When this is called for a command buffer that corresponds to a before command, dc_params should be null
+    void FinalizeCommandBuffer(DrawCallParams* dc_params = nullptr);
+
+    void UpdateSecondaries();
+
+    void MergeRenderPasses(const DrawCallsDumpingContext& secondary_context);
+
+    using RenderPassSubpassPair = std::pair<uint64_t, uint64_t>;
+    RenderPassSubpassPair GetRenderPassIndex(uint64_t dc_index) const;
+    size_t                CmdBufToDCVectorIndex(size_t cmd_buf_index) const;
+
+    void DestroyMutableResourceBackups();
+
+    void ReleaseIndirectParams();
+
+    VkResult BackUpMutableResources(VkQueue queue);
+
+    VkResult RevertMutableResources(VkQueue queue);
+
+    VkResult FetchDrawIndirectParams(uint64_t dc_index);
+
+    VkResult RevertRenderTargetImageLayouts(VkQueue queue, uint64_t dc_index);
 
     DrawCallParams* InsertNewDrawParameters(
         uint64_t index, uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance);
@@ -243,41 +284,6 @@ class DrawCallsDumpingContext
                                                                 uint32_t                max_draw_count,
                                                                 uint32_t                stride,
                                                                 DrawCallType            drawcall_type);
-
-    void Release();
-
-    const std::vector<VkCommandBuffer>& GetCommandBuffers() const { return command_buffers_; }
-
-    void AssignSecondary(uint64_t execute_commands_index, DrawCallsDumpingContext* secondary_context);
-
-    uint32_t RecaclulateCommandBuffers();
-
-    void UpdateSecondaries();
-
-    void MergeRenderPasses(const DrawCallsDumpingContext& secondary_context);
-
-  private:
-    void SetRenderTargets(const std::vector<VulkanImageInfo*>& color_att_imgs,
-                          VulkanImageInfo*                     depth_att_img,
-                          bool                                 new_renderpass);
-
-    void SetRenderArea(const VkRect2D& new_render_area);
-
-    using RenderPassSubpassPair = std::pair<uint64_t, uint64_t>;
-    RenderPassSubpassPair GetRenderPassIndex(uint64_t dc_index) const;
-    size_t                CmdBufToDCVectorIndex(size_t cmd_buf_index) const;
-
-    void DestroyMutableResourceBackups();
-
-    void ReleaseIndirectParams();
-
-    VkResult BackUpMutableResources(VkQueue queue);
-
-    VkResult RevertMutableResources(VkQueue queue);
-
-    VkResult FetchDrawIndirectParams(uint64_t dc_index);
-
-    VkResult RevertRenderTargetImageLayouts(VkQueue queue, uint64_t dc_index);
 
     VulkanCommandBufferInfo*     original_command_buffer_info_;
     std::vector<VkCommandBuffer> command_buffers_;

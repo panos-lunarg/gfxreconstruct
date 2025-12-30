@@ -128,6 +128,46 @@ class DispatchTraceRaysDumpingContext
 
     void FinalizeCommandBuffer(bool is_dispatch);
 
+    void InsertNewTraceRaysIndirect2Parameters(uint64_t index, VkDeviceAddress indirectDeviceAddress);
+
+    VkResult CloneDispatchMutableResources(uint64_t index, bool cloning_before_cmd);
+
+    VkResult CloneTraceRaysMutableResources(uint64_t index, bool cloning_before_cmd);
+
+    void BindPipeline(VkPipelineBindPoint bind_point, const VulkanPipelineInfo* pipeline);
+
+    void EndCommandBuffer();
+
+    void Release();
+
+    void CmdExecuteCommands(const ApiCallInfo&       call_info,
+                            PFN_vkCmdExecuteCommands func,
+                            VkCommandBuffer          commandBuffer,
+                            uint32_t                 commandBufferCount,
+                            const VkCommandBuffer*   pCommandBuffers);
+
+    void AssignSecondary(uint64_t execute_commands_index, DispatchTraceRaysDumpingContext* secondary_context);
+
+  private:
+    void UpdateSecondaries();
+
+    bool ShouldHandleExecuteCommands(uint64_t index) const;
+
+    void CopyImageResource(const VulkanImageInfo* src_image_info, VkImage dst_image);
+
+    void CopyBufferResource(const VulkanBufferInfo* src_buffer_info,
+                            VkDeviceSize            offset,
+                            VkDeviceSize            range,
+                            VkBuffer                dst_buffer);
+
+    void DestroyMutableResourcesClones();
+
+    void ReleaseIndirectParams();
+
+    VkResult FetchIndirectParams();
+
+    VkResult DumpDescriptors(uint64_t qs_index, uint64_t bcb_index, uint64_t cmd_index, bool is_dispatch);
+
     void InsertNewDispatchParameters(uint64_t index, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
 
     void InsertNewDispatchParameters(uint64_t index, const VulkanBufferInfo* buffer_info, VkDeviceSize offset);
@@ -147,40 +187,6 @@ class DispatchTraceRaysDumpingContext
                                               const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable,
                                               const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable,
                                               VkDeviceAddress                        indirectDeviceAddress);
-
-    void InsertNewTraceRaysIndirect2Parameters(uint64_t index, VkDeviceAddress indirectDeviceAddress);
-
-    VkResult CloneDispatchMutableResources(uint64_t index, bool cloning_before_cmd);
-
-    VkResult CloneTraceRaysMutableResources(uint64_t index, bool cloning_before_cmd);
-
-    void BindPipeline(VkPipelineBindPoint bind_point, const VulkanPipelineInfo* pipeline);
-
-    void EndCommandBuffer();
-
-    void Release();
-
-    void UpdateSecondaries();
-
-    void AssignSecondary(uint64_t execute_commands_index, DispatchTraceRaysDumpingContext* secondary_context);
-
-    bool ShouldHandleExecuteCommands(uint64_t index) const;
-
-  private:
-    void CopyImageResource(const VulkanImageInfo* src_image_info, VkImage dst_image);
-
-    void CopyBufferResource(const VulkanBufferInfo* src_buffer_info,
-                            VkDeviceSize            offset,
-                            VkDeviceSize            range,
-                            VkBuffer                dst_buffer);
-
-    void DestroyMutableResourcesClones();
-
-    void ReleaseIndirectParams();
-
-    VkResult FetchIndirectParams();
-
-    VkResult DumpDescriptors(uint64_t qs_index, uint64_t bcb_index, uint64_t cmd_index, bool is_dispatch);
 
     const VulkanCommandBufferInfo* original_command_buffer_info_;
     VkCommandBuffer                DR_command_buffer_;

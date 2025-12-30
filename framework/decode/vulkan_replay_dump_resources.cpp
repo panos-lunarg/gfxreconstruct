@@ -2309,61 +2309,9 @@ void VulkanReplayDumpResourcesBase::OverrideCmdExecuteCommands(const ApiCallInfo
                                                                const VkCommandBuffer*   pCommandBuffers)
 {
     const std::vector<DrawCallsDumpingContext*> dc_primary_contexts = FindDrawCallCommandBufferContext(commandBuffer);
-
     for (auto dc_primary_context : dc_primary_contexts)
     {
-        CommandBufferIterator primary_first, primary_last;
-        dc_primary_context->GetDrawCallActiveCommandBuffers(primary_first, primary_last);
-
-        if (dc_primary_context->ShouldHandleExecuteCommands(call_info.index))
-        {
-            uint32_t executed_secondaries = 0;
-            for (uint32_t i = 0; i < commandBufferCount; ++i)
-            {
-                const std::vector<DrawCallsDumpingContext*> dc_secondary_contexts =
-                    FindDrawCallCommandBufferContext(pCommandBuffers[i]);
-                if (!dc_secondary_contexts.empty())
-                {
-                    for (auto dc_secondary_context : dc_secondary_contexts)
-                    {
-                        const std::vector<VkCommandBuffer>& secondarys_command_buffers =
-                            dc_secondary_context->GetCommandBuffers();
-
-                        GFXRECON_ASSERT(secondarys_command_buffers.size() <=
-                                        primary_last - (primary_first + executed_secondaries));
-                        for (size_t scb = 0; scb < secondarys_command_buffers.size(); ++scb)
-                        {
-                            func(*(primary_first + executed_secondaries), 1, &secondarys_command_buffers[scb]);
-                            dc_primary_context->MergeRenderPasses(*dc_secondary_context);
-                            ++executed_secondaries;
-                        }
-
-                        // All primaries have been finalized. Nothing else to do
-                        if (executed_secondaries == primary_last - primary_first)
-                        {
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    for (CommandBufferIterator primary_it = (primary_first + executed_secondaries);
-                         primary_it < primary_last;
-                         ++primary_it)
-                    {
-                        func(*primary_it, 1, &pCommandBuffers[i]);
-                    }
-                }
-            }
-            dc_primary_context->UpdateSecondaries();
-        }
-        else
-        {
-            for (CommandBufferIterator primary_it = primary_first; primary_it < primary_last; ++primary_it)
-            {
-                func(*primary_it, commandBufferCount, pCommandBuffers);
-            }
-        }
+        dc_primary_context->CmdExecuteCommands(call_info, func, commandBuffer, commandBufferCount, pCommandBuffers);
     }
 
     if (IsRecording())
@@ -2372,36 +2320,7 @@ void VulkanReplayDumpResourcesBase::OverrideCmdExecuteCommands(const ApiCallInfo
             FindDispatchRaysCommandBufferContext(commandBuffer);
         for (auto dr_primary_context : dr_primary_contexts)
         {
-            VkCommandBuffer dispatch_rays_command_buffer = dr_primary_context->GetDispatchRaysCommandBuffer();
-            if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-            {
-                if (dr_primary_context->ShouldHandleExecuteCommands(call_info.index))
-                {
-                    for (uint32_t i = 0; i < commandBufferCount; ++i)
-                    {
-                        const std::vector<DispatchTraceRaysDumpingContext*> dr_secondary_contexts =
-                            FindDispatchRaysCommandBufferContext(pCommandBuffers[i]);
-                        if (!dr_secondary_contexts.empty())
-                        {
-                            for (auto dr_secondary_context : dr_secondary_contexts)
-                            {
-                                VkCommandBuffer secondary_command_buffer =
-                                    dr_secondary_context->GetDispatchRaysCommandBuffer();
-                                func(dispatch_rays_command_buffer, 1, &secondary_command_buffer);
-                            }
-                        }
-                        else
-                        {
-                            func(dispatch_rays_command_buffer, 1, &pCommandBuffers[i]);
-                        }
-                    }
-                    dr_primary_context->UpdateSecondaries();
-                }
-                else
-                {
-                    func(dispatch_rays_command_buffer, commandBufferCount, pCommandBuffers);
-                }
-            }
+            dr_primary_context->CmdExecuteCommands(call_info, func, commandBuffer, commandBufferCount, pCommandBuffers);
         }
     }
 }
