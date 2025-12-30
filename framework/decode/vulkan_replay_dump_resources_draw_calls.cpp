@@ -504,8 +504,8 @@ VkResult DrawCallsDumpingContext::CopyDrawIndirectParameters(DrawCallParams& dc_
 
     if (IsDrawCallIndirectCount(dc_params.type))
     {
-        DrawCallParams::DrawCallParamsUnion::DrawIndirectCountParams& ic_params =
-            dc_params.dc_params_union.draw_indirect_count;
+        DrawCallParams::DrawIndirectCountParams& ic_params =
+            std::get<DrawCallParams::DrawIndirectCountParams>(dc_params.dc_call_params_var);
 
         const uint32_t max_draw_count = ic_params.max_draw_count;
 
@@ -649,7 +649,8 @@ VkResult DrawCallsDumpingContext::CopyDrawIndirectParameters(DrawCallParams& dc_
     }
     else
     {
-        DrawCallParams::DrawCallParamsUnion::DrawIndirectParams& i_params = dc_params.dc_params_union.draw_indirect;
+        DrawCallParams::DrawIndirectParams& i_params =
+            std::get<DrawCallParams::DrawIndirectParams>(dc_params.dc_call_params_var);
 
         const uint32_t draw_count = i_params.draw_count;
 
@@ -1972,8 +1973,8 @@ VkResult DrawCallsDumpingContext::FetchDrawIndirectParams(uint64_t dc_index)
 
     if (IsDrawCallIndirectCount(dc_params.type))
     {
-        DrawCallParams::DrawCallParamsUnion::DrawIndirectCountParams& ic_params =
-            dc_params.dc_params_union.draw_indirect_count;
+        DrawCallParams::DrawIndirectCountParams& ic_params =
+            std::get<DrawCallParams::DrawIndirectCountParams>(dc_params.dc_call_params_var);
 
         if (!ic_params.max_draw_count)
         {
@@ -2005,24 +2006,16 @@ VkResult DrawCallsDumpingContext::FetchDrawIndirectParams(uint64_t dc_index)
         VkDeviceSize params_actual_size;
         if (IsDrawCallIndexed(dc_params.type))
         {
-            assert(ic_params.draw_indexed_params == nullptr);
-            ic_params.draw_indexed_params = new VkDrawIndexedIndirectCommand[actual_draw_count];
-            if (ic_params.draw_indexed_params == nullptr)
-            {
-                return VK_ERROR_OUT_OF_HOST_MEMORY;
-            }
+            GFXRECON_ASSERT(ic_params.draw_indexed_params.empty());
+            ic_params.draw_indexed_params.resize(actual_draw_count);
 
             // Now we know the exact draw count. We can fetch the exact draw params instead of the whole buffer
             params_actual_size = sizeof(VkDrawIndexedIndirectCommand) * actual_draw_count;
         }
         else
         {
-            assert(ic_params.draw_params == nullptr);
-            ic_params.draw_params = new VkDrawIndirectCommand[actual_draw_count];
-            if (ic_params.draw_params == nullptr)
-            {
-                return VK_ERROR_OUT_OF_HOST_MEMORY;
-            }
+            GFXRECON_ASSERT(ic_params.draw_params.empty());
+            ic_params.draw_params.resize(actual_draw_count);
 
             // Now we know the exact draw count. We can fetch the exact draw params instead of the whole buffer
             params_actual_size = sizeof(VkDrawIndirectCommand) * actual_draw_count;
@@ -2041,16 +2034,18 @@ VkResult DrawCallsDumpingContext::FetchDrawIndirectParams(uint64_t dc_index)
         if (IsDrawCallIndexed(dc_params.type))
         {
             util::platform::MemoryCopy(
-                ic_params.draw_indexed_params, params_actual_size, data.data(), params_actual_size);
+                ic_params.draw_indexed_params.data(), params_actual_size, data.data(), params_actual_size);
         }
         else
         {
-            util::platform::MemoryCopy(ic_params.draw_params, params_actual_size, data.data(), params_actual_size);
+            util::platform::MemoryCopy(
+                ic_params.draw_params.data(), params_actual_size, data.data(), params_actual_size);
         }
     }
     else
     {
-        DrawCallParams::DrawCallParamsUnion::DrawIndirectParams& i_params = dc_params.dc_params_union.draw_indirect;
+        DrawCallParams::DrawIndirectParams& i_params =
+            std::get<DrawCallParams::DrawIndirectParams>(dc_params.dc_call_params_var);
 
         if (!i_params.draw_count)
         {
@@ -2059,21 +2054,13 @@ VkResult DrawCallsDumpingContext::FetchDrawIndirectParams(uint64_t dc_index)
 
         if (IsDrawCallIndexed(dc_params.type))
         {
-            assert(i_params.draw_indexed_params == nullptr);
-            i_params.draw_indexed_params = new VkDrawIndexedIndirectCommand[i_params.draw_count];
-            if (i_params.draw_indexed_params == nullptr)
-            {
-                return VK_ERROR_OUT_OF_HOST_MEMORY;
-            }
+            GFXRECON_ASSERT(i_params.draw_indexed_params.empty());
+            i_params.draw_indexed_params.resize(i_params.draw_count);
         }
         else
         {
-            assert(i_params.draw_params == nullptr);
-            i_params.draw_params = new VkDrawIndirectCommand[i_params.draw_count];
-            if (i_params.draw_params == nullptr)
-            {
-                return VK_ERROR_OUT_OF_HOST_MEMORY;
-            }
+            GFXRECON_ASSERT(i_params.draw_params.empty());
+            i_params.draw_params.resize(i_params.draw_count);
         }
 
         std::vector<uint8_t> params_data;
@@ -2089,14 +2076,16 @@ VkResult DrawCallsDumpingContext::FetchDrawIndirectParams(uint64_t dc_index)
 
         if (IsDrawCallIndexed(dc_params.type))
         {
-            util::platform::MemoryCopy(
-                i_params.draw_indexed_params, i_params.new_params_buffer_size, params_data.data(), params_data.size());
+            util::platform::MemoryCopy(i_params.draw_indexed_params.data(),
+                                       i_params.new_params_buffer_size,
+                                       params_data.data(),
+                                       params_data.size());
         }
         else
         {
             GFXRECON_ASSERT(dc_params.type == DrawCallType::kDrawIndirect);
             util::platform::MemoryCopy(
-                i_params.draw_params, i_params.new_params_buffer_size, params_data.data(), params_data.size());
+                i_params.draw_params.data(), i_params.new_params_buffer_size, params_data.data(), params_data.size());
         }
     }
 
@@ -2158,14 +2147,14 @@ VkResult DrawCallsDumpingContext::DumpVertexIndexBuffers(uint64_t qs_index, uint
         {
             if (IsDrawCallIndirectCount(dc_params.type))
             {
-                const DrawCallParams::DrawCallParamsUnion::DrawIndirectCountParams& ic_params =
-                    dc_params.dc_params_union.draw_indirect_count;
+                const DrawCallParams::DrawIndirectCountParams& ic_params =
+                    std::get<DrawCallParams::DrawIndirectCountParams>(dc_params.dc_call_params_var);
                 empty_draw_call = !ic_params.actual_draw_count;
 
                 if (ic_params.actual_draw_count)
                 {
                     bool has_count = false;
-                    assert(ic_params.draw_indexed_params != nullptr);
+                    GFXRECON_ASSERT(!ic_params.draw_indexed_params.empty());
                     for (uint32_t d = 0; d < ic_params.actual_draw_count; ++d)
                     {
                         const uint32_t indirect_index_count    = ic_params.draw_indexed_params[d].indexCount;
@@ -2186,14 +2175,14 @@ VkResult DrawCallsDumpingContext::DumpVertexIndexBuffers(uint64_t qs_index, uint
             }
             else
             {
-                const DrawCallParams::DrawCallParamsUnion::DrawIndirectParams& i_params =
-                    dc_params.dc_params_union.draw_indirect;
+                const DrawCallParams::DrawIndirectParams& i_params =
+                    std::get<DrawCallParams::DrawIndirectParams>(dc_params.dc_call_params_var);
                 empty_draw_call = !i_params.draw_count;
 
                 if (i_params.draw_count)
                 {
                     bool has_count = false;
-                    assert(i_params.draw_indexed_params != nullptr);
+                    GFXRECON_ASSERT(!i_params.draw_indexed_params.empty());
                     for (uint32_t d = 0; d < i_params.draw_count; ++d)
                     {
                         const uint32_t indirect_index_count    = i_params.draw_indexed_params[d].indexCount;
@@ -2215,15 +2204,17 @@ VkResult DrawCallsDumpingContext::DumpVertexIndexBuffers(uint64_t qs_index, uint
         }
         else
         {
-            const uint32_t index_count = dc_params.dc_params_union.draw_indexed.indexCount;
-            if (index_count && dc_params.dc_params_union.draw_indexed.instanceCount)
+            const VkDrawIndexedIndirectCommand& indexed_dc_params =
+                std::get<VkDrawIndexedIndirectCommand>(dc_params.dc_call_params_var);
+            const uint32_t index_count = indexed_dc_params.indexCount;
+            if (index_count && indexed_dc_params.instanceCount)
             {
-                const uint32_t first_index = dc_params.dc_params_union.draw_indexed.firstIndex;
+                const uint32_t first_index = indexed_dc_params.firstIndex;
                 empty_draw_call            = !index_count;
                 abs_index_count            = index_count + first_index;
 
                 indexed_params.emplace_back(
-                    DrawIndexedParams{ index_count, first_index, dc_params.dc_params_union.draw_indexed.vertexOffset });
+                    DrawIndexedParams{ index_count, first_index, indexed_dc_params.vertexOffset });
             }
         }
 
@@ -2310,13 +2301,13 @@ VkResult DrawCallsDumpingContext::DumpVertexIndexBuffers(uint64_t qs_index, uint
             {
                 if (IsDrawCallIndirectCount(dc_params.type))
                 {
-                    const DrawCallParams::DrawCallParamsUnion::DrawIndirectCountParams& ic_params =
-                        dc_params.dc_params_union.draw_indirect_count;
+                    const DrawCallParams::DrawIndirectCountParams& ic_params =
+                        std::get<DrawCallParams::DrawIndirectCountParams>(dc_params.dc_call_params_var);
 
                     if (ic_params.actual_draw_count)
                     {
-                        assert(ic_params.draw_indexed_params != nullptr);
-                        assert(ic_params.draw_params == nullptr);
+                        GFXRECON_ASSERT(!ic_params.draw_indexed_params.empty());
+                        GFXRECON_ASSERT(ic_params.draw_params.empty());
                         for (uint32_t d = 0; d < ic_params.actual_draw_count; ++d)
                         {
                             instance_count = std::max(instance_count, ic_params.draw_indexed_params[d].instanceCount);
@@ -2326,13 +2317,13 @@ VkResult DrawCallsDumpingContext::DumpVertexIndexBuffers(uint64_t qs_index, uint
                 }
                 else
                 {
-                    const DrawCallParams::DrawCallParamsUnion::DrawIndirectParams& i_params =
-                        dc_params.dc_params_union.draw_indirect;
+                    const DrawCallParams::DrawIndirectParams& i_params =
+                        std::get<DrawCallParams::DrawIndirectParams>(dc_params.dc_call_params_var);
 
                     if (i_params.draw_count)
                     {
-                        assert(i_params.draw_indexed_params != nullptr);
-                        assert(i_params.draw_params == nullptr);
+                        GFXRECON_ASSERT(!i_params.draw_indexed_params.empty());
+                        GFXRECON_ASSERT(i_params.draw_params.empty());
                         for (uint32_t d = 0; d < i_params.draw_count; ++d)
                         {
                             instance_count = std::max(instance_count, i_params.draw_indexed_params[d].instanceCount);
@@ -2343,8 +2334,10 @@ VkResult DrawCallsDumpingContext::DumpVertexIndexBuffers(uint64_t qs_index, uint
             }
             else
             {
-                instance_count = dc_params.dc_params_union.draw_indexed.instanceCount;
-                first_instance = dc_params.dc_params_union.draw_indexed.firstInstance;
+                const VkDrawIndexedIndirectCommand& dc_indexed_params =
+                    std::get<VkDrawIndexedIndirectCommand>(dc_params.dc_call_params_var);
+                instance_count = dc_indexed_params.instanceCount;
+                first_instance = dc_indexed_params.firstInstance;
             }
         }
         else
@@ -2355,13 +2348,13 @@ VkResult DrawCallsDumpingContext::DumpVertexIndexBuffers(uint64_t qs_index, uint
 
                 if (IsDrawCallIndirectCount(dc_params.type))
                 {
-                    const DrawCallParams::DrawCallParamsUnion::DrawIndirectCountParams& ic_params =
-                        dc_params.dc_params_union.draw_indirect_count;
+                    const DrawCallParams::DrawIndirectCountParams& ic_params =
+                        std::get<DrawCallParams::DrawIndirectCountParams>(dc_params.dc_call_params_var);
 
                     if (ic_params.actual_draw_count)
                     {
-                        assert(ic_params.draw_params != nullptr);
-                        assert(ic_params.draw_indexed_params == nullptr);
+                        GFXRECON_ASSERT(!ic_params.draw_params.empty());
+                        GFXRECON_ASSERT(ic_params.draw_indexed_params.empty());
                         for (uint32_t d = 0; d < ic_params.actual_draw_count; ++d)
                         {
                             if (ic_params.draw_params[d].vertexCount && ic_params.draw_params[d].instanceCount)
@@ -2376,13 +2369,13 @@ VkResult DrawCallsDumpingContext::DumpVertexIndexBuffers(uint64_t qs_index, uint
                 }
                 else
                 {
-                    const DrawCallParams::DrawCallParamsUnion::DrawIndirectParams& i_params =
-                        dc_params.dc_params_union.draw_indirect;
+                    const DrawCallParams::DrawIndirectParams& i_params =
+                        std::get<DrawCallParams::DrawIndirectParams>(dc_params.dc_call_params_var);
 
                     if (i_params.draw_count)
                     {
-                        assert(i_params.draw_params != nullptr);
-                        assert(i_params.draw_indexed_params == nullptr);
+                        GFXRECON_ASSERT(!i_params.draw_params.empty());
+                        GFXRECON_ASSERT(i_params.draw_indexed_params.empty());
                         for (uint32_t d = 0; d < i_params.draw_count; ++d)
                         {
                             if (i_params.draw_params[d].vertexCount && i_params.draw_params[d].instanceCount)
@@ -2403,10 +2396,11 @@ VkResult DrawCallsDumpingContext::DumpVertexIndexBuffers(uint64_t qs_index, uint
             }
             else
             {
-                vertex_count   = dc_params.dc_params_union.draw.vertexCount;
-                instance_count = dc_params.dc_params_union.draw.instanceCount;
-                first_vertex   = dc_params.dc_params_union.draw.firstVertex;
-                first_instance = dc_params.dc_params_union.draw.firstInstance;
+                const VkDrawIndirectCommand& idc_params = std::get<VkDrawIndirectCommand>(dc_params.dc_call_params_var);
+                vertex_count                            = idc_params.vertexCount;
+                instance_count                          = idc_params.instanceCount;
+                first_vertex                            = idc_params.firstVertex;
+                first_instance                          = idc_params.firstInstance;
             }
         }
 
@@ -3548,20 +3542,8 @@ void DrawCallsDumpingContext::ReleaseIndirectParams()
         {
             if (IsDrawCallIndirectCount(dc_params.type))
             {
-                DrawCallParams::DrawCallParamsUnion::DrawIndirectCountParams& ic_params =
-                    dc_params.dc_params_union.draw_indirect_count;
-
-                if (ic_params.draw_params != nullptr)
-                {
-                    delete[] ic_params.draw_params;
-                    ic_params.draw_params = nullptr;
-                }
-
-                if (ic_params.draw_indexed_params != nullptr)
-                {
-                    delete[] ic_params.draw_indexed_params;
-                    ic_params.draw_indexed_params = nullptr;
-                }
+                DrawCallParams::DrawIndirectCountParams& ic_params =
+                    std::get<DrawCallParams::DrawIndirectCountParams>(dc_params.dc_call_params_var);
 
                 if (ic_params.new_params_buffer != VK_NULL_HANDLE)
                 {
@@ -3589,20 +3571,8 @@ void DrawCallsDumpingContext::ReleaseIndirectParams()
             }
             else
             {
-                DrawCallParams::DrawCallParamsUnion::DrawIndirectParams& i_params =
-                    dc_params.dc_params_union.draw_indirect;
-
-                if (i_params.draw_params != nullptr)
-                {
-                    delete[] i_params.draw_params;
-                    i_params.draw_params = nullptr;
-                }
-
-                if (i_params.draw_indexed_params != nullptr)
-                {
-                    delete[] i_params.draw_indexed_params;
-                    i_params.draw_indexed_params = nullptr;
-                }
+                DrawCallParams::DrawIndirectParams& i_params =
+                    std::get<DrawCallParams::DrawIndirectParams>(dc_params.dc_call_params_var);
 
                 if (i_params.new_params_buffer != VK_NULL_HANDLE)
                 {

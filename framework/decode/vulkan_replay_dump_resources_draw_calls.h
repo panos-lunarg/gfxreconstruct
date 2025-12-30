@@ -36,6 +36,8 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
+#include <utility>
+#include <variant>
 #include <vector>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
@@ -536,114 +538,75 @@ class DrawCallsDumpingContext
     {
         static constexpr uint64_t INVALID_BLOCK_INDEX = std::numeric_limits<uint64_t>::max();
 
-        union DrawCallParamsUnion
+        struct DrawIndirectParams
         {
-            VkDrawIndirectCommand draw;
-
-            VkDrawIndexedIndirectCommand draw_indexed;
-
-            struct DrawIndirectParams
-            {
-                const VulkanBufferInfo* params_buffer_info;
-                VkDeviceSize            params_buffer_offset;
-                uint32_t                draw_count;
-                uint32_t                stride;
-
-                VkBuffer       new_params_buffer;
-                VkDeviceMemory new_params_memory;
-                VkDeviceSize   new_params_buffer_size;
-
-                // Pointers that will point to host allocated memory and filled with the draw params
-                // read back after executing on the gpu. Because of the union a data structure
-                // with a non default destructor (vector/unique_ptr) cannot be used and we will
-                // handle the memory managment ourselves.
-                // One of these pointer will be used, depending on whether the draw call is indexed
-                // or not.
-                VkDrawIndirectCommand*        draw_params;
-                VkDrawIndexedIndirectCommand* draw_indexed_params;
-            };
-
-            DrawIndirectParams draw_indirect;
-
-            struct DrawIndirectCountParams
-            {
-                const VulkanBufferInfo* params_buffer_info;
-                VkDeviceSize            params_buffer_offset;
-                const VulkanBufferInfo* count_buffer_info;
-                VkDeviceSize            count_buffer_offset;
-                uint32_t                max_draw_count;
-                uint32_t                stride;
-
-                VkBuffer       new_params_buffer;
-                VkDeviceMemory new_params_memory;
-                VkDeviceSize   new_params_buffer_size;
-
-                VkBuffer       new_count_buffer;
-                VkDeviceMemory new_count_memory;
-
-                // Pointers that will point to host allocated memory and filled with the draw params
-                // read back after executing on the gpu. Because of the union a data structure
-                // with a non default destructor (vector/unique_ptr) cannot be used and we will
-                // handle the memory managment ourselves.
-                // One of these pointer will be used, depending on whether the draw call is indexed
-                // or not.
-                VkDrawIndirectCommand*        draw_params;
-                VkDrawIndexedIndirectCommand* draw_indexed_params;
-
-                uint32_t actual_draw_count;
-            };
-
-            DrawIndirectCountParams draw_indirect_count;
-
-            // Constructor for vkCmdDraw
-            DrawCallParamsUnion(uint32_t vertex_count,
-                                uint32_t instance_count,
-                                uint32_t first_vertex,
-                                uint32_t first_instance) :
-                draw{ vertex_count, instance_count, first_vertex, first_instance }
+            DrawIndirectParams(const VulkanBufferInfo* buf_info, VkDeviceSize offset, uint32_t count, uint32_t strd) :
+                params_buffer_info(buf_info), params_buffer_offset(offset), draw_count(count), stride(strd),
+                new_params_buffer(VK_NULL_HANDLE), new_params_memory(VK_NULL_HANDLE), new_params_buffer_size(0)
             {}
 
-            // Constructor for vkCmdDrawIndexed*
-            DrawCallParamsUnion(uint32_t index_count,
-                                uint32_t instance_count,
-                                uint32_t first_index,
-                                int32_t  vertex_offset,
-                                uint32_t first_instance) :
-                draw_indexed{ index_count, instance_count, first_index, vertex_offset, first_instance }
+            const VulkanBufferInfo* params_buffer_info;
+            VkDeviceSize            params_buffer_offset;
+            uint32_t                draw_count;
+            uint32_t                stride;
+
+            VkBuffer       new_params_buffer;
+            VkDeviceMemory new_params_memory;
+            VkDeviceSize   new_params_buffer_size;
+
+            // Pointers that will point to host allocated memory and filled with the draw params
+            // read back after executing on the gpu. Because of the union a data structure
+            // with a non default destructor (vector/unique_ptr) cannot be used and we will
+            // handle the memory managment ourselves.
+            // One of these pointer will be used, depending on whether the draw call is indexed
+            // or not.
+            std::vector<VkDrawIndirectCommand>        draw_params;
+            std::vector<VkDrawIndexedIndirectCommand> draw_indexed_params;
+        };
+
+        struct DrawIndirectCountParams
+        {
+            DrawIndirectCountParams(const VulkanBufferInfo* buf_info,
+                                    VkDeviceSize            buf_size,
+                                    const VulkanBufferInfo* count_buf_info,
+                                    VkDeviceSize            count_buf_size,
+                                    uint32_t                max,
+                                    uint32_t                strd) :
+                params_buffer_info(buf_info),
+                params_buffer_offset(buf_size), count_buffer_info(count_buf_info), count_buffer_offset(count_buf_size),
+                max_draw_count(max), stride(strd), new_params_buffer(VK_NULL_HANDLE), new_params_memory(VK_NULL_HANDLE),
+                new_params_buffer_size(0), new_count_buffer(VK_NULL_HANDLE), new_count_memory(VK_NULL_HANDLE),
+                actual_draw_count(std::numeric_limits<uint32_t>::max())
             {}
 
-            // Constructor for vkCmdDrawIndirect*
-            DrawCallParamsUnion(const VulkanBufferInfo* params_buffer_info,
-                                VkDeviceSize            offset,
-                                uint32_t                draw_count,
-                                uint32_t                stride) :
-                draw_indirect{ params_buffer_info, offset, draw_count, stride, VK_NULL_HANDLE,
-                               VK_NULL_HANDLE,     0,      nullptr,    nullptr }
-            {}
+            const VulkanBufferInfo* params_buffer_info;
+            VkDeviceSize            params_buffer_offset;
+            const VulkanBufferInfo* count_buffer_info;
+            VkDeviceSize            count_buffer_offset;
+            uint32_t                max_draw_count;
+            uint32_t                stride;
 
-            // Constructor for vkCmdDraw*IndirectCount*
-            DrawCallParamsUnion(const VulkanBufferInfo* params_buffer_info,
-                                VkDeviceSize            params_buffer_offset,
-                                const VulkanBufferInfo* count_buffer_info,
-                                VkDeviceSize            count_buffer_offset,
-                                uint32_t                max_draw_count,
-                                uint32_t                stride) :
-                draw_indirect_count{ params_buffer_info,
-                                     params_buffer_offset,
-                                     count_buffer_info,
-                                     count_buffer_offset,
-                                     max_draw_count,
-                                     stride,
-                                     VK_NULL_HANDLE,
-                                     VK_NULL_HANDLE,
-                                     0,
-                                     VK_NULL_HANDLE,
-                                     VK_NULL_HANDLE,
-                                     nullptr,
-                                     nullptr,
-                                     std::numeric_limits<uint32_t>::max() }
-            {}
-        } dc_params_union;
+            VkBuffer       new_params_buffer;
+            VkDeviceMemory new_params_memory;
+            VkDeviceSize   new_params_buffer_size;
+
+            VkBuffer       new_count_buffer;
+            VkDeviceMemory new_count_memory;
+
+            // Pointers that will point to host allocated memory and filled with the draw params
+            // read back after executing on the gpu. Because of the union a data structure
+            // with a non default destructor (vector/unique_ptr) cannot be used and we will
+            // handle the memory managment ourselves.
+            // One of these pointer will be used, depending on whether the draw call is indexed
+            // or not.
+            std::vector<VkDrawIndirectCommand>        draw_params;
+            std::vector<VkDrawIndexedIndirectCommand> draw_indexed_params;
+
+            uint32_t actual_draw_count;
+        };
+
+        std::variant<VkDrawIndirectCommand, VkDrawIndexedIndirectCommand, DrawIndirectParams, DrawIndirectCountParams>
+            dc_call_params_var;
 
         // Constructor for vkCmdDraw
         DrawCallParams(DrawCallType type,
@@ -651,7 +614,8 @@ class DrawCallsDumpingContext
                        uint32_t     instance_count,
                        uint32_t     first_vertex,
                        uint32_t     first_instance) :
-            dc_params_union(vertex_count, instance_count, first_vertex, first_instance),
+            dc_call_params_var(
+                std::in_place_type<VkDrawIndirectCommand>, vertex_count, instance_count, first_vertex, first_instance),
             type(type), updated_referenced_descriptors(false), updated_bound_vertex_buffers(false),
             updated_bound_index_buffer(false)
         {
@@ -665,7 +629,12 @@ class DrawCallsDumpingContext
                        uint32_t     first_index,
                        int32_t      vertex_offset,
                        uint32_t     first_instance) :
-            dc_params_union(index_count, instance_count, first_index, vertex_offset, first_instance),
+            dc_call_params_var(std::in_place_type<VkDrawIndexedIndirectCommand>,
+                               index_count,
+                               instance_count,
+                               first_index,
+                               vertex_offset,
+                               first_instance),
             type(type), updated_referenced_descriptors(false), updated_bound_vertex_buffers(false),
             updated_bound_index_buffer(false)
         {
@@ -678,7 +647,7 @@ class DrawCallsDumpingContext
                        VkDeviceSize            offset,
                        uint32_t                draw_count,
                        uint32_t                stride) :
-            dc_params_union(params_buffer_info, offset, draw_count, stride),
+            dc_call_params_var(std::in_place_type<DrawIndirectParams>, params_buffer_info, offset, draw_count, stride),
             type(type), updated_referenced_descriptors(false), updated_bound_vertex_buffers(false),
             updated_bound_index_buffer(false)
         {
@@ -693,7 +662,13 @@ class DrawCallsDumpingContext
                        VkDeviceSize            count_buffer_offset,
                        uint32_t                max_draw_count,
                        uint32_t                stride) :
-            dc_params_union(buffer_info, offset, count_buffer_info, count_buffer_offset, max_draw_count, stride),
+            dc_call_params_var(std::in_place_type<DrawIndirectCountParams>,
+                               buffer_info,
+                               offset,
+                               count_buffer_info,
+                               count_buffer_offset,
+                               max_draw_count,
+                               stride),
             type(type), updated_referenced_descriptors(false), updated_bound_vertex_buffers(false),
             updated_bound_index_buffer(false)
         {

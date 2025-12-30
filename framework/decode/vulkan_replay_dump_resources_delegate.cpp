@@ -1036,7 +1036,8 @@ void DefaultVulkanDumpResourcesDelegate::GenerateOutputJsonDrawCallInfo(
     {
         case DrawCallsDumpingContext::DrawCallType::kDraw:
         {
-            const VkDrawIndirectCommand& draw_call_parameters = dc_params->dc_params_union.draw;
+            const VkDrawIndirectCommand& draw_call_parameters =
+                std::get<VkDrawIndirectCommand>(dc_params->dc_call_params_var);
 
             dc_params_json_entry["vertexCount"]   = draw_call_parameters.vertexCount;
             dc_params_json_entry["instanceCount"] = draw_call_parameters.instanceCount;
@@ -1047,7 +1048,8 @@ void DefaultVulkanDumpResourcesDelegate::GenerateOutputJsonDrawCallInfo(
 
         case DrawCallsDumpingContext::DrawCallType::kDrawIndexed:
         {
-            const VkDrawIndexedIndirectCommand& draw_call_parameters = dc_params->dc_params_union.draw_indexed;
+            const VkDrawIndexedIndirectCommand& draw_call_parameters =
+                std::get<VkDrawIndexedIndirectCommand>(dc_params->dc_call_params_var);
 
             dc_params_json_entry["indexCount"]    = draw_call_parameters.indexCount;
             dc_params_json_entry["instanceCount"] = draw_call_parameters.instanceCount;
@@ -1059,10 +1061,11 @@ void DefaultVulkanDumpResourcesDelegate::GenerateOutputJsonDrawCallInfo(
 
         case DrawCallsDumpingContext::DrawCallType::kDrawIndirect:
         {
-            const auto& draw_call_parameters = dc_params->dc_params_union.draw_indirect;
+            const DrawCallsDumpingContext::DrawCallParams::DrawIndirectParams& draw_call_parameters =
+                std::get<DrawCallsDumpingContext::DrawCallParams::DrawIndirectParams>(dc_params->dc_call_params_var);
 
-            assert((draw_call_parameters.draw_count && draw_call_parameters.draw_params != nullptr) ||
-                   !draw_call_parameters.draw_count);
+            GFXRECON_ASSERT((draw_call_parameters.draw_count && !draw_call_parameters.draw_params.empty()) ||
+                            !draw_call_parameters.draw_count);
 
             dc_params_json_entry["drawCount"] = draw_call_parameters.draw_count;
             auto& indirect_param_entries      = dc_params_json_entry["indirectParams"];
@@ -1078,10 +1081,11 @@ void DefaultVulkanDumpResourcesDelegate::GenerateOutputJsonDrawCallInfo(
 
         case DrawCallsDumpingContext::DrawCallType::kDrawIndexedIndirect:
         {
-            const auto& draw_call_parameters = dc_params->dc_params_union.draw_indirect;
+            const DrawCallsDumpingContext::DrawCallParams::DrawIndirectParams& draw_call_parameters =
+                std::get<DrawCallsDumpingContext::DrawCallParams::DrawIndirectParams>(dc_params->dc_call_params_var);
 
-            assert((draw_call_parameters.draw_count && draw_call_parameters.draw_indexed_params != nullptr) ||
-                   !draw_call_parameters.draw_count);
+            GFXRECON_ASSERT((draw_call_parameters.draw_count && !draw_call_parameters.draw_indexed_params.empty()) ||
+                            !draw_call_parameters.draw_count);
 
             dc_params_json_entry["drawCount"] = draw_call_parameters.draw_count;
             auto& indirect_param_entries      = dc_params_json_entry["indirectParams"];
@@ -1102,7 +1106,9 @@ void DefaultVulkanDumpResourcesDelegate::GenerateOutputJsonDrawCallInfo(
         case DrawCallsDumpingContext::DrawCallType::kDrawIndirectCountKHR:
         case DrawCallsDumpingContext::DrawCallType::kDrawIndirectCountAMD:
         {
-            const auto& draw_call_parameters = dc_params->dc_params_union.draw_indirect_count;
+            const DrawCallsDumpingContext::DrawCallParams::DrawIndirectCountParams& draw_call_parameters =
+                std::get<DrawCallsDumpingContext::DrawCallParams::DrawIndirectCountParams>(
+                    dc_params->dc_call_params_var);
 
             dc_params_json_entry["maxDrawCount"]    = draw_call_parameters.max_draw_count;
             dc_params_json_entry["actualDrawCount"] = draw_call_parameters.actual_draw_count;
@@ -1122,7 +1128,9 @@ void DefaultVulkanDumpResourcesDelegate::GenerateOutputJsonDrawCallInfo(
         case DrawCallsDumpingContext::DrawCallType::kDrawIndexedIndirectCountKHR:
         case DrawCallsDumpingContext::DrawCallType::kDrawIndexedIndirectCountAMD:
         {
-            const auto& draw_call_parameters = dc_params->dc_params_union.draw_indirect_count;
+            const DrawCallsDumpingContext::DrawCallParams::DrawIndirectCountParams& draw_call_parameters =
+                std::get<DrawCallsDumpingContext::DrawCallParams::DrawIndirectCountParams>(
+                    dc_params->dc_call_params_var);
 
             dc_params_json_entry["maxDrawCount"]    = draw_call_parameters.max_draw_count;
             dc_params_json_entry["actualDrawCount"] = draw_call_parameters.actual_draw_count;
