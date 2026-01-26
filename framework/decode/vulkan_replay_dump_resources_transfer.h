@@ -160,6 +160,15 @@ class TransferDumpingContext
                                           StructPointerDecoder<Decoded_VkCopyAccelerationStructureInfoKHR>* pInfo,
                                           bool before_command);
 
+    VkResult HandleCmdFillBuffer(const ApiCallInfo&      call_info,
+                                 PFN_vkCmdFillBuffer     func,
+                                 VkCommandBuffer         commandBuffer,
+                                 const VulkanBufferInfo* dstBuffer,
+                                 VkDeviceSize            dstOffset,
+                                 VkDeviceSize            size,
+                                 uint32_t                data,
+                                 bool                    before_command);
+
     bool MustDumpTransfer(uint64_t index) const;
 
     VkResult DumpTransferCommands(uint64_t bcb_index, uint64_t qs_index);
@@ -178,7 +187,8 @@ class TransferDumpingContext
         kCmdCopyImageToBuffer,
         kCmdBlitImage,
         kCmdBuildAccelerationStructures,
-        kCmdCopyAccelerationStructure
+        kCmdCopyAccelerationStructure,
+        kCmdFillBuffer
     };
 
     static const char* TransferCommandTypeToStr(TransferCommandTypes type)
@@ -203,6 +213,8 @@ class TransferDumpingContext
                 return "vkCmdBuildAccelerationStructures";
             case kCmdCopyAccelerationStructure:
                 return "vkCmdCopyAccelerationStructure";
+            case kCmdFillBuffer:
+                return "vkCmdFillBuffer";
 
             default:
                 GFXRECON_LOG_ERROR("%s(): Unrecognized transfer command type (%d)", __func__, static_cast<int>(type));
@@ -667,6 +679,29 @@ class TransferDumpingContext
             CopiedAccelerationStructure        vk_objects;
         };
 
+        struct FillBuffer : TransferParamsBase
+        {
+            FillBuffer() = delete;
+
+            FillBuffer(TransferCommandTypes               t,
+                       bool                               hb,
+                       const graphics::VulkanDeviceTable& dt,
+                       const VulkanDeviceInfo*            pdi,
+                       format::HandleId                   db,
+                       VkDeviceSize                       o,
+                       VkDeviceSize                       s,
+                       uint32_t                           d) :
+                TransferParamsBase(t, hb, dt, pdi),
+                dst_buffer(db), offset(o), size(s), data(d)
+            {}
+
+            CopiedBuffer     vk_objects;
+            format::HandleId dst_buffer;
+            VkDeviceSize     offset;
+            VkDeviceSize     size;
+            uint32_t         data;
+        };
+
         // TransferParams constructors, one for each transfer command
         TransferParams() = delete;
 
@@ -818,6 +853,25 @@ class TransferDumpingContext
             if (bc)
             {
                 before_params = std::make_unique<CopyAccelerationStructure>(t, bc, dt, pdi, s, d, m, oit, at);
+            }
+        }
+
+        // CmdFillBuffer
+        TransferParams(format::HandleId                   dst_buffer,
+                       VkDeviceSize                       offset,
+                       VkDeviceSize                       size,
+                       uint32_t                           data,
+                       const graphics::VulkanDeviceTable& dt,
+                       const VulkanDeviceInfo*            pdi,
+                       bool                               bc,
+                       TransferCommandTypes               t) :
+            params(std::make_unique<FillBuffer>(t, bc, dt, pdi, dst_buffer, offset, size, data))
+        {
+            GFXRECON_ASSERT(t == TransferCommandTypes::kCmdFillBuffer);
+
+            if (bc)
+            {
+                before_params = std::make_unique<FillBuffer>(t, bc, dt, pdi, dst_buffer, offset, size, data);
             }
         }
 

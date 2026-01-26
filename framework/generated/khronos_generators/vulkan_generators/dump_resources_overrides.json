@@ -56,7 +56,8 @@
     "vkCmdBlitImage2": "OverrideCmdBlitImage2",
     "vkCmdBlitImage2KHR": "OverrideCmdBlitImage2KHR",
     "vkCmdBuildAccelerationStructuresKHR": "OverrideCmdBuildAccelerationStructuresKHR",
-    "vkCmdCopyAccelerationStructureKHR": "OverrideCmdCopyAccelerationStructureKHR"
+    "vkCmdCopyAccelerationStructureKHR": "OverrideCmdCopyAccelerationStructureKHR",
+    "vkCmdFillBuffer": "OverrideCmdFillBuffer"
   },
   "transfer": [
       "vkCmdCopyBuffer",
@@ -75,6 +76,7 @@
       "vkCmdBlitImage2",
       "vkCmdBlitImage2KHR",
       "vkCmdBuildAccelerationStructuresKHR",
-      "vkCmdCopyAccelerationStructureKHR"
+      "vkCmdCopyAccelerationStructureKHR",
+      "vkCmdFillBuffer"
   ]
 }

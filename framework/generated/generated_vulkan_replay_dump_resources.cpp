@@ -152,33 +152,15 @@ void VulkanReplayDumpResources::Process_vkCmdFillBuffer(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdFillBuffer                         func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    dstBuffer,
+    const VulkanBufferInfo*                     dstBuffer,
     VkDeviceSize                                dstOffset,
     VkDeviceSize                                size,
-    uint32_t                                    data)
+    uint32_t                                    data,
+    bool before_command)
 {
     if (IsRecording())
     {
-        const std::vector<std::shared_ptr<DrawCallsDumpingContext>> dc_contexts = FindDrawCallDumpingContexts(commandBuffer);
-        for (auto dc_context : dc_contexts)
-        {
-            CommandBufferIterator first, last;
-            dc_context->GetDrawCallActiveCommandBuffers(first, last);
-            for (CommandBufferIterator it = first; it < last; ++it)
-            {
-                func(*it, dstBuffer, dstOffset, size, data);
-            }
-        }
-
-        const std::vector<std::shared_ptr<DispatchTraceRaysDumpingContext>> dr_contexts = FindDispatchTraceRaysContexts(commandBuffer);
-        for (auto dr_context : dr_contexts)
-        {
-            VkCommandBuffer dispatch_rays_command_buffer = dr_context->GetDispatchRaysCommandBuffer();
-            if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
-            {
-                func(dispatch_rays_command_buffer, dstBuffer, dstOffset, size, data);
-            }
-        }
+        OverrideCmdFillBuffer(call_info, func, commandBuffer, dstBuffer, dstOffset, size, data, before_command);
     }
 }
 

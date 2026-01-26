@@ -374,6 +374,8 @@ class DefaultVulkanDumpResourcesDelegate : public VulkanDumpResourcesDelegate
     void GenerateOutputJsonCopyAccelerationStructureCommand(const DumpedTransferCommand& cmd,
                                                             nlohmann::ordered_json&      json_entry);
 
+    void GenerateOutputJsonFillBufferCommand(const DumpedTransferCommand& cmd, nlohmann::ordered_json& json_entry);
+
     void GenerateDescriptorsJsonInfo(nlohmann::ordered_json&    dispatch_json_entry,
                                      const DumpedResourcesInfo& dumped_resources);
 

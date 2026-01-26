@@ -677,6 +677,15 @@ class VulkanReplayDumpResourcesBase
                                             StructPointerDecoder<Decoded_VkCopyAccelerationStructureInfoKHR>* pInfo,
                                             bool before_command);
 
+    void OverrideCmdFillBuffer(const ApiCallInfo&      call_info,
+                               PFN_vkCmdFillBuffer     func,
+                               VkCommandBuffer         commandBuffer,
+                               const VulkanBufferInfo* dstBuffer,
+                               VkDeviceSize            dstOffset,
+                               VkDeviceSize            size,
+                               uint32_t                data,
+                               bool                    before_command);
+
   private:
     std::vector<std::shared_ptr<DispatchTraceRaysDumpingContext>> FindDispatchTraceRaysContexts(uint64_t bcb_id);
     std::shared_ptr<DispatchTraceRaysDumpingContext>

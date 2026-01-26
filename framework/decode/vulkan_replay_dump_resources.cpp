@@ -3217,6 +3217,50 @@ void VulkanReplayDumpResourcesBase::OverrideCmdCopyAccelerationStructureKHR(
     }
 }
 
+void VulkanReplayDumpResourcesBase::OverrideCmdFillBuffer(const ApiCallInfo&      call_info,
+                                                          PFN_vkCmdFillBuffer     func,
+                                                          VkCommandBuffer         commandBuffer,
+                                                          const VulkanBufferInfo* dstBuffer,
+                                                          VkDeviceSize            dstOffset,
+                                                          VkDeviceSize            size,
+                                                          uint32_t                data,
+                                                          bool                    before_command)
+{
+    // In case DumpBeforeCommand is true, draw call and compute/ray tracing contexts need to be handled only once
+    if (!before_command)
+    {
+        const std::vector<std::shared_ptr<DrawCallsDumpingContext>> dc_contexts =
+            FindDrawCallDumpingContexts(commandBuffer);
+        for (auto dc_context : dc_contexts)
+        {
+            CommandBufferIterator first, last;
+            dc_context->GetDrawCallActiveCommandBuffers(first, last);
+            for (CommandBufferIterator it = first; it < last; ++it)
+            {
+                func(*it, dstBuffer->handle, dstOffset, size, data);
+            }
+        }
+
+        const std::vector<std::shared_ptr<DispatchTraceRaysDumpingContext>> dr_contexts =
+            FindDispatchTraceRaysContexts(commandBuffer);
+        for (auto dr_context : dr_contexts)
+        {
+            VkCommandBuffer dispatch_rays_command_buffer = dr_context->GetDispatchRaysCommandBuffer();
+            if (dispatch_rays_command_buffer != VK_NULL_HANDLE)
+            {
+                func(dispatch_rays_command_buffer, dstBuffer->handle, dstOffset, size, data);
+            }
+        }
+    }
+
+    std::vector<std::shared_ptr<TransferDumpingContext>> transf_contexts = FindTransferContextCmdIndex(call_info.index);
+    for (auto transf_context : transf_contexts)
+    {
+        transf_context->HandleCmdFillBuffer(
+            call_info, func, commandBuffer, dstBuffer, dstOffset, size, data, before_command);
+    }
+}
+
 void VulkanReplayDumpResourcesBase::ProcessStateEndMarker()
 {
     std::shared_ptr<TransferDumpingContext> transfer_context = FindTransferContextBcbQsIndex(0, 0);

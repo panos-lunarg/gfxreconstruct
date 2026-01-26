@@ -120,10 +120,11 @@ void Process_vkCmdFillBuffer(
     const ApiCallInfo&                          call_info,
     PFN_vkCmdFillBuffer                         func,
     VkCommandBuffer                             commandBuffer,
-    VkBuffer                                    dstBuffer,
+    const VulkanBufferInfo*                     dstBuffer,
     VkDeviceSize                                dstOffset,
     VkDeviceSize                                size,
-    uint32_t                                    data);
+    uint32_t                                    data,
+    bool before_command);
 
 void Process_vkCmdPipelineBarrier(
     const ApiCallInfo&                          call_info,

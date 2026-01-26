@@ -24,6 +24,7 @@
 #include "decode/vulkan_replay_dump_resources_delegate.h"
 #include "decode/vulkan_replay_dump_resources_common.h"
 #include "decode/vulkan_replay_dump_resources_delegate_dumped_resources.h"
+#include "decode/vulkan_replay_dump_resources_transfer.h"
 #include "generated/generated_vulkan_enum_to_string.h"
 #include "util/buffer_writer.h"
 #include "util/image_writer.h"
@@ -96,6 +97,7 @@ bool DefaultVulkanDumpResourcesDelegate::DumpResource(const VulkanDelegateDumpRe
         case DumpResourceType::kBlitImage:
         case DumpResourceType::kBuildAccelerationStructure:
         case DumpResourceType::kCopyAccelerationStructure:
+        case DumpResourceType::kFillBuffer:
             return DumpTransferCommandToFile(delegate_context);
             break;
 
@@ -891,12 +893,14 @@ std::string DefaultVulkanDumpResourcesDelegate::GenerateTransferToBufferRegionFi
         case DumpResourceType::kInitBufferMetaCommand:
             filename << "initBuffer_";
             break;
-
         case DumpResourceType::kCopyBuffer:
             filename << "copyBuffer_";
             break;
         case DumpResourceType::kCopyImageToBuffer:
             filename << "copyImageToBuffer_";
+            break;
+        case DumpResourceType::kFillBuffer:
+            filename << "fillBuffer_";
             break;
         default:
             GFXRECON_LOG_ERROR(
@@ -2003,18 +2007,31 @@ bool DefaultVulkanDumpResourcesDelegate::DumpTransferCommandToFile(
     auto* dumped_transfer_command = static_cast<DumpedTransferCommand*>(delegate_context.dumped_resource);
     GFXRECON_ASSERT(dumped_transfer_command != nullptr);
 
-    if (const auto* init_buffer_host_data =
+    if (const auto* buffer_host_data =
             std::get_if<VulkanDelegateBufferDumpedData>(&dumped_transfer_host_data->dumped_data))
     {
         const DumpedResourceBase* resource_info = delegate_context.dumped_resource;
-        GFXRECON_ASSERT(resource_info->type == DumpResourceType::kInitBufferMetaCommand);
-
-        auto* dumped_init_buffer = std::get_if<DumpedInitBufferMetaCommand>(&dumped_transfer_command->dumped_resource);
-        GFXRECON_ASSERT(dumped_init_buffer != nullptr);
-        const std::string filename =
-            GenerateTransferToBufferRegionFilename(*delegate_context.dumped_resource, false, NO_INDEX);
-        gfxrecon::decode::DumpBufferToFile(
-            dumped_init_buffer->dumped_buffer, filename, init_buffer_host_data->data, delegate_context.compressor);
+        if (resource_info->type == DumpResourceType::kInitBufferMetaCommand)
+        {
+            auto* dumped_init_buffer =
+                std::get_if<DumpedInitBufferMetaCommand>(&dumped_transfer_command->dumped_resource);
+            GFXRECON_ASSERT(dumped_init_buffer != nullptr);
+            const std::string filename =
+                GenerateTransferToBufferRegionFilename(*delegate_context.dumped_resource, false, NO_INDEX);
+            gfxrecon::decode::DumpBufferToFile(
+                dumped_init_buffer->dumped_buffer, filename, buffer_host_data->data, delegate_context.compressor);
+        }
+        else if (resource_info->type == DumpResourceType::kFillBuffer)
+        {
+            auto* dumped_fill_buffer = std::get_if<DumpedFillBuffer>(
+                delegate_context.before_command ? &dumped_transfer_command->dumped_resource_before
+                                                : &dumped_transfer_command->dumped_resource);
+            GFXRECON_ASSERT(dumped_fill_buffer != nullptr);
+            const std::string filename = GenerateTransferToBufferRegionFilename(
+                *delegate_context.dumped_resource, delegate_context.before_command, NO_INDEX);
+            gfxrecon::decode::DumpBufferToFile(
+                dumped_fill_buffer->dumped_buffer, filename, buffer_host_data->data, delegate_context.compressor);
+        }
     }
     else if (const auto* init_image_host_data =
                  std::get_if<VulkanDelegateImageDumpedData>(&dumped_transfer_host_data->dumped_data))
@@ -2617,6 +2634,30 @@ void DefaultVulkanDumpResourcesDelegate::GenerateOutputJsonCopyAccelerationStruc
     }
 }
 
+void DefaultVulkanDumpResourcesDelegate::GenerateOutputJsonFillBufferCommand(const DumpedTransferCommand& cmd,
+                                                                             nlohmann::ordered_json&      json_entry)
+{
+    GFXRECON_ASSERT(cmd.type == DumpResourceType::kFillBuffer);
+
+    const auto* dumped_fill_buffer = std::get_if<DumpedFillBuffer>(&cmd.dumped_resource);
+    GFXRECON_ASSERT(dumped_fill_buffer != nullptr);
+
+    json_entry["dstBuffer"] = dumped_fill_buffer->dst_buffer;
+    json_entry["dstOffset"] = dumped_fill_buffer->offset;
+    json_entry["size"]      = dumped_fill_buffer->size;
+    json_entry["data"]      = dumped_fill_buffer->data;
+
+    dump_json_.InsertBufferInfo(json_entry, dumped_fill_buffer->dumped_buffer);
+
+    if (cmd.has_before)
+    {
+        const auto* dumped_fill_buffer_before = std::get_if<DumpedFillBuffer>(&cmd.dumped_resource_before);
+        GFXRECON_ASSERT(dumped_fill_buffer_before != nullptr);
+
+        dump_json_.InsertBeforeBufferInfo(json_entry, dumped_fill_buffer_before->dumped_buffer);
+    }
+}
+
 void DefaultVulkanDumpResourcesDelegate::GenerateOutputJsonTransferInfo(
     const VulkanDelegateDumpDrawCallContext& draw_call_info)
 {
@@ -2693,6 +2734,10 @@ void DefaultVulkanDumpResourcesDelegate::GenerateOutputJsonTransferInfo(
 
         case TransferDumpingContext::TransferCommandTypes::kCmdCopyAccelerationStructure:
             GenerateOutputJsonCopyAccelerationStructureCommand(*cmd, transf_params_json_entry);
+            break;
+
+        case TransferDumpingContext::TransferCommandTypes::kCmdFillBuffer:
+            GenerateOutputJsonFillBufferCommand(*cmd, transf_params_json_entry);
             break;
 
         default:

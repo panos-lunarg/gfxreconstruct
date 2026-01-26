@@ -72,6 +72,7 @@ enum class DumpResourceType
     kBlitImage,
     kBuildAccelerationStructure,
     kCopyAccelerationStructure,
+    kFillBuffer
 };
 
 using DumpedHostData                  = std::vector<uint8_t>;
@@ -790,6 +791,20 @@ struct DumpedCopyAccelerationStructure
     AccelerationStructureTransfer dumped_copy_info;
 };
 
+struct DumpedFillBuffer
+{
+    DumpedFillBuffer() = delete;
+
+    DumpedFillBuffer(VkBuffer b, format::HandleId bid, VkDeviceSize o, VkDeviceSize s, uint32_t d) :
+        dumped_buffer(b, s), dst_buffer(bid), offset(o), size(s), data(d){};
+
+    DumpedBuffer     dumped_buffer;
+    format::HandleId dst_buffer;
+    VkDeviceSize     offset;
+    VkDeviceSize     size;
+    uint32_t         data;
+};
+
 struct DumpedTransferCommand : DumpedResourceBase
 {
     DumpedTransferCommand() = delete;
@@ -932,6 +947,26 @@ struct DumpedTransferCommand : DumpedResourceBase
         }
     }
 
+    // FillBuffer
+    DumpedTransferCommand(DumpResourceType t,
+                          uint64_t         cmd,
+                          uint64_t         qs,
+                          VkBuffer         b,
+                          VkBuffer         before_buffer,
+                          format::HandleId bid,
+                          VkDeviceSize     offset,
+                          VkDeviceSize     s,
+                          uint32_t         d,
+                          bool             hb) :
+        DumpedResourceBase(t, DumpResourcesPipelineStage::kTransfer, cmd, qs),
+        dumped_resource(std::in_place_type<DumpedFillBuffer>, b, bid, offset, s, d), has_before(hb)
+    {
+        if (hb)
+        {
+            dumped_resource_before = DumpedFillBuffer(before_buffer, bid, offset, s, d);
+        }
+    }
+
     // The dumped resource
     std::variant<std::monostate,
                  DumpedInitBufferMetaCommand,
@@ -942,7 +977,8 @@ struct DumpedTransferCommand : DumpedResourceBase
                  DumpedCopyImageToBuffer,
                  DumpedBlitImage,
                  DumpedBuildAccelerationStructure,
-                 DumpedCopyAccelerationStructure>
+                 DumpedCopyAccelerationStructure,
+                 DumpedFillBuffer>
         dumped_resource;
 
     bool has_before{ false };
@@ -958,7 +994,8 @@ struct DumpedTransferCommand : DumpedResourceBase
                  DumpedCopyImageToBuffer,
                  DumpedBlitImage,
                  DumpedBuildAccelerationStructure,
-                 DumpedCopyAccelerationStructure>
+                 DumpedCopyAccelerationStructure,
+                 DumpedFillBuffer>
         dumped_resource_before;
 };
 

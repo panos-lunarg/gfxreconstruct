@@ -23,6 +23,7 @@
 #include "decode/vulkan_object_info.h"
 #include "decode/vulkan_replay_dump_resources_delegate.h"
 #include "decode/vulkan_replay_dump_resources_common.h"
+#include "decode/vulkan_replay_dump_resources_delegate_dumped_resources.h"
 #include "format/format.h"
 #include "graphics/vulkan_resources_util.h"
 #include "graphics/vulkan_util.h"
@@ -437,7 +438,6 @@ VkResult TransferDumpingContext::HandleCmdCopyBufferToImage(const ApiCallInfo&  
     if (MustDumpTransfer(call_info.index))
     {
         GetDispatchTables(dstImage->parent_id);
-        const VkDevice device = device_info_->handle;
 
         // If we also are dumping resources before the command, we insert only one entry in transfer_params_ and store
         // the allocated resources for both before and after in the same entry.
@@ -620,7 +620,6 @@ VkResult TransferDumpingContext::HandleCmdCopyImage(const ApiCallInfo&     call_
     if (MustDumpTransfer(call_info.index))
     {
         GetDispatchTables(srcImage->parent_id);
-        const VkDevice device = device_info_->handle;
 
         // If we also are dumping resources before the command, we insert only one entry in transfer_params_ and store
         // the allocated resources for both before and after in the same entry.
@@ -1480,6 +1479,100 @@ VkResult TransferDumpingContext::HandleCmdCopyAccelerationStructureKHR(
     return VK_SUCCESS;
 }
 
+VkResult TransferDumpingContext::HandleCmdFillBuffer(const ApiCallInfo&      call_info,
+                                                     PFN_vkCmdFillBuffer     func,
+                                                     VkCommandBuffer         commandBuffer,
+                                                     const VulkanBufferInfo* dstBuffer,
+                                                     VkDeviceSize            dstOffset,
+                                                     VkDeviceSize            size,
+                                                     uint32_t                data,
+                                                     bool                    before_command)
+{
+    if (MustDumpTransfer(call_info.index))
+    {
+        GetDispatchTables(dstBuffer->parent_id);
+
+        const VkDeviceSize fill_size = size == VK_WHOLE_SIZE ? dstBuffer->size - dstOffset : size;
+
+        // If we also are dumping resources before the command, we insert only one entry in transfer_params_ and store
+        // the allocated resources for both before and after in the same entry.
+        const bool insert_new_entry =
+            (options_.dump_resources_before && before_command) || !options_.dump_resources_before;
+        TransferParams::FillBuffer* fill_buffer_params;
+        if (insert_new_entry)
+        {
+            auto [new_entry, success] =
+                transfer_params_.emplace(std::piecewise_construct,
+                                         std::forward_as_tuple(call_info.index),
+                                         std::forward_as_tuple(dstBuffer->capture_id,
+                                                               dstOffset,
+                                                               fill_size,
+                                                               data,
+                                                               *device_table_,
+                                                               device_info_,
+                                                               before_command,
+                                                               TransferCommandTypes::kCmdFillBuffer));
+            GFXRECON_ASSERT(success);
+            fill_buffer_params = static_cast<TransferParams::FillBuffer*>(
+                before_command ? new_entry->second.before_params.get() : new_entry->second.params.get());
+        }
+        else
+        {
+            GFXRECON_ASSERT(options_.dump_resources_before && !before_command);
+
+            auto params_entry = transfer_params_.find(call_info.index);
+            GFXRECON_ASSERT(params_entry != transfer_params_.end());
+            fill_buffer_params = static_cast<TransferParams::FillBuffer*>(params_entry->second.params.get());
+        }
+        GFXRECON_ASSERT(fill_buffer_params != nullptr);
+
+        VkResult res = CreateVkBuffer(fill_size,
+                                      *device_table_,
+                                      device_info_->handle,
+                                      nullptr,
+                                      nullptr,
+                                      replay_device_phys_mem_props_,
+                                      VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                                      &fill_buffer_params->vk_objects.buffer,
+                                      &fill_buffer_params->vk_objects.memory);
+        if (res != VK_SUCCESS)
+        {
+            GFXRECON_LOG_ERROR("%s(): CreateVkBuffer failed for command %" PRIu64 " with %s",
+                               __func__,
+                               call_info.index,
+                               util::ToString<VkResult>(res).c_str());
+            return res;
+        }
+
+        // Flush original buffer
+        VkBufferMemoryBarrier buf_barrier = { VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+                                              nullptr,
+                                              VK_ACCESS_TRANSFER_WRITE_BIT | VK_ACCESS_MEMORY_WRITE_BIT,
+                                              VK_ACCESS_TRANSFER_READ_BIT,
+                                              VK_QUEUE_FAMILY_IGNORED,
+                                              VK_QUEUE_FAMILY_IGNORED,
+                                              dstBuffer->handle,
+                                              dstOffset,
+                                              fill_size };
+        device_table_->CmdPipelineBarrier(commandBuffer,
+                                          VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                                          VK_PIPELINE_STAGE_TRANSFER_BIT,
+                                          0,
+                                          0,
+                                          nullptr,
+                                          1,
+                                          &buf_barrier,
+                                          0,
+                                          nullptr);
+        // Inject copy command
+        const std::vector<VkBufferCopy> region{ VkBufferCopy{ dstOffset, 0, fill_size } };
+        CopyBufferAndBarrier(
+            commandBuffer, *device_table_, dstBuffer->handle, fill_buffer_params->vk_objects.buffer, region);
+    }
+
+    return VK_SUCCESS;
+}
+
 VkResult TransferDumpingContext::DumpTransferCommands(uint64_t bcb_index, uint64_t qs_index)
 {
     if (!qs_index)
@@ -2230,6 +2323,66 @@ VkResult TransferDumpingContext::DumpTransferCommands(uint64_t bcb_index, uint64
                     if (res != VK_SUCCESS)
                     {
                         GFXRECON_LOG_ERROR("Error dumping build acceleration structure command (%s)",
+                                           util::ToString(res).c_str());
+                        return res;
+                    }
+
+                    res_info.before_command = true;
+                    delegate_.DumpResource(res_info);
+                }
+            }
+            break;
+
+            case kCmdFillBuffer:
+            {
+                auto*       fill_buffer        = static_cast<TransferParams::FillBuffer*>(base_transfer_cmd);
+                const auto* fill_buffer_before = static_cast<TransferParams::FillBuffer*>(cmd.before_params.get());
+
+                auto& new_dumped_transfer_cmd = fill_buffer->dumped_resources.dumped_transfer_command =
+                    std::make_unique<DumpedTransferCommand>(
+                        DumpResourceType::kFillBuffer,
+                        cmd_index,
+                        qs_index,
+                        fill_buffer->vk_objects.buffer,
+                        fill_buffer->has_before_command ? fill_buffer_before->vk_objects.buffer : VK_NULL_HANDLE,
+                        fill_buffer->dst_buffer,
+                        fill_buffer->offset,
+                        fill_buffer->size,
+                        fill_buffer->data,
+                        fill_buffer->has_before_command);
+                auto& new_dumped_fill_buffer = std::get<DumpedFillBuffer>(new_dumped_transfer_cmd->dumped_resource);
+                host_data.dumped_data        = VulkanDelegateBufferDumpedData();
+                auto& dumped_fill_buffer_host_data = std::get<VulkanDelegateBufferDumpedData>(host_data.dumped_data);
+
+                VkResult res = DumpBuffer(new_dumped_fill_buffer.dumped_buffer,
+                                          dumped_fill_buffer_host_data.data,
+                                          device_info_,
+                                          device_table_,
+                                          instance_table_,
+                                          object_info_table_);
+                if (res != VK_SUCCESS)
+                {
+                    GFXRECON_LOG_ERROR("Error dumping buffer of transfer command (%s)", util::ToString(res).c_str());
+                    return res;
+                }
+
+                res_info.dumped_resource = new_dumped_transfer_cmd.get();
+                delegate_.DumpResource(res_info);
+
+                if (fill_buffer->has_before_command)
+                {
+                    auto& new_dumped_fill_buffer_before =
+                        std::get<DumpedFillBuffer>(new_dumped_transfer_cmd->dumped_resource_before);
+
+                    VkResult res = DumpBuffer(new_dumped_fill_buffer_before.dumped_buffer,
+                                              dumped_fill_buffer_host_data.data,
+                                              device_info_,
+                                              device_table_,
+                                              instance_table_,
+                                              object_info_table_);
+                    if (res != VK_SUCCESS)
+                    {
+                        GFXRECON_LOG_ERROR("Error dumping buffer of transfer command (%s)",
                                            util::ToString(res).c_str());
                         return res;
                     }

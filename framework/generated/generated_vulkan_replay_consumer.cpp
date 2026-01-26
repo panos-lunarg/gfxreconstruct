@@ -1044,11 +1044,16 @@ void VulkanReplayConsumer::Process_vkCmdFillBuffer(
     VkCommandBuffer in_commandBuffer = MapHandle<VulkanCommandBufferInfo>(commandBuffer, &CommonObjectInfoTable::GetVkCommandBufferInfo);
     VkBuffer in_dstBuffer = MapHandle<VulkanBufferInfo>(dstBuffer, &CommonObjectInfoTable::GetVkBufferInfo);
 
+    if (options_.dumping_resources && options_.dump_resources_before)
+    {
+        resource_dumper_->Process_vkCmdFillBuffer(call_info, GetDeviceTable(in_commandBuffer)->CmdFillBuffer, in_commandBuffer, GetObjectInfoTable().GetVkBufferInfo(dstBuffer), dstOffset, size, data, true);
+    }
+
     GetDeviceTable(in_commandBuffer)->CmdFillBuffer(in_commandBuffer, in_dstBuffer, dstOffset, size, data);
 
     if (options_.dumping_resources)
     {
-        resource_dumper_->Process_vkCmdFillBuffer(call_info, GetDeviceTable(in_commandBuffer)->CmdFillBuffer, in_commandBuffer, in_dstBuffer, dstOffset, size, data);
+        resource_dumper_->Process_vkCmdFillBuffer(call_info, GetDeviceTable(in_commandBuffer)->CmdFillBuffer, in_commandBuffer, GetObjectInfoTable().GetVkBufferInfo(dstBuffer), dstOffset, size, data, false);
     }
 }
 
