@@ -24,6 +24,10 @@
 
 #include "util/page_guard_manager.h"
 
+#if !defined(WIN32)
+#include "util/sigaction_wrapper.h"
+#endif
+
 #include "util/logging.h"
 #include "util/page_status_tracker.h"
 #include "util/platform.h"
@@ -190,14 +194,20 @@ static void PageGuardExceptionHandler(int id, siginfo_t* info, void* data)
 {
     if (!TryHandlePageGuardException(id, info, data))
     {
+        int result = sigaction(MEMPROT_SIGNAL, nullptr, &s_old_sigaction);
+        GFXRECON_WRITE_CONSOLE("%s()", __func__);
+        GFXRECON_WRITE_CONSOLE("  s_old_sigaction.sa_sigaction: %p", s_old_sigaction.sa_sigaction);
+
         // This was not a SIGSEGV signal for an address that was protected with mprotect().
         // Raise the original signal handler for this case.
         if (((s_old_sigaction.sa_flags & SA_SIGINFO) == SA_SIGINFO) && (s_old_sigaction.sa_sigaction != nullptr))
         {
+            GFXRECON_WRITE_CONSOLE("  calling s_old_sigaction.sa_sigaction")
             s_old_sigaction.sa_sigaction(id, info, data);
         }
         else if (((s_old_sigaction.sa_flags & SA_SIGINFO) != SA_SIGINFO) && (s_old_sigaction.sa_handler != nullptr))
         {
+            GFXRECON_WRITE_CONSOLE("  calling s_old_sigaction.sa_handler")
             s_old_sigaction.sa_handler(id);
         }
         else
@@ -220,16 +230,16 @@ void PageGuardManager::InitializeSystemExceptionContext(void)
     }
 #endif
 #if defined(__ANDROID__)
-    AddSpecialSignalHandlerFn =
-        reinterpret_cast<PFN_AddSpecialSignalHandlerFn>(dlsym(RTLD_DEFAULT, "AddSpecialSignalHandlerFn"));
-    RemoveSpecialSignalHandlerFn =
-        reinterpret_cast<PFN_RemoveSpecialSignalHandlerFn>(dlsym(RTLD_DEFAULT, "RemoveSpecialSignalHandlerFn"));
-    if (!AddSpecialSignalHandlerFn || !RemoveSpecialSignalHandlerFn)
-    {
-        AddSpecialSignalHandlerFn    = nullptr;
-        RemoveSpecialSignalHandlerFn = nullptr;
-        GFXRECON_LOG_WARNING("PageGuardManager could not find libsigchain symbols. Falling back to sigaction.")
-    }
+    // AddSpecialSignalHandlerFn =
+    //     reinterpret_cast<PFN_AddSpecialSignalHandlerFn>(dlsym(RTLD_DEFAULT, "AddSpecialSignalHandlerFn"));
+    // RemoveSpecialSignalHandlerFn =
+    //     reinterpret_cast<PFN_RemoveSpecialSignalHandlerFn>(dlsym(RTLD_DEFAULT, "RemoveSpecialSignalHandlerFn"));
+    // if (!AddSpecialSignalHandlerFn || !RemoveSpecialSignalHandlerFn)
+    // {
+    //     AddSpecialSignalHandlerFn    = nullptr;
+    //     RemoveSpecialSignalHandlerFn = nullptr;
+    //     GFXRECON_LOG_WARNING("PageGuardManager could not find libsigchain symbols. Falling back to sigaction.")
+    // }
 #endif
 }
 
@@ -325,7 +335,7 @@ bool PageGuardManager::CheckSignalHandler()
         assert(instance_->exception_handler_count_);
 
         struct sigaction current_handler;
-        int              result = sigaction(MEMPROT_SIGNAL, nullptr, &current_handler);
+        int              result = sigaction(GFXRECON_MEMPROT_SIGNAL, nullptr, &current_handler);
 
         if (result != -1)
         {
@@ -531,6 +541,7 @@ void PageGuardManager::AddExceptionHandler()
             abort_sa.sa_sigaction = [](int id, siginfo_t* info, void* data) { std::longjmp(abort_env, 0); };
 
             // Install temporary handler for SIGABRT to catch failure in AddSpecialSignalHandlerFn
+            GFXRECON_WRITE_CONSOLE("Calling sigaction")
             sigaction(SIGABRT, &abort_sa, &orig_abort_sa);
             if (setjmp(abort_env) == 0)
             {
@@ -552,13 +563,13 @@ void PageGuardManager::AddExceptionHandler()
             }
 
             // Restore original SIGABRT handler
+            GFXRECON_WRITE_CONSOLE("Calling sigaction")
             sigaction(SIGABRT, &orig_abort_sa, nullptr);
         }
         if (!libsigchain_active_)
 #endif
         {
-            // Retrieve the current SIGSEGV handler info before replacing the current signal handler to determine if our
-            // replacement signal handler should use an alternate signal stack.
+            GFXRECON_WRITE_CONSOLE("Calling sigaction")
             int result = sigaction(MEMPROT_SIGNAL, nullptr, &s_old_sigaction);
 
             if (result != -1)
@@ -583,7 +594,8 @@ void PageGuardManager::AddExceptionHandler()
                     sa.sa_flags |= SA_ONSTACK;
                 }
 
-                result = sigaction(MEMPROT_SIGNAL, &sa, nullptr);
+                GFXRECON_WRITE_CONSOLE("Calling sigaction")
+                result = sigaction(GFXRECON_MEMPROT_SIGNAL, &sa, nullptr);
             }
 
             if (result != -1)
@@ -655,7 +667,8 @@ void PageGuardManager::ClearExceptionHandler(void* exception_handler)
         }
 
         // Restore the old signal handler.
-        if (sigaction(MEMPROT_SIGNAL, &s_old_sigaction, nullptr) == -1)
+        GFXRECON_WRITE_CONSOLE("Calling sigaction")
+        if (sigaction(GFXRECON_MEMPROT_SIGNAL, &s_old_sigaction, nullptr) == -1)
         {
             GFXRECON_LOG_ERROR("PageGuardManager failed to remove exception handler (errno= %d)", errno);
         }

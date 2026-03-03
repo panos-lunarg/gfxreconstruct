@@ -1,3 +1,9 @@
+# sigaction wrapper
+add_library(sigaction_wrapper SHARED "")
+target_sources(sigaction_wrapper PRIVATE ${GFXRECON_SOURCE_DIR}/framework/util/sigaction_wrapper.h
+                                         ${GFXRECON_SOURCE_DIR}/framework/util/sigaction_wrapper.cpp)
+target_link_libraries(sigaction_wrapper log)
+
 add_library(gfxrecon_encode STATIC "")
 
 target_sources(gfxrecon_encode

@@ -116,3 +116,4 @@ target_link_libraries(gfxrecon_util
                       ${GFXRECON_SOURCE_DIR}/external/precompiled/android/lib/${ANDROID_ABI}/liblz4_static.a
                       ${GFXRECON_SOURCE_DIR}/external/precompiled/android/lib/${ANDROID_ABI}/libzstd.a
                       z)
+
