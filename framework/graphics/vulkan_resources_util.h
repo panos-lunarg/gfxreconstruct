@@ -33,6 +33,7 @@
 #include <vector>
 #include <functional>
 #include <map>
+#include <optional>
 
 GFXRECON_BEGIN_NAMESPACE(gfxrecon)
 GFXRECON_BEGIN_NAMESPACE(graphics)
