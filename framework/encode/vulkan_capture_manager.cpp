@@ -1319,7 +1319,7 @@ VkResult VulkanCaptureManager::OverrideAllocateMemory(VkDevice                  
             if (alloc_flags_info->flags & VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT)
             {
                 uses_address = true;
-                alloc_flags_info->flags |= VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_CAPTURE_REPLAY_BIT;
+                // alloc_flags_info->flags |= VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_CAPTURE_REPLAY_BIT;
             }
         }
     }
@@ -1335,7 +1335,7 @@ VkResult VulkanCaptureManager::OverrideAllocateMemory(VkDevice                  
         }
         optional_alloc_flags_info->pNext = nullptr;
         optional_alloc_flags_info->flags |=
-            VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT | VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_CAPTURE_REPLAY_BIT;
+            VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT /* | VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_CAPTURE_REPLAY_BIT */;
         graphics::vulkan_struct_add_pnext(pAllocateInfo_unwrapped, &optional_alloc_flags_info.value());
     }
 
