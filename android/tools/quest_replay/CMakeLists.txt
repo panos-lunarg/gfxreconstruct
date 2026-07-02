@@ -1,38 +1,7 @@
-cmake_minimum_required(VERSION 3.4.1)
-
-project(gfxrecon-quest-replay)
-
-# For more information about using CMake with Android Studio, read the
-# documentation: https://d.android.com/studio/projects/add-native-code.html
-option(GFXRECON_ENABLE_OPENXR "Enable OpenXR support." ON)
-get_filename_component(GFXRECON_SOURCE_DIR ../../.. ABSOLUTE)
-
-if (GFXRECON_ENABLE_OPENXR)
-# Only supported when OpenXr support
-
-get_filename_component(GFXRECON_SOURCE_DIR ../../.. ABSOLUTE)
-include(../../framework/cmake-config/PlatformConfig.cmake)
-
-cmake_minimum_required(VERSION 3.4.1)
-
-
-# Enable OpenXR support for quest_replay or fail
-include("FindOpenXRVersion")
-if ((NOT XR_VERSION_MAJOR STREQUAL "") AND (NOT XR_VERSION_MINOR STREQUAL ""))
-    message(STATUS "OpenXR support enabled")
-    set(OPENXR_SUPPORT_ENABLED TRUE)
-else()
-    message(FATAL_ERROR "Failed to find OpenXR headers for support.  Continuing with it disabled!")
-endif()
-
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/util util)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/plugin plugin)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/graphics graphics)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/format format)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/decode decode)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/encode encode)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/application application)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/external/OpenXR-SDK OpenXR-SDK)
+# Quest replay NativeActivity library, packaged into an APK by the Gradle
+# module in this directory. Added by the repository-root CMakeLists.txt when
+# configured with the Android NDK toolchain and OpenXR support is enabled
+# (OpenXR is required for Quest).
 
 add_library(gfxrecon-quest-replay
             SHARED
@@ -58,19 +27,19 @@ target_include_directories(gfxrecon-quest-replay
                                ${GFXRECON_SOURCE_DIR}
                                ${CMAKE_BINARY_DIR})
 
-target_include_directories(gfxrecon-quest-replay PUBLIC ${GFXRECON_SOURCE_DIR}/external/OpenXR-SDK/include)
-target_compile_definitions(gfxrecon-quest-replay PUBLIC ENABLE_OPENXR_SUPPORT=1)
-
 target_link_libraries(
         gfxrecon-quest-replay
-        nlohmann_json
         gfxrecon_application
         gfxrecon_decode
         gfxrecon_encode
         gfxrecon_graphics
         gfxrecon_format
         platform_specific
-        OpenXR::openxr_loader)
-else()
-    message(WARNING "OpenXR support disabled!")
-endif()
+        project_version
+        openxr_loader)
+
+# ANativeActivity_onCreate lives in the static native_app_glue library and is
+# only referenced at runtime via dlsym by the NativeActivity framework, so
+# force the linker to keep and export it.
+# Refer to: https://github.com/android-ndk/ndk/issues/381
+target_link_options(gfxrecon-quest-replay PRIVATE "LINKER:-u,ANativeActivity_onCreate")

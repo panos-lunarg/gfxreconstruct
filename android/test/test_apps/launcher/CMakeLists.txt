@@ -1,4 +1,4 @@
-##############################################################################
+###############################################################################
 # Copyright (c) 2025 LunarG, Inc.
 # All rights reserved
 #
@@ -22,27 +22,18 @@
 #
 # Author: LunarG Team
 # Description: CMake script for Test launcher app
+#
+# Test launcher NativeActivity library, packaged into an APK by the Gradle
+# module in this directory. Added by the repository-root CMakeLists.txt when
+# configured with the Android NDK toolchain and GFXRECON_INCLUDE_TEST_APPS is
+# enabled.
 ###############################################################################
 
-cmake_minimum_required(VERSION 3.4.1)
-
-get_filename_component(GFXRECON_SOURCE_DIR ../../../.. ABSOLUTE)
-set(GFXRECON_ANDROID_DIR ${GFXRECON_SOURCE_DIR}/android)
-include(${GFXRECON_ANDROID_DIR}/framework/cmake-config/PlatformConfig.cmake)
-
-project(gfxrecon-test-launcher)
-
-set(GFXRECON_ANDROID_TEST_APPS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
-
-set(COMMON_DIR ${GFXRECON_ANDROID_TEST_APPS_DIR}/common)
-add_subdirectory(${COMMON_DIR} common)
-
-
-add_library(${PROJECT_NAME}
+add_library(gfxrecon-test-launcher
             SHARED
                 ${GFXRECON_SOURCE_DIR}/test/test_apps/launcher/test_launcher.cpp)
 
-target_include_directories(${PROJECT_NAME}
+target_include_directories(gfxrecon-test-launcher
                            PUBLIC
                                ${GFXRECON_SOURCE_DIR}
                                ${GFXRECON_SOURCE_DIR}/external/precompiled/android/include
@@ -67,9 +58,15 @@ set(GFXRECON_TEST_LAUNCHER_LINK_LIBRARIES
     gfxrecon-testapp-ahb
     gfxrecon-testapp-deep-pnext-chain)
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(gfxrecon-test-launcher
                       ${GFXRECON_TEST_LAUNCHER_LINK_LIBRARIES})
 
-target_link_options(${PROJECT_NAME}
+target_link_options(gfxrecon-test-launcher
     PRIVATE
-        LINKER:--version-script=${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.map)
+        LINKER:--version-script=${CMAKE_CURRENT_SOURCE_DIR}/gfxrecon-test-launcher.map)
+
+# ANativeActivity_onCreate lives in the static native_app_glue library and is
+# only referenced at runtime via dlsym by the NativeActivity framework, so
+# force the linker to keep and export it.
+# Refer to: https://github.com/android-ndk/ndk/issues/381
+target_link_options(gfxrecon-test-launcher PRIVATE "LINKER:-u,ANativeActivity_onCreate")

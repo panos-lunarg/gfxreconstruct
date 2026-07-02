@@ -126,6 +126,38 @@ if (GFXRECON_ENABLE_VULKAN)
                 )
     endif()
 
+    if (ANDROID AND OPENXR_SUPPORT_ENABLED)
+        # Generate the OpenXR implicit layer manifest into the Android layer
+        # module's assets directory so Gradle packages it into the AAR (and thus
+        # any APK that includes the layer).
+        set(XR_VERSION ${XR_VERSION_MAJOR}.${XR_VERSION_MINOR}.${XR_VERSION_PATCH})
+        math(EXPR GFXRECONSTRUCT_LAYER_JSON_VERSION "${GFXRECONSTRUCT_PROJECT_VERSION_MAJOR} << 22 | ${GFXRECONSTRUCT_PROJECT_VERSION_MINOR} << 12 | ${GFXRECONSTRUCT_PROJECT_VERSION_PATCH}")
+        set(GFXRECONSTRUCT_VERSION_STRING ${GFXRECONSTRUCT_PROJECT_VERSION_MAJOR}.${GFXRECONSTRUCT_PROJECT_VERSION_MINOR}.${GFXRECONSTRUCT_PROJECT_VERSION_PATCH}${GFXRECON_PROJECT_VERSION_DESIGNATION})
+
+        # Firstly, expand variables
+        string(CONFIGURE
+        [=[
+{
+    "file_format_version": "1.0.0",
+    "api_layer": {
+        "name": "XR_APILAYER_LUNARG_gfxreconstruct",
+        "library_path": "libVkLayer_gfxreconstruct.so",
+        "api_version" : "${XR_VERSION}",
+        "implementation_version" : "${GFXRECONSTRUCT_LAYER_JSON_VERSION}",
+        "description": "GFXReconstruct Capture Layer Version ${GFXRECONSTRUCT_VERSION_STRING}",
+        "disable_environment" : "GFXRECON_DISABLE"
+    }
+}
+        ]=]
+        openxr_implicit_layer_contents
+        )
+
+        # Then expand generator expressions
+        set(GFXRECON_ANDROID_LAYER_ASSETS_DIR "${PROJECT_SOURCE_DIR}/android/layer/assets")
+        file(MAKE_DIRECTORY ${GFXRECON_ANDROID_LAYER_ASSETS_DIR}/openxr/1/api_layers/implicit.d)
+        file(GENERATE OUTPUT ${GFXRECON_ANDROID_LAYER_ASSETS_DIR}/openxr/1/api_layers/implicit.d/XrLayer_gfxreconstruct.json CONTENT "${openxr_implicit_layer_contents}")
+    endif()
+
     if(UNIX)
             # Generate a Vulkan JSON file that can be installed into system directories (w/o the "./" prefix in the library_path)
             set(RELATIVE_PATH_PREFIX "")

@@ -26,7 +26,9 @@
 # Description: CMake script for framework util target
 ###############################################################################
 cmake_minimum_required(VERSION 3.16.3)
-project(GFXReconstruct LANGUAGES CXX)
+# C is required in addition to CXX for the Android native_app_glue sources
+# (framework/util) when this file is configured with the NDK toolchain.
+project(GFXReconstruct LANGUAGES C CXX)
 
 set(GFXRECON_SOURCE_DIR "${PROJECT_SOURCE_DIR}")
 
@@ -34,8 +36,8 @@ set_property(GLOBAL PROPERTY TEST_SCRIPT ${CMAKE_ROOT})
 
 include(GNUInstallDirs)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CXX_STANDARD_REQUIRED ON)
+# NOTE: CMAKE_CXX_STANDARD / CXX_STANDARD_REQUIRED are set by CommonConfig
+# (included below), shared with the Android build.
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" "${PROJECT_SOURCE_DIR}/external/cmake-modules")
 set(CMAKE_CXX_VISIBILITY_PRESET "hidden")
@@ -53,79 +55,15 @@ if (USE_STRICT_COMPILER_WARNINGS)
     endif ()
 endif (USE_STRICT_COMPILER_WARNINGS)
 
-# Version info
-set(GFXRECONSTRUCT_PROJECT_VERSION_MAJOR 1)
-set(GFXRECONSTRUCT_PROJECT_VERSION_MINOR 0)
-set(GFXRECONSTRUCT_PROJECT_VERSION_PATCH 5)
-
-set(GFXRECON_PROJECT_VERSION_SHA1 "unknown-build-source")
-
 option(BUILD_STATIC "Build static binaries for HPC clusters (will not build the tracer library)" OFF)
 
 if (NOT DEFINED HEADLESS)
     set(HEADLESS TRUE)
 endif ()
 
-include(GetGitRevisionDescription)
-get_git_head_revision(GIT_REFSPEC GIT_SHA1)
-git_get_exact_tag(GIT_TAG)
-set(GIT_BRANCH "")
-
-if (GIT_REFSPEC)
-    string(REGEX REPLACE ".*/(.+)$" "\\1" GIT_BRANCH ${GIT_REFSPEC})
-    string(COMPARE EQUAL ${GIT_BRANCH} "master" GIT_IS_MASTER)
-    string(REGEX MATCH "^vulkan-sdk-[0-9]+\.[0-9]+\.[0-9]+$" GIT_IS_SDK ${GIT_BRANCH})
-
-    if (GIT_IS_MASTER OR GIT_IS_SDK)
-        if (GIT_TAG)
-            set(GIT_BRANCH ${GIT_TAG})
-        else ()
-            set(GIT_BRANCH "")
-        endif ()
-        if (NOT DEFINED GFXRECON_PROJECT_VERSION_DESIGNATION)
-            set(GFXRECON_PROJECT_VERSION_DESIGNATION "")
-        endif ()
-    elseif (NOT DEFINED GFXRECON_PROJECT_VERSION_DESIGNATION)
-        set(GFXRECON_PROJECT_VERSION_DESIGNATION "-dev")
-    endif ()
-elseif (GIT_TAG)
-    string(REGEX MATCH "^v[0-9]+\.[0-9]+\.[0-9]+$" GIT_IS_VERSION_RELEASE_TAG ${GIT_TAG})
-    if (GIT_IS_VERSION_RELEASE_TAG)
-        set(GIT_BRANCH ${GIT_TAG})
-        set(GFXRECON_PROJECT_VERSION_DESIGNATION "")
-    endif ()
-elseif (NOT DEFINED GFXRECON_PROJECT_VERSION_DESIGNATION)
-    set(GFXRECON_PROJECT_VERSION_DESIGNATION "-unknown")
-endif ()
-
-if (GIT_SHA1)
-    string(SUBSTRING ${GIT_SHA1} 0 7 GFXRECON_PROJECT_VERSION_SHA1)
-
-    if (GIT_BRANCH)
-        string(CONCAT GFXRECON_PROJECT_VERSION_SHA1 ${GIT_BRANCH} ":" ${GFXRECON_PROJECT_VERSION_SHA1})
-    endif ()
-
-    git_local_changes(GIT_LOCAL_STATE)
-    string(COMPARE EQUAL ${GIT_LOCAL_STATE} "DIRTY" GIT_DIRTY)
-    if (GIT_DIRTY)
-        string(CONCAT GFXRECON_PROJECT_VERSION_SHA1 ${GFXRECON_PROJECT_VERSION_SHA1} "*")
-    endif ()
-endif ()
-
-# Adds all the configure time information into project_version_temp.h.in
-configure_file("${PROJECT_SOURCE_DIR}/project_version.h.in" "${CMAKE_BINARY_DIR}/project_version_temp.h.in")
-
-# Generate a "project_version_$<CONFIG>.h" for the current config - necessary to determine the current build configuration
-file(GENERATE OUTPUT "${CMAKE_BINARY_DIR}/project_version_$<CONFIG>.h" INPUT "${CMAKE_BINARY_DIR}/project_version_temp.h.in")
-
-# Since project_version_$<CONFIG>.h differs per build, set a compiler definition that files can use to include it
-add_definitions(-DPROJECT_VERSION_HEADER_FILE="project_version_$<CONFIG>.h")
-
-# Isolate the repo SHA in a library to reduce the amount of recompilation on git commit, checkout, etc.
-# Clients should #include PROJECT_VERSION_HEADER_FILE and call GetProjectVersionString()
-configure_file("${PROJECT_SOURCE_DIR}/project_version_string.h.in" "${CMAKE_BINARY_DIR}/project_version_string.h")
-add_library(project_version STATIC "${PROJECT_SOURCE_DIR}/project_version.cpp")
-target_include_directories(project_version PUBLIC "${CMAKE_BINARY_DIR}")
+# Version numbers, git revision stamping, and the project_version library,
+# shared by the desktop and Android (NDK toolchain) configurations.
+include(CommonConfig)
 
 option(BUILD_WERROR "Build with warnings as errors" ON)
 
@@ -326,24 +264,37 @@ if (WIN32)
     find_package(Detours)
 endif () # WIN32
 
-option(LZ4_OPTIONAL "Allow building without LZ4-compression" OFF)
-find_package(LZ4)
+# On Android, LZ4/ZSTD/zlib are supplied as precompiled libraries by the
+# framework/util Android branch, so no discovery is needed.
+if (NOT ANDROID)
+    option(LZ4_OPTIONAL "Allow building without LZ4-compression" OFF)
+    find_package(LZ4)
 
-if (NOT LZ4_FOUND)
-    if (LZ4_OPTIONAL)
-        message(STATUS "LZ4 library not found, but declared optional. LZ4 support is disabled.")
-    else ()
-        message(FATAL_ERROR "LZ4 library not found. Please install LZ4 or allow building without it by setting LZ4_OPTIONAL to ON.")
-    endif ()# LZ4_OPTIONAL
-endif ()# NOT LZ4_FOUND
+    if (NOT LZ4_FOUND)
+        if (LZ4_OPTIONAL)
+            message(STATUS "LZ4 library not found, but declared optional. LZ4 support is disabled.")
+        else ()
+            message(FATAL_ERROR "LZ4 library not found. Please install LZ4 or allow building without it by setting LZ4_OPTIONAL to ON.")
+        endif ()# LZ4_OPTIONAL
+    endif ()# NOT LZ4_FOUND
 
-find_package(ZSTD)
+    find_package(ZSTD)
+endif ()# NOT ANDROID
 
 # Find and use nlohmann_json
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/nlohmann-json")
-find_package(nlohmann_json REQUIRED)
+if (ANDROID)
+    # The NDK toolchain sets CMAKE_FIND_ROOT_PATH_MODE_* to ONLY, which re-roots
+    # CMAKE_PREFIX_PATH searches into the NDK sysroot. Point find_package at the
+    # vendored package config directly.
+    set(nlohmann_json_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/nlohmann-json/share/cmake/nlohmann_json")
+    find_package(nlohmann_json REQUIRED CONFIG PATHS "${nlohmann_json_DIR}" NO_DEFAULT_PATH)
+else ()
+    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/nlohmann-json")
+    find_package(nlohmann_json REQUIRED)
+endif ()
 
-if (UNIX AND NOT APPLE)
+# Android is UNIX but uses its own windowing system, not the desktop WSI backends.
+if (UNIX AND NOT APPLE AND NOT ANDROID)
     option(BUILD_WSI_XCB_SUPPORT "Build XCB WSI support" ON)
     option(BUILD_WSI_WAYLAND_SUPPORT "Build Wayland WSI support" ON)
     option(BUILD_WSI_DISPLAY_SUPPORT "Build direct-to-display swapchain support" ON)
@@ -355,7 +306,7 @@ if (UNIX AND NOT APPLE)
     if (BUILD_WSI_WAYLAND_SUPPORT)
         find_package(WAYLAND)
     endif ()
-endif (UNIX AND NOT APPLE)
+endif ()
 
 # CMake provided find modules
 if (BUILD_STATIC)
@@ -363,12 +314,12 @@ if (BUILD_STATIC)
 else ()
     find_package(ZLIB)
 endif ()
-if (UNIX AND NOT APPLE)
+if (UNIX AND NOT APPLE AND NOT ANDROID)
     option(BUILD_WSI_XLIB_SUPPORT "Build Xlib WSI support" ON)
     if (BUILD_WSI_XLIB_SUPPORT)
         find_package(X11)
     endif ()
-endif (UNIX AND NOT APPLE)
+endif ()
 
 add_library(windows_specific INTERFACE)
 
@@ -401,11 +352,24 @@ target_compile_definitions(macos_specific INTERFACE
         VK_USE_PLATFORM_METAL_EXT
         $<$<BOOL:${HEADLESS}>:VK_USE_PLATFORM_HEADLESS>)
 
+# Platform defines for Android so the shared framework builds identically when
+# this file is configured with the NDK toolchain.
+add_library(android_specific INTERFACE)
+target_compile_definitions(android_specific INTERFACE
+        _FILE_OFFSET_BITS=64
+        PAGE_GUARD_ENABLE_UCONTEXT_WRITE_DETECTION
+        VK_USE_PLATFORM_ANDROID_KHR
+        XR_USE_PLATFORM_ANDROID
+        XR_USE_GRAPHICS_API_VULKAN)
+# Android 15+ devices use 16KB memory pages; shared objects must be aligned accordingly.
+target_link_options(android_specific INTERFACE "-Wl,-z,max-page-size=16384")
+
 add_library(platform_specific INTERFACE)
 target_link_libraries(platform_specific INTERFACE
         $<$<BOOL:${WIN32}>:windows_specific>
         $<$<BOOL:${APPLE}>:macos_specific>
-        $<$<NOT:$<OR:$<BOOL:${WIN32}>,$<BOOL:${APPLE}>>>:linux_specific>)
+        $<$<BOOL:${ANDROID}>:android_specific>
+        $<$<NOT:$<OR:$<BOOL:${WIN32}>,$<BOOL:${APPLE}>,$<BOOL:${ANDROID}>>>:linux_specific>)
 
 if (BUILD_WERROR)
     if (MSVC)
@@ -472,9 +436,27 @@ if (NOT BUILD_STATIC)
 endif ()
 add_subdirectory(tools)
 
+if (ANDROID)
+    # Android-only NativeActivity variants of the replay tool, packaged into
+    # APKs by the Gradle modules under android/tools/.
+    add_subdirectory(android/framework/application-multi-win)
+    add_subdirectory(android/tools/multi-win-replay)
+    if (OPENXR_SUPPORT_ENABLED)
+        add_subdirectory(android/tools/quest_replay)
+    endif ()
+endif ()
+
 if (GFXRECON_INCLUDE_TEST_APPS)
-    add_subdirectory(external/Vulkan-Headers)
-    add_subdirectory(test)
+    if (ANDROID)
+        # Android test app variants: the shared test app leaf directories are
+        # pulled in through android/test/test_apps/common, and the launcher is
+        # built as a NativeActivity library instead of an executable.
+        add_subdirectory(android/test/test_apps/common)
+        add_subdirectory(android/test/test_apps/launcher)
+    else ()
+        add_subdirectory(external/Vulkan-Headers)
+        add_subdirectory(test)
+    endif ()
 endif ()
 
 if (${RUN_TESTS})

@@ -21,6 +21,9 @@ android {
         }
         externalNativeBuild {
             cmake {
+                // Build only the capture layer target from the repository-root
+                // CMakeLists.txt (see the module-level externalNativeBuild below).
+                targets "VkLayer_gfxreconstruct"
                 cppFlags "-fexceptions", "-Wno-nullability-completeness"
                 arguments "-DANDROID_TOOLCHAIN=clang", "-DANDROID_STL=c++_static"
 
@@ -43,7 +46,9 @@ android {
     }
     externalNativeBuild {
         cmake {
-            path "CMakeLists.txt"
+            // Repository-root CMakeLists.txt: one CMake tree shared between
+            // desktop and Android builds.
+            path "../../CMakeLists.txt"
         }
     }
 

@@ -22,6 +22,11 @@
 #
 # Author: LunarG Team
 # Description: CMake script for Android test app base
+#
+# Added by the repository-root CMakeLists.txt when configured with the Android
+# NDK toolchain and GFXRECON_INCLUDE_TEST_APPS is enabled. Defines the Android
+# variant of gfxrecon-testapp-base (no android_mock, unlike the desktop variant
+# in test/test_apps/common) and pulls in the shared test app leaf directories.
 ###############################################################################
 
 add_library(gfxrecon-testapp-base STATIC ${GFXRECON_SOURCE_DIR}/test/test_apps/common/test_app_base.cpp)
@@ -33,22 +38,10 @@ target_include_directories(gfxrecon-testapp-base
                                ${GFXRECON_SOURCE_DIR}/test/test_apps/common
                                ${GFXRECON_SOURCE_DIR}/test/icd)
 
-set(GFXRECON_ANDROID_TEST_APPS_DIR ${CMAKE_SOURCE_DIR}/..)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/util util)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/plugin plugin)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/decode decode)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/graphics graphics)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/format format)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/application application)
-
 target_link_libraries(gfxrecon-testapp-base
     PUBLIC
     gfxrecon_util
     gfxrecon_application)
-
-
-macro(common_build_directives TARGET)
-endmacro()
 
 macro(add_test_app TEST_NAME)
     add_subdirectory(${GFXRECON_SOURCE_DIR}/test/test_apps/${TEST_NAME} ${TEST_NAME})

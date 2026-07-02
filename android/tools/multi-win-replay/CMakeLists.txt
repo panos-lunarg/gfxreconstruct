@@ -1,27 +1,13 @@
-# For more information about using CMake with Android Studio, read the
-# documentation: https://d.android.com/studio/projects/add-native-code.html
+# Multi-window replay NativeActivity library, packaged into an APK by the
+# Gradle module in this directory. Added by the repository-root CMakeLists.txt
+# when configured with the Android NDK toolchain.
+#
+# The target (and thus library) name must differ from the standard replay
+# target: names must be unique within the unified CMake tree, and the Android
+# Gradle Plugin collects all .so outputs into a single flat directory.
+# AndroidManifest.xml and ReplayActivity.java reference the library by this name.
 
-cmake_minimum_required(VERSION 3.4.1)
-
-project(gfxrecon-replay)
-
-get_filename_component(GFXRECON_SOURCE_DIR ../../.. ABSOLUTE)
-
-# because the NDK sets CMAKE_FIND_ROOT_PATH_MODE_*  to ONLY, it ignores
-# us setting CMAKE_PREFIX_PATH.  So just set the package DIR directly.
-set(nlohmann_json_DIR "${GFXRECON_SOURCE_DIR}/external/nlohmann-json/share/cmake/nlohmann_json")
-find_package(nlohmann_json REQUIRED CONFIG PATHS "${nlohmann_json_DIR}" NO_DEFAULT_PATH)
-
-include(../../framework/cmake-config/PlatformConfig.cmake)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/util util)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/plugin plugin)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/graphics graphics)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/format format)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/decode decode)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/framework/encode encode)
-add_subdirectory(${GFXRECON_SOURCE_DIR}/android/framework/application-multi-win application-multi-win)
-
-add_library(gfxrecon-replay
+add_library(gfxrecon-multiwin-replay
             SHARED
                 ${GFXRECON_SOURCE_DIR}/tools/tool_settings.h
                 ${GFXRECON_SOURCE_DIR}/tools/replay/parse_dump_resources_cli.h
@@ -39,21 +25,27 @@ add_library(gfxrecon-replay
                 ${GFXRECON_SOURCE_DIR}/tools/replay/replay_vulkan_feature.cpp
                 ${GFXRECON_SOURCE_DIR}/tools/replay/android_main.cpp)
 
-target_include_directories(gfxrecon-replay
+target_include_directories(gfxrecon-multiwin-replay
                            PUBLIC
                                ${GFXRECON_SOURCE_DIR}/external/precompiled/android/include
                                ${GFXRECON_SOURCE_DIR}
                                ${CMAKE_BINARY_DIR})
 
 target_link_libraries(
-        gfxrecon-replay
+        gfxrecon-multiwin-replay
         gfxrecon_application_multiwin
         gfxrecon_decode
         gfxrecon_encode
         gfxrecon_graphics
         gfxrecon_format
-        platform_specific)
+        platform_specific
+        project_version
+        # OpenXR entry points are compiled in when OpenXR support is enabled,
+        # and the loader is not linked transitively on Android.
+        $<$<BOOL:${OPENXR_SUPPORT_ENABLED}>:openxr_loader>)
 
-target_link_options(gfxrecon-replay PRIVATE "-Wl,-z,max-page-size=16384")
-
-message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+# ANativeActivity_onCreate lives in the static native_app_glue library and is
+# only referenced at runtime via dlsym by the NativeActivity framework, so
+# force the linker to keep and export it.
+# Refer to: https://github.com/android-ndk/ndk/issues/381
+target_link_options(gfxrecon-multiwin-replay PRIVATE "LINKER:-u,ANativeActivity_onCreate")

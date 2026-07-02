@@ -26,7 +26,14 @@
 # Description: CMake script for framework util target
 ###############################################################################
 
-add_executable(gfxrecon-replay "")
+# On Android the replay tool is a NativeActivity shared library packaged into
+# an APK by the android/tools/replay Gradle module; elsewhere it is a
+# command-line executable.
+if (ANDROID)
+    add_library(gfxrecon-replay SHARED "")
+else ()
+    add_executable(gfxrecon-replay "")
+endif ()
 
 target_sources(gfxrecon-replay
                PRIVATE
@@ -41,9 +48,10 @@ target_sources(gfxrecon-replay
                     ${CMAKE_CURRENT_LIST_DIR}/replay_openxr_feature.cpp
                     ${CMAKE_CURRENT_LIST_DIR}/replay_vulkan_feature.h
                     ${CMAKE_CURRENT_LIST_DIR}/replay_vulkan_feature.cpp
-                    ${CMAKE_CURRENT_LIST_DIR}/desktop_main.cpp
+                    $<$<BOOL:${ANDROID}>:${CMAKE_CURRENT_LIST_DIR}/android_main.cpp>
+                    $<$<NOT:$<BOOL:${ANDROID}>>:${CMAKE_CURRENT_LIST_DIR}/desktop_main.cpp>
                     ${CMAKE_CURRENT_LIST_DIR}/parse_dump_resources_cli.cpp
-                    ${CMAKE_CURRENT_LIST_DIR}/../platform_debug_helper.cpp
+                    $<$<NOT:$<BOOL:${ANDROID}>>:${CMAKE_CURRENT_LIST_DIR}/../platform_debug_helper.cpp>
                     $<$<BOOL:${GFXRECON_ENABLE_VULKAN}>:${CMAKE_CURRENT_LIST_DIR}/recapture_vulkan_entry.cpp>
                     $<$<BOOL:${GFXRECON_ENABLE_VULKAN}>:${CMAKE_CURRENT_LIST_DIR}/recapture_vulkan_entry.h>
                     $<$<BOOL:${GFXRECON_ENABLE_VULKAN}>:${PROJECT_SOURCE_DIR}/framework/generated/generated_vulkan_recapture_func_table.h>
@@ -63,7 +71,10 @@ target_link_libraries(gfxrecon-replay
                           project_version
                           $<$<BOOL:${D3D12_SUPPORT}>:d3d12.lib>
                           $<$<BOOL:${D3D12_SUPPORT}>:dxgi.lib>
-                          $<$<BOOL:${DXC_FOUND}>:${DXC_LIBRARY_PATH}>)
+                          $<$<BOOL:${DXC_FOUND}>:${DXC_LIBRARY_PATH}>
+                          # On Android the OpenXR loader is not linked transitively by
+                          # gfxrecon_application, so link it directly when OpenXR is enabled.
+                          $<$<AND:$<BOOL:${ANDROID}>,$<BOOL:${OPENXR_SUPPORT_ENABLED}>>:openxr_loader>)
 
 if (MSVC)
     # Force inclusion of "gfxrecon_disable_popup_result" variable in linking.
@@ -73,6 +84,12 @@ if (MSVC)
     else()
       target_link_options(gfxrecon-replay PUBLIC "LINKER:/Include:gfxrecon_disable_popup_result")
     endif()
+elseif (ANDROID)
+    # ANativeActivity_onCreate lives in the static native_app_glue library and is
+    # only referenced at runtime via dlsym by the NativeActivity framework, so
+    # force the linker to keep and export it.
+    # Refer to: https://github.com/android-ndk/ndk/issues/381
+    target_link_options(gfxrecon-replay PRIVATE "LINKER:-u,ANativeActivity_onCreate")
 else ()
     target_link_options(gfxrecon-replay PUBLIC "-rdynamic")
 endif()
