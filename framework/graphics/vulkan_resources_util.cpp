@@ -2016,6 +2016,7 @@ bool VulkanResourcesUtil::CanRenderPassResolve(
         VK_FORMAT_FEATURE_TRANSFER_SRC_BIT;
     if (!IsFormatSupported(instance_table, physical_device, format, tiling, feature_flags))
     {
+        GFXRECON_WRITE_CONSOLE("ATTACHMENT_BIT | TRANSFER_SRC_BIT are not supported")
         return false;
     }
 
@@ -2038,16 +2039,46 @@ VulkanResourcesUtil::SelectResolveMethod(const VulkanInstanceTable&             
                                          VkImageTiling                                    tiling,
                                          const graphics::VulkanDevicePropertyFeatureInfo& physical_device_features_info)
 {
+    GFXRECON_WRITE_CONSOLE("%s()", __func__)
+    GFXRECON_WRITE_CONSOLE("  format: %s", util::ToString(format).c_str())
+    GFXRECON_WRITE_CONSOLE("  tiling: %s", util::ToString(tiling).c_str())
+
+    VkFormatProperties format_properties{};
+    instance_table.GetPhysicalDeviceFormatProperties(physical_device, format, &format_properties);
+    const VkFormatFeatureFlags& supported_feature_flags = tiling == VK_IMAGE_TILING_LINEAR
+                                                              ? format_properties.linearTilingFeatures
+                                                              : format_properties.optimalTilingFeatures;
+
+    // Maintenace10 and depth/stencil formats require vkCmdResolveImage2 and VkResolveImageModeInfoKHR.
+    const bool maintenance10_supported = physical_device_features_info.feature_maintenance10 != VK_FALSE;
+
+    GFXRECON_WRITE_CONSOLE("%s()", __func__)
+    GFXRECON_WRITE_CONSOLE("  maintenance10_supported: %u", maintenance10_supported)
+    GFXRECON_WRITE_CONSOLE(
+        "  VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT: %u",
+        ((supported_feature_flags & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT) == VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT))
+    GFXRECON_WRITE_CONSOLE("  VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT: %u",
+                           ((supported_feature_flags & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) ==
+                            VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT))
+
+    GFXRECON_WRITE_CONSOLE("  physical_device_features_info.feature_dynamic_rendering: %u",
+                           physical_device_features_info.feature_dynamic_rendering)
+    GFXRECON_WRITE_CONSOLE("  physical_device_features_info.dynamic_rendering_depth_stencil_resolve: %u",
+                           physical_device_features_info.dynamic_rendering_depth_stencil_resolve)
+
     if (CanTransferResolve(instance_table, physical_device, format, tiling, physical_device_features_info))
     {
+        GFXRECON_WRITE_CONSOLE("  TRANSFER");
         return MultisampleResolveMethod::kTransfer;
     }
 
     if (CanRenderPassResolve(instance_table, physical_device, format, tiling, physical_device_features_info))
     {
+        GFXRECON_WRITE_CONSOLE("  RENDERPASS");
         return MultisampleResolveMethod::kRenderPass;
     }
 
+    GFXRECON_WRITE_CONSOLE("  NOT SUPPORTED");
     return MultisampleResolveMethod::kUnsupported;
 }
 
